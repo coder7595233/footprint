@@ -40,6 +40,7 @@ struct DoctoralRecordHeroView: View {
     private static let visibleYears = 5
     private static let todayAnchorID = "doctoral-timeline-today"
     private static let paperDiamondBlock: CGFloat = 16
+    private static let edgeMargin: CGFloat = 32
     private static let milestoneNodeSize: CGFloat = 18
     private static let activityDotSize: CGFloat = 12
     private static let activityGroupSize: CGFloat = 24
@@ -485,6 +486,9 @@ struct DoctoralRecordHeroView: View {
                         .allowsHitTesting(false)
                     }
                     .frame(width: width, height: totalHeight, alignment: .topLeading)
+                    // Room at both ends, so a milestone on the first or last
+                    // day of the axis (and its label) is never cut off.
+                    .padding(.horizontal, Self.edgeMargin)
                     .padding(.bottom, 10)
                 }
                 .frame(maxWidth: .infinity)
