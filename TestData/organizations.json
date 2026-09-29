@@ -1,0 +1,4045 @@
+[
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "",
+    "congresses": [],
+    "country": "United States",
+    "employerContacts": [],
+    "flag": "🇺🇸",
+    "id": "3713C0D6-3204-48C3-84CC-AA44BA37BE1C",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 1",
+    "nameSv": "Exempelnamn 1",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "employer"
+    ],
+    "salaryCalculator": {
+      "allocationMonths": "",
+      "allocationPercent": "",
+      "annualIncreaseAfterCurrentYearPercent": "3 %",
+      "birthDate": "",
+      "employerFeePeriods": [
+        {
+          "from": "",
+          "id": "E8C46764-EEE9-464A-AD8E-2FFF470FD828",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "forssWithoutOverhead": false,
+      "itInfrastructureFeePeriods": [],
+      "listedPatientCountPeriods": [],
+      "monthlySalaryPeriods": [],
+      "overheadPeriods": [
+        {
+          "from": "",
+          "id": "E8C46764-EEE9-464A-AD8E-2FFF470FD828",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "regionalCostPeriods": [
+        {
+          "from": "",
+          "id": "E8C46764-EEE9-464A-AD8E-2FFF470FD828",
+          "to": "",
+          "value": ""
+        }
+      ]
+    },
+    "vatNumber": "",
+    "websiteURL": "Exempel 248"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 74",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-02-14",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 33",
+        "country": "Japan",
+        "from": "2026-07-25",
+        "fromUncertain": false,
+        "id": "555B7FC8-23D4-491C-B583-646C2C02BA11",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/870",
+        "title": "Exempelmöte 77",
+        "to": "2026-07-27",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2026-04-25",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 24",
+        "country": "France",
+        "from": "2026-10-17",
+        "fromUncertain": false,
+        "id": "59FFCA40-0AF0-43B4-BC8F-C6CB13452804",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/870",
+        "title": "Exempelmöte 78",
+        "to": "2026-10-20",
+        "toUncertain": false
+      }
+    ],
+    "country": "Switzerland",
+    "employerContacts": [],
+    "flag": "🇨🇭",
+    "id": "BCB82336-6A0C-4431-8BFE-02E60C4209C3",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 1",
+    "nameSv": "Exempelorganisation 1",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/871"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 1",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "7D4A36F5-07BB-4D8A-A9FA-319F306CE4E4",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 2",
+    "nameSv": "Exempelnamn 2",
+    "organizationNumber": "",
+    "phoneNumber": "010-000 00 00",
+    "postalCode": "10627",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/872"
+  },
+  {
+    "addressLine": "Exempelgatan 1",
+    "category": "National",
+    "city": "Exempelstad 1",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "0F63F21B-26A3-45A2-8BAB-E2C821B3F1E9",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 58",
+    "nameSv": "Exempelstiftelsen 58",
+    "organizationNumber": "",
+    "phoneNumber": "010-000 00 00",
+    "postalCode": "11329",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/872"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 75",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 34",
+        "country": "United States",
+        "from": "2025-11-11",
+        "fromUncertain": false,
+        "id": "C5798501-568A-4E39-9BF1-C4889BA1D5CF",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/873",
+        "title": "Exempelmöte 79",
+        "to": "2025-11-13",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2026-05-22",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 35",
+        "country": "United States",
+        "from": "2026-11-24",
+        "fromUncertain": false,
+        "id": "EA846BA2-4BB3-44BD-89C6-6229CBFC8179",
+        "isEditingLocked": true,
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "2026-07-17",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 80",
+        "to": "2026-11-26",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 36",
+        "country": "United States",
+        "from": "2027-11-16",
+        "fromUncertain": false,
+        "id": "CD972CF7-BB20-474B-88F5-AA0FCD1C303B",
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 81",
+        "to": "2027-11-18",
+        "toUncertain": false
+      }
+    ],
+    "country": "United States",
+    "employerContacts": [],
+    "flag": "🇺🇸",
+    "id": "331F9D54-D4DB-4E3F-B86F-6F6C3E079B54",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 2",
+    "nameSv": "Exempelorganisation 2",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "Exempel 249"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 76",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-02-07",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 37",
+        "country": "United States",
+        "from": "2026-05-23",
+        "fromUncertain": false,
+        "id": "8CC61196-FABB-4250-ADA5-82A52AF8AEA7",
+        "isEditingLocked": true,
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/875",
+        "title": "Exempelmöte 82",
+        "to": "2026-05-27",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2026-01-18",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 36",
+        "country": "United States",
+        "from": "2026-06-22",
+        "fromUncertain": false,
+        "id": "4821F21A-C388-44F5-B4CF-8BE7D8C0005B",
+        "isEditingLocked": true,
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "2026-04-09",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/875",
+        "title": "Exempelmöte 83",
+        "to": "2026-06-25",
+        "toUncertain": false
+      }
+    ],
+    "country": "United States",
+    "employerContacts": [],
+    "flag": "🇺🇸",
+    "id": "ACD1E57D-F8F4-4CA9-BDEC-7C9253F1E33C",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 3",
+    "nameSv": "Exempelorganisation 3",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/876"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-05-12",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 38",
+        "country": "Japan",
+        "from": "2026-11-09",
+        "fromUncertain": false,
+        "id": "1347432A-7917-4529-AF45-7A1351DE3EAF",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/876",
+        "title": "Exempelmöte 84",
+        "to": "2026-11-11",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 39",
+        "country": "Indonesia",
+        "from": "",
+        "fromUncertain": false,
+        "id": "7F415FB0-039C-49B8-9183-ECC2C5732241",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 85",
+        "to": "",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 40",
+        "country": "Hong Kong",
+        "from": "",
+        "fromUncertain": false,
+        "id": "E0D28571-5833-489A-9E2B-671201FFB40C",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 86",
+        "to": "",
+        "toUncertain": false
+      }
+    ],
+    "country": "Japan",
+    "employerContacts": [],
+    "flag": "🇯🇵",
+    "id": "8470BF9B-92C0-4E75-8912-D50100AB1892",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 4",
+    "nameSv": "Exempelorganisation 4",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/876"
+  },
+  {
+    "addressLine": "",
+    "category": "Regional",
+    "city": "Exempelstad 2",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "8C4B570E-37C5-42F7-A03A-FA39E5FC7AEB",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 1",
+    "nameSv": "Exempelnamn 3",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/877"
+  },
+  {
+    "addressLine": "Exempelgatan 2",
+    "category": "National",
+    "city": "Exempelstad 77",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "BC56922A-FD3F-4E09-B678-E63EC7310A10",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 56",
+    "nameSv": "Exempelstiftelsen 56",
+    "organizationNumber": "",
+    "phoneNumber": "010-000 00 00",
+    "postalCode": "11727",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/879"
+  },
+  {
+    "addressLine": "Exempelgatan 3",
+    "category": "National",
+    "city": "Exempelstad 78",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "8CE2FF74-074B-4F36-AE1F-4EE41EC8E17B",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 2",
+    "nameSv": "Exempelstiftelsen 54",
+    "organizationNumber": "",
+    "phoneNumber": "010-000 00 00",
+    "postalCode": "16751",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/881"
+  },
+  {
+    "addressLine": "Exempelgatan 4",
+    "category": "National",
+    "city": "Exempelstad 79",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "D0027FFB-5FF7-4473-A8EB-788D1310C45C",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 3",
+    "nameSv": "Exempelstiftelsen 44",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "12116",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/884"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "4F05B938-3A4B-499B-9176-66041CA4640D",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 4",
+    "nameSv": "Exempelstiftelsen 49",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/886"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "",
+    "congresses": [],
+    "country": "Netherlands",
+    "employerContacts": [],
+    "flag": "🇳🇱",
+    "id": "D579A72E-2827-44E7-A87D-480287CFA114",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 30",
+    "nameSv": "Exempelorganisation 30",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/887"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "30F99335-2F4D-469A-BFC2-1835563B80CE",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 64",
+    "nameSv": "Exempelstiftelsen 64",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/887"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "03F9F282-4B61-4B6D-9DAA-65BF0D7A244B",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 5",
+    "nameSv": "Exempelnamn 4",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/888"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-09-07",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 36",
+        "country": "United States",
+        "from": "2026-01-27",
+        "fromUncertain": false,
+        "id": "08DF8F10-3C3E-42F5-9798-35E1B6934AE6",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2025-12-05",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/889",
+        "title": "Exempelmöte 87",
+        "to": "2026-01-30",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 41",
+        "country": "Canada",
+        "from": "2027-01-19",
+        "fromUncertain": false,
+        "id": "C5A950DC-FDE7-4267-98E3-BEE977FC870F",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 88",
+        "to": "2027-01-22",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 42",
+        "country": "United States",
+        "from": "2028-01-18",
+        "fromUncertain": false,
+        "id": "4651A5EE-C45F-4A02-A044-A422BA9AD250",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 89",
+        "to": "2028-01-21",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 36",
+        "country": "United States",
+        "from": "2029-01-30",
+        "fromUncertain": false,
+        "id": "0BAA8E7F-78C6-454D-826B-E1967A8E9CFC",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 90",
+        "to": "2029-02-02",
+        "toUncertain": false
+      }
+    ],
+    "country": "United States",
+    "employerContacts": [],
+    "flag": "🇺🇸",
+    "id": "125A0F9F-77E6-4D5F-9AE9-30162D6ECD9D",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 5",
+    "nameSv": "Exempelorganisation 5",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/889"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "0E037F80-3D52-4E6C-9FEF-7403743A3C54",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 6",
+    "nameSv": "Exempelstiftelsen 39",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/889"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 14",
+    "congresses": [],
+    "country": "Switzerland",
+    "employerContacts": [],
+    "flag": "🇨🇭",
+    "id": "39872C47-E4B3-4FAA-A252-87E2EC0AE6AA",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 10",
+    "nameSv": "Exempelstiftelsen 10",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/890"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2024-11-15",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 43",
+        "congressFeePaid": true,
+        "country": "Austria",
+        "from": "2025-05-01",
+        "fromUncertain": false,
+        "id": "9BE87021-0E41-4D03-903F-D1A5C6ED4976",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2025-01-31",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "participantAuthorIDs": [
+          "655A87D0-2A40-40D4-9C43-A45E7507517F",
+          "BDA0E338-59DF-4B8B-A54B-C47D580E09D9",
+          "75176704-EC9A-49F7-8573-DD58FA65CDCF"
+        ],
+        "participantNames": [
+          "Greta af Låtsasby",
+          "Pontus N. Skissgren",
+          "Therese Modelldahl"
+        ],
+        "title": "Exempelmöte 91",
+        "to": "2025-05-05",
+        "toUncertain": false,
+        "venue": "Exempel 183"
+      },
+      {
+        "abstractSubmissionDeadline": "2025-11-15",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 44",
+        "country": "Italy",
+        "from": "2026-09-28",
+        "fromUncertain": false,
+        "id": "050BA637-8825-4988-979C-AED43428B523",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2026-01-31",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/890",
+        "title": "Exempelmöte 92",
+        "to": "2026-05-18",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 45",
+        "country": "Hungary",
+        "from": "2027-05-06",
+        "fromUncertain": false,
+        "id": "9193FD73-2EC7-4FDA-B40B-B0909A3437F9",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 93",
+        "to": "2027-05-10",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 46",
+        "country": "Denmark",
+        "from": "2028-05-04",
+        "fromUncertain": false,
+        "id": "4565F2AC-D1D1-427A-AF3E-A386319D2160",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 94",
+        "to": "2028-05-08",
+        "toUncertain": false
+      }
+    ],
+    "country": "Germany",
+    "employerContacts": [],
+    "flag": "🇩🇪",
+    "id": "55D71DB8-FFC9-401E-99B2-3ED0BCDA3119",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 6",
+    "nameSv": "Exempelorganisation 6",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/890"
+  },
+  {
+    "addressLine": "",
+    "city": "",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 47",
+        "country": "Hungary",
+        "from": "2025-12-23",
+        "fromUncertain": false,
+        "id": "B919983E-3084-4090-AE79-6C4D49F9DF98",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 95",
+        "to": "2025-12-26",
+        "toUncertain": false
+      }
+    ],
+    "country": "",
+    "employerContacts": [],
+    "flag": "",
+    "id": "89FDE864-5CE4-42B9-9040-1E6EDD928BFC",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 7",
+    "nameSv": "Exempelorganisation 7",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/890"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 80",
+    "congresses": [],
+    "country": "Belgium",
+    "employerContacts": [],
+    "flag": "🇧🇪",
+    "id": "633E2118-E8B4-474B-AABA-CF9EDD8DAE0A",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 51",
+    "nameSv": "Exempelstiftelsen 51",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/891"
+  },
+  {
+    "addressLine": "Exempelgatan 5",
+    "category": "International",
+    "city": "Exempelstad 81",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 48",
+        "country": "Spain",
+        "from": "2025-04-14",
+        "fromUncertain": false,
+        "id": "6363C906-110A-4E3C-9816-7A5D4F8091F7",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2025-01-20",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 96",
+        "to": "2025-04-17",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 49",
+        "country": "Slovenia",
+        "from": "2025-12-07",
+        "fromUncertain": false,
+        "id": "9BC94C9D-2AC6-4168-8482-7CD263C7C0A2",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 97",
+        "to": "2025-12-09",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2025-10-15",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 50",
+        "country": "Germany",
+        "from": "2026-04-13",
+        "fromUncertain": false,
+        "id": "70807BA5-6D44-4C8E-93F0-6AB4F74A0E81",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/891",
+        "title": "Exempelmöte 98",
+        "to": "2026-04-16",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 22",
+        "country": "Italy",
+        "from": "2027-04-12",
+        "fromUncertain": false,
+        "id": "55414914-CE8E-4977-87C5-26133B0E00F1",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 99",
+        "to": "2027-04-15",
+        "toUncertain": false
+      }
+    ],
+    "country": "France",
+    "employerContacts": [],
+    "flag": "🇫🇷",
+    "id": "6B11C942-6EE2-4F92-B9C4-4753FE45666D",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 8",
+    "nameSv": "Exempelorganisation 8",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "Exempel 250",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/893"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 7",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-07-04",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 1",
+        "country": "Sweden",
+        "from": "2026-11-23",
+        "fromUncertain": false,
+        "id": "EC861512-88EA-4AC2-BC87-828DA5D47B7E",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 100",
+        "to": "2026-11-27",
+        "toUncertain": false
+      }
+    ],
+    "country": "Switzerland",
+    "employerContacts": [],
+    "flag": "🇨🇭",
+    "id": "4E3C4235-98AF-4CB7-863A-5753A5FFCA61",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 9",
+    "nameSv": "Exempelorganisation 9",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/894"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 82",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-09-05",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 51",
+        "country": "Czechia",
+        "from": "2025-12-23",
+        "fromUncertain": false,
+        "id": "6CDED9FE-3309-426E-852A-E79EA10A32AE",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2026-01-07",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/894",
+        "title": "Exempelmöte 101",
+        "to": "2025-12-26",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 7",
+        "country": "Switzerland",
+        "from": "2026-12-22",
+        "fromUncertain": false,
+        "id": "AC00A2FB-38E3-4699-B79F-D3B311E6DA45",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/894",
+        "title": "Exempelmöte 102",
+        "to": "2026-12-25",
+        "toUncertain": false
+      }
+    ],
+    "country": "United Kingdom",
+    "employerContacts": [],
+    "flag": "🇬🇧",
+    "id": "14468D0C-000E-41E4-B0B9-0ECD67810982",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 10",
+    "nameSv": "Exempelorganisation 10",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/895"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 83",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 44",
+        "country": "Italy",
+        "from": "2025-01-06",
+        "fromUncertain": false,
+        "id": "30D6E511-C4EA-4736-B717-A6083B46A12F",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/895",
+        "participantAuthorIDs": [
+          "8F62D0B6-0F17-4417-9AB0-E325A8D795EA"
+        ],
+        "participantNames": [
+          "Emelie Låtsaslund"
+        ],
+        "title": "Exempelmöte 103",
+        "to": "2025-01-09",
+        "toUncertain": false,
+        "venue": "Exempel 196"
+      },
+      {
+        "abstractSubmissionDeadline": "2025-09-01",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 52",
+        "country": "Poland",
+        "from": "2026-01-11",
+        "fromUncertain": false,
+        "id": "00F1946E-41EF-4253-814E-6ECEE9B9D1E4",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/895",
+        "title": "Exempelmöte 104",
+        "to": "2026-01-14",
+        "toUncertain": false,
+        "venue": "Exempel 198"
+      },
+      {
+        "abstractSubmissionDeadline": "2026-08-26",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 7",
+        "country": "Switzerland",
+        "from": "2027-01-24",
+        "fromUncertain": false,
+        "id": "612EF884-E450-4879-8D9F-B07BA5A11450",
+        "lateAbstractSubmissionDeadline": "2026-10-08",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/895",
+        "title": "Exempelmöte 105",
+        "to": "2027-01-27",
+        "toUncertain": false
+      }
+    ],
+    "country": "Switzerland",
+    "employerContacts": [],
+    "flag": "🇨🇭",
+    "id": "B84BA676-4BA2-4DA2-88A0-82C780F7F4D9",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 11",
+    "nameSv": "Exempelorganisation 11",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/896"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "CE0C99FD-10C9-4A7D-B9C6-C79288B084BF",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 7",
+    "nameSv": "Exempelnamn 5",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/897"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "0147A491-5CB0-45AE-84E3-F7C5EF231BDE",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 47",
+    "nameSv": "Exempelstiftelsen 47",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/898"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "C5FC5346-2AD3-4195-BDB0-6BB1522BF201",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 43",
+    "nameSv": "Exempelstiftelsen 43",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/898"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "7BC202E2-8AF5-4809-8D3F-8A8C78543C7C",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 8",
+    "nameSv": "Exempelstiftelsen 45",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/898"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "99D5651D-4ED8-4968-AA5E-DB19C1C8664D",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 63",
+    "nameSv": "Exempelstiftelsen 63",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/899"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "5E93DEEF-3DB1-4BB8-B554-0AA9C878C80F",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 6",
+    "nameSv": "Exempelnamn 6",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/900"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 26",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "C823DAB0-D7B4-485E-878E-4F388131B7A3",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 61",
+    "nameSv": "Exempelstiftelsen 61",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/900"
+  },
+  {
+    "addressLine": "Exempelgatan 6",
+    "category": "National",
+    "city": "Exempelstad 3",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "3E54C09D-F9D2-47A5-B001-CF045F9416F4",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempel 5",
+    "nameSv": "Exempel 5",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "41346",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 56",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-03-30",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 53",
+        "country": "Oman",
+        "from": "2026-06-28",
+        "fromUncertain": false,
+        "id": "87BAB1B4-021D-432A-872D-5BD17C8BB341",
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/901",
+        "title": "Exempelmöte 106",
+        "to": "2026-06-30",
+        "toUncertain": false
+      }
+    ],
+    "country": "United Arab Emirates",
+    "employerContacts": [],
+    "flag": "🇦🇪",
+    "id": "CC8A6C1A-EB19-4C51-93DB-FE5E6FCCDF18",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 12",
+    "nameSv": "Exempelorganisation 12",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/901"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "7259E5D1-2615-477C-A0B6-0001976EC6A4",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 7",
+    "nameSv": "Exempelnamn 7",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/902"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "E1A2D3A3-0F4B-4953-B5FD-1EDBEAB422EC",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 9",
+    "nameSv": "Exempelnamn 8",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/903"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "597E338A-5CB0-4DBC-B7DE-D1BBE7C57F95",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 10",
+    "nameSv": "Hjärt-Lungfonden",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/904"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "11741502-B0D5-4673-9735-47508383DB60",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 9",
+    "nameSv": "Exempelnamn 9",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/906"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 84",
+    "congresses": [],
+    "country": "Canada",
+    "employerContacts": [],
+    "flag": "🇨🇦",
+    "id": "F6F361CD-0206-4014-A78B-3277AFF29257",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 10",
+    "nameSv": "Exempelnamn 10",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/908"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 41",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2023-03-31",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 41",
+        "congressFeePaid": true,
+        "country": "Canada",
+        "from": "2024-01-27",
+        "fromUncertain": false,
+        "fundingApplicationIDs": [
+          "A967D155-49B5-44BE-BD2B-C4BA891FA365"
+        ],
+        "id": "A05579F1-03EA-45E6-A118-53D053B92CDD",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2023-10-02",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/908",
+        "participantAuthorIDs": [
+          "655A87D0-2A40-40D4-9C43-A45E7507517F",
+          "FC9370A1-88A6-435D-A6E2-F3050A1CAF40",
+          "75176704-EC9A-49F7-8573-DD58FA65CDCF"
+        ],
+        "participantNames": [
+          "Greta af Låtsasby",
+          "Gustav Utkastgren",
+          "Therese Modelldahl"
+        ],
+        "title": "Exempelmöte 107",
+        "to": "2024-01-29",
+        "toUncertain": false,
+        "venue": "Exempel 202"
+      }
+    ],
+    "country": "Canada",
+    "employerContacts": [],
+    "flag": "🇨🇦",
+    "id": "4159AA0A-99C8-4DAF-9EDD-69A5F0B9825F",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 13",
+    "nameSv": "Exempelorganisation 13",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/908"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 80",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-03-31",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 54",
+        "country": "Singapore",
+        "from": "2026-11-24",
+        "fromUncertain": false,
+        "id": "DAC64215-FECE-4CD6-9C16-F3590ADFBF9C",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/908",
+        "title": "Exempelmöte 108",
+        "to": "2026-11-26",
+        "toUncertain": false
+      }
+    ],
+    "country": "Belgium",
+    "employerContacts": [],
+    "flag": "🇧🇪",
+    "id": "9413AD7E-D7F5-4AD6-BF40-B7B84192DE00",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 14",
+    "nameSv": "Exempelorganisation 14",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/908"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 80",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-10-30",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 18",
+        "country": "Australia",
+        "from": "2026-04-03",
+        "fromUncertain": false,
+        "id": "93292E43-D5E8-47F1-8910-4F4AE0B8B617",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/908",
+        "title": "Exempelmöte 109",
+        "to": "2026-04-06",
+        "toUncertain": false
+      }
+    ],
+    "country": "Belgium",
+    "employerContacts": [],
+    "flag": "🇧🇪",
+    "id": "D4FF38DF-7092-4960-841D-0945742EF716",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 15",
+    "nameSv": "Exempelorganisation 15",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 82",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-08-29",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 33",
+        "country": "Japan",
+        "from": "2026-01-16",
+        "fromUncertain": false,
+        "id": "B15A7559-725C-4AF3-84AB-DA58B23AB646",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2025-10-26",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/908",
+        "title": "Exempelmöte 110",
+        "to": "2026-01-20",
+        "toUncertain": false
+      }
+    ],
+    "country": "United Kingdom",
+    "employerContacts": [],
+    "flag": "🇬🇧",
+    "id": "A3030A8B-8EE0-4D59-A52A-83D774F24576",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 16",
+    "nameSv": "Exempelorganisation 16",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/908"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 85",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2023-12-15",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 55",
+        "country": "Colombia",
+        "from": "2024-05-05",
+        "fromUncertain": false,
+        "id": "C2373DF4-55C8-4F8E-9F31-58AA0A5D8147",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/908",
+        "participantAuthorIDs": [
+          "B67EBBBB-CB3A-4FC5-AEFF-39A7B6EF6FE1"
+        ],
+        "participantNames": [
+          "Fredrik Å. Påhittgren"
+        ],
+        "title": "Exempelmöte 111",
+        "to": "2024-05-08",
+        "toUncertain": false,
+        "venue": "Exempel 207"
+      },
+      {
+        "abstractSubmissionDeadline": "2026-01-03",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 56",
+        "country": "United Arab Emirates",
+        "from": "2026-06-07",
+        "fromUncertain": false,
+        "id": "3F554861-A474-4FC9-8D36-73669139DC5F",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/908",
+        "title": "Exempelmöte 112",
+        "to": "2026-06-10",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 57",
+        "country": "United Kingdom",
+        "from": "2028-01-16",
+        "fromUncertain": false,
+        "id": "B583F317-3269-4E0B-934E-8220C37BAC76",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 113",
+        "to": "2028-01-19",
+        "toUncertain": false
+      }
+    ],
+    "country": "United Kingdom",
+    "employerContacts": [],
+    "flag": "🇬🇧",
+    "id": "6A106DB1-F98A-410C-85BA-38A3C2792E96",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 17",
+    "nameSv": "Exempelorganisation 17",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/909"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "D5BDD1B8-0E6C-479A-ABEB-4299481B4D30",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 60",
+    "nameSv": "Exempelstiftelsen 60",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/909"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 1",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "13ABE39D-CA6B-4D52-B5E6-E69813CCC3CB",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempel 2",
+    "nameSv": "Exempel 2",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "17177",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": "Exempel 251"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "6805B134-6C82-40D0-A5B0-B202D7EC43A2",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 11",
+    "nameSv": "Exempelstiftelsen 37",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/910"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 21",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "7DD19FF6-0D8B-4D7A-BB42-11A997424E35",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 12",
+    "nameSv": "Exempelstiftelsen 55",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/911"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "02721BBE-C3F8-40B5-8CA0-C341F92F06A8",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 13",
+    "nameSv": "Exempelstiftelsen 50",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/912"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "D5A3354C-A406-4959-BEE7-0B114472B74E",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 11",
+    "nameSv": "Exempelnamn 11",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/914"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "4C28744A-DFDD-4BDE-BB96-CE37FD92CA9D",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 12",
+    "nameSv": "Exempelnamn 12",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/915"
+  },
+  {
+    "addressLine": "",
+    "category": "Regional",
+    "city": "Exempelstad 2",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "61DE9D86-E3A8-469E-8810-898766AACB42",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 14",
+    "nameSv": "Exempelstiftelsen 52",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/915"
+  },
+  {
+    "addressLine": "",
+    "category": "Regional",
+    "city": "Exempelstad 2",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 58",
+        "country": "Sweden",
+        "from": "2026-05-01",
+        "fromUncertain": false,
+        "id": "35C31CDF-8376-4967-855E-584EC8B3D1DE",
+        "isEditingLocked": true,
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 114",
+        "to": "2026-05-02",
+        "toUncertain": false
+      }
+    ],
+    "country": "Sweden",
+    "employerContacts": [
+      {
+        "email": "person158@example.org",
+        "firstName": "Mattias",
+        "id": "518E739C-99B4-45F7-89B3-C152635AA72F",
+        "lastName": "Prov",
+        "name": "Exempel 253",
+        "phone": "",
+        "role": "Ekonom"
+      }
+    ],
+    "flag": "🇸🇪",
+    "id": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelköping University",
+    "nameSv": "Exempelköpings universitet",
+    "organizationNumber": "",
+    "phoneNumber": "010-000 00 00",
+    "postalCode": "58183",
+    "projectTasks": [],
+    "roles": [
+      "fundManager",
+      "institution",
+      "association"
+    ],
+    "salaryCalculator": {
+      "allocationMonths": "",
+      "allocationPercent": "",
+      "annualIncreaseAfterCurrentYearPercent": "3",
+      "birthDate": "1993-02-18",
+      "employerFeePeriods": [
+        {
+          "from": "2022-01-01",
+          "id": "0A92216A-A842-413E-8D12-CC698CB45D94",
+          "to": "2022-12-31",
+          "value": "48,1 %"
+        },
+        {
+          "from": "2023-01-01",
+          "id": "70465C46-6A68-4173-B2F2-5C2360ECBDA0",
+          "to": "2023-12-31",
+          "value": "52,9 %"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "676F99B9-4D5E-46DA-AAD7-F4FE8644FDCD",
+          "to": "2024-12-31",
+          "value": ""
+        },
+        {
+          "from": "2025-01-01",
+          "id": "F01E579B-E671-42D8-ADF6-37119E40E9E4",
+          "to": "2025-12-31",
+          "value": "52,9 %"
+        }
+      ],
+      "forssWithoutOverhead": false,
+      "itInfrastructureFeePeriods": [],
+      "listedPatientCountPeriods": [],
+      "monthlySalaryPeriods": [
+        {
+          "from": "2018-08-17",
+          "id": "CEF1CC37-4715-4678-9953-3BFD9F6F4983",
+          "to": "2019-05-16",
+          "value": "80 000 kr"
+        },
+        {
+          "from": "2019-05-17",
+          "id": "D8C8ED5D-AB9F-4CAC-A6F0-42F3FB288BED",
+          "to": "2020-10-14",
+          "value": "62 000 kr"
+        },
+        {
+          "from": "2020-10-15",
+          "id": "6BB58879-E0AC-4EDF-A8C7-CCCC189D0E39",
+          "to": "2020-12-14",
+          "value": "83 000 kr"
+        },
+        {
+          "from": "2020-12-15",
+          "id": "5312B992-F530-4452-9D68-DD96AAB46255",
+          "to": "2021-12-14",
+          "value": "38 000 kr"
+        },
+        {
+          "from": "2021-12-15",
+          "id": "CF2A45A4-1A5C-40B4-AAFF-8482FC77E018",
+          "to": "2023-01-14",
+          "value": "62 000 kr"
+        },
+        {
+          "from": "2023-01-15",
+          "id": "4DA1E52E-FEE7-401F-A46D-DFB1FF2F5CAA",
+          "to": "2023-12-31",
+          "value": "75 000 kr"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "92C23E30-A8AB-4BB7-9483-F614D12B12DB",
+          "to": "2023-09-16",
+          "value": "56 000 kr"
+        },
+        {
+          "from": "2023-09-17",
+          "id": "D9CC1046-FD72-45A7-BB4A-14EC28857963",
+          "to": "2024-04-16",
+          "value": "43 000 kr"
+        },
+        {
+          "from": "2024-04-17",
+          "id": "46E652D2-3F3A-4D00-BB76-A34A55121864",
+          "to": "2025-05-16",
+          "value": "83 000 kr"
+        },
+        {
+          "from": "2025-05-17",
+          "id": "67276690-EF1B-4FD9-AB2A-90C8ACFC462C",
+          "to": "2025-10-14",
+          "value": "79 000 kr"
+        }
+      ],
+      "overheadPeriods": [
+        {
+          "from": "2022-01-01",
+          "id": "0A92216A-A842-413E-8D12-CC698CB45D94",
+          "to": "2022-12-31",
+          "value": "11 %"
+        },
+        {
+          "from": "2023-01-01",
+          "id": "70465C46-6A68-4173-B2F2-5C2360ECBDA0",
+          "to": "2023-12-31",
+          "value": "8,8 %"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "676F99B9-4D5E-46DA-AAD7-F4FE8644FDCD",
+          "to": "2024-12-31",
+          "value": ""
+        },
+        {
+          "from": "2025-01-01",
+          "id": "F01E579B-E671-42D8-ADF6-37119E40E9E4",
+          "to": "2025-12-31",
+          "value": "8,8 %"
+        }
+      ],
+      "regionalCostPeriods": [
+        {
+          "from": "2022-01-01",
+          "id": "0A92216A-A842-413E-8D12-CC698CB45D94",
+          "to": "2022-12-31",
+          "value": "7,1 %"
+        },
+        {
+          "from": "2023-01-01",
+          "id": "70465C46-6A68-4173-B2F2-5C2360ECBDA0",
+          "to": "2023-12-31",
+          "value": "7,1 %"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "676F99B9-4D5E-46DA-AAD7-F4FE8644FDCD",
+          "to": "2024-12-31",
+          "value": ""
+        },
+        {
+          "from": "2025-01-01",
+          "id": "F01E579B-E671-42D8-ADF6-37119E40E9E4",
+          "to": "2025-12-31",
+          "value": "6,2 %"
+        }
+      ]
+    },
+    "vatNumber": "",
+    "websiteURL": "Exempel 252"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "CCDB673A-624C-4F6F-A641-FA18786031D7",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 62",
+    "nameSv": "Exempelstiftelsen 62",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/918"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 21",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "02FB2761-81A2-460A-9B83-1BE1AE3D512A",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempel 65",
+    "nameSv": "Exempelstiftelsen 19",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/918"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "2F136FE1-6872-4F11-8CF2-F2AAA57CE7E1",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 15",
+    "nameSv": "Exempelstiftelsen 48",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/918"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 8",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "F61B582B-4524-42FF-ABD3-F0737EE48E5E",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 16",
+    "nameSv": "Exempelnamn 13",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/920"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "0AB126D0-E3BE-4F51-8B38-82723BD056E1",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 38",
+    "nameSv": "Exempelstiftelsen 38",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/921"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "B75F183B-1EE0-436D-BBFD-61E52BD7203F",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 53",
+    "nameSv": "Exempelstiftelsen 53",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/921"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 86",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-07-20",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 26",
+        "country": "Sweden",
+        "from": "2026-01-09",
+        "fromUncertain": false,
+        "id": "7454A4FA-192B-4497-9C9D-6A8DD7F31841",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/921",
+        "title": "Exempelmöte 115",
+        "to": "2026-01-12",
+        "toUncertain": false,
+        "venue": "Exempel 212"
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 59",
+        "country": "Iceland",
+        "from": "2028-01-29",
+        "fromUncertain": false,
+        "id": "109C1A45-BA92-4610-9083-B831514DA52A",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 116",
+        "to": "2028-01-31",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 46",
+        "country": "Denmark",
+        "from": "2030-01-04",
+        "fromUncertain": false,
+        "id": "B7ABD542-F7B1-4197-A62C-07A7C22EC7B0",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 117",
+        "to": "2030-01-07",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "",
+        "country": "Norway",
+        "from": "",
+        "fromUncertain": false,
+        "id": "F44C976E-5029-460D-B7CE-7DA50E742A0A",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 118",
+        "to": "",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "",
+        "country": "Finland",
+        "from": "",
+        "fromUncertain": false,
+        "id": "6A49AD61-4E53-4BD2-B6DC-BEA4E724AE20",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 119",
+        "to": "",
+        "toUncertain": false
+      }
+    ],
+    "country": "Denmark",
+    "employerContacts": [],
+    "flag": "🇩🇰",
+    "id": "3F66A292-5CBA-4E2A-A594-B224AAA98A51",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 18",
+    "nameSv": "Exempelorganisation 18",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/922"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "",
+    "congresses": [],
+    "country": "Denmark",
+    "employerContacts": [],
+    "flag": "🇩🇰",
+    "id": "65763C82-A56B-4E95-9D94-D1F5FFBA6807",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Novo Nordisk Foundation",
+    "nameSv": "Novo Nordisk foundation",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/922"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "C517F4B4-7EDF-4E68-9F1C-54F48B7D6322",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 14",
+    "nameSv": "Exempelnamn 14",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/923"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 87",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-12-04",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 60",
+        "country": "Türkiye",
+        "from": "2026-04-26",
+        "fromUncertain": false,
+        "id": "76F3AAB2-3D9E-4F31-985A-91762A7809EC",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2025-12-18",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/923",
+        "title": "Exempelmöte 120",
+        "to": "2026-04-28",
+        "toUncertain": false
+      }
+    ],
+    "country": "Belgium",
+    "employerContacts": [],
+    "flag": "🇧🇪",
+    "id": "B7E4D680-369F-47CA-995A-1FC878A22F1F",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 19",
+    "nameSv": "Exempelorganisation 19",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/924"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "52E702AB-D651-4B06-90C0-4FAA4863591B",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 17",
+    "nameSv": "Exempelnamn 15",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "city": "",
+    "congresses": [],
+    "country": "",
+    "employerContacts": [],
+    "flag": "",
+    "id": "CC4627B0-B647-46CE-8485-D83191D811AD",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempel 96",
+    "nameSv": "Exempelstiftelsen 28",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 62",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "259268FF-82D2-4BA7-B7B6-607FA9579F7A",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 4",
+    "nameSv": "Exempelstiftelsen 4",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "salaryCalculator": {
+      "allocationMonths": "",
+      "allocationPercent": "",
+      "annualIncreaseAfterCurrentYearPercent": "3",
+      "birthDate": "1993-08-17",
+      "employerFeePeriods": [
+        {
+          "from": "",
+          "id": "99EF5148-0C13-4575-A07C-388A947F71B1",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "forssWithoutOverhead": false,
+      "itInfrastructureFeePeriods": [],
+      "listedPatientCountPeriods": [],
+      "monthlySalaryPeriods": [],
+      "overheadPeriods": [
+        {
+          "from": "",
+          "id": "99EF5148-0C13-4575-A07C-388A947F71B1",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "regionalCostPeriods": [
+        {
+          "from": "",
+          "id": "99EF5148-0C13-4575-A07C-388A947F71B1",
+          "to": "",
+          "value": ""
+        }
+      ]
+    },
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/926"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 1",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "2A3C83EA-4252-4B63-9E2D-8D4C76299D50",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 33",
+    "nameSv": "Exempelstiftelsen 33",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider",
+      "employer"
+    ],
+    "salaryCalculator": {
+      "allocationMonths": "",
+      "allocationPercent": "",
+      "annualIncreaseAfterCurrentYearPercent": "3 %",
+      "birthDate": "",
+      "employerFeePeriods": [
+        {
+          "from": "",
+          "id": "B0DB7A0A-FCE3-4480-95C5-932400C3E98F",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "forssWithoutOverhead": false,
+      "itInfrastructureFeePeriods": [],
+      "listedPatientCountPeriods": [],
+      "monthlySalaryPeriods": [],
+      "overheadPeriods": [
+        {
+          "from": "",
+          "id": "B0DB7A0A-FCE3-4480-95C5-932400C3E98F",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "regionalCostPeriods": [
+        {
+          "from": "",
+          "id": "B0DB7A0A-FCE3-4480-95C5-932400C3E98F",
+          "to": "",
+          "value": ""
+        }
+      ]
+    },
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "Regional",
+    "city": "Exempelstad 2",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [
+      {
+        "email": "person159@example.org",
+        "firstName": "Jakob",
+        "id": "CBF28EBA-C1EB-4E05-9669-AD4DA9586E67",
+        "lastName": "Skissander",
+        "name": "Exempel 255",
+        "phone": "010-000 00 00",
+        "role": "Redovisningsekonom"
+      },
+      {
+        "email": "person160@example.org",
+        "firstName": "Frida",
+        "id": "C138B3F6-E933-4C96-B944-2A694F4F64C4",
+        "lastName": "Demosson",
+        "name": "Exempel 256",
+        "phone": "010-000 00 00",
+        "role": "Controller CHC"
+      },
+      {
+        "email": "person161@example.org",
+        "firstName": "Margareta",
+        "id": "40A14ACA-AD2E-40E6-BF55-86FA0C469C63",
+        "lastName": "Påhittander",
+        "name": "Exempel 257",
+        "phone": "010-000 00 00",
+        "role": "Controller Kärna"
+      },
+      {
+        "email": "person162@example.org",
+        "firstName": "Ebba",
+        "id": "CAFDC896-202E-4C37-9951-B50947C8E499",
+        "lastName": "Mallholm",
+        "name": "Exempel 258",
+        "phone": "",
+        "role": "Ekonom"
+      }
+    ],
+    "flag": "🇸🇪",
+    "id": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Region Exempelgöta",
+    "nameSv": "Region Exempelgöta",
+    "organizationNumber": "",
+    "phoneNumber": "010-000 00 00",
+    "postalCode": "58191",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider",
+      "fundManager",
+      "employer",
+      "institution"
+    ],
+    "salaryCalculator": {
+      "allocationMonths": "12",
+      "allocationPercent": "50 %",
+      "annualIncreaseAfterCurrentYearPercent": "3 %",
+      "birthDate": "1974-09-17",
+      "employerFeePeriods": [
+        {
+          "from": "2022-01-01",
+          "id": "817FD1AC-D057-4037-A314-F9CAB0D1AC8F",
+          "to": "2022-12-31",
+          "value": "48,1 %"
+        },
+        {
+          "from": "2023-01-01",
+          "id": "D84A4991-2266-48BC-81AC-CB426E181245",
+          "to": "2023-12-31",
+          "value": "52,9 %"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "2BCBBAE8-8AFE-4E0A-9078-FA61F337A04C",
+          "to": "2024-12-31",
+          "value": "52,9 %"
+        },
+        {
+          "from": "2025-01-01",
+          "id": "C279DABC-0E5F-43B6-8B4F-87DCAB3A7648",
+          "to": "2025-12-31",
+          "value": "52,9 %"
+        },
+        {
+          "from": "2026-01-01",
+          "id": "478E33A1-043E-4F64-B8E1-32DEA8E3BBB1",
+          "to": "2026-08-16",
+          "value": "46,5 %"
+        }
+      ],
+      "forssWithoutOverhead": true,
+      "itInfrastructureFeePeriods": [],
+      "listedPatientCountPeriods": [],
+      "monthlySalaryPeriods": [
+        {
+          "from": "2018-08-17",
+          "id": "A35235AC-B444-467C-8DC8-D37DFBC9AE82",
+          "to": "2019-05-16",
+          "value": "80 000 kr"
+        },
+        {
+          "from": "2019-05-17",
+          "id": "543B887F-FCD5-4C0D-B369-D1D9DB191809",
+          "to": "2020-10-14",
+          "value": "37 000 kr"
+        },
+        {
+          "from": "2020-10-15",
+          "id": "CA3CA5E0-C5B4-4C85-A6E5-55F673D47C62",
+          "to": "2020-12-14",
+          "value": "76 000 kr"
+        },
+        {
+          "from": "2020-12-15",
+          "id": "46EE3B3A-3287-4955-B03D-CC970251A4E8",
+          "to": "2021-12-14",
+          "value": "60 000 kr"
+        },
+        {
+          "from": "2021-12-15",
+          "id": "E7405670-6155-42FD-9F38-2A856E1DF45C",
+          "to": "2023-01-14",
+          "value": "72 000 kr"
+        },
+        {
+          "from": "2023-01-15",
+          "id": "BC99C52C-2C4A-421B-816D-4613D452F063",
+          "to": "2023-12-31",
+          "value": "76 000 kr"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "664B5380-CAA9-4C87-B03A-3DB9F242EE72",
+          "to": "2023-09-16",
+          "value": "43 000 kr"
+        },
+        {
+          "from": "2023-09-17",
+          "id": "4EA7E24D-C0F3-464B-A62E-B8980009EF39",
+          "to": "2024-04-16",
+          "value": "73 000 kr"
+        },
+        {
+          "from": "2024-04-17",
+          "id": "DA8D0D39-D1B4-46A9-8FFC-FA1EB45EDDAD",
+          "to": "2025-05-16",
+          "value": "49 000 kr"
+        },
+        {
+          "from": "2025-05-17",
+          "id": "17EFF005-ECF2-467B-B516-AB3B351D986A",
+          "to": "2025-11-14",
+          "value": "42 000 kr"
+        },
+        {
+          "from": "2025-11-15",
+          "id": "0D8D5EED-1723-408B-9B9C-7AC5512E1625",
+          "to": "2026-11-14",
+          "value": "57 000 kr"
+        }
+      ],
+      "overheadPeriods": [
+        {
+          "from": "2022-01-01",
+          "id": "817FD1AC-D057-4037-A314-F9CAB0D1AC8F",
+          "to": "2022-12-31",
+          "value": "11 %"
+        },
+        {
+          "from": "2023-01-01",
+          "id": "D84A4991-2266-48BC-81AC-CB426E181245",
+          "to": "2023-12-31",
+          "value": "8,8 %"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "2BCBBAE8-8AFE-4E0A-9078-FA61F337A04C",
+          "to": "2024-12-31",
+          "value": "8,8 %"
+        },
+        {
+          "from": "2025-01-01",
+          "id": "C279DABC-0E5F-43B6-8B4F-87DCAB3A7648",
+          "to": "2025-12-31",
+          "value": "8,8 %"
+        },
+        {
+          "from": "2026-01-01",
+          "id": "478E33A1-043E-4F64-B8E1-32DEA8E3BBB1",
+          "to": "2026-08-16",
+          "value": "8,8 %"
+        }
+      ],
+      "regionalCostPeriods": [
+        {
+          "from": "2022-01-01",
+          "id": "817FD1AC-D057-4037-A314-F9CAB0D1AC8F",
+          "to": "2022-12-31",
+          "value": "7,1 %"
+        },
+        {
+          "from": "2023-01-01",
+          "id": "D84A4991-2266-48BC-81AC-CB426E181245",
+          "to": "2023-12-31",
+          "value": "7,1 %"
+        },
+        {
+          "from": "2024-01-01",
+          "id": "2BCBBAE8-8AFE-4E0A-9078-FA61F337A04C",
+          "to": "2024-12-31",
+          "value": "7,1 %"
+        },
+        {
+          "from": "2025-01-01",
+          "id": "C279DABC-0E5F-43B6-8B4F-87DCAB3A7648",
+          "to": "2025-12-31",
+          "value": "6,2 %"
+        },
+        {
+          "from": "2026-01-01",
+          "id": "478E33A1-043E-4F64-B8E1-32DEA8E3BBB1",
+          "to": "2026-08-16",
+          "value": "6,7 %"
+        }
+      ]
+    },
+    "vatNumber": "",
+    "websiteURL": "Exempel 254"
+  },
+  {
+    "addressLine": "",
+    "city": "",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 61",
+        "country": "Sweden",
+        "from": "2026-10-24",
+        "fromUncertain": false,
+        "id": "CE29C6A3-9E38-4450-8843-A5C986CF258F",
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 121",
+        "to": "2026-10-25",
+        "toUncertain": false
+      }
+    ],
+    "country": "",
+    "employerContacts": [],
+    "flag": "",
+    "id": "C4C71E43-D6B5-4181-9BBA-430029E89FC5",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 20",
+    "nameSv": "Exempelorganisation 20",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "5C687DC0-7B97-4B45-B815-5C8E2DD7E1C5",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 18",
+    "nameSv": "Exempelnamn 16",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/932"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "12DB02D9-4010-4922-8548-1E47D8F634AB",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 42",
+    "nameSv": "Exempelstiftelsen 42",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/933"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "CB5F9D3B-B622-412B-B818-954C992A8F01",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 17",
+    "nameSv": "Exempelnamn 17",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/934"
+  },
+  {
+    "addressLine": "",
+    "category": "Regional",
+    "city": "Exempelstad 4",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "B64DD65B-DDED-4BB9-8813-E19D2E50DDDA",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Scholarship",
+    "nameSv": "Stipendium",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "fundManager",
+      "employer"
+    ],
+    "salaryCalculator": {
+      "allocationMonths": "",
+      "allocationPercent": "",
+      "annualIncreaseAfterCurrentYearPercent": "3",
+      "birthDate": "1960-07-16",
+      "employerFeePeriods": [
+        {
+          "from": "",
+          "id": "A5211BB2-54CB-4EAC-BB41-5B83FA15A920",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "forssWithoutOverhead": false,
+      "itInfrastructureFeePeriods": [],
+      "listedPatientCountPeriods": [],
+      "monthlySalaryPeriods": [],
+      "overheadPeriods": [
+        {
+          "from": "",
+          "id": "A5211BB2-54CB-4EAC-BB41-5B83FA15A920",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "regionalCostPeriods": [
+        {
+          "from": "",
+          "id": "A5211BB2-54CB-4EAC-BB41-5B83FA15A920",
+          "to": "",
+          "value": ""
+        }
+      ]
+    },
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "30CA3E1D-AB8E-485A-81CC-6469C19EDE3F",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 19",
+    "nameSv": "Exempelnamn 18",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/935"
+  },
+  {
+    "addressLine": "",
+    "city": "",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 62",
+        "country": "Sweden",
+        "from": "2026-11-21",
+        "fromUncertain": false,
+        "id": "31462DBE-0B50-483D-A00F-3A4E6D1E7C3F",
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/936",
+        "title": "Exempelmöte 122",
+        "to": "2026-11-23",
+        "toUncertain": false
+      }
+    ],
+    "country": "",
+    "employerContacts": [],
+    "flag": "",
+    "id": "883AAEAB-38CA-4757-B10F-35424D9DF4F8",
+    "isArchived": false,
+    "membershipFrom": "2016",
+    "membershipTo": "",
+    "nameEn": "Example name 20",
+    "nameSv": "Exempelorganisation 21",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 3",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 15",
+        "country": "Sweden",
+        "from": "2026-12-05",
+        "fromUncertain": false,
+        "id": "D78DA7EA-B4E6-47DD-89B6-DF8C33A56CD2",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/937",
+        "title": "Exempelmöte 123",
+        "to": "2026-12-07",
+        "toUncertain": false
+      }
+    ],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "7D7D40C9-6E1A-450B-912B-E2D55699B794",
+    "isArchived": false,
+    "membershipFrom": "2026",
+    "membershipTo": "",
+    "nameEn": "Example name 21",
+    "nameSv": "Exempelorganisation 22",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/937"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 88",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "60F5A013-EA92-465F-B3D6-60EBE84D1824",
+    "isArchived": false,
+    "membershipFrom": "2022",
+    "membershipTo": "",
+    "nameEn": "Example name 22",
+    "nameSv": "Exempelnamn 19",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/940"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 1",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "1C8B5BFD-6C5E-4B85-B7A2-A71835D2C68D",
+    "isArchived": false,
+    "membershipFrom": "2016",
+    "membershipTo": "",
+    "nameEn": "Example name 23",
+    "nameSv": "Exempelstiftelsen 41",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider",
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/941"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "C1545F3A-1CFE-463A-B63F-B202A7A2A4B6",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 24",
+    "nameSv": "Exempelstiftelsen 40",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/942"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "36FDC089-4B81-4EC5-B70E-AF03A2611891",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 20",
+    "nameSv": "Exempelnamn 20",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/944"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 89",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 63",
+        "country": "Japan",
+        "from": "2026-01-04",
+        "fromUncertain": false,
+        "id": "E287B448-BFB2-4ECC-840B-DF7EE35045DF",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 124",
+        "to": "2026-01-06",
+        "toUncertain": false
+      }
+    ],
+    "country": "Japan",
+    "employerContacts": [],
+    "flag": "🇯🇵",
+    "id": "5BFEA9EF-AEC5-47CA-87CF-02997BA1416F",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 23",
+    "nameSv": "Exempelorganisation 23",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/945"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 40",
+    "congresses": [],
+    "country": "Hong Kong",
+    "employerContacts": [],
+    "flag": "🇭🇰",
+    "id": "35122F16-5D6B-47C6-8281-0FEB38E47FFE",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 21",
+    "nameSv": "Exempelnamn 21",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/946"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 90",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-01-29",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 64",
+        "country": "Bahamas",
+        "from": "2026-03-07",
+        "fromUncertain": false,
+        "id": "CFAC42F0-99EB-401B-A23F-9EE82DEF2B2D",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/946",
+        "title": "Exempelmöte 125",
+        "to": "2026-03-10",
+        "toUncertain": false
+      }
+    ],
+    "country": "Barbados",
+    "employerContacts": [],
+    "flag": "🇧🇧",
+    "id": "52102F83-BEEE-4487-B931-59C33210D42B",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 25",
+    "nameSv": "Exempelorganisation 24",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/947"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 91",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-09-13",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 57",
+        "country": "United Kingdom",
+        "from": "2026-01-17",
+        "fromUncertain": false,
+        "id": "DE61A386-DB1B-4334-A247-70FAB9E137AF",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2025-11-08",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/948",
+        "title": "Exempelmöte 126",
+        "to": "2026-01-20",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 65",
+        "country": "Netherlands",
+        "from": "2027-01-17",
+        "fromUncertain": false,
+        "id": "F16558FB-4F4D-4727-B0DA-1D34DE011376",
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/948",
+        "title": "Exempelmöte 127",
+        "to": "2027-01-20",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 20",
+        "country": "Germany",
+        "from": "2028-01-29",
+        "fromUncertain": false,
+        "id": "20F5634A-D994-45E0-BD67-7870637164AA",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/948",
+        "title": "Exempelmöte 128",
+        "to": "2028-02-01",
+        "toUncertain": false
+      }
+    ],
+    "country": "Italy",
+    "employerContacts": [],
+    "flag": "🇮🇹",
+    "id": "83C26F8D-0034-47EC-8DD1-D74FD5943206",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 25",
+    "nameSv": "Exempelorganisation 25",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/949"
+  },
+  {
+    "addressLine": "Exempelgatan 7",
+    "category": "International",
+    "city": "Exempelstad 5",
+    "congresses": [],
+    "country": "Australia",
+    "employerContacts": [],
+    "flag": "🇦🇺",
+    "id": "1F2918EA-690B-4B73-A88F-A963EB935695",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempel 12",
+    "nameSv": "Exempel 12",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "Exempel 259",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "salaryCalculator": {
+      "allocationMonths": "",
+      "allocationPercent": "",
+      "annualIncreaseAfterCurrentYearPercent": "3",
+      "birthDate": "1963-03-13",
+      "employerFeePeriods": [
+        {
+          "from": "",
+          "id": "12513AB2-9610-4990-84EE-EEA6FC0EAEE5",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "forssWithoutOverhead": false,
+      "itInfrastructureFeePeriods": [],
+      "listedPatientCountPeriods": [],
+      "monthlySalaryPeriods": [],
+      "overheadPeriods": [
+        {
+          "from": "",
+          "id": "12513AB2-9610-4990-84EE-EEA6FC0EAEE5",
+          "to": "",
+          "value": ""
+        }
+      ],
+      "regionalCostPeriods": [
+        {
+          "from": "",
+          "id": "12513AB2-9610-4990-84EE-EEA6FC0EAEE5",
+          "to": "",
+          "value": ""
+        }
+      ]
+    },
+    "vatNumber": "",
+    "websiteURL": ""
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 80",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-06-13",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 66",
+        "country": "",
+        "from": "2026-11-15",
+        "fromUncertain": false,
+        "id": "855B9326-0C55-43B5-B532-D2600684F4ED",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/951",
+        "title": "Exempelmöte 129",
+        "to": "2026-11-18",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 67",
+        "country": "Canada",
+        "from": "2027-12-12",
+        "fromUncertain": false,
+        "id": "9C55D353-74A3-4D4F-A688-6F6468117DFA",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 130",
+        "to": "2027-12-15",
+        "toUncertain": false
+      }
+    ],
+    "country": "Belgium",
+    "employerContacts": [],
+    "flag": "🇧🇪",
+    "id": "C81ED2C7-6F1B-42C2-8C34-6388FCBC9DC6",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 26",
+    "nameSv": "Exempelorganisation 26",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/951"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 92",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2026-01-24",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 68",
+        "country": "Ethiopia",
+        "from": "2026-03-16",
+        "fromUncertain": false,
+        "id": "897F5C77-2FD5-4A83-8608-9878D8A520D3",
+        "isEditingLocked": true,
+        "isHiddenOnMap": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/951",
+        "title": "Exempelmöte 131",
+        "to": "2026-03-18",
+        "toUncertain": false
+      }
+    ],
+    "country": "South Africa",
+    "employerContacts": [],
+    "flag": "🇿🇦",
+    "id": "EA993188-083A-4CC5-957B-64FD35FA6B66",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 27",
+    "nameSv": "Exempelorganisation 27",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/952"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "67B1A972-B8FD-499B-86F2-8AFBF1A1D078",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 46",
+    "nameSv": "Exempelstiftelsen 46",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/952"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "4C22F6CA-E6CB-49DA-86F3-7186E44203C8",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 26",
+    "nameSv": "Exempelstiftelsen 59",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/952"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 8",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "2FCCD65E-058A-40AC-827D-2FF40E3B9931",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempel 24",
+    "nameSv": "Exempelstiftelsen 3",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/953"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 17",
+    "congresses": [],
+    "country": "Norway",
+    "employerContacts": [],
+    "flag": "🇳🇴",
+    "id": "D7B98C82-DE95-48F2-80FA-915A1D4BF765",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempel 52",
+    "nameSv": "Exempelstiftelsen 14",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/953"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 19",
+    "congresses": [],
+    "country": "Somaliland",
+    "employerContacts": [],
+    "flag": "🏴",
+    "id": "53AAE2E5-E6B3-4F80-91C1-8F47464FCE56",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelstiftelsen 16",
+    "nameSv": "Exempelstiftelsen 16",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/953"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "Exempelstad 15",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "4A6717EE-1B7F-42F6-A977-53A356DA2F8C",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Test University 2",
+    "nameSv": "Exempelstiftelsen 12",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/953"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "39F72F8B-FBD5-4F01-B52A-8FF5CC4F712E",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 27",
+    "nameSv": "Vetenskapsrådet",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/953"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "FFEAC6EA-4955-4469-A65F-980838C20A0A",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 22",
+    "nameSv": "Exempelnamn 22",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/955"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "D02855FB-B313-4962-B4ED-544B8C6B42F7",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 23",
+    "nameSv": "Exempelnamn 23",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/956"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 69",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2024-10-15",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 48",
+        "country": "Spain",
+        "from": "2025-04-14",
+        "fromUncertain": false,
+        "id": "05A7A4D4-2020-46EE-9963-F193413E1CEC",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "2025-01-20",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 132",
+        "to": "2025-04-17",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 69",
+        "country": "Switzerland",
+        "from": "2025-12-30",
+        "fromUncertain": false,
+        "id": "BD296A71-E2DB-4501-A6A8-0CE6B087CF43",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "",
+        "title": "Exempelmöte 133",
+        "to": "2025-12-31",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2025-12-22",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 70",
+        "country": "Brazil",
+        "from": "2026-05-24",
+        "fromUncertain": false,
+        "id": "85D52C58-9D20-4C1A-83BF-05BEF1258EC8",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/956",
+        "title": "Exempelmöte 134",
+        "to": "2026-05-26",
+        "toUncertain": false
+      }
+    ],
+    "country": "Switzerland",
+    "employerContacts": [],
+    "flag": "🇨🇭",
+    "id": "68427586-6422-4366-A29E-FCDCA960E395",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 28",
+    "nameSv": "Exempelorganisation 28",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/956"
+  },
+  {
+    "addressLine": "",
+    "category": "International",
+    "city": "Exempelstad 22",
+    "congresses": [],
+    "country": "Italy",
+    "employerContacts": [],
+    "flag": "🇮🇹",
+    "id": "0A5DB876-5BD4-4320-BE9E-7EDF205DA1A1",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelnamn 24",
+    "nameSv": "Exempelnamn 24",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/957"
+  },
+  {
+    "addressLine": "Exempelgatan 8",
+    "category": "International",
+    "city": "Exempelstad 80",
+    "congresses": [
+      {
+        "abstractSubmissionDeadline": "2025-08-07",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 24",
+        "country": "France",
+        "from": "2026-02-13",
+        "fromUncertain": false,
+        "id": "6877FB77-48DE-457F-B047-249DB1ED50F4",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/957",
+        "title": "Exempelmöte 135",
+        "to": "2026-02-16",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2025-10-14",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 71",
+        "country": "Botswana",
+        "from": "2026-04-26",
+        "fromUncertain": false,
+        "id": "FF1781E2-D978-4ECF-A688-F7F8AE9ABE31",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/957",
+        "title": "Exempelmöte 136",
+        "to": "2026-04-27",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2026-01-15",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 72",
+        "country": "Egypt",
+        "from": "2026-06-14",
+        "fromUncertain": false,
+        "id": "39712653-744F-425A-94C7-2FD81C258A46",
+        "isEditingLocked": true,
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/957",
+        "title": "Exempelmöte 137",
+        "to": "2026-06-16",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2026-07-01",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 40",
+        "country": "Hong Kong",
+        "from": "2026-12-06",
+        "fromUncertain": false,
+        "id": "EAA31BBF-BB40-49B7-828B-31D86C5DD85F",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/957",
+        "title": "Exempelmöte 138",
+        "to": "2026-12-09",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2026-07-16",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 49",
+        "country": "Slovenia",
+        "from": "2027-01-23",
+        "fromUncertain": false,
+        "id": "AB42A0E0-78E4-455A-9A2B-7F1E24C92D7E",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/957",
+        "title": "Exempelmöte 139",
+        "to": "2027-01-26",
+        "toUncertain": false
+      },
+      {
+        "abstractSubmissionDeadline": "2026-11-29",
+        "abstractSubmissionDeadlineUncertain": false,
+        "city": "Exempelstad 73",
+        "country": "South Africa",
+        "from": "2027-06-19",
+        "fromUncertain": false,
+        "id": "633A2D03-3D98-4A6A-B81D-B70992E98F2A",
+        "lateAbstractSubmissionDeadline": "",
+        "lateAbstractSubmissionDeadlineUncertain": false,
+        "link": "https://example.org/link/957",
+        "title": "Exempelmöte 140",
+        "to": "2027-06-23",
+        "toUncertain": false
+      }
+    ],
+    "country": "Belgium",
+    "employerContacts": [],
+    "flag": "🇧🇪",
+    "id": "73FE742A-119D-49CB-BC57-FBAF888B15E6",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Exempelorganisation 29",
+    "nameSv": "Exempelorganisation 29",
+    "organizationNumber": "",
+    "phoneNumber": "010-000 00 00",
+    "postalCode": "1210",
+    "projectTasks": [],
+    "roles": [
+      "association"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/957"
+  },
+  {
+    "addressLine": "",
+    "category": "National",
+    "city": "",
+    "congresses": [],
+    "country": "Sweden",
+    "employerContacts": [],
+    "flag": "🇸🇪",
+    "id": "D3373D45-3D8A-4D5B-82E3-9139C9B5BD5B",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Example name 28",
+    "nameSv": "Exempelstiftelsen 57",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "grantProvider"
+    ],
+    "vatNumber": "",
+    "websiteURL": "https://example.org/websiteURL/958"
+  },
+  {
+    "addressLine": "",
+    "city": "",
+    "congresses": [],
+    "country": "",
+    "employerContacts": [],
+    "flag": "",
+    "id": "1BEEFE55-CB1B-4388-8891-7BB2008E14CF",
+    "isArchived": false,
+    "membershipFrom": "",
+    "membershipTo": "",
+    "nameEn": "Test University 5",
+    "nameSv": "Exempelnamn 25",
+    "organizationNumber": "",
+    "phoneNumber": "",
+    "postalCode": "",
+    "projectTasks": [],
+    "roles": [
+      "institution"
+    ],
+    "vatNumber": "",
+    "websiteURL": ""
+  }
+]

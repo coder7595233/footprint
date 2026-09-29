@@ -1,0 +1,209 @@
+[
+  {
+    "activityTypeName": "Handledning",
+    "allowedContextIDs": [
+      "BEDFF008-EC5B-4505-AF8F-4020C509D244",
+      "CEF7C232-5739-47AF-B806-9E2C2B4C71AB"
+    ],
+    "id": "CFE9D63B-8C0C-4026-A985-08E42B75AF94",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 40",
+    "nameSv": "Exempelaktivitet 11",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Handledning",
+    "allowedContextIDs": [
+      "73DB606C-9C71-4B89-ABF0-F99689D6D535"
+    ],
+    "id": "51F98590-89A5-4587-96C8-BAC3E6AF1132",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 41",
+    "nameSv": "Exempelnamn 29",
+    "participantForm": "Individual"
+  },
+  {
+    "activityTypeID": "D3C46F40-FECF-45E4-83C7-CF2DC8BE1970",
+    "activityTypeName": "Seminarium",
+    "allowedContextIDs": [
+      "6C42B33E-8BCB-415C-B6FC-38850750B755"
+    ],
+    "id": "43F87D55-44CB-42D6-9CD3-0A3A51D10592",
+    "institution": "Region Exempelgöta",
+    "nameEn": "Example name 42",
+    "nameSv": "Exempelaktivitet 2",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeID": "A0342601-2215-42E5-A940-90A6E5143E40",
+    "activityTypeName": "Doktorandhandledning",
+    "allowedContextIDs": [
+      "38584C38-E0CE-472D-9104-2934F5C0BC79"
+    ],
+    "id": "D924356E-52C1-4C38-937A-51DF7D92957B",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Exempelaktivitet 8",
+    "nameSv": "Exempelaktivitet 8",
+    "participantForm": "Individual"
+  },
+  {
+    "activityTypeID": "A0342601-2215-42E5-A940-90A6E5143E40",
+    "activityTypeName": "Doktorandhandledning",
+    "allowedContextIDs": [
+      "074633BD-0417-4E56-A757-04F6F009750A"
+    ],
+    "id": "4A57F3B2-BD6F-43B2-AA3E-BC3AF95F751E",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Exempelaktivitet 9",
+    "nameSv": "Exempelaktivitet 9",
+    "participantForm": "Individual"
+  },
+  {
+    "activityTypeID": "A0342601-2215-42E5-A940-90A6E5143E40",
+    "activityTypeName": "Doktorandhandledning",
+    "allowedContextIDs": [
+      "E39A10C5-1108-4F2D-BD5A-46B2C6878FE1"
+    ],
+    "id": "98B0ED73-1A10-4482-B0C5-9093943682CD",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 43",
+    "nameSv": "Exempelaktivitet 10",
+    "participantForm": "Individual"
+  },
+  {
+    "activityTypeName": "Exempel 315",
+    "allowedContextIDs": [
+      "DAC5A387-A733-4CDA-8F11-3D02D217B9DE"
+    ],
+    "id": "3E09B4B1-83DF-42B4-A264-1606AD28E902",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 44",
+    "nameSv": "Exempelnamn 36",
+    "participantForm": "Individual"
+  },
+  {
+    "activityTypeID": "A0342601-2215-42E5-A940-90A6E5143E40",
+    "activityTypeName": "Doktorandhandledning",
+    "allowedContextIDs": [
+      "6C42B33E-8BCB-415C-B6FC-38850750B755"
+    ],
+    "id": "1997CB66-0625-40F5-96A2-90B2C41AEB50",
+    "institution": "Region Exempelgöta",
+    "nameEn": "Example name 45",
+    "nameSv": "Exempelaktivitet 1",
+    "participantForm": "Group and individual"
+  },
+  {
+    "activityTypeName": "Exempel 316",
+    "allowedContextIDs": [
+      "6C42B33E-8BCB-415C-B6FC-38850750B755"
+    ],
+    "id": "FC5BFD61-DB6D-40EC-A2B5-76A11FA844BC",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 46",
+    "nameSv": "Exempelnamn 37",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Examinator",
+    "allowedContextIDs": [
+      "78CEBF24-2B5A-46F1-8DCE-186F61A4F1B4"
+    ],
+    "id": "C23C122E-40F3-4F0E-9070-B2852B103183",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Exempelaktivitet 4",
+    "nameSv": "Exempelaktivitet 4",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Seminarium",
+    "allowedContextIDs": [
+      "DAC5A387-A733-4CDA-8F11-3D02D217B9DE"
+    ],
+    "id": "6A04C01A-8109-4460-840B-F7A6AABE6CBF",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 47",
+    "nameSv": "Exempelaktivitet 12",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Seminarium",
+    "allowedContextIDs": [
+      "BEDFF008-EC5B-4505-AF8F-4020C509D244"
+    ],
+    "id": "1FBA6F4C-362D-401F-8E03-CA9D08614B92",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 48",
+    "nameSv": "Exempelaktivitet 6",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Examinator",
+    "allowedContextIDs": [
+      "DAC5A387-A733-4CDA-8F11-3D02D217B9DE"
+    ],
+    "id": "FA60B687-F392-45F6-A191-1C324937295B",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 49",
+    "nameSv": "Exempelaktivitet 3",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Examinator",
+    "allowedContextIDs": [
+      "DAC5A387-A733-4CDA-8F11-3D02D217B9DE"
+    ],
+    "id": "AE205585-59BC-48FE-A065-516313A2A49B",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 50",
+    "nameSv": "Exempelnamn 38",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Seminarium",
+    "allowedContextIDs": [
+      "3E5EEB21-188A-4690-A45D-9FD63B4AAADD",
+      "10F4E4BA-AC63-4584-A691-91C49078F9D6"
+    ],
+    "id": "85CDD1B9-9AE2-4937-A21D-E6299C86FE05",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 51",
+    "nameSv": "Exempelaktivitet 7",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Seminarium",
+    "allowedContextIDs": [
+      "3E5EEB21-188A-4690-A45D-9FD63B4AAADD",
+      "10F4E4BA-AC63-4584-A691-91C49078F9D6",
+      "31B133AA-26CD-49B0-9A36-C47477579D32"
+    ],
+    "id": "D7FCC901-0B24-4D45-A576-24F33A912A18",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 52",
+    "nameSv": "Exempelaktivitet 5",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Seminarium",
+    "allowedContextIDs": [
+      "78CEBF24-2B5A-46F1-8DCE-186F61A4F1B4"
+    ],
+    "id": "C939EC98-AB73-40BE-9100-0F2A67CD26ED",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 53",
+    "nameSv": "Exempelaktivitet 13",
+    "participantForm": "Group"
+  },
+  {
+    "activityTypeName": "Utvecklingsarbete",
+    "allowedContextIDs": [
+      "EE410BEF-CDC2-487D-A098-22AD1C9F3502"
+    ],
+    "id": "45BE7952-92C3-4152-9555-E91CE66FFCDA",
+    "institution": "Exempelköpings universitet",
+    "nameEn": "Example name 54",
+    "nameSv": "Utvecklingsarbete",
+    "participantForm": "Not teaching work"
+  }
+]

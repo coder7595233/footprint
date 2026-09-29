@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>Footprint</string>
+	<key>CFBundleDisplayName</key>
+	<string>Footprint</string>
+	<key>CFBundleIconFile</key>
+	<string>Footprint</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.codex.footprint</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Footprint</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>FootprintAppName</key>
+	<string>Footprint</string>
+	<key>FootprintChromeStyle</key>
+	<string>renewed</string>
+	<key>FootprintDatabaseFileName</key>
+	<string>footprint.sqlite</string>
+	<key>FootprintDefaultsPrefix</key>
+	<string>com.codex.footprint</string>
+	<key>FootprintExportEnabled</key>
+	<false/>
+	<key>FootprintPackageMode</key>
+	<string>self-contained</string>
+	<key>FootprintDisableLegacyMigration</key>
+	<true/>
+	<key>FootprintStorageFolderName</key>
+	<string>Footprint</string>
+	<key>FootprintWindowAutosaveName</key>
+	<string>FootprintMainWindow</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+</dict>
+</plist>

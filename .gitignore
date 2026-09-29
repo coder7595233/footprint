@@ -1,0 +1,18 @@
+# Riktig data hör hemma i det privata förrådet footprint-data, aldrig här.
+data_snapshot/
+xcuserdata/
+DerivedData/
+build/
+.DS_Store
+data_snapshot/Footprint/Backups/
+data_snapshot/Footprint/ManualBackups/
+data_snapshot/Footprint/Ersatta filer/
+data_snapshot/Footprint/*PDFs/
+data_snapshot/Footprint/Media Appearance Files/
+data_snapshot/Footprint/*.pre-restore-*
+data_snapshot/Footprint/*.log
+_superseded/
+.build/
+__pycache__/
+*.pyc
+.claude/worktrees/

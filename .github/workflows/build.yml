@@ -1,0 +1,62 @@
+name: Bygg och testa
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Välj Xcode med Swift 6.2 eller senare
+        run: |
+          latest=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Använder $latest"
+          sudo xcode-select -s "$latest"
+          swift --version
+
+      # Sorting follows the Mac's region; the tests expect Swedish order (Ö after P).
+      - name: Ställ in svenska som på den vanliga datorn
+        run: |
+          defaults write NSGlobalDomain AppleLocale sv_SE
+          defaults write NSGlobalDomain AppleLanguages -array sv en
+
+      - name: Bygg och testa
+        run: swift test --disable-sandbox
+
+      - name: Testa exportskripten
+        run: python3 Scripts/test_ooxml_workbook.py
+
+      # Packaging takes a separate release build (about four minutes), so it
+      # runs only on request (Actions minutes on macOS are limited).
+      - name: Paketera appen
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          FOOTPRINT_SKIP_TESTS: "1"
+          FOOTPRINT_APP_DIR: ${{ runner.temp }}/app/Footprint.app
+        run: |
+          zsh Scripts/package_app.sh
+          cd "$RUNNER_TEMP/app"
+          ditto -c -k --keepParent Footprint.app Footprint.zip
+
+      - name: Lägg upp appen för nedladdning
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v6
+        with:
+          name: Footprint-app-${{ github.run_number }}
+          path: ${{ runner.temp }}/app/Footprint.zip
+          retention-days: 14
+          if-no-files-found: error

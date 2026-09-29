@@ -1,0 +1,4060 @@
+[
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-20",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "72D67BA3-8FA2-455C-BB6A-066C8D90A3BF",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-10-12",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "11:00",
+    "id": "26739488-CD66-4DD8-B1B6-92F2C07BE2C1",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-12-26",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:00",
+    "id": "583A3068-92CE-41AD-9F40-7DE8B5196F0E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Undervisning",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentID": "FD801AFC-BD30-4F10-8307-A825E2AC8987",
+    "teachingAssignmentIDs": [
+      "FD801AFC-BD30-4F10-8307-A825E2AC8987"
+    ],
+    "title": "Exempelmöte 56"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2026-05-24",
+    "detail": "",
+    "doctoralCandidateID": "31FB059A-8135-4E96-A0E3-CFE57A7050A0",
+    "doctoralCandidateIDs": [
+      "31FB059A-8135-4E96-A0E3-CFE57A7050A0"
+    ],
+    "endTime": "12:00",
+    "id": "99EEAAD5-37CD-4DC9-878A-75C87B790500",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Handledning",
+    "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "organizationIDs": [
+      "C75BB8BE-3368-4074-A5BD-D0FBD55B0442"
+    ],
+    "participantNames": [
+      "Elias Skissius",
+      "Lisa Modellby",
+      "Martin Provby",
+      "Christoffer Testius"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 57"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-10-19",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "11:00",
+    "id": "DDF78EEA-5881-4024-AAD5-4EC27E5FF313",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-11-09",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:00",
+    "id": "174C849A-B51F-4FA7-84D7-E4DEB9E39F62",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "09:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-11-21",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "C965D52B-005B-439B-9F74-7A2066655037",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "16:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-12-19",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "8316057B-0896-4C24-8794-DA7A4F8CF373",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "16:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-01-11",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "15:00",
+    "id": "7D31C374-03CB-4531-8B52-2186A6E9A6FC",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "14:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2021-01-24",
+    "detail": "Exempelköpings universitet",
+    "doctoralCandidateIDs": [],
+    "endTime": "11:00",
+    "id": "815C27E6-4DEA-461E-A6EA-6CC342DEB350",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Karin Selma Fiktivdahl"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "09:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 58"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-01-29",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:30",
+    "id": "3344AC74-62C1-43C8-9858-3E4E57198711",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "09:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2021-03-22",
+    "detail": "Exempelköpings universitet",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:00",
+    "id": "8DE376D8-6084-4EAB-B7C2-61A50BD5C68B",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-03-28",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:00",
+    "id": "EEC1476E-778C-4541-B69D-3215FCBC5FFD",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "15:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-04-17",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "18:00",
+    "id": "192A8D66-547D-4770-8175-7D0455AF105E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "17:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-04-29",
+    "detail": "Exempeltext 36.",
+    "doctoralCandidateIDs": [],
+    "endTime": "15:15",
+    "id": "9F5C29AD-8300-4A88-9BAF-11CFF0F1328D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "14:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 59"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-04-29",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "15:30",
+    "id": "47D32F37-B7CE-49FF-8A33-BB69160B8475",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "15:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-05-15",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "18:00",
+    "id": "680A6434-C8CA-4312-902F-9B6D188523A2",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "17:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-05-28",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "14:30",
+    "id": "F7421A82-0CA8-4A6E-AAF3-1C25D7D2FDAD",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl",
+      "Martin Provby"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "13:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-07-24",
+    "detail": "Exempeltext 37.",
+    "doctoralCandidateIDs": [],
+    "endTime": "15:15",
+    "id": "D7B8E3AF-C378-44BC-ABA6-32EBCC00A6AE",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "14:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 60"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-07-26",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "14:30",
+    "id": "525075AF-B30D-4B80-85B6-E6A06924E4E6",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "13:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-07-29",
+    "detail": "Exempeltext 38.",
+    "doctoralCandidateIDs": [],
+    "endTime": "15:00",
+    "id": "044E3179-019E-4779-8321-1525CE5B6939",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Martin Exempelqvist"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "14:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 61"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2021-08-01",
+    "detail": "Exempeltext 39.",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:25",
+    "id": "28B4012C-774D-4D68-938B-788C3D0A807F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Presentation",
+    "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "organizationIDs": [
+      "C75BB8BE-3368-4074-A5BD-D0FBD55B0442"
+    ],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "Exempelstad 4",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 62"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2021-08-21",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:45",
+    "id": "C24BA15B-6F13-4A47-ACE9-642426A0D558",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus Påhittby"
+    ],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "11:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-09-10",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "8E8CEE0D-03A7-406B-B3C0-71FB4D6DFDF8",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-09-17",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:00",
+    "id": "E947742F-88F6-4265-9083-1C7DA22A11E9",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl",
+      "Martin Provby"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "09:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-10-04",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:45",
+    "id": "7A827121-2077-41E8-86AC-66E9FB145752",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 63"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-10-25",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "68875E31-A7CC-46E5-92E6-E7BDEF883C74",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-11-01",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "08:30",
+    "id": "92ABE65A-E9BA-43B8-9182-0CB42FA45476",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl",
+      "Martin Provby"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-11-01",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "585CD046-9B47-4258-B9AB-CCB1C3345A58",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "08:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-11-08",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "11:00",
+    "id": "C3ABB9D0-FC3B-4F4A-B121-F9898F92153E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Harald Mallius",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2021-11-26",
+    "detail": "Exempeltext 40.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:45",
+    "id": "1C98FEE4-B91D-4395-97A3-16DD98912837",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "15:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 64"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Denmark",
+    "date": "2021-12-04",
+    "detail": "Exempeltext 41.",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:30",
+    "id": "42552800-9387-47ED-AA04-B1FE90A84C0E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Presentation",
+    "organizationIDs": [],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "Exempelplats 1",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 62"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2021-12-24",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "08:30",
+    "id": "5DDB8F7E-3D34-48DF-94EE-11A44C61F449",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl",
+      "Martin Provby"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-01-28",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "DCFA6993-7543-4CDA-B1F0-143EE9DADBFE",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren",
+      "Louise TC Testander"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-01-28",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:25",
+    "id": "37AF401F-B91A-457E-8AE1-3EB71B0FF7B8",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "776A7039-6655-415F-B2C2-CB2B6C6BD251"
+    ],
+    "startTime": "09:55",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-02-20",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "AAB12822-02CE-40C3-A47F-E3457C0BE8CE",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Louise TC Testander"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-03-14",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "9C545E36-D484-478A-B435-8498BC66F239",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-05-09",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "08:30",
+    "id": "301661BC-225C-4F53-A88B-A9B0E176ED9E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Harald Mallius"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "07:45",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-05-21",
+    "detail": "Exempeltext 39.",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:15",
+    "id": "7821DBF5-0159-4DB4-9BFE-BB13A734725E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Presentation",
+    "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "organizationIDs": [
+      "C75BB8BE-3368-4074-A5BD-D0FBD55B0442"
+    ],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "Exempelstad 4",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 65"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-05-26",
+    "detail": "Exempeltext 42.",
+    "doctoralCandidateIDs": [],
+    "endTime": "18:30",
+    "id": "68600F5D-01FF-42F2-889D-DD13F9CDA03C",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "18:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-05-27",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:30",
+    "id": "F729E718-1E9B-47A2-A549-AB119698648E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Therese Modelldahl"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-03",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "64F05409-5FE8-4460-8E62-44B16A8C1529",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "6D963914-50EE-4CFA-8753-A87D1B978A82"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-06-09",
+    "detail": "Exempelköpings universitet",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:30",
+    "id": "F7C6861B-5326-475B-9956-8B6CD0F58665",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Presentation",
+    "organizationIDs": [],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "6D963914-50EE-4CFA-8753-A87D1B978A82"
+    ],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 66"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-12",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:00",
+    "id": "BCEE6332-FEB8-4583-897D-29F46E9BF84A",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Harald Mallius",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "11:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-12",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:30",
+    "id": "ADD6DB53-A70F-4544-9E29-A6296B8F3CCF",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "6D963914-50EE-4CFA-8753-A87D1B978A82"
+    ],
+    "startTime": "12:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-17",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "0DF960D0-284E-4DDA-9A59-F666C085110D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "16:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-23",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "13:00",
+    "id": "748EC50C-FA6E-4D46-8B88-36AF312F878F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "6D963914-50EE-4CFA-8753-A87D1B978A82"
+    ],
+    "startTime": "12:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-25",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "18:00",
+    "id": "5D6C1281-3447-42B5-ABC7-55427699808A",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3",
+      "6D963914-50EE-4CFA-8753-A87D1B978A82"
+    ],
+    "startTime": "17:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-26",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:00",
+    "id": "430D711D-3047-43DF-91E3-F32AA8A82779",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "6D963914-50EE-4CFA-8753-A87D1B978A82"
+    ],
+    "startTime": "11:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-26",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "B756ABD6-900B-467A-87D0-D652E0E13E24",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Harald Mallius"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "16:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-06-27",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:30",
+    "id": "FC0419DD-E9D2-4DD9-9F51-F7F1417B5F8B",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "21895D56-FF63-4BCF-818F-D76019B78FF3"
+    ],
+    "startTime": "11:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-07-29",
+    "detail": "Exempeltext 43.",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "39BE0319-CDF3-4C06-BABC-CAF792273F71",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "6D963914-50EE-4CFA-8753-A87D1B978A82"
+    ],
+    "startTime": "16:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-07-30",
+    "detail": "US",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "B29F3AB8-9885-43A1-8EBD-16A81C10FD76",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Harald Mallius"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "16:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-07-31",
+    "detail": "Exempelköpings universitet",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:30",
+    "id": "E03D653E-4B4E-4D11-9797-E6ABCD36395E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Presentation",
+    "organizationIDs": [],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 67"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-08-01",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:00",
+    "id": "30F97DFC-66BF-4858-B597-18655356FA24",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl",
+      "Martin Provby",
+      "Kjell Fiktivander",
+      "Therese Modelldahl"
+    ],
+    "place": "",
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectIDs": [
+      "AA603652-51D0-4BB6-9CE2-E5A741BFC85E"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "11:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-08-19",
+    "detail": "Exempeltext 44.",
+    "doctoralCandidateIDs": [],
+    "endTime": "15:15",
+    "id": "102CFDE1-2561-4696-A541-BB393240C49F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Handledning",
+    "organizationIDs": [],
+    "participantNames": [
+      "Maria Skisslund"
+    ],
+    "place": "Exempelstad 4",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "14:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 68"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-08-20",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "10:00",
+    "id": "F33C841D-B65A-4978-88F4-09BF69522161",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Astrid Provsson"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "BB8887F1-9946-4864-B2F0-AEA193F1F014"
+    ],
+    "startTime": "09:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-09-05",
+    "detail": "Exempelköpings universitet",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "70D205EB-A6A6-4706-A4AE-47A05D10D902",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Vera Påhittholm",
+      "Martin Testander"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "E91C6783-9111-4247-9C78-3DF6DD7B3FCE",
+    "projectIDs": [
+      "E91C6783-9111-4247-9C78-3DF6DD7B3FCE"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "F3CE2B8B-52CB-43F1-8FD2-137B92CADF79"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-09-24",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "09CFD246-9BDD-4A9C-B3AC-2D15C2147512",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Tobias Modellström",
+      "Joakim Demo"
+    ],
+    "place": "",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "16:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-09-29",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "14:00",
+    "id": "04D68218-B3B5-4541-8A83-F26DE95ADFB9",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Mikael Modellius",
+      "Mats Exempelsson"
+    ],
+    "place": "",
+    "projectID": "E91C6783-9111-4247-9C78-3DF6DD7B3FCE",
+    "projectIDs": [
+      "E91C6783-9111-4247-9C78-3DF6DD7B3FCE"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "24ABE96D-D3A7-42A1-87D7-62DBE5256E61"
+    ],
+    "startTime": "13:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-10-01",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "27F8E46D-030E-4554-8B56-326E80DF6A3A",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Harald Mallius"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "16:30",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-10-07",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "13:00",
+    "id": "757D31AE-D033-4C13-A24B-7AEB51ED53B4",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Handledning",
+    "organizationIDs": [],
+    "participantNames": [
+      "Nils Provling"
+    ],
+    "place": "Exempelstad 4",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "12:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 69"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-10-17",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:00",
+    "id": "95CFB35F-1193-4DAA-BA16-C28B4FC5C6AB",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Astrid Provsson"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "BB8887F1-9946-4864-B2F0-AEA193F1F014"
+    ],
+    "startTime": "11:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-10",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "2F7AC518-03CB-4D82-B6CF-10ADB43F23F1",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Astrid Provsson"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "BB8887F1-9946-4864-B2F0-AEA193F1F014"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-11",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "08:45",
+    "id": "F69D105C-F94B-415A-8BDB-4B41D07E52D0",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Louise TC Testander"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "15EF2C62-280D-44D7-9E00-175ABAEDB0B7"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-13",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "77EDD84C-7727-4998-944C-85F2520C9665",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Louise TC Testander"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "15EF2C62-280D-44D7-9E00-175ABAEDB0B7"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-13",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "F703847B-604A-4B00-9D40-E5EB0D1DCD36",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "118A0F88-EBCD-4F1E-8535-459A90BF1E22",
+    "projectIDs": [
+      "118A0F88-EBCD-4F1E-8535-459A90BF1E22"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "2BD6D6DD-2EEC-4570-8A24-BC1545392432"
+    ],
+    "startTime": "16:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-14",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "08:45",
+    "id": "4BF3D24C-5385-4022-A64C-9C4BFCCE84C0",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Jesper Fiktivqvist",
+      "Jakob Modellholm"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "776A7039-6655-415F-B2C2-CB2B6C6BD251"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-17",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "18:00",
+    "id": "31F56CD5-6C63-4992-B0C5-B5631F0EEBEE",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Louise TC Testander"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "15EF2C62-280D-44D7-9E00-175ABAEDB0B7"
+    ],
+    "startTime": "17:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-18",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:15",
+    "id": "2D71AC0C-C821-4C03-BA07-9D465193DCA5",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "118A0F88-EBCD-4F1E-8535-459A90BF1E22",
+    "projectIDs": [
+      "118A0F88-EBCD-4F1E-8535-459A90BF1E22"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "2BD6D6DD-2EEC-4570-8A24-BC1545392432"
+    ],
+    "startTime": "12:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-20",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "11:00",
+    "id": "015F586E-6566-485D-B27A-F613856A067D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Harald Mallius"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "8C37CD29-81AD-40AC-8898-25C8464F4541"
+    ],
+    "startTime": "10:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-11-25",
+    "detail": "Exempelköpings universitet",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:00",
+    "id": "2E7B1FE8-917D-4059-A23A-ED5A62744731",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Presentation",
+    "organizationIDs": [],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "09:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 70"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-11-29",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "8D807AC4-09E9-4A65-9363-4F11584A91A9",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Louise TC Testander"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "15EF2C62-280D-44D7-9E00-175ABAEDB0B7"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-12-01",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "5C4B75AE-A183-4B00-BE49-15190ADD2FB5",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren",
+      "Astrid Provsson"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "BB8887F1-9946-4864-B2F0-AEA193F1F014"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-12-04",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:00",
+    "id": "79AAA4AF-4AA8-4EB2-BC82-A20E05D76EEB",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren",
+      "Louise TC Testander"
+    ],
+    "place": "",
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectIDs": [
+      "505B8E89-1963-4657-83A4-088E593F6605"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "15EF2C62-280D-44D7-9E00-175ABAEDB0B7"
+    ],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-12-04",
+    "detail": "Exempeltext 45.",
+    "doctoralCandidateIDs": [],
+    "endTime": "09:30",
+    "id": "981C4A1B-8A35-46D7-8D6F-87DCD0E9D89A",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Pontus N. Skissgren"
+    ],
+    "place": "",
+    "projectID": "118A0F88-EBCD-4F1E-8535-459A90BF1E22",
+    "projectIDs": [
+      "118A0F88-EBCD-4F1E-8535-459A90BF1E22"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "2BD6D6DD-2EEC-4570-8A24-BC1545392432"
+    ],
+    "startTime": "09:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 55"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-12-11",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "15:00",
+    "id": "E4F739FF-CE1B-45BA-A5F3-F4A2ED4A65DA",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Möte",
+    "organizationIDs": [],
+    "participantNames": [
+      "Gustav Utkastgren"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "14:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 71"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2022-12-17",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "17:00",
+    "id": "F3DB7D62-B1FA-4994-8832-302B91DF96E2",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Presentation",
+    "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "organizationIDs": [
+      "C75BB8BE-3368-4074-A5BD-D0FBD55B0442"
+    ],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "",
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectIDs": [
+      "B852A318-C112-4ACD-BEEA-50E1DF304178"
+    ],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "14:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 72"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2022-12-23",
+    "detail": "Exempelköpings universitet",
+    "doctoralCandidateIDs": [],
+    "endTime": "12:00",
+    "id": "6F65DBEE-36CF-4B71-B43B-4C440953BA1A",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Presentation",
+    "organizationIDs": [],
+    "participantNames": [
+      "Greta af Låtsasby"
+    ],
+    "place": "Exempelstad 2",
+    "projectID": "118A0F88-EBCD-4F1E-8535-459A90BF1E22",
+    "projectIDs": [
+      "118A0F88-EBCD-4F1E-8535-459A90BF1E22"
+    ],
+    "protocolText": "",
+    "publicationIDs": [
+      "2BD6D6DD-2EEC-4570-8A24-BC1545392432"
+    ],
+    "startTime": "09:15",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 73"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-21",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "7A77972B-DF4D-4104-8541-4CEC6660E6CC",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-23",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "30927E68-1120-4603-97D5-7B0DBF00DBD6",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-24",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "76F4E2CA-2E2E-4F0A-BB63-9D504EE365BC",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-27",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "0A74C59C-5CBE-4C9D-8D4D-3280B57E186E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-28",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "00F41F50-6598-495B-94DE-AEC39F2A2BE0",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-29",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "B94EAB20-0708-436C-83D8-6DF2EB4142B0",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-30",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "F50122E6-BA7B-45C1-A7E1-11215AFAE699",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-08-31",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "3423E66E-FEEB-4AFC-B88A-40B908E01C6B",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-03",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "C6A71220-0BE4-4431-9E25-A0FEEF2060DF",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-04",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "B828F9E9-E85D-43AC-B80C-C4E3ED4E8239",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-05",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "D8D75275-F955-4A29-B339-3E8C223CA7BF",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-06",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "6025AEFA-B040-4F41-8663-0C11912B2F8D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-07",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "3F87AB64-3A4B-4012-8360-5DC1C316DEF9",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-10",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "7AC24E9C-9C4B-413F-9F99-5DCC27555C7D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-11",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "9784A667-BBD2-4618-AA9A-9CB13FEB6414",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-12",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "BB31CD07-F014-4A41-972C-5491102BCF3F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-13",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "6FCF0511-991B-4C1C-A1A0-1C7D9F2C947E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-14",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "A0B0555C-7F61-4D27-8581-F36669CBA392",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-17",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "235589B5-E37D-4C6E-8A38-09DC7E6EBCF3",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-18",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "F1374855-0B3D-421C-924B-DF814EA263B6",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-19",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "E0431991-483B-4FCF-902E-D68F88F0B9AB",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-20",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "C2C4EEF2-5E0E-4F3C-AF44-EF5BB71D0F65",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-21",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "9A10D064-FDCC-4384-BC6A-191B786478F1",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-24",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "B87E9AE0-89A6-468D-B043-BCF027D9CA2E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-25",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "6AEF2D05-7843-4108-96A3-B5850FF9514D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-09-26",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "731E77C5-9069-4028-BD0A-FB6F950D09BB",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "",
+    "meetingType": "Kurs",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 74"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-09-27",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "96CC5D8E-64DA-4CB5-894D-ECD8DDE2DAEC",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "online",
+    "meetingType": "Kurs",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 74"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-09-28",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "197A8931-680A-46A5-9C50-A05275961043",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-01",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "8907A1D8-3772-481D-BAF4-2094D28B64D5",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-02",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "3B3F018A-C585-4CDD-822F-9DA540BB5C2F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-03",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "BB7038E8-EF5F-4935-8DA3-5F715A4DCC15",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-04",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "0F1AC6C9-B6A1-498A-9C81-60444223A4FC",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-05",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "F31A9BA8-8307-4F3C-AD05-6AD36E6B39D7",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-08",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "F459F045-2B6F-4F93-9215-7CC9A4F5C09B",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-09",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "363ADFE5-D242-4FB8-8845-AE9E86FA02C0",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-10",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "2BA48159-0D85-43BF-BF56-BC95A9D09717",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-11",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "938F93C8-B7B9-4628-B7C3-BAAAE8984FD5",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-12",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "B0C1E8D3-72C8-4031-AD1D-A272AB6F6C70",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 54"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-22",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "0CAE0406-61E6-4212-9A3F-F0269AE9AD5F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-23",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "571B3D8C-11AF-47EF-8ACE-19330B220EB7",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-24",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "D74ACBDF-A9DE-4AFE-85F0-ABA523F09439",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-25",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "018CD63A-AE3C-45AB-B8B2-8B88E672BF87",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-26",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "EAA09C50-A68F-44EF-83B5-48FB9C61DD06",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-29",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "7174DEFF-23B2-43AE-9FC6-FDC61D395706",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-30",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "F7E0A185-7D3F-426C-9A34-B11D316A2FC7",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-10-31",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "373F17DD-8ECE-49DE-84D8-BC8A32A1A1DD",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-01",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "831DB229-9247-4C1F-8574-53138B6063BC",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-02",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "A7D92480-7B16-4153-B0CF-D92AA715CDB3",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-05",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "484D8F35-BB1B-4ECA-B342-68BF419E02DD",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-06",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "4DDD4B54-FF8B-4663-9030-0A649FB726AF",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-07",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "C3A4E7E7-D0F2-4C2A-B496-CC9FF23BBFBA",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-08",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "F9CE18DC-5777-4284-AE3B-4A7ECFC96512",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-09",
+    "detail": "Exempeltext 35.",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "57E70475-495F-446A-BC1A-C49A0E9AAAD0",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempeltext 35."
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-12",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "B6716875-3D1A-4415-B98D-E2F0033C7180",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-13",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "86216F66-B830-4FE3-BBED-2647EF92DA10",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-14",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "66334A9C-89CB-4A5B-87D8-CBE953F85394",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-15",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "169535FE-D433-4508-8F1C-4CFF1075932E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-20",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "08AC2336-61B9-4369-B4EA-29F6A3E4161D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-21",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "A0EC69C9-2B69-460A-8C50-800D7EAE1D1B",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-22",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "C213A2CC-4350-497A-BC06-886773721B0C",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-23",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "14:00",
+    "id": "5F66A78B-BF38-4422-8D93-F7FFC321214F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-26",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "FB7D95D9-B9BD-4B2C-BBB8-286AB4654628",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-27",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "4776B557-CCD5-45A8-ACE2-3EA8E4124E0D",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-28",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "CD9F04D2-5920-4AAC-8BB8-E2A2693CE604",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-29",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "F40AA506-52B5-4441-92D2-AEF20B09D39F",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-11-30",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "14:00",
+    "id": "E8DA3278-6E25-4F86-8B58-5C53D9012F13",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-12-03",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "794BA0F4-50FC-496F-B950-CDA9F9B2D590",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "",
+    "meetingType": "Kurs",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 76"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-12-04",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "6C0C3ADA-63BD-4E28-B4D0-0C668A21F5B8",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "",
+    "meetingType": "Kurs",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 76"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-12-05",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "6A4AD988-EBFC-44B7-9303-5975BD10792A",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "",
+    "meetingType": "Kurs",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 76"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "",
+    "date": "2020-12-06",
+    "detail": "",
+    "doctoralCandidateIDs": [],
+    "endTime": "16:30",
+    "id": "B86E79B8-4834-4C16-895E-D503DF7D4853",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "",
+    "meetingType": "Kurs",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 76"
+  },
+  {
+    "agendaText": "",
+    "applicationIDs": [],
+    "country": "Sweden",
+    "date": "2020-12-07",
+    "detail": "Exempelavdelning 1",
+    "doctoralCandidateIDs": [],
+    "endTime": "14:00",
+    "id": "60693AB0-7CF6-461A-BC2A-4B25C3BEE53E",
+    "mediaAppearanceIDs": [],
+    "meetingMode": "physical",
+    "meetingType": "Klinik",
+    "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+    "organizationIDs": [
+      "47B74433-7AE5-43D4-8E49-830A64331C86"
+    ],
+    "participantNames": [],
+    "place": "Exempelstad 4",
+    "projectIDs": [],
+    "protocolText": "",
+    "publicationIDs": [],
+    "startTime": "08:00",
+    "teachingAssignmentIDs": [],
+    "title": "Exempelmöte 75"
+  }
+]

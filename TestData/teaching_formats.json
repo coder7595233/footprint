@@ -1,0 +1,44 @@
+[
+  {
+    "category": "Not teaching work",
+    "id": "60D1F4C8-4E92-41D5-8ACA-3CA14BD5A99D",
+    "nameEn": "Development work",
+    "nameSv": "Utvecklingsarbete"
+  },
+  {
+    "category": "Individual",
+    "id": "A0342601-2215-42E5-A940-90A6E5143E40",
+    "nameEn": "Doctoral supervision",
+    "nameSv": "Doktorandhandledning"
+  },
+  {
+    "category": "Group",
+    "id": "0E2FC605-4BDD-4E44-88C4-70F0BF4CE2E5",
+    "nameEn": "Examiner",
+    "nameSv": "Examinator"
+  },
+  {
+    "category": "Group",
+    "id": "91F682EF-F956-4205-BB6F-F1BA8C6622AB",
+    "nameEn": "Example name 69",
+    "nameSv": "Handledning"
+  },
+  {
+    "category": "Group",
+    "id": "10B8A532-51B8-400F-8DB2-3C73412B5B8C",
+    "nameEn": "Lecture",
+    "nameSv": "Föreläsning"
+  },
+  {
+    "category": "Group",
+    "id": "1FC6DB96-873F-49B0-B80C-85064DA9167D",
+    "nameEn": "Practical teaching",
+    "nameSv": "Praktisk undervisning"
+  },
+  {
+    "category": "Group",
+    "id": "D3C46F40-FECF-45E4-83C7-CF2DC8BE1970",
+    "nameEn": "Seminar",
+    "nameSv": "Seminarium"
+  }
+]

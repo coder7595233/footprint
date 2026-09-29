@@ -1,0 +1,1002 @@
+[
+  {
+    "activityID": "1997CB66-0625-40F5-96A2-90B2C41AEB50",
+    "activityName": "Exempelaktivitet 1",
+    "activityTypeName": "Doktorandhandledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "6C42B33E-8BCB-415C-B6FC-38850750B755",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "FD801AFC-BD30-4F10-8307-A825E2AC8987",
+    "kind": "Clinical teaching",
+    "participantForm": "Group and individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2018-08-17",
+        "hoursPerTerm": "25",
+        "id": "BB41292D-BB48-417C-B07C-9E28E7157AE4",
+        "to": "2019-08-16"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2019-08-17",
+        "hoursPerTerm": "50",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2020-08-16"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2020-08-17",
+        "hoursPerTerm": "100",
+        "id": "258F592A-A178-4233-B535-1C270AE9F01E",
+        "to": "2022-12-31"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2023-01-01",
+        "hoursPerTerm": "100",
+        "id": "03B816F9-0500-4063-A9EF-7785AD27ED0F",
+        "to": "2024-02-14"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-02-15",
+        "hoursPerTerm": "50",
+        "id": "A15BACC2-9CF6-4806-A485-E011C4894549",
+        "to": "2024-12-31"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2025-01-01",
+        "hoursPerTerm": "40",
+        "id": "57E641D6-0244-40A4-8168-4D745828D0FE",
+        "to": "2025-02-13"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2025-02-14",
+        "hoursPerTerm": "24",
+        "id": "6EF5B8BC-D5CE-4EDB-89A3-B6859644E786",
+        "to": "2025-12-31"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2026-01-01",
+        "hoursPerTerm": "2",
+        "id": "CD11B9F1-B23A-453A-AFC3-91B905B13BF3",
+        "to": "2026-02-13"
+      }
+    ],
+    "programName": "Klinisk undervisning",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "supervisor"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "43F87D55-44CB-42D6-9CD3-0A3A51D10592",
+    "activityName": "Exempelaktivitet 2",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "6C42B33E-8BCB-415C-B6FC-38850750B755",
+    "deliveryMode": "Hybrid",
+    "deliveryModes": [
+      "Hybrid"
+    ],
+    "id": "52BBD7BB-69C4-4134-9AF4-FBE0B211E09C",
+    "kind": "Clinical teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2020-08-17",
+        "hoursPerTerm": "1",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2022-12-31"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-01-01",
+        "hoursPerTerm": "3",
+        "id": "0548FE64-CBB4-4CEF-812C-E155831B75B2",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Klinisk undervisning",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityName": "Skriftlig ordinarie tentamen",
+    "activityTypeName": "Examinator",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "DAC5A387-A733-4CDA-8F11-3D02D217B9DE",
+    "deliveryMode": "Online",
+    "deliveryModes": [
+      "Online"
+    ],
+    "id": "7A07A56E-1D02-4866-8FB1-77981AE239B5",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2022-02-14",
+        "hoursPerTerm": "3",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2022-12-31"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2023-01-01",
+        "hoursPerTerm": "18",
+        "id": "F493A96A-DB2A-4C0B-A5A4-FAC46DAABBB4",
+        "to": "2023-02-13"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2023-02-14",
+        "hoursPerTerm": "9",
+        "id": "7116079B-D3F5-4125-9647-50339BCD2AA6",
+        "to": "2024-02-14"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2025-01-01",
+        "hoursPerTerm": "34",
+        "id": "21CDD9E7-FADB-4DE1-9722-C71DABEA01EF",
+        "to": "2025-02-13"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2025-02-14",
+        "hoursPerTerm": "30",
+        "id": "81C0C04D-B18A-4E1B-9548-CB02DBB8809B",
+        "to": "2025-12-31"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2026-01-01",
+        "hoursPerTerm": "27",
+        "id": "C33C8731-F984-43D9-8C29-FBF761E62796",
+        "to": "2026-02-13"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "examiner"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "FA60B687-F392-45F6-A191-1C324937295B",
+    "activityName": "Exempelaktivitet 3",
+    "activityTypeName": "Examinator",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "DAC5A387-A733-4CDA-8F11-3D02D217B9DE",
+    "deliveryMode": "Online",
+    "deliveryModes": [
+      "Online"
+    ],
+    "id": "03295B0E-F2E3-422E-9C1C-E553662C3527",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2022-02-14",
+        "hoursPerTerm": "8",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2022-12-31"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-01-01",
+        "hoursPerTerm": "3",
+        "id": "3E5773F4-A65C-4713-A6AC-3273B27B2535",
+        "to": "2024-02-14"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2025-01-01",
+        "hoursPerTerm": "23",
+        "id": "79DBB9EC-81EA-441B-9264-2111066D7C63",
+        "to": "2025-02-13"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2025-02-14",
+        "hoursPerTerm": "21",
+        "id": "8C3C8B20-9D76-400E-8417-CACCFABF1EF8",
+        "to": "2025-12-31"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2026-01-01",
+        "hoursPerTerm": "26",
+        "id": "B57F6348-1504-42D2-BDA1-032A2424345D",
+        "to": "2026-02-13"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2026-02-14",
+        "hoursPerTerm": "",
+        "id": "840D9474-EB1E-4388-8FE9-C54018728B9B",
+        "to": "2026-08-16"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "examiner"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "C23C122E-40F3-4F0E-9070-B2852B103183",
+    "activityName": "Exempelaktivitet 4",
+    "activityTypeName": "Examinator",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "78CEBF24-2B5A-46F1-8DCE-186F61A4F1B4",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "3B084B84-744B-4DF9-9B36-9FB0DD3ACC96",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2022-02-14",
+        "hoursPerTerm": "8",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-02-14"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "examiner"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "D7FCC901-0B24-4D45-A576-24F33A912A18",
+    "activityName": "Exempelaktivitet 5",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "3E5EEB21-188A-4690-A45D-9FD63B4AAADD",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "16D9CF97-15EB-41DE-8AC2-875037FE2AAA",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2023-01-01",
+        "hoursPerTerm": "45",
+        "id": "45622EA4-8FA4-4491-9066-52F0D35DB66D",
+        "to": "2023-02-13"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-01-01",
+        "hoursPerTerm": "45",
+        "id": "7B665908-FEB2-4CB3-921B-F7A7272FB0B4",
+        "to": "2024-02-14"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "D7FCC901-0B24-4D45-A576-24F33A912A18",
+    "activityName": "Exempelaktivitet 5",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "10F4E4BA-AC63-4584-A691-91C49078F9D6",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "4C251A71-17F7-4DB9-A6BE-64198D9B588D",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2023-02-14",
+        "hoursPerTerm": "34",
+        "id": "BF785E77-1F5E-4776-B656-11729689960D",
+        "to": "2023-12-31"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "45",
+        "id": "33C92E3A-502C-48F1-AA1B-95FB3C6CFC34",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "1FBA6F4C-362D-401F-8E03-CA9D08614B92",
+    "activityName": "Exempelaktivitet 6",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "BEDFF008-EC5B-4505-AF8F-4020C509D244",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "095FD8DA-272F-4F65-B0B4-1AAF3F293837",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2023-02-14",
+        "hoursPerTerm": "8",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "85CDD1B9-9AE2-4937-A21D-E6299C86FE05",
+    "activityName": "Exempelaktivitet 7",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "3E5EEB21-188A-4690-A45D-9FD63B4AAADD",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "3E524ED0-C756-4778-9360-F52CB2036315",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "20",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "51F98590-89A5-4587-96C8-BAC3E6AF1132",
+    "activityName": "Exempelnamn 29",
+    "activityTypeName": "Handledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "73DB606C-9C71-4B89-ABF0-F99689D6D535",
+    "deliveryModes": [
+      "On-site",
+      "Online"
+    ],
+    "id": "25608202-FA79-4AFC-8F11-B2F1332621C9",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-02-15",
+        "hoursPerTerm": "30",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Thesis / in-depth project supervision",
+    "roles": [
+      "assistantSupervisor"
+    ],
+    "studentName": "Lena Testander",
+    "tasks": []
+  },
+  {
+    "activityID": "51F98590-89A5-4587-96C8-BAC3E6AF1132",
+    "activityName": "Exempelnamn 29",
+    "activityTypeName": "Handledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "73DB606C-9C71-4B89-ABF0-F99689D6D535",
+    "deliveryModes": [
+      "On-site",
+      "Online"
+    ],
+    "id": "212D9F99-5153-4FEA-AC28-797038A12721",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "60",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Thesis / in-depth project supervision",
+    "roles": [
+      "principalSupervisor"
+    ],
+    "studentName": "Arvid Fiktivwood",
+    "tasks": []
+  },
+  {
+    "activityID": "51F98590-89A5-4587-96C8-BAC3E6AF1132",
+    "activityName": "Exempelnamn 29",
+    "activityTypeName": "Handledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "73DB606C-9C71-4B89-ABF0-F99689D6D535",
+    "deliveryModes": [
+      "On-site",
+      "Online"
+    ],
+    "id": "E8881636-279D-48FB-A673-4D1B5AFD1E2E",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-02-15",
+        "hoursPerTerm": "30",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Thesis / in-depth project supervision",
+    "roles": [
+      "assistantSupervisor"
+    ],
+    "studentName": "Ulla Låtsasholm",
+    "tasks": []
+  },
+  {
+    "activityID": "D924356E-52C1-4C38-937A-51DF7D92957B",
+    "activityName": "Exempelaktivitet 8",
+    "activityTypeName": "Doktorandhandledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "38584C38-E0CE-472D-9104-2934F5C0BC79",
+    "deliveryMode": "Hybrid",
+    "deliveryModes": [
+      "Hybrid"
+    ],
+    "id": "BFFDDA57-B119-4EC5-A269-C55FE85A218C",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-02-15",
+        "hoursPerTerm": "30",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Forskarutbildning",
+    "reportCategory": "Doctoral supervision (assistant)",
+    "roles": [
+      "assistantSupervisor"
+    ],
+    "studentName": "Axel Övningsling",
+    "tasks": []
+  },
+  {
+    "activityID": "4A57F3B2-BD6F-43B2-AA3E-BC3AF95F751E",
+    "activityName": "Exempelaktivitet 9",
+    "activityTypeName": "Doktorandhandledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "074633BD-0417-4E56-A757-04F6F009750A",
+    "deliveryModes": [
+      "On-site",
+      "Online"
+    ],
+    "id": "C0D0700E-0170-40D6-9EFD-8706829DD2C5",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-02-15",
+        "hoursPerTerm": "10",
+        "id": "DA405987-565F-440E-96F9-9684CFEF9450",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Forskarutbildning",
+    "reportCategory": "Doctoral supervision (assistant)",
+    "roles": [
+      "assistantSupervisor"
+    ],
+    "studentName": "Lena Testander",
+    "tasks": []
+  },
+  {
+    "activityID": "98B0ED73-1A10-4482-B0C5-9093943682CD",
+    "activityName": "Exempelaktivitet 10",
+    "activityTypeName": "Doktorandhandledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "E39A10C5-1108-4F2D-BD5A-46B2C6878FE1",
+    "deliveryModes": [
+      "On-site",
+      "Online"
+    ],
+    "id": "CDC05740-ADB4-44E5-8A22-3AD007CAEC65",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-02-15",
+        "hoursPerTerm": "30",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Fristående kurser",
+    "reportCategory": "Doctoral supervision (assistant)",
+    "roles": [
+      "assistantSupervisor"
+    ],
+    "studentName": "Therese Modelldahl",
+    "tasks": []
+  },
+  {
+    "activityID": "85CDD1B9-9AE2-4937-A21D-E6299C86FE05",
+    "activityName": "Exempelaktivitet 7",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "10F4E4BA-AC63-4584-A691-91C49078F9D6",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "A61C3CF8-DEE3-4B6C-A551-CAD34C46305D",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "20",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "D7FCC901-0B24-4D45-A576-24F33A912A18",
+    "activityName": "Exempelaktivitet 5",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "31B133AA-26CD-49B0-9A36-C47477579D32",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "0BDA230E-BE3A-468E-905D-A9542CE9B2E9",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "20",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "CFE9D63B-8C0C-4026-A985-08E42B75AF94",
+    "activityName": "Exempelaktivitet 11",
+    "activityTypeName": "Handledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "BEDFF008-EC5B-4505-AF8F-4020C509D244",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "0542D918-B59E-4B36-BD4F-79BB73E10CA9",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "18",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "supervisor"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "6A04C01A-8109-4460-840B-F7A6AABE6CBF",
+    "activityName": "Exempelaktivitet 12",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "DAC5A387-A733-4CDA-8F11-3D02D217B9DE",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "03357181-5DE8-48F9-A973-7B39DACCCB9A",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "2",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "C939EC98-AB73-40BE-9100-0F2A67CD26ED",
+    "activityName": "Exempelaktivitet 13",
+    "activityTypeName": "Seminarium",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "78CEBF24-2B5A-46F1-8DCE-186F61A4F1B4",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "CC2D8E16-4678-4714-AFEB-5A0316DB368F",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "40",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Example Programme",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "seminarLeader"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityName": "",
+    "activityTypeName": "Handledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "CEF7C232-5739-47AF-B806-9E2C2B4C71AB",
+    "deliveryMode": "On-site",
+    "deliveryModes": [
+      "On-site"
+    ],
+    "id": "6B7AE077-7295-4AA8-B1C5-E4DFE5170DB6",
+    "kind": "Teaching",
+    "participantForm": "Group",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2024-02-15",
+        "hoursPerTerm": "56",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2024-12-31"
+      }
+    ],
+    "programName": "Example Programme",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "supervisor"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityName": "Fältstudiehandledning",
+    "activityTypeName": "Exempel 315",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "DAC5A387-A733-4CDA-8F11-3D02D217B9DE",
+    "deliveryMode": "Online",
+    "deliveryModes": [
+      "Online"
+    ],
+    "id": "CD9C2802-F257-4B5E-969C-AC4BFBB9DAC2",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2025-01-01",
+        "hoursPerTerm": "2",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2025-02-13"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "supervisor"
+    ],
+    "studentName": "Pontus Testdahl",
+    "tasks": []
+  },
+  {
+    "activityID": "45BE7952-92C3-4152-9555-E91CE66FFCDA",
+    "activityName": "Utvecklingsarbete",
+    "activityTypeName": "Utvecklingsarbete",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "EE410BEF-CDC2-487D-A098-22AD1C9F3502",
+    "deliveryMode": "Online",
+    "deliveryModes": [
+      "Online"
+    ],
+    "id": "8D87DB8B-17C2-4F0B-8EFD-902687CB8828",
+    "kind": "Development work",
+    "participantForm": "Not teaching work",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2025-01-01",
+        "hoursPerTerm": "11",
+        "id": "30134A6F-C43B-44A5-AF69-16E98874912E",
+        "to": "2025-02-13"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2025-02-14",
+        "hoursPerTerm": "1",
+        "id": "F5616245-2620-43C3-907D-15716D11A88D",
+        "to": "2025-12-31"
+      },
+      {
+        "confirmedInRetendo": true,
+        "from": "2026-01-01",
+        "hoursPerTerm": "10",
+        "id": "261EC62B-EF08-4A98-BCC4-00536B2E4141",
+        "to": "2026-02-02"
+      }
+    ],
+    "programName": "Administration och utveckling",
+    "reportCategory": "Course administration / development",
+    "roles": [
+      "contributor"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityName": "Fältstudiegranskning",
+    "activityTypeName": "Exempel 315",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "DAC5A387-A733-4CDA-8F11-3D02D217B9DE",
+    "deliveryMode": "Online",
+    "deliveryModes": [
+      "Online"
+    ],
+    "id": "5AD0FB72-D069-4D62-98DE-78802500A7F6",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2026-01-01",
+        "hoursPerTerm": "24",
+        "id": "012BE80A-457C-4DF1-873A-C1E288C19A0B",
+        "to": "2026-02-13"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Group teaching / practical teaching",
+    "roles": [
+      "examiner"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityName": "Underhållsarbete",
+    "activityTypeName": "Doktorandhandledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "EE410BEF-CDC2-487D-A098-22AD1C9F3502",
+    "deliveryMode": "Online",
+    "deliveryModes": [
+      "Online"
+    ],
+    "id": "3233B6D0-4C30-4EA3-9F04-6AC126E0ECC2",
+    "kind": "Development work",
+    "participantForm": "Not teaching work",
+    "periods": [
+      {
+        "confirmedInRetendo": true,
+        "from": "2026-01-01",
+        "hoursPerTerm": "6",
+        "id": "27C02871-0043-462D-BB72-888FB79661BA",
+        "to": "2026-02-13"
+      }
+    ],
+    "programName": "Administration och utveckling",
+    "reportCategory": "Course administration / development",
+    "roles": [
+      "contributor"
+    ],
+    "studentName": "",
+    "tasks": []
+  },
+  {
+    "activityID": "51F98590-89A5-4587-96C8-BAC3E6AF1132",
+    "activityName": "Exempelnamn 29",
+    "activityTypeName": "Doktorandhandledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "73DB606C-9C71-4B89-ABF0-F99689D6D535",
+    "deliveryModes": [
+      "On-site",
+      "Online"
+    ],
+    "id": "6C58A520-9B5F-4A71-9752-0245CEDCAB52",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2026-02-14",
+        "hoursPerTerm": "0",
+        "id": "3834E9FB-9D52-4E52-9D31-83EDD7F0F50F",
+        "to": "2026-08-16"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2026-08-17",
+        "hoursPerTerm": "",
+        "id": "AB5A3AAF-C334-4875-B724-3C88649DD8FF",
+        "to": "2027-02-13"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Thesis / in-depth project supervision",
+    "roles": [
+      "supervisor"
+    ],
+    "studentName": "Daniel Utkastqvist",
+    "tasks": []
+  },
+  {
+    "activityID": "51F98590-89A5-4587-96C8-BAC3E6AF1132",
+    "activityName": "Exempelnamn 29",
+    "activityTypeName": "Doktorandhandledning",
+    "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+    "comment": "",
+    "contextID": "73DB606C-9C71-4B89-ABF0-F99689D6D535",
+    "deliveryModes": [
+      "On-site",
+      "Online"
+    ],
+    "id": "1005218D-EA50-4C4B-81CB-7043D183DD2C",
+    "kind": "Supervision",
+    "participantForm": "Individual",
+    "periods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2026-02-14",
+        "hoursPerTerm": "0",
+        "id": "7210A637-59C2-4FA3-A4D3-F1BAFFAC7DC6",
+        "to": "2026-08-16"
+      },
+      {
+        "confirmedInRetendo": false,
+        "from": "2026-08-17",
+        "hoursPerTerm": "",
+        "id": "FCFBA372-CA3A-4469-9731-58746ECABA82",
+        "to": "2027-01-17"
+      }
+    ],
+    "programName": "Exempelprogrammet",
+    "reportCategory": "Thesis / in-depth project supervision",
+    "roles": [
+      "supervisor"
+    ],
+    "studentName": "Albert Skissholm",
+    "tasks": []
+  }
+]

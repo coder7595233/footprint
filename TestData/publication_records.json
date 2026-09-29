@@ -1,0 +1,5191 @@
+[
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Sven Utkastlund",
+      "Mikael Modellius",
+      "Moa Testwood",
+      "Karin Selma Fiktivdahl",
+      "Peter Provius",
+      "Adam Exempeldahl",
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "B6424875-AAB8-41B0-A9BC-6A8743C4E373",
+        "selfCitationCount": "0",
+        "year": "2026"
+      }
+    ],
+    "citations": "0",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Formal analysis",
+          "Methodology",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Sven Utkastlund",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Mikael Modellius",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Moa Testwood",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Karin Selma Fiktivdahl",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Peter Provius",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Adam Exempeldahl",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Pontus N. Skissgren",
+        "roleContributions": [],
+        "roles": [
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Gustav Utkastgren",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1049",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1049.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1050.pdf",
+    "geography": "International",
+    "id": "24ABE96D-D3A7-42A1-87D7-62DBE5256E61",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "1",
+    "jif2024": "8.3000000000000007",
+    "jifCurrent": "3.4 (osäkert)",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 10",
+    "norwegian2025": "saknas",
+    "norwegianCurrent": "2",
+    "number": "19",
+    "pageRange": "1-11",
+    "phdStage": "After",
+    "pmid": "41439169",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "A5F124F4-5C7A-46B7-B732-6D386A642DD8",
+        "journal": "Journal of Examples 13",
+        "rejectedOn": "2024-11-17",
+        "submittedOn": "2024-11-07"
+      },
+      {
+        "id": "7A583D1F-0CDB-4AC5-84AB-1948C135F23B",
+        "journal": "Journal of Examples 9",
+        "rejectedOn": "2024-12-27",
+        "submittedOn": "2024-12-15"
+      },
+      {
+        "id": "EA61A3D7-A293-46D8-828C-CD4BC86BF06A",
+        "journal": "Journal of Examples 12",
+        "rejectedOn": "2025-01-21",
+        "submittedOn": "2025-01-07"
+      },
+      {
+        "id": "A1F57D75-C8B3-4A97-8C2A-27D503777003",
+        "journal": "Journal of Examples 11",
+        "rejectedOn": "2025-02-25",
+        "submittedOn": "2025-02-08"
+      }
+    ],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "3 (2019)",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2026-01-01",
+    "statusTimeline": [
+      {
+        "date": "2026-01-01",
+        "id": "BFFA01C8-7AB8-45A7-A920-E1366649B3D3",
+        "journal": "Journal of Examples 10",
+        "status": "Published"
+      },
+      {
+        "date": "2025-07-05",
+        "id": "D6C8F88D-8F17-4563-BFA8-4926AB678785",
+        "journal": "Journal of Examples 10",
+        "status": "Accepted"
+      },
+      {
+        "date": "2025-02-26",
+        "id": "7693A377-5C56-4BC2-B082-4A6A0767536A",
+        "journal": "Journal of Examples 10",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-02-25",
+        "id": "1CB49F41-4FAA-4C87-BDD8-0705A7CCF5DB",
+        "journal": "Journal of Examples 11",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-02-08",
+        "id": "7376ED3C-B2DC-493F-B2EC-B84AA5799BFD",
+        "journal": "Journal of Examples 11",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-01-21",
+        "id": "BBFEF808-BC22-413F-B125-77227C50850C",
+        "journal": "Journal of Examples 12",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-01-07",
+        "id": "6B1D4F7C-FDB1-4311-BE77-9C6215160DCF",
+        "journal": "Journal of Examples 12",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-12-27",
+        "id": "EEA4B238-05B4-4EBD-8E1E-59284D040DF5",
+        "journal": "Journal of Examples 9",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-12-15",
+        "id": "B4EE96DC-4B45-4DB1-9F48-2E3E0362A850",
+        "journal": "Journal of Examples 9",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-11-17",
+        "id": "0EE78576-435C-4D05-9AD9-2A8EA6DE2CF1",
+        "journal": "Journal of Examples 13",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-11-07",
+        "id": "039309A2-9482-4114-B49D-A32FC8535A03",
+        "journal": "Journal of Examples 13",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 9",
+    "volume": "14",
+    "year": "2026"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Elin Provqvist",
+      "Alice Exempelgren",
+      "Alexander Fiktivholm",
+      "Adam Testsson",
+      "Johan T. Låtsasberg",
+      "Lars Provberg",
+      "Christoffer Testius",
+      "Harald Mallius"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Data curation"
+          },
+          {
+            "contribution": "equal",
+            "role": "Formal analysis"
+          },
+          {
+            "contribution": "equal",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "lead",
+            "role": "Project administration"
+          },
+          {
+            "contribution": "equal",
+            "role": "Validation"
+          },
+          {
+            "contribution": "equal",
+            "role": "Visualization"
+          }
+        ],
+        "roles": [
+          "Data curation",
+          "Formal analysis",
+          "Methodology",
+          "Project administration",
+          "Validation",
+          "Visualization",
+          "Writing - original draft"
+        ]
+      },
+      {
+        "authorName": "Elin Provqvist",
+        "roleContributions": [
+          {
+            "contribution": "lead",
+            "role": "Data curation"
+          },
+          {
+            "contribution": "equal",
+            "role": "Formal analysis"
+          },
+          {
+            "contribution": "equal",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "equal",
+            "role": "Validation"
+          },
+          {
+            "contribution": "equal",
+            "role": "Visualization"
+          },
+          {
+            "contribution": "equal",
+            "role": "Writing - original draft"
+          },
+          {
+            "contribution": "lead",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Data curation",
+          "Formal analysis",
+          "Methodology",
+          "Validation",
+          "Visualization",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Alice Exempelgren",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Alexander Fiktivholm",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Adam Testsson",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Johan T. Låtsasberg",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Lars Provberg",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Christoffer Testius",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Harald Mallius",
+        "roleContributions": [
+          {
+            "contribution": "lead",
+            "role": "Conceptualization"
+          },
+          {
+            "contribution": "lead",
+            "role": "Investigation"
+          },
+          {
+            "contribution": "lead",
+            "role": "Supervision"
+          },
+          {
+            "contribution": "lead",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Conceptualization",
+          "Investigation",
+          "Supervision",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1056",
+    "epubDate": "2026-03-21",
+    "finalPDFFilename": "exempel-1056.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1057.pdf",
+    "geography": "National",
+    "id": "C58FB1F3-3950-481C-BED7-6093A5419CF8",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "10 (osäkert)",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 3",
+    "norwegian2025": "",
+    "norwegianCurrent": "2",
+    "number": "",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "42554163",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "6F37B3E6-67BE-408B-A979-9393A07F91D3",
+        "journal": "Journal of Examples 18",
+        "rejectedOn": "2025-11-02",
+        "submittedOn": "2025-10-29"
+      },
+      {
+        "id": "734F5DD7-DFA2-46A0-9FC7-2CC96925E901",
+        "journal": "Journal of Examples 17",
+        "rejectedOn": "2025-11-15",
+        "submittedOn": "2025-11-03"
+      },
+      {
+        "id": "B19E8887-30F8-4C35-AEEB-EFC5E225089B",
+        "journal": "Journal of Examples 16",
+        "rejectedOn": "2025-11-18",
+        "submittedOn": "2025-11-17"
+      },
+      {
+        "id": "25D761D0-768A-4869-A91E-B727EAF189AE",
+        "journal": "Journal of Examples 15",
+        "rejectedOn": "2025-11-21",
+        "submittedOn": "2025-11-19"
+      },
+      {
+        "id": "F113A12B-5EB5-47DB-B6F5-FA6D27C5774E",
+        "journal": "Journal of Examples 14",
+        "rejectedOn": "2025-11-24",
+        "submittedOn": "2025-11-22"
+      }
+    ],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2026-03-21",
+    "statusTimeline": [
+      {
+        "date": "2026-03-21",
+        "id": "4A8ED374-8CCA-47CF-936C-F602E23D4BCA",
+        "journal": "Journal of Examples 3",
+        "status": "Published"
+      },
+      {
+        "date": "2026-02-19",
+        "id": "65A4BB97-7EF5-4E0E-AA9C-CDBA031DEA1E",
+        "journal": "Journal of Examples 3",
+        "status": "Accepted"
+      },
+      {
+        "date": "2025-11-25",
+        "id": "4D3B08A6-48F6-4D74-BF99-D94B4C4EDD9D",
+        "journal": "Journal of Examples 3",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-11-24",
+        "id": "CA1722BC-4947-4482-874A-B9B28B0F3B99",
+        "journal": "Journal of Examples 14",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-11-22",
+        "id": "39A7C544-7A4A-4599-A40C-9C3AD924B648",
+        "journal": "Journal of Examples 14",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-11-21",
+        "id": "D5C359DC-2991-4EDE-BADB-450607AAB063",
+        "journal": "Journal of Examples 15",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-11-19",
+        "id": "CD4A0D26-7422-4B9D-B59E-525942210B9D",
+        "journal": "Journal of Examples 15",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-11-18",
+        "id": "7C93E62A-1D87-44ED-ACAE-FF343904A4EC",
+        "journal": "Journal of Examples 16",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-11-17",
+        "id": "E7C844E0-8FE9-405F-BD50-3213CDA51AF3",
+        "journal": "Journal of Examples 16",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-11-15",
+        "id": "281DECB0-DA6C-492C-9012-035B98845820",
+        "journal": "Journal of Examples 17",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-11-03",
+        "id": "1C1F4186-9F32-4686-B14C-3FFEF2259A1D",
+        "journal": "Journal of Examples 17",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-11-02",
+        "id": "CEA6ED52-7B07-4970-AE1D-38137707393D",
+        "journal": "Journal of Examples 18",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-10-29",
+        "id": "5EE74A65-25E3-4D02-B217-6D748349CA72",
+        "journal": "Journal of Examples 18",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 10",
+    "volume": "",
+    "year": "2026"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Astrid Provsson",
+      "Signe Påhittberg",
+      "Jakob Modellholm",
+      "Monica Skissdahl",
+      "Jesper Fiktivqvist",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "660A457D-D738-4AC8-888A-C7A5C5CF95D5",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "0CA09D62-2289-4950-935A-8AB8464D31F4",
+        "selfCitationCount": "0",
+        "year": "2025"
+      }
+    ],
+    "citations": "0",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [],
+        "roles": [
+          "Formal analysis",
+          "Visualization",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Astrid Provsson",
+        "roleContributions": [],
+        "roles": [
+          "Formal analysis",
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Signe Påhittberg",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Jakob Modellholm",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Monica Skissdahl",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Jesper Fiktivqvist",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Funding acquisition",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Gustav Utkastgren",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Funding acquisition",
+          "Methodology",
+          "Project administration",
+          "Supervision",
+          "Validation",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1070",
+    "epubDate": "2025-07-10",
+    "finalPDFFilename": "exempel-1070.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1071.pdf",
+    "geography": "National",
+    "id": "BB8887F1-9946-4864-B2F0-AEA193F1F014",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "1",
+    "jif2024": "1.8",
+    "jifCurrent": "1.9 (osäkert)",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 19",
+    "norwegian2025": "2",
+    "norwegianCurrent": "2",
+    "number": "18",
+    "pageRange": "1-9",
+    "phdStage": "After",
+    "pmid": "41283789",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "B6715DA0-DE86-4816-93E0-F74DF231B950",
+        "journal": "Journal of Examples 30",
+        "rejectedOn": "2023-06-10",
+        "submittedOn": "2023-05-29"
+      },
+      {
+        "id": "3C8FADA5-EF79-4016-949D-21D6B1C43DA5",
+        "journal": "Journal of Examples 29",
+        "rejectedOn": "2023-06-13",
+        "submittedOn": "2023-06-10"
+      },
+      {
+        "id": "890BC25E-02F6-45B4-AA9E-3546CC4CAACA",
+        "journal": "Journal of Examples 28",
+        "rejectedOn": "2023-06-22",
+        "submittedOn": "2023-06-18"
+      },
+      {
+        "id": "903764DE-BABA-4C36-8C3D-A1BB9A3CFED7",
+        "journal": "Journal of Examples 27",
+        "rejectedOn": "2023-08-18",
+        "submittedOn": "2023-07-30"
+      },
+      {
+        "id": "99899FBC-1BC9-4986-A7EC-35F6E17A18DE",
+        "journal": "Journal of Examples 26",
+        "rejectedOn": "2023-09-18",
+        "submittedOn": "2023-08-28"
+      },
+      {
+        "id": "E0B4FE2C-0935-4054-895A-7BEBEB813540",
+        "journal": "Journal of Examples 25",
+        "rejectedOn": "2023-10-17",
+        "submittedOn": "2023-09-18"
+      },
+      {
+        "id": "5FD5C908-6374-40BE-B109-BBD49EB6548B",
+        "journal": "Journal of Examples 24",
+        "rejectedOn": "2023-10-19",
+        "submittedOn": "2023-10-18"
+      },
+      {
+        "id": "3AC7F022-0E82-4BA8-8384-933675BBE935",
+        "journal": "Journal of Examples 23",
+        "rejectedOn": "2023-10-28",
+        "submittedOn": "2023-10-22"
+      },
+      {
+        "id": "838E5965-EFB8-4A50-800F-22F6038DB149",
+        "journal": "Journal of Examples 22",
+        "rejectedOn": "2023-11-05",
+        "submittedOn": "2023-11-02"
+      },
+      {
+        "id": "C8E24152-8240-49CB-A50A-9122DE2E88C9",
+        "journal": "Journal of Examples 21",
+        "rejectedOn": "2023-11-12",
+        "submittedOn": "2023-11-05"
+      },
+      {
+        "id": "5B3EFED0-0AD1-468C-9771-24ED80F147F7",
+        "journal": "Journal of Examples 20",
+        "rejectedOn": "2024-11-03",
+        "submittedOn": "2023-12-18"
+      }
+    ],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "2",
+    "sjrCurrent": "Q2",
+    "status": "Published",
+    "statusDate": "2026-01-01",
+    "statusTimeline": [
+      {
+        "date": "2026-01-01",
+        "id": "59E67DC0-C947-46EE-9C0E-0EE51ADC2FF7",
+        "journal": "Journal of Examples 19",
+        "status": "Published"
+      },
+      {
+        "date": "2025-07-02",
+        "id": "A0E4FC13-1EBA-46EE-8610-1A3A4670798D",
+        "journal": "Journal of Examples 19",
+        "status": "Accepted"
+      },
+      {
+        "date": "2024-11-25",
+        "id": "98342CA5-3BC2-4E86-9EE5-EFAD476A837B",
+        "journal": "Journal of Examples 19",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-11-03",
+        "id": "092BF34C-2673-443C-AAF4-F5FF204C19E3",
+        "journal": "Journal of Examples 20",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-12-18",
+        "id": "29744170-CA62-4957-AA6A-357BEF41A02C",
+        "journal": "Journal of Examples 20",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-11-12",
+        "id": "6B84832D-67A7-4225-B301-43F9442113C0",
+        "journal": "Journal of Examples 21",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-11-05",
+        "id": "2BDD1A7D-6ED0-41A3-B7B0-99E7495F1FB8",
+        "journal": "Journal of Examples 21",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-11-05",
+        "id": "AF4456D9-F29F-4547-8AF3-4B9E639B2864",
+        "journal": "Journal of Examples 22",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-11-02",
+        "id": "EEF1D8E3-D902-4ED7-B3E4-03BBF69E31AC",
+        "journal": "Journal of Examples 22",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-10-28",
+        "id": "8953B1F5-DB6A-4664-B8C3-F745BC1F5722",
+        "journal": "Journal of Examples 23",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-10-22",
+        "id": "0477076D-E688-49CB-96A0-F3F06F297EF8",
+        "journal": "Journal of Examples 23",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-10-19",
+        "id": "037B20F6-ED5C-47B1-AAFE-16908E9AB1EA",
+        "journal": "Journal of Examples 24",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-10-18",
+        "id": "A68D8A3D-8810-4476-BF7F-0ECFCD3C64FB",
+        "journal": "Journal of Examples 24",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-10-17",
+        "id": "DC9CA3F8-07A4-482D-AFCF-959F443448EF",
+        "journal": "Journal of Examples 25",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-09-18",
+        "id": "069DA281-BF4B-4889-A3FE-B2C9ED180200",
+        "journal": "Journal of Examples 25",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-09-18",
+        "id": "83836455-5071-4BD8-96DA-A2103944D0C2",
+        "journal": "Journal of Examples 26",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-08-28",
+        "id": "9D7B0F51-5417-4D6A-8DB9-165961BE437D",
+        "journal": "Journal of Examples 26",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-08-18",
+        "id": "D2EA311F-A7C3-44D3-B42A-95AAA0D857FB",
+        "journal": "Journal of Examples 27",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-07-30",
+        "id": "B9A1262C-5C25-4D19-9815-AB47B0A78303",
+        "journal": "Journal of Examples 27",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-06-22",
+        "id": "B401550E-DBD6-4739-83D6-18D08F947BB1",
+        "journal": "Journal of Examples 28",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-06-18",
+        "id": "5FBB3F98-B93B-4903-8289-2C39BF68054C",
+        "journal": "Journal of Examples 28",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-06-13",
+        "id": "1F9C0C4E-B607-43ED-AE40-E582CE14C325",
+        "journal": "Journal of Examples 29",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-06-10",
+        "id": "7AB7F416-9334-48BA-B625-C8A1B27E02CE",
+        "journal": "Journal of Examples 29",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-06-10",
+        "id": "C2432CC1-AF31-4426-B404-B44FA9CF195C",
+        "journal": "Journal of Examples 30",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-05-29",
+        "id": "FB7E803A-58D2-4678-937D-AB3AEECAB74B",
+        "journal": "Journal of Examples 30",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 13",
+    "volume": "44",
+    "year": "2026"
+  },
+  {
+    "articleNumber": "12196",
+    "authorNames": [
+      "Bo Mallberg",
+      "Lena Testander",
+      "Greta af Låtsasby",
+      "Gustav Utkastgren",
+      "Rolf Påhittlund"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "290CF50E-6F62-48F9-83CE-C0AA1F300369",
+        "selfCitationCount": "0",
+        "year": "2026"
+      }
+    ],
+    "citations": "0",
+    "correspondingAuthorName": "Bo Mallberg",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1073",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1073.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1074.pdf",
+    "geography": "National",
+    "id": "9C834B0D-AB42-4544-A256-071B1D55D4D3",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "1",
+    "jif2024": "",
+    "jifCurrent": "3.9 (osäkert)",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 31",
+    "norwegian2025": "",
+    "norwegianCurrent": "X",
+    "number": "",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "41975197",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "FBC7A8E5-1D9C-49D2-8A72-86877EA9F518",
+    "projectName": "Exempelnamn 26",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": true,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2025-11-27",
+    "statusTimeline": [
+      {
+        "date": "2025-11-27",
+        "id": "44AD88B2-A907-4C6C-887C-DBF1C6F17601",
+        "journal": "Journal of Examples 31",
+        "status": "Published"
+      },
+      {
+        "date": "2025-11-10",
+        "id": "CDC7E368-908F-4BD2-9767-49A258833A85",
+        "journal": "Journal of Examples 31",
+        "status": "Accepted"
+      },
+      {
+        "date": "2025-10-13",
+        "id": "3EFA8875-D681-48F8-8997-F84D3ED8A37A",
+        "journal": "Journal of Examples 31",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 20",
+    "volume": "16",
+    "year": "2026"
+  },
+  {
+    "articleNumber": "Exempel 312",
+    "authorNames": [
+      "Kjell Låtsasander",
+      "Therese Modelldahl",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Greta af Låtsasby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1082",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1082.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1083.pdf",
+    "geography": "National",
+    "id": "3A3C5F9A-CD28-4B9F-9786-DB5DA1FFA5B8",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "9",
+    "jif2024": "",
+    "jifCurrent": "2.6 (osäkert)",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 32",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "42771606",
+    "position": "Last",
+    "previousAttempts": [
+      {
+        "id": "804B4A6D-D879-42BA-8EEE-87D888656C23",
+        "journal": "Journal of Examples 37",
+        "rejectedOn": "2024-06-05",
+        "submittedOn": "2024-04-28"
+      },
+      {
+        "id": "21E33274-636F-4E43-A93A-C6B7A640E0E7",
+        "journal": "Journal of Examples 36",
+        "rejectedOn": "2024-06-10",
+        "submittedOn": "2024-06-06"
+      },
+      {
+        "id": "E4B8E134-3893-42CE-9F07-F5E0F72EF339",
+        "journal": "Nutrition",
+        "rejectedOn": "2024-06-19",
+        "submittedOn": "2024-06-16"
+      },
+      {
+        "id": "90C90B58-A596-485E-A18D-9E6A73E3C0A4",
+        "journal": "Journal of Examples 35",
+        "rejectedOn": "2024-07-10",
+        "submittedOn": "2024-06-22"
+      },
+      {
+        "id": "2720ECAD-CC0A-40BD-B792-6FF3CFE5209B",
+        "journal": "Journal of Examples 34",
+        "rejectedOn": "2024-08-23",
+        "submittedOn": "2024-07-13"
+      },
+      {
+        "id": "DAACD76D-09FA-41F8-B4BB-BE244E3189A4",
+        "journal": "Journal of Examples 33",
+        "rejectedOn": "2025-05-01",
+        "submittedOn": "2024-11-08"
+      }
+    ],
+    "projectID": "DF0E70FB-273D-42A0-BAA9-56CE060C6415",
+    "projectName": "Exempelnamn 31",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2026-05-08",
+    "statusTimeline": [
+      {
+        "date": "2026-05-08",
+        "id": "DC37C34B-60C6-414F-9E4A-8BFD76991CB0",
+        "journal": "Journal of Examples 32",
+        "status": "Published"
+      },
+      {
+        "date": "2026-04-19",
+        "id": "CB9ADEED-CF34-408D-BE90-0736C05BC9A6",
+        "journal": "Journal of Examples 32",
+        "status": "Accepted"
+      },
+      {
+        "date": "2025-08-13",
+        "id": "5A595FFB-DF3D-481E-84E7-1901FD16FD67",
+        "journal": "Journal of Examples 32",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-05-01",
+        "id": "87408DC5-4EE5-4A84-B9AA-05A34B415C59",
+        "journal": "Journal of Examples 33",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-11-08",
+        "id": "8C03AA6E-98AC-4552-AB20-292B61F88936",
+        "journal": "Journal of Examples 33",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-08-23",
+        "id": "CA3BC90B-731F-455F-86F3-EF2620FAC912",
+        "journal": "Journal of Examples 34",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-07-13",
+        "id": "FF8688E2-DA3C-49D1-9524-8FD9AE15E23C",
+        "journal": "Journal of Examples 34",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-07-10",
+        "id": "CF54A6BC-747A-4578-94F0-6717EFFED0A6",
+        "journal": "Journal of Examples 35",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-06-22",
+        "id": "C75D981D-418B-4EC4-BB2E-9FB884357FCC",
+        "journal": "Journal of Examples 35",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-06-19",
+        "id": "E40BC48C-EA33-40EA-A7EE-75CDB7E95E7B",
+        "journal": "Nutrition",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-06-16",
+        "id": "D9C505D3-3926-4DAB-AE20-CFEBB4A757CE",
+        "journal": "Nutrition",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-06-10",
+        "id": "1D21D8CE-BD04-447B-931F-7CD340429245",
+        "journal": "Journal of Examples 36",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-06-06",
+        "id": "9B55385E-1344-4C14-A5B7-AB505C357BE7",
+        "journal": "Journal of Examples 36",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-06-05",
+        "id": "A64ADD70-911A-435A-A25F-5C58F4845895",
+        "journal": "Journal of Examples 37",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-04-28",
+        "id": "C0E409EF-B5BC-459E-90BF-2FA97DBDC3FC",
+        "journal": "Journal of Examples 37",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 23",
+    "volume": "21",
+    "year": "2026"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Emelie Låtsaslund",
+      "Greta af Låtsasby",
+      "Pontus Påhittby",
+      "Gustav Utkastgren",
+      "Karin Selma Fiktivdahl",
+      "Pontus N. Skissgren",
+      "Leo Påhittling"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "1",
+        "id": "49FD9110-B1AC-4EE2-B11D-52438BF60830",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "33B49F74-07AC-4241-B293-60458452FD4B",
+        "year": "2025"
+      }
+    ],
+    "citations": "1",
+    "correspondingAuthorName": "Emelie Låtsaslund",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1085",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1085.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1086.pdf",
+    "geography": "National",
+    "id": "ABFC955A-DAAF-47F3-9796-B51B48CB799E",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "3",
+    "jif2024": "3.1",
+    "jifCurrent": "2.9 (osäkert)",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 38",
+    "norwegian2025": "1",
+    "norwegianCurrent": "1",
+    "number": "16",
+    "pageRange": "372-381",
+    "phdStage": "After",
+    "pmid": "40884434",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "1",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2025-10-15",
+    "statusTimeline": [
+      {
+        "date": "2025-10-15",
+        "id": "1CF1DBF6-D86F-4127-8BAC-436ED133FEC5",
+        "journal": "Journal of Examples 38",
+        "status": "Published"
+      },
+      {
+        "date": "2025-03-20",
+        "id": "F3A04A7A-9435-48EB-9D8D-6CBFF1ADEFE5",
+        "journal": "Journal of Examples 38",
+        "status": "Accepted"
+      },
+      {
+        "date": "2025-02-06",
+        "id": "05E76767-0599-4FA5-BCFD-425CB16A6DE1",
+        "journal": "Journal of Examples 38",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 39",
+    "volume": "39",
+    "year": "2026"
+  },
+  {
+    "articleNumber": "54",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Therese Modelldahl",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "2",
+        "id": "AC461FD0-DA89-476A-A498-CEF8F49B56FE",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "51044F6E-5501-48EF-B064-980EC2879344",
+        "selfCitationCount": "0",
+        "year": "2025"
+      }
+    ],
+    "citations": "2",
+    "correspondingAuthorName": "Pontus N. Skissgren",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [],
+        "roles": [
+          "Formal analysis",
+          "Investigation",
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Therese Modelldahl",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Investigation",
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Gustav Utkastgren",
+        "roleContributions": [],
+        "roles": [
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Pontus N. Skissgren",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1090",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1090.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1091.pdf",
+    "geography": "National",
+    "id": "2BD6D6DD-2EEC-4570-8A24-BC1545392432",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "1",
+    "jif2024": "4.0999999999999996",
+    "jifCurrent": "4 (osäkert)",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 39",
+    "norwegian2025": "1",
+    "norwegianCurrent": "1",
+    "number": "12",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "40241094",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "A76B123C-DB99-4F9A-99C7-AA604A79C902",
+        "journal": "Journal of Examples 9",
+        "rejectedOn": "2024-04-06",
+        "submittedOn": "2024-04-04"
+      },
+      {
+        "id": "7AE00883-2479-46E5-A579-2B0857201A38",
+        "journal": "Journal of Examples 41",
+        "rejectedOn": "2024-05-02",
+        "submittedOn": "2024-04-28"
+      },
+      {
+        "id": "804A3176-3C64-423D-BC88-FEAA87B7AFA8",
+        "journal": "Journal of Examples 40",
+        "rejectedOn": "2024-05-04",
+        "submittedOn": "2024-05-02"
+      }
+    ],
+    "projectID": "118A0F88-EBCD-4F1E-8535-459A90BF1E22",
+    "projectName": "Exempelprojekt 10",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "1",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2024-11-30",
+    "statusTimeline": [
+      {
+        "date": "2024-11-30",
+        "id": "4763CCCC-FFA8-4B56-BF7B-8CE74358A21F",
+        "journal": "Journal of Examples 39",
+        "status": "Published"
+      },
+      {
+        "date": "2024-11-08",
+        "id": "AFF6A8BE-9818-4A9A-9F77-07335C96E804",
+        "journal": "Journal of Examples 39",
+        "status": "Accepted"
+      },
+      {
+        "date": "2024-05-04",
+        "id": "F9C3CB01-6E7D-4713-90BD-ECE4E59BFD32",
+        "journal": "Journal of Examples 39",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-05-04",
+        "id": "CC61F25F-E28C-4FFF-B6E9-1B944129A3C7",
+        "journal": "Journal of Examples 40",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-05-02",
+        "id": "497F8965-E66F-4D18-BCAE-C0016C497C53",
+        "journal": "Journal of Examples 40",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-05-02",
+        "id": "E28D7223-819C-45CD-A5F0-23B7F841176B",
+        "journal": "Journal of Examples 41",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-04-28",
+        "id": "0EB2DD8E-ABFC-4F4D-BCB2-EE5E369512F9",
+        "journal": "Journal of Examples 41",
+        "status": "Submitted"
+      },
+      {
+        "date": "2024-04-06",
+        "id": "74BF2466-79FE-4874-A715-96E6D8A56423",
+        "journal": "Journal of Examples 9",
+        "status": "Rejected"
+      },
+      {
+        "date": "2024-04-04",
+        "id": "ABFD138D-87C6-42F7-90FF-EF7E544E91F1",
+        "journal": "Journal of Examples 9",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 11",
+    "volume": "22",
+    "year": "2025"
+  },
+  {
+    "articleNumber": "Exempel 313",
+    "authorNames": [
+      "Elin Provqvist",
+      "Greta af Låtsasby",
+      "Sven Mallsson Påhittqvist",
+      "Helena Modellfield-Modellander",
+      "Sofia Påhittwood",
+      "Elin Exempelstedt"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "1",
+        "id": "35E82DCF-85C0-4C88-A042-44F9C076046B",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "501DF1EC-2918-414B-94B7-1534915E225D",
+        "selfCitationCount": "0",
+        "year": "2025"
+      }
+    ],
+    "citations": "1",
+    "correspondingAuthorName": "Elin Provqvist",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Elin Provqvist",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Data curation",
+          "Formal analysis",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Software",
+          "Validation",
+          "Visualization",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Data curation",
+          "Formal analysis",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Validation",
+          "Visualization",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Sven Mallsson Påhittqvist",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Validation",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Helena Modellfield-Modellander",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Validation",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Sofia Påhittwood",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Validation",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Elin Exempelstedt",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Funding acquisition",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Resources",
+          "Supervision",
+          "Validation",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1094",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1094.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1095.pdf",
+    "geography": "National",
+    "id": "166971E1-833F-4EFC-9246-7C7DC04794BF",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "6",
+    "jif2024": "2.2999999999999998",
+    "jifCurrent": "2.5",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 42",
+    "norwegian2025": "1",
+    "norwegianCurrent": "1",
+    "number": "13",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "40527555",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "78BA3244-D756-4A55-BFDF-B32100FAFA7C",
+    "projectName": "Exempelnamn 33",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "1",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2025-01-31",
+    "statusTimeline": [
+      {
+        "date": "2025-01-31",
+        "id": "BF395903-233D-41BE-8D24-A45C0D2E8B5A",
+        "journal": "Journal of Examples 42",
+        "status": "Published"
+      },
+      {
+        "date": "2025-01-13",
+        "id": "933A9F60-328F-4998-9B30-0F7620757FD4",
+        "journal": "Journal of Examples 42",
+        "status": "Accepted"
+      },
+      {
+        "date": "2024-08-06",
+        "id": "BFF5AD70-95BF-4217-BE67-57359D91D740",
+        "journal": "Journal of Examples 42",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 15",
+    "volume": "15",
+    "year": "2025"
+  },
+  {
+    "articleNumber": "20552076251365063",
+    "authorNames": [
+      "Märta Exempelander",
+      "Carina Exempelholm Provstedt",
+      "Martin Exempelqvist",
+      "Greta af Låtsasby",
+      "Åsa Testqvist",
+      "Sara NA Utkaststedt",
+      "Julia Mallby",
+      "Gustav Utkastgren"
+    ],
+    "category": "SJR Quartiles",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "81FB207F-F43B-48AF-BAA5-F6AE7497D550",
+        "selfCitationCount": "1",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "0371FC54-229B-4914-8E67-97409240BF12",
+        "selfCitationCount": "1",
+        "year": "2025"
+      }
+    ],
+    "citations": "2",
+    "correspondingAuthorName": "Gustav Utkastgren",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1097",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1097.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1098.pdf",
+    "geography": "International",
+    "id": "739204F6-DDB4-42F9-B05A-C8813814F34E",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "3.3",
+    "jifCurrent": "3.9",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 43",
+    "norwegian2025": "1",
+    "norwegianCurrent": "1",
+    "number": "14",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "40755958",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "FBC7A8E5-1D9C-49D2-8A72-86877EA9F518",
+    "projectName": "Exempelnamn 26",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "2",
+    "sjrCurrent": "Q2",
+    "status": "Published",
+    "statusDate": "2025-03-16",
+    "statusTimeline": [
+      {
+        "date": "2025-03-16",
+        "id": "A4D6784B-C752-4CD1-B649-4D64FC67B7F5",
+        "journal": "Journal of Examples 43",
+        "status": "Published"
+      },
+      {
+        "date": "2025-03-06",
+        "id": "DA90954A-C4C6-4838-92E4-475B8293BFBC",
+        "journal": "Journal of Examples 43",
+        "status": "Accepted"
+      },
+      {
+        "date": "2024-09-29",
+        "id": "0C005F25-1861-423F-97AB-9E6BDBD407D5",
+        "journal": "Journal of Examples 43",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 18",
+    "volume": "11",
+    "year": "2025"
+  },
+  {
+    "articleNumber": "Exempel 314",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Lena Testander",
+      "Bo Mallberg",
+      "Sara NA Utkaststedt",
+      "Rolf Påhittlund",
+      "Gustav Mallsson",
+      "Märta Exempelander",
+      "Julia Mallby",
+      "Susanne Testlund",
+      "Carina Exempelholm Provstedt",
+      "Martin Exempelqvist",
+      "Selma Påhittfield",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "7BDA0668-E597-444B-8969-F3739C825802",
+        "selfCitationCount": "1",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "0565677B-51CD-439C-83E4-F4FED167AE04",
+        "selfCitationCount": "0",
+        "year": "2025"
+      }
+    ],
+    "citations": "1",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1100",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1100.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1101.pdf",
+    "geography": "International",
+    "id": "7BA7E859-9E83-4449-82C9-24FB535AD5D2",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "2.2999999999999998",
+    "jifCurrent": "2.5",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 42",
+    "norwegian2025": "1",
+    "norwegianCurrent": "1",
+    "number": "17",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "41248424",
+    "position": "First",
+    "previousAttempts": [],
+    "projectID": "FBC7A8E5-1D9C-49D2-8A72-86877EA9F518",
+    "projectName": "Exempelnamn 26",
+    "publicationTasks": [],
+    "publicationType": "Protocol",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "1",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2025-07-02",
+    "statusTimeline": [
+      {
+        "date": "2025-07-02",
+        "id": "DE72717A-BCDB-4497-B187-1A8D352B193C",
+        "journal": "Journal of Examples 42",
+        "status": "Published"
+      },
+      {
+        "date": "2025-06-16",
+        "id": "F968F1B1-DD2F-4009-9CC2-CEE2EDC8861E",
+        "journal": "Journal of Examples 42",
+        "status": "Accepted"
+      },
+      {
+        "date": "2025-04-15",
+        "id": "D6A9C34E-AEAE-4217-A353-E2F9C8129B58",
+        "journal": "Journal of Examples 42",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 21",
+    "volume": "15",
+    "year": "2025"
+  },
+  {
+    "articleNumber": "10529",
+    "authorNames": [
+      "Axel Övningsling",
+      "Greta af Låtsasby",
+      "Leo Påhittling",
+      "Martin G. Testander",
+      "Sven Utkastlund",
+      "Vera Påhittholm",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "768233FF-56B0-4462-B787-D754403A289F",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "C648984D-64A5-4BA5-B423-29D8CA86CDA1",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "0",
+        "id": "2564E30C-832B-450D-B84B-F7BDE8710CE8",
+        "year": "2024"
+      }
+    ],
+    "citations": "0",
+    "correspondingAuthorName": "Gustav Utkastgren",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Axel Övningsling",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Formal analysis",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Validation",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Leo Påhittling",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Martin G. Testander",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Sven Utkastlund",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Vera Påhittholm",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Gustav Utkastgren",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Validation",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1102",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1102.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1103.pdf",
+    "geography": "International",
+    "id": "76D57D53-D041-4D5C-A7CF-05437CF72A6E",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "3.9 (osäkert)",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 31",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "40148538",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "E5E1C7D8-F178-4DB6-9E54-DB9C0A70A95B",
+    "projectName": "Exempelnamn 28",
+    "publicationTasks": [],
+    "publicationType": "",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2024-11-10",
+    "statusTimeline": [
+      {
+        "date": "2024-11-10",
+        "id": "1B55A680-5907-4B02-9BAF-7898D223B66C",
+        "journal": "Journal of Examples 31",
+        "status": "Published"
+      },
+      {
+        "date": "2024-11-01",
+        "id": "12FB2616-001A-400A-8C63-E1823A10688B",
+        "journal": "Journal of Examples 31",
+        "status": "Accepted"
+      },
+      {
+        "date": "2024-08-04",
+        "id": "FD9E4C8B-14C9-4FC9-9D8E-9FC7BB677B5F",
+        "journal": "Journal of Examples 31",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 25",
+    "volume": "15",
+    "year": "2025"
+  },
+  {
+    "articleNumber": "340",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Sven Utkastlund",
+      "Tilda Testfield",
+      "Ingrid Fiktivberg",
+      "Robin Fiktivsson",
+      "Rebecka Demoling",
+      "Hanna Skissby",
+      "Maja Testby"
+    ],
+    "category": "JIF Clarivate",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "CE68B069-8C64-496A-AF47-F78101D6522B",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "1",
+        "id": "484F7B6B-ECCB-480D-83A5-526308FCEC14",
+        "selfCitationCount": "0",
+        "year": "2025"
+      }
+    ],
+    "citations": "1",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [],
+        "roles": [
+          "Formal analysis",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Sven Utkastlund",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Resources",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Tilda Testfield",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Ingrid Fiktivberg",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Robin Fiktivsson",
+        "roleContributions": [],
+        "roles": [
+          "Resources",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Rebecka Demoling",
+        "roleContributions": [],
+        "roles": [
+          "Resources",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Hanna Skissby",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Resources",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Maja Testby",
+        "roleContributions": [],
+        "roles": [
+          "Conceptualization",
+          "Formal analysis",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1105",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1105.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1106.pdf",
+    "geography": "International",
+    "id": "5C3AEC4C-4E08-46A1-BAB4-2BEABB10C2FD",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "1",
+    "jif2024": "10.6",
+    "jifCurrent": "15.6",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 44",
+    "norwegian2025": "1",
+    "norwegianCurrent": "1",
+    "number": "15",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "40826451",
+    "position": "First",
+    "previousAttempts": [],
+    "projectID": "E91C6783-9111-4247-9C78-3DF6DD7B3FCE",
+    "projectName": "Exempelnamn 34",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "1",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2025-04-03",
+    "statusTimeline": [
+      {
+        "date": "2025-04-03",
+        "id": "5D1AF8D2-62D7-4C17-8795-AB23D062179F",
+        "journal": "Journal of Examples 44",
+        "status": "Published"
+      },
+      {
+        "date": "2025-03-20",
+        "id": "6015AAFD-DF7C-45C8-AABC-88B8CEEA45C5",
+        "journal": "Journal of Examples 44",
+        "status": "Accepted"
+      },
+      {
+        "date": "2025-01-17",
+        "id": "FF313C68-E543-48AB-886B-C8EC518F59DD",
+        "journal": "Journal of Examples 44",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 28",
+    "volume": "24",
+    "year": "2025"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Maja Testby",
+      "Martin G. Testander",
+      "Sven Utkastlund",
+      "Vera Påhittholm",
+      "Gustav Utkastgren"
+    ],
+    "category": "Citations",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "44EF03C2-3FFF-46F8-A8EF-B7A71BCA0EB0",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "D79403D1-55A7-4B18-83D2-C82F99D464FA",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "0",
+        "id": "3C006549-8ADE-4529-8205-892F9BB99ABA",
+        "year": "2024"
+      }
+    ],
+    "citations": "0",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1111",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1111.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1112.pdf",
+    "geography": "International",
+    "id": "F3CE2B8B-52CB-43F1-8FD2-137B92CADF79",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "1",
+    "jif2024": "",
+    "jifCurrent": "9.6",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 45",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "10",
+    "pageRange": "469-478",
+    "phdStage": "After",
+    "pmid": "38421828",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "E20F1E90-FA30-4ADD-9F01-6A2B6CA6B935",
+        "journal": "Journal of Examples 48",
+        "rejectedOn": "2023-06-24",
+        "submittedOn": "2023-06-20"
+      },
+      {
+        "id": "A31FED15-DAD2-4131-A35D-B4D90DCF5DE2",
+        "journal": "Journal of Examples 47",
+        "rejectedOn": "2023-07-06",
+        "submittedOn": "2023-07-01"
+      },
+      {
+        "id": "CDDC725A-53EB-43D7-A408-7CB518D6C88E",
+        "journal": "Journal of Examples 46",
+        "rejectedOn": "2023-07-14",
+        "submittedOn": "2023-07-13"
+      }
+    ],
+    "projectID": "E5E1C7D8-F178-4DB6-9E54-DB9C0A70A95B",
+    "projectName": "Exempelnamn 28",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2024-09-17",
+    "statusTimeline": [
+      {
+        "date": "2024-09-17",
+        "id": "39BD2E8B-05A0-418A-8686-96F572BE8298",
+        "journal": "Journal of Examples 45",
+        "status": "Published"
+      },
+      {
+        "date": "2023-09-21",
+        "id": "18D545E8-5F2F-409F-B037-8F9E499B2F7F",
+        "journal": "Journal of Examples 45",
+        "status": "Accepted"
+      },
+      {
+        "date": "2023-07-14",
+        "id": "446D567D-5A28-4101-B9F6-A052F7D2B3FE",
+        "journal": "Journal of Examples 46",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-07-13",
+        "id": "AB2CC96C-508C-4724-8657-BB7D1054723F",
+        "journal": "Journal of Examples 46",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-07-06",
+        "id": "9776E7C8-B392-40ED-8B7B-4AFCC7FD8755",
+        "journal": "Journal of Examples 47",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-07-05",
+        "id": "5E4B0C9A-7673-4594-B36C-8D82789F9C6B",
+        "journal": "Journal of Examples 45",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-07-01",
+        "id": "925BE167-BC5E-4536-A075-F27EA909EE39",
+        "journal": "Journal of Examples 47",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-06-24",
+        "id": "AC12F440-28E2-4168-9A6F-75C28B414B77",
+        "journal": "Journal of Examples 48",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-06-20",
+        "id": "7D2659B5-11D7-4A6A-A6EF-CA03FB2A01AA",
+        "journal": "Journal of Examples 48",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 31",
+    "volume": "16",
+    "year": "2025"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Therese Modelldahl",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "category": "PhD, before",
+    "citationYears": [
+      {
+        "count": "3",
+        "id": "58C6BCB1-8055-45DC-BB97-1BC56AA1E58B",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "3",
+        "id": "77E58D6A-D1B0-4315-9893-487EFFE1AF06",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "1",
+        "id": "EF2265E4-38A8-46FF-9F7C-908BEF106123",
+        "selfCitationCount": "0",
+        "year": "2024"
+      }
+    ],
+    "citations": "7",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1114",
+    "epubDate": "2023-09-05",
+    "finalPDFFilename": "exempel-1114.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1115.pdf",
+    "geography": "National",
+    "id": "6D963914-50EE-4CFA-8753-A87D1B978A82",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "3",
+    "jif2024": "",
+    "jifCurrent": "6.9",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 49",
+    "norwegian2025": "",
+    "norwegianCurrent": "2",
+    "number": "6",
+    "pageRange": "682-691",
+    "phdStage": "Before",
+    "pmid": "38246526",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "37AA4FD4-D742-42A0-8DB8-08424A7F8ACE",
+        "journal": "Journal of Examples 9",
+        "rejectedOn": "2023-03-07",
+        "submittedOn": "2023-03-07"
+      }
+    ],
+    "projectID": "DF0E70FB-273D-42A0-BAA9-56CE060C6415",
+    "projectName": "Exempelnamn 31",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2023-10-16",
+    "statusTimeline": [
+      {
+        "date": "2023-10-16",
+        "id": "D058C319-0CEE-41A4-8B22-C164E1DF72A0",
+        "journal": "Journal of Examples 49",
+        "status": "Published"
+      },
+      {
+        "date": "2023-09-01",
+        "id": "97F9F06B-9EF4-4690-AC68-835CD51A0125",
+        "journal": "Journal of Examples 49",
+        "status": "Accepted"
+      },
+      {
+        "date": "2023-04-10",
+        "id": "77724C08-44BB-4B15-9F70-1D320916337C",
+        "journal": "Journal of Examples 49",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-03-07",
+        "id": "303FBAF7-DAEC-40EE-A47F-544EF34793BC",
+        "journal": "Journal of Examples 9",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-03-07",
+        "id": "20FBC6BD-6E1B-416F-ABA5-C7FFA8D73ADB",
+        "journal": "Journal of Examples 9",
+        "status": "Rejected"
+      }
+    ],
+    "title": "Exempelmöte 7",
+    "volume": "119",
+    "year": "2024"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Tilda Testfield",
+      "Hanna Skissby",
+      "Greta af Låtsasby",
+      "Stina Låtsasius",
+      "Camilla Påhitt",
+      "Rebecka Demoling",
+      "Robin Fiktivsson",
+      "Stig Testholm",
+      "Sven Utkastlund",
+      "Maja Testby"
+    ],
+    "category": "After PhD + independent + last",
+    "citationYears": [
+      {
+        "count": "3",
+        "id": "27CDC551-8377-46AD-B6FA-FB70B3854C3D",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "4",
+        "id": "0CEB85D3-A3A5-4C89-8F4B-42F1D4450DA9",
+        "selfCitationCount": "1",
+        "year": "2025"
+      },
+      {
+        "count": "0",
+        "id": "6BD60154-E59A-4EA4-BBCF-4EB0C634C28C",
+        "selfCitationCount": "0",
+        "year": "2024"
+      }
+    ],
+    "citations": "8",
+    "correspondingAuthorName": "Maja Testby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1117",
+    "epubDate": "2024-04-26",
+    "finalPDFFilename": "exempel-1117.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1118.pdf",
+    "geography": "International",
+    "id": "FA48AE59-9887-46E1-8657-90EF9F8AA79E",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "12",
+    "jif2024": "",
+    "jifCurrent": "5.7",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 50",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "9",
+    "pageRange": "5669-5680",
+    "phdStage": "After",
+    "pmid": "39256935",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "E91C6783-9111-4247-9C78-3DF6DD7B3FCE",
+    "projectName": "Exempelnamn 34",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2024-07-17",
+    "statusTimeline": [
+      {
+        "date": "2024-07-17",
+        "id": "065D1A08-0E71-4E51-A19E-B7042FB2A887",
+        "journal": "Journal of Examples 50",
+        "status": "Published"
+      },
+      {
+        "date": "2024-04-08",
+        "id": "B0A35685-6716-4AFC-9E73-54407FF172FF",
+        "journal": "Journal of Examples 50",
+        "status": "Accepted"
+      },
+      {
+        "date": "2024-02-17",
+        "id": "0AAC4786-0A3A-4835-A977-25862D3F4EC5",
+        "journal": "Journal of Examples 50",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 27",
+    "volume": "26",
+    "year": "2024"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Gustav Utkastgren",
+      "Therese Modelldahl",
+      "Pontus N. Skissgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1120.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1121.pdf",
+    "geography": "National",
+    "id": "0AC2D241-D08D-4A78-ACF7-1C4954C2B609",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": false,
+    "issue": "1",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "Journal of Examples 51",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "27",
+    "pageRange": "22-24",
+    "phdStage": "Before",
+    "pmid": "",
+    "position": "First",
+    "previousAttempts": [],
+    "projectID": "DF0E70FB-273D-42A0-BAA9-56CE060C6415",
+    "projectName": "Exempelnamn 31",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2023-10-26",
+    "statusTimeline": [
+      {
+        "date": "2023-10-26",
+        "id": "924757D9-8F2E-49D5-9700-3BF52AF1CE2A",
+        "journal": "Journal of Examples 51",
+        "status": "Published"
+      }
+    ],
+    "title": "Exempelmöte 29",
+    "volume": "40",
+    "year": "2024"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Gustav Utkastgren",
+      "Anton Testwood",
+      "Adam M. Provholm",
+      "Mikael Modellius",
+      "Pontus N. Skissgren",
+      "Harald Mallius"
+    ],
+    "category": "PhD, after",
+    "citationYears": [
+      {
+        "count": "1",
+        "id": "050A7556-F05B-42A4-963F-323739E025F7",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "E1CB40D3-89B7-4231-9151-744F867F4F8E",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "1",
+        "id": "14DB856E-F864-456E-8400-19DEE125D295",
+        "selfCitationCount": "0",
+        "year": "2024"
+      }
+    ],
+    "citations": "2",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1123",
+    "epubDate": "2023-11-02",
+    "finalPDFFilename": "exempel-1123.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1124.pdf",
+    "geography": "National",
+    "id": "8C37CD29-81AD-40AC-8898-25C8464F4541",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "7",
+    "jif2024": "",
+    "jifCurrent": "4.2",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 52",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "7",
+    "pageRange": "1226-1234",
+    "phdStage": "Before",
+    "pmid": "38690927",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "834432F2-C1C3-4D05-859F-AA75A9A7F2AD",
+        "journal": "Journal of Examples 9",
+        "rejectedOn": "2023-03-17",
+        "submittedOn": "2023-03-14"
+      },
+      {
+        "id": "4923175D-01BF-4F4A-B238-C88C17BB1BB0",
+        "journal": "Arteriosclerosis, Thrombosis, and Vascular Biology",
+        "rejectedOn": "2023-04-28",
+        "submittedOn": "2023-04-25"
+      },
+      {
+        "id": "B756BF91-29C0-441A-B7A8-675CD3C5EC5B",
+        "journal": "Ateriosclerosis, Thrombosis, and Vascular Biology",
+        "rejectedOn": "2023-04-28",
+        "submittedOn": "2023-04-25"
+      },
+      {
+        "id": "FC6405CE-ED26-43CC-BC7F-33047F53076B",
+        "journal": "Journal of Examples 12",
+        "rejectedOn": "2023-05-22",
+        "submittedOn": "2023-05-22"
+      }
+    ],
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectName": "Doktorandprojekt",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2024-02-15",
+    "statusTimeline": [
+      {
+        "date": "2024-02-15",
+        "id": "4354AD50-BAC2-4EF6-AEE3-531B2C552C5F",
+        "journal": "Journal of Examples 52",
+        "status": "Published"
+      },
+      {
+        "date": "2023-10-17",
+        "id": "9152FB9F-ECD7-473F-B944-ACC086C941E9",
+        "journal": "Journal of Examples 52",
+        "status": "Accepted"
+      },
+      {
+        "date": "2023-05-26",
+        "id": "39C5DAC7-57D2-4A48-B63C-6D9FD5B80D6F",
+        "journal": "Journal of Examples 52",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-05-22",
+        "id": "49123279-6DA0-4806-9D87-9E7072315899",
+        "journal": "Journal of Examples 12",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-05-22",
+        "id": "E2396AEB-6BBA-41BF-BD63-E452A2FD50F3",
+        "journal": "Journal of Examples 12",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-04-28",
+        "id": "12740229-45A7-4C1F-96FB-A73731B719AE",
+        "journal": "Arteriosclerosis, Thrombosis, and Vascular Biology",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-04-28",
+        "id": "3E05D502-DBFF-45C5-A3D8-EF8BAA39112E",
+        "journal": "Ateriosclerosis, Thrombosis, and Vascular Biology",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-04-25",
+        "id": "60A1EADF-6D30-4DA3-B040-E5591BD57BDB",
+        "journal": "Arteriosclerosis, Thrombosis, and Vascular Biology",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-04-25",
+        "id": "A9BE57C4-AFA0-4983-8050-24EF0BE12789",
+        "journal": "Ateriosclerosis, Thrombosis, and Vascular Biology",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-03-17",
+        "id": "FE660F03-9746-4CF0-A156-291416E4E308",
+        "journal": "Journal of Examples 9",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-03-14",
+        "id": "74B4951B-10BA-4A81-ACFF-B1D228240697",
+        "journal": "Journal of Examples 9",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 32",
+    "volume": "42",
+    "year": "2024"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Inger H. Exempelby",
+      "Sven Utkastlund",
+      "Emil Z. Övningsfield",
+      "Agnes Övningsholm",
+      "Fredrik Å. Påhittgren"
+    ],
+    "category": "After PhD + independent + first",
+    "citationYears": [
+      {
+        "count": "2",
+        "id": "476BC99D-F156-4BDA-8DAD-CC3C88FF7F16",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "4",
+        "id": "407CB886-BC3F-47B8-9A08-1EE8DE0991D0",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "0",
+        "id": "C2CBD634-8D77-4183-8AC1-0545A64049A4",
+        "selfCitationCount": "0",
+        "year": "2024"
+      }
+    ],
+    "citations": "6",
+    "correspondingAuthorName": "Fredrik Å. Påhittgren",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1126",
+    "epubDate": "2024-01-22",
+    "finalPDFFilename": "exempel-1126.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1127.pdf",
+    "geography": "International",
+    "id": "5548F774-778F-45AB-9B3A-B2CC50EAC6A3",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "8",
+    "jif2024": "",
+    "jifCurrent": "4.6",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 11",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "8",
+    "pageRange": "2104-2114",
+    "phdStage": "Before",
+    "pmid": "38849500",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "6C9D2261-3F35-4061-B0FF-56DA05F96A63",
+        "journal": "Journal of Examples 53",
+        "rejectedOn": "2023-09-23",
+        "submittedOn": "2023-09-07"
+      },
+      {
+        "id": "B8E243CD-835D-4A70-B34F-B6B1BB63EB0F",
+        "journal": "Journal of Examples 52",
+        "rejectedOn": "2023-10-28",
+        "submittedOn": "2023-10-06"
+      }
+    ],
+    "projectID": "E91C6783-9111-4247-9C78-3DF6DD7B3FCE",
+    "projectName": "Exempelnamn 34",
+    "publicationTasks": [],
+    "publicationType": "Narrative review",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2024-03-17",
+    "statusTimeline": [
+      {
+        "date": "2024-03-17",
+        "id": "586B30B8-0DC9-4814-A635-64ADF078DE32",
+        "journal": "Journal of Examples 11",
+        "status": "Published"
+      },
+      {
+        "date": "2023-12-28",
+        "id": "52F577DE-9D4D-4C81-85DF-33E0085C1910",
+        "journal": "Journal of Examples 11",
+        "status": "Accepted"
+      },
+      {
+        "date": "2023-10-31",
+        "id": "FF0CF057-E99E-48EB-947E-F703A0320E2E",
+        "journal": "Journal of Examples 11",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-10-28",
+        "id": "B5525500-9ABF-4E38-ADFD-7BDEB5A29C92",
+        "journal": "Journal of Examples 52",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-10-06",
+        "id": "58524DFD-F70A-4C7F-8F1B-4081ACEDF814",
+        "journal": "Journal of Examples 52",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-09-23",
+        "id": "7F7E7FF1-D76A-402E-AF93-E916A5590852",
+        "journal": "Journal of Examples 53",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-09-07",
+        "id": "837F45E0-D895-4CB0-836B-450594E2ED40",
+        "journal": "Journal of Examples 53",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 36",
+    "volume": "47",
+    "year": "2024"
+  },
+  {
+    "articleNumber": "1265645",
+    "authorNames": [
+      "Gustav Utkastgren",
+      "Greta af Låtsasby",
+      "Hanna Skissby",
+      "Sven Utkastlund",
+      "Ida Mallqvist",
+      "Jakob Modellholm",
+      "Jesper Fiktivqvist"
+    ],
+    "category": "Independent",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "4EF60E24-FA77-401D-837D-FD31620C518E",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "1E2C25D0-D1E1-4218-8E54-9BA78F52943A",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "0",
+        "id": "AAA50469-9F27-4BC1-A54D-C7B6E81B7ED8",
+        "selfCitationCount": "0",
+        "year": "2024"
+      },
+      {
+        "count": "0",
+        "id": "B063C5DD-B951-4452-97E3-969C8E633B21",
+        "selfCitationCount": "0",
+        "year": "2023"
+      }
+    ],
+    "citations": "0",
+    "correspondingAuthorName": "Jesper Fiktivqvist",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Gustav Utkastgren",
+        "roleContributions": [],
+        "roles": [
+          "Writing - original draft"
+        ]
+      },
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Hanna Skissby",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Sven Utkastlund",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Ida Mallqvist",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Jakob Modellholm",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Jesper Fiktivqvist",
+        "roleContributions": [],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "10.0000/exempel.1133",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1133.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1134.pdf",
+    "geography": "International",
+    "id": "776A7039-6655-415F-B2C2-CB2B6C6BD251",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "4.1",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 54",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "5",
+    "pageRange": "",
+    "phdStage": "Before",
+    "pmid": "38162624",
+    "position": "Middle",
+    "previousAttempts": [
+      {
+        "id": "95975D5E-5B3F-42DD-93D7-C75690D0BF3E",
+        "journal": "Journal of Examples 58",
+        "rejectedOn": "2022-06-09",
+        "submittedOn": "2022-05-30"
+      },
+      {
+        "id": "EB163DC4-78AA-4B55-97A6-FA3FF06BE46B",
+        "journal": "Journal of Examples 57",
+        "rejectedOn": "2022-07-05",
+        "submittedOn": "2022-06-10"
+      },
+      {
+        "id": "360C78BF-5B59-4749-AA7E-9AD7DBE831F3",
+        "journal": "Journal of Examples 42",
+        "rejectedOn": "2022-10-15",
+        "submittedOn": "2022-07-07"
+      },
+      {
+        "id": "8FE330B8-5662-430F-9F44-9D8FD2109C54",
+        "journal": "Journal of Examples 56",
+        "rejectedOn": "2022-12-29",
+        "submittedOn": "2022-12-28"
+      },
+      {
+        "id": "53B56191-6202-4ACE-9F37-BBE2DC78F225",
+        "journal": "Journal of Examples 24",
+        "rejectedOn": "2022-12-19",
+        "submittedOn": "2022-12-15"
+      },
+      {
+        "id": "BF8DF01D-6160-4439-8E13-9B52992627D7",
+        "journal": "Journal of Examples 55",
+        "rejectedOn": "2023-01-17",
+        "submittedOn": "2023-01-15"
+      },
+      {
+        "id": "39416020-EF51-4D25-8887-098B0322F415",
+        "journal": "Journal of Examples 23",
+        "rejectedOn": "2023-03-05",
+        "submittedOn": "2023-02-04"
+      }
+    ],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2023-07-31",
+    "statusTimeline": [
+      {
+        "date": "2023-07-31",
+        "id": "CFE9897A-F9B8-4084-8497-85AEEC9ABA9E",
+        "journal": "Journal of Examples 54",
+        "status": "Published"
+      },
+      {
+        "date": "2023-07-16",
+        "id": "28F16463-D270-4CB2-BF3C-6A2584D41AF7",
+        "journal": "Journal of Examples 54",
+        "status": "Accepted"
+      },
+      {
+        "date": "2023-03-08",
+        "id": "D4A70F02-A8C5-4996-99AB-5328EFDD2503",
+        "journal": "Journal of Examples 54",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-03-05",
+        "id": "4AA43587-12DF-4B85-8D92-D08FB833588E",
+        "journal": "Journal of Examples 23",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-02-04",
+        "id": "800D0B3A-A4FD-4091-8A55-63432E38D5D1",
+        "journal": "Journal of Examples 23",
+        "status": "Submitted"
+      },
+      {
+        "date": "2023-01-17",
+        "id": "FEF81539-8B34-418B-8EBE-C659EA4717B9",
+        "journal": "Journal of Examples 55",
+        "status": "Rejected"
+      },
+      {
+        "date": "2023-01-15",
+        "id": "B3ADA67C-C18A-408C-9339-FC4F6018B97C",
+        "journal": "Journal of Examples 55",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-12-29",
+        "id": "38006A22-46C1-4135-947C-969A2CA57A57",
+        "journal": "Journal of Examples 56",
+        "status": "Rejected"
+      },
+      {
+        "date": "2022-12-28",
+        "id": "1EEE2C5A-FB5A-4DF4-AE96-3004FF830DFD",
+        "journal": "Journal of Examples 56",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-12-19",
+        "id": "AB6A4583-0235-4DF0-B2AA-1F38DCD0DCBF",
+        "journal": "Journal of Examples 24",
+        "status": "Rejected"
+      },
+      {
+        "date": "2022-12-15",
+        "id": "8EA81550-482F-4592-AD62-79D945022156",
+        "journal": "Journal of Examples 24",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-10-15",
+        "id": "1871B8B8-6A16-4DEC-A98D-77AF3ECF6876",
+        "journal": "Journal of Examples 42",
+        "status": "Rejected"
+      },
+      {
+        "date": "2022-07-07",
+        "id": "34EFAA7A-B682-47B8-9282-170F831E1111",
+        "journal": "Journal of Examples 42",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-07-05",
+        "id": "375CD91C-51EC-4A31-935D-1E931364C22F",
+        "journal": "Journal of Examples 57",
+        "status": "Rejected"
+      },
+      {
+        "date": "2022-06-10",
+        "id": "62E9F63E-62CF-4FD1-A32A-1A976CBD8C1F",
+        "journal": "Journal of Examples 57",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-06-09",
+        "id": "A14303D0-F8E8-418D-A1EF-BFF6557EB059",
+        "journal": "Journal of Examples 58",
+        "status": "Rejected"
+      },
+      {
+        "date": "2022-05-30",
+        "id": "0C568058-1EEC-49DF-8B0D-733FBB67660B",
+        "journal": "Journal of Examples 58",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 19",
+    "volume": "11",
+    "year": "2023"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Mikael Modellius",
+      "Karin Selma Fiktivdahl",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "category": "Placement, middle",
+    "citationYears": [
+      {
+        "count": "2",
+        "id": "D83D49CF-AB63-423F-9563-68CE9DF5BFBF",
+        "selfCitationCount": "1",
+        "year": "2026"
+      },
+      {
+        "count": "3",
+        "id": "A0F0FB8F-E144-4C71-A131-79AE3F7F2C20",
+        "selfCitationCount": "1",
+        "year": "2025"
+      },
+      {
+        "count": "2",
+        "id": "189E2252-DF56-4ABE-8772-5E4CD5C8B841",
+        "selfCitationCount": "1",
+        "year": "2024"
+      },
+      {
+        "count": "1",
+        "id": "37D0689E-C547-4ADE-B9C1-20D614806912",
+        "selfCitationCount": "0",
+        "year": "2023"
+      }
+    ],
+    "citations": "11",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1135",
+    "epubDate": "2022-11-17",
+    "finalPDFFilename": "exempel-1135.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1136.pdf",
+    "geography": "National",
+    "id": "21895D56-FF63-4BCF-818F-D76019B78FF3",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "7",
+    "jif2024": "",
+    "jifCurrent": "3.3",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 52",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "3",
+    "pageRange": "1084-1091",
+    "phdStage": "Before",
+    "pmid": "37016927",
+    "position": "First",
+    "previousAttempts": [],
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectName": "Doktorandprojekt",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2023-02-14",
+    "statusTimeline": [
+      {
+        "date": "2023-02-14",
+        "id": "C493C2CB-D2C0-406F-99C8-9191C6FB54ED",
+        "journal": "Journal of Examples 52",
+        "status": "Published"
+      },
+      {
+        "date": "2022-10-18",
+        "id": "B47E272D-58CE-4942-9514-78B0A3DB5980",
+        "journal": "Journal of Examples 52",
+        "status": "Accepted"
+      },
+      {
+        "date": "2022-04-24",
+        "id": "8CEB37F2-EF31-452B-93C9-2E2B3FB87C4F",
+        "journal": "Journal of Examples 52",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 30",
+    "volume": "41",
+    "year": "2023"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1137.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1138.pdf",
+    "geography": "National",
+    "id": "D606006E-A703-4231-9FBF-A1A9431C4B4C",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": false,
+    "issue": "4",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "Journal of Examples 51",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "28",
+    "pageRange": "6-7",
+    "phdStage": "Before",
+    "pmid": "",
+    "position": "Single",
+    "previousAttempts": [],
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectName": "Doktorandprojekt",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2023-08-01",
+    "statusTimeline": [
+      {
+        "date": "2023-08-01",
+        "id": "9C612B3E-4C80-424C-AA6C-1DCD22682E33",
+        "journal": "Journal of Examples 51",
+        "status": "Published"
+      }
+    ],
+    "title": "Exempelmöte 35",
+    "volume": "39",
+    "year": "2023"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Pontus Provwood",
+      "Pontus N. Skissgren"
+    ],
+    "category": "Placement, last",
+    "citationYears": [
+      {
+        "count": "0",
+        "id": "DCCFAC05-CBE2-4EDE-B0F9-533BF6EC92F2",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "3",
+        "id": "43C1A1C3-5CBC-4E1E-9E3E-27DB3A0AA51C",
+        "selfCitationCount": "1",
+        "year": "2025"
+      },
+      {
+        "count": "1",
+        "id": "19CA449C-FFE0-478A-A6EF-3C0FDC99BEB5",
+        "selfCitationCount": "0",
+        "year": "2024"
+      },
+      {
+        "count": "0",
+        "id": "8BB903B9-1E3B-495B-9177-47C36CE41E33",
+        "selfCitationCount": "0",
+        "year": "2023"
+      }
+    ],
+    "citations": "5",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1140",
+    "epubDate": "2023-05-13",
+    "finalPDFFilename": "exempel-1140.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1141.pdf",
+    "geography": "National",
+    "id": "66B571BA-3539-4892-B946-4D3E905263A4",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "11",
+    "jif2024": "",
+    "jifCurrent": "2.9",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 59",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "4",
+    "pageRange": "802-807",
+    "phdStage": "Before",
+    "pmid": "37768866",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "8E7D269E-57B8-48F8-8E67-76A4C53A4B76",
+        "journal": "Journal of Examples 44",
+        "rejectedOn": "2022-05-12",
+        "submittedOn": "2022-05-12"
+      },
+      {
+        "id": "9A6B4BFE-8B49-4C76-8959-9855A5760B06",
+        "journal": "Journal of Examples 5",
+        "rejectedOn": "2022-08-18",
+        "submittedOn": "2022-08-18"
+      }
+    ],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q2",
+    "status": "Published",
+    "statusDate": "2023-06-17",
+    "statusTimeline": [
+      {
+        "date": "2023-06-17",
+        "id": "B809D55E-2DC6-489A-8D4B-7F0AA342A605",
+        "journal": "Journal of Examples 59",
+        "status": "Published"
+      },
+      {
+        "date": "2023-02-27",
+        "id": "B796F485-CF57-41CC-825E-FF53BDE9E7FE",
+        "journal": "Journal of Examples 59",
+        "status": "Accepted"
+      },
+      {
+        "date": "2022-09-21",
+        "id": "CE0120F5-B472-485C-B276-8CAB646A1DD7",
+        "journal": "Journal of Examples 59",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-08-18",
+        "id": "D73BD661-BE54-42DA-9944-33B492A4538D",
+        "journal": "Journal of Examples 5",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-08-18",
+        "id": "52CF8CE3-B15C-4146-8D51-96A69BB82BC0",
+        "journal": "Journal of Examples 5",
+        "status": "Rejected"
+      },
+      {
+        "date": "2022-05-12",
+        "id": "E6DEA063-B23B-4041-A839-C45E5B85AB82",
+        "journal": "Journal of Examples 44",
+        "status": "Submitted"
+      },
+      {
+        "date": "2022-05-12",
+        "id": "073CECAA-7647-4CEE-A183-483BF8533AD6",
+        "journal": "Journal of Examples 44",
+        "status": "Rejected"
+      }
+    ],
+    "title": "Exempelmöte 41",
+    "volume": "24",
+    "year": "2023"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Mikael Modellius",
+      "Karin Selma Fiktivdahl",
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren"
+    ],
+    "category": "Placement, first",
+    "citationYears": [
+      {
+        "count": "1",
+        "id": "BA0994CD-D2C6-4329-B75C-31972204DF9B",
+        "selfCitationCount": "1",
+        "year": "2026"
+      },
+      {
+        "count": "0",
+        "id": "A7438FFA-F902-4A5E-BFC8-47695277535D",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "0",
+        "id": "429D34A2-9B59-4FE3-98B4-35F420B7E17B",
+        "selfCitationCount": "1",
+        "year": "2024"
+      },
+      {
+        "count": "1",
+        "id": "7CC4A6B3-021F-4D96-A788-325094885F89",
+        "selfCitationCount": "1",
+        "year": "2023"
+      },
+      {
+        "count": "0",
+        "id": "04C60AA9-F12F-4D06-9A11-35DEB739A0E2",
+        "selfCitationCount": "0",
+        "year": "2022"
+      }
+    ],
+    "citations": "5",
+    "correspondingAuthorName": "Gustav Utkastgren",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1142",
+    "epubDate": "2022-02-28",
+    "finalPDFFilename": "exempel-1142.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1143.pdf",
+    "geography": "National",
+    "id": "D4E54100-162E-41A9-98F5-536096598A15",
+    "independence": "No",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "9",
+    "jif2024": "",
+    "jifCurrent": "3.2",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 38",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "2",
+    "pageRange": "810-819",
+    "phdStage": "Before",
+    "pmid": "35849046",
+    "position": "First",
+    "previousAttempts": [],
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectName": "Doktorandprojekt",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2022-04-17",
+    "statusTimeline": [
+      {
+        "date": "2022-04-17",
+        "id": "C38888EB-B99A-46BF-B876-CF81D1EFFC30",
+        "journal": "Journal of Examples 38",
+        "status": "Published"
+      },
+      {
+        "date": "2022-02-11",
+        "id": "9211C9DF-7210-4C07-A943-2A6968F19E37",
+        "journal": "Journal of Examples 38",
+        "status": "Accepted"
+      },
+      {
+        "date": "2022-01-15",
+        "id": "AD9C492F-3568-4F7E-B720-FA053CB57E99",
+        "journal": "Journal of Examples 38",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 24",
+    "volume": "35",
+    "year": "2022"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Lova Testgren",
+      "Viggo Demoius",
+      "Jenny Modellberg",
+      "Greta af Låtsasby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1144.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1145.pdf",
+    "geography": "National",
+    "id": "99B16F94-11D3-4D88-A7F4-CEB161A1D3A5",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": false,
+    "issue": "2",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "Journal of Examples 51",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "29",
+    "pageRange": "10-11",
+    "phdStage": "Before",
+    "pmid": "",
+    "position": "Last",
+    "previousAttempts": [],
+    "projectID": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "projectName": "Doktorandprojekt",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2022-01-30",
+    "statusTimeline": [
+      {
+        "date": "2022-01-30",
+        "id": "14930B99-FFD9-4F9E-9B4E-7D74D144F9C6",
+        "journal": "Journal of Examples 51",
+        "status": "Published"
+      }
+    ],
+    "title": "Exempelmöte 38",
+    "volume": "38",
+    "year": "2022"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Josefin Påhittius",
+      "Lisa Utkast",
+      "Ludvig Mall",
+      "Arvid Övningsgren",
+      "Linus Utkastander",
+      "Sandra Mallander",
+      "David Exempelström-Utkastberg",
+      "Gunilla Teststedt"
+    ],
+    "category": "Total",
+    "citationYears": [
+      {
+        "count": "1",
+        "id": "711AE098-6740-44E4-962D-D432CDFE9DAC",
+        "selfCitationCount": "0",
+        "year": "2026"
+      },
+      {
+        "count": "1",
+        "id": "1039CC96-3874-4DDC-8828-A84C4861526F",
+        "selfCitationCount": "0",
+        "year": "2025"
+      },
+      {
+        "count": "4",
+        "id": "84E5DAEF-554E-4C35-A1C2-861F26745840",
+        "selfCitationCount": "0",
+        "year": "2024"
+      },
+      {
+        "count": "2",
+        "id": "0FDFF37B-E0FB-4915-A50E-F819A2D1FCC6",
+        "selfCitationCount": "0",
+        "year": "2023"
+      },
+      {
+        "count": "4",
+        "id": "25CE24D4-5EE1-4D09-9D03-749DBE1CC74E",
+        "selfCitationCount": "0",
+        "year": "2022"
+      },
+      {
+        "count": "3",
+        "id": "B87F57AF-AF24-45F9-B3FC-189EC7B6C784",
+        "selfCitationCount": "0",
+        "year": "2021"
+      },
+      {
+        "count": "4",
+        "id": "2BB43F4A-6ACC-4B3E-A89E-5DDD75B78283",
+        "selfCitationCount": "0",
+        "year": "2020"
+      },
+      {
+        "count": "1",
+        "id": "60EA2EF1-AA61-4907-A118-12EB0553D67C",
+        "selfCitationCount": "0",
+        "year": "2019"
+      }
+    ],
+    "citations": "20",
+    "correspondingAuthorName": "Gunilla Teststedt",
+    "creditRoleAssignments": [],
+    "doi": "10.0000/exempel.1147",
+    "epubDate": "2018-08-23",
+    "finalPDFFilename": "exempel-1147.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1148.pdf",
+    "geography": "International",
+    "id": "E3431097-1286-4EFC-8C60-22347EEADF03",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "4.2",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 60",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "1",
+    "pageRange": "215-220",
+    "phdStage": "Before",
+    "pmid": "30629991",
+    "position": "First",
+    "previousAttempts": [],
+    "projectID": "4F3A6A92-5A45-47C5-A05D-628D7BB6BCFA",
+    "projectName": "Exempelnamn 29",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Published",
+    "statusDate": "2018-11-15",
+    "statusTimeline": [
+      {
+        "date": "2018-11-15",
+        "id": "04455A97-AA2A-409A-A581-8FDF9188B6F8",
+        "journal": "Journal of Examples 60",
+        "status": "Published"
+      },
+      {
+        "date": "2018-08-18",
+        "id": "674B96A2-9706-49AA-BEBC-FDD2EC951A3A",
+        "journal": "Journal of Examples 60",
+        "status": "Accepted"
+      },
+      {
+        "date": "2018-04-09",
+        "id": "AB83A6BD-FF75-49DC-A683-E8B8032A5DE8",
+        "journal": "Journal of Examples 60",
+        "status": "Submitted"
+      }
+    ],
+    "title": "Exempelmöte 34",
+    "volume": "137",
+    "year": "2019"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1150.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1151.pdf",
+    "geography": "National",
+    "id": "192E83FE-84D8-4579-A182-2FF099A2852A",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": false,
+    "issue": "22-23",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "Journal of Examples 61",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "25",
+    "pageRange": "969",
+    "phdStage": "Before",
+    "pmid": "",
+    "position": "Single",
+    "previousAttempts": [],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2017-12-29",
+    "statusTimeline": [
+      {
+        "date": "2017-12-29",
+        "id": "29D3AFD2-34C8-4B01-BE08-C6B3280023E1",
+        "journal": "Journal of Examples 61",
+        "status": "Published"
+      }
+    ],
+    "title": "Exempelmöte 14",
+    "volume": "115",
+    "year": "2018"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "finalPDFFilename": "exempel-1152.pdf",
+    "finalPDFPath": "Publication PDFs/exempel-1153.pdf",
+    "geography": "National",
+    "id": "D817DA38-2F36-4ADF-90A5-2A9BDC7B4B80",
+    "independence": "Yes",
+    "isEditingLocked": true,
+    "isPeerReviewed": false,
+    "issue": "35-36",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "Journal of Examples 61",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "26",
+    "pageRange": "1312",
+    "phdStage": "Before",
+    "pmid": "",
+    "position": "Single",
+    "previousAttempts": [],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "Published",
+    "statusDate": "2018-04-13",
+    "statusTimeline": [
+      {
+        "date": "2018-04-13",
+        "id": "FD33DBBD-6B8C-4A8F-8D4A-450E9B9AD854",
+        "journal": "Journal of Examples 61",
+        "status": "Published"
+      }
+    ],
+    "title": "Exempelmöte 22",
+    "volume": "115",
+    "year": "2018"
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Victor Övningsby",
+      "Sven Utkastlund",
+      "Hanna Skissby",
+      "Greta af Låtsasby",
+      "Vera Påhittholm",
+      "Karin Selma Fiktivdahl",
+      "Pontus N. Skissgren",
+      "Leo Påhittling",
+      "Maja Testby",
+      "Mats Exempelsson",
+      "Per Demoström",
+      "Elin Demoberg",
+      "Lennart Övningsqvist-Övningsander",
+      "Kjell Modellwood",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "International",
+    "id": "7FE3B57C-D96A-479B-B6FF-ABF8A2F77B23",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "22",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "A270F383-61EF-4430-9090-2F63064E490C",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 8",
+    "volume": "",
+    "workflowStatus": "Manuscript writing",
+    "workflowStatusDate": "2025-01-25",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Johanna Utkastfield",
+      "Harald Mallius",
+      "Greta af Låtsasby",
+      "Tobias Modellström"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "E637E3D5-B7C9-45A8-AA5D-49457788E7CE",
+    "independence": "Yes",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "20",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "36F94DF6-5607-460A-B2D6-7425194193DA",
+    "projectName": "Exempelnamn 30",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "616178D4-738C-4A8D-A676-C68AC2B05822",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 12",
+    "volume": "",
+    "workflowStatus": "Data processing",
+    "workflowStatusDate": "2025-12-02",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Mikael Exempelberg",
+      "Kevin Demoby",
+      "Jan Modellsson",
+      "Theo Provdahl",
+      "Bo Mallberg",
+      "Greta af Låtsasby",
+      "Malin Utkastling",
+      "Oskar Demodahl Provgren",
+      "Göran Testström",
+      "Signe Påhittberg",
+      "Leo Påhittling",
+      "Vera Påhittholm",
+      "Elin Demoberg",
+      "Jakob Modellholm",
+      "Lennart Övningsqvist-Övningsander",
+      "Axel Z. Utkastström",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "International",
+    "id": "6712609D-1956-47BD-AE90-D6CDB9ABA139",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "23",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "5F386A16-3AC3-4A1A-9CA7-DDE5ABECEE62",
+    "projectName": "Exempelprojekt 14",
+    "publicationTasks": [],
+    "publicationType": "Systematic review",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "https://example.org/reviewRegistrationID/1154",
+    "reviewRegistrationRegistry": "PROSPERO",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "58619E25-4AE2-45CF-BAC4-1C758CE46E75",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 16",
+    "volume": "",
+    "workflowStatus": "Data collection",
+    "workflowStatusDate": "2025-12-02",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Martin Provby",
+      "Martin Mallgren",
+      "Britt Utkastsson",
+      "Elin Provqvist",
+      "Greta af Låtsasby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [
+          {
+            "contribution": "lead",
+            "role": "Conceptualization"
+          },
+          {
+            "contribution": "lead",
+            "role": "Data curation"
+          },
+          {
+            "contribution": "lead",
+            "role": "Formal analysis"
+          },
+          {
+            "contribution": "lead",
+            "role": "Funding acquisition"
+          },
+          {
+            "contribution": "lead",
+            "role": "Investigation"
+          },
+          {
+            "contribution": "lead",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "lead",
+            "role": "Project administration"
+          },
+          {
+            "contribution": "lead",
+            "role": "Validation"
+          },
+          {
+            "contribution": "lead",
+            "role": "Visualization"
+          },
+          {
+            "contribution": "lead",
+            "role": "Writing - original draft"
+          },
+          {
+            "contribution": "lead",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Conceptualization",
+          "Data curation",
+          "Formal analysis",
+          "Funding acquisition",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Validation",
+          "Visualization",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Martin Provby",
+        "roleContributions": [
+          {
+            "contribution": "supporting",
+            "role": "Data curation"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Formal analysis"
+          },
+          {
+            "contribution": "equal",
+            "role": "Funding acquisition"
+          },
+          {
+            "contribution": "equal",
+            "role": "Investigation"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Project administration"
+          },
+          {
+            "contribution": "lead",
+            "role": "Writing - original draft"
+          },
+          {
+            "contribution": "lead",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Data curation",
+          "Formal analysis",
+          "Funding acquisition",
+          "Investigation",
+          "Methodology",
+          "Project administration",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Elin Provqvist",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Data curation"
+          },
+          {
+            "contribution": "equal",
+            "role": "Formal analysis"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Validation"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Visualization"
+          },
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Data curation",
+          "Formal analysis",
+          "Methodology",
+          "Validation",
+          "Visualization",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Britt Utkastsson",
+        "roleContributions": [
+          {
+            "contribution": "supporting",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Martin Mallgren",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Investigation"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Investigation",
+          "Methodology",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "85B9AE32-BFD4-411F-BC99-16F030FE084B",
+    "independence": "Yes",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "22.6",
+    "jifQuartileCurrent": "Q1",
+    "journal": "Journal of Examples 62",
+    "norwegian2025": "",
+    "norwegianCurrent": "2",
+    "number": "",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Last",
+    "previousAttempts": [],
+    "projectID": "A28FDCC4-B5E9-4275-8E8E-12D0EE3E914F",
+    "projectName": "Exempelprojekt 2",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "B3A77F68-4C9B-493F-8150-4F36F0F8900F",
+        "journal": "Journal of Examples 62",
+        "status": "In preparation"
+      },
+      {
+        "id": "8DDEE96E-3AC4-44CE-A161-21026F371B09",
+        "journal": "Journal of Examples 63",
+        "status": "In preparation"
+      },
+      {
+        "id": "A6432E3F-D717-4E06-87B7-517DFE24B443",
+        "journal": "Journal of Examples 64",
+        "status": "In preparation"
+      },
+      {
+        "id": "15263327-9F2F-4B02-94EE-8C0F98571D09",
+        "journal": "Journal of Examples 65",
+        "status": "In preparation"
+      },
+      {
+        "id": "38B4EE34-56A0-48AA-A09C-7CB0735D945B",
+        "journal": "Journal of Examples 66",
+        "status": "In preparation"
+      },
+      {
+        "id": "816357D1-4391-41C1-A47B-3710E8596116",
+        "journal": "Journal of Examples 57",
+        "status": "In preparation"
+      },
+      {
+        "id": "F09884D8-2CFF-4138-B615-D63F7FA8F39D",
+        "journal": "Journal of Examples 67",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 17",
+    "volume": "",
+    "workflowStatus": "With co-authors",
+    "workflowStatusDate": "2026-03-28",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Elin Provqvist",
+      "Greta af Låtsasby",
+      "Sofia Provfield",
+      "Elin Exempelstedt"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "11334B66-3FDD-46A4-88CB-CDA1FAAC19C0",
+    "independence": "Yes",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "21",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "78BA3244-D756-4A55-BFDF-B32100FAFA7C",
+    "projectName": "Exempelnamn 33",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "046CD27C-C24A-4508-B8B8-55D55AC8CE73",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 26",
+    "volume": "",
+    "workflowStatus": "Data processing",
+    "workflowStatusDate": "2025-12-02",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Linnea Skisswood",
+      "Elin Provqvist",
+      "Sofia Provfield",
+      "Greta af Låtsasby",
+      "Matilda Fiktivström",
+      "Erik Fiktivgren",
+      "Monica Skissdahl",
+      "Hugo Fiktivlund-Fiktivfield",
+      "Elin Exempelstedt"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "International",
+    "id": "C6888088-38A6-4415-BAF5-04A953536B2F",
+    "independence": "Yes",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "24",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "78BA3244-D756-4A55-BFDF-B32100FAFA7C",
+    "projectName": "Exempelnamn 33",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "46F4EE2D-D6CD-4BE1-AE78-81F7E4A8E378",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 33",
+    "volume": "",
+    "workflowStatus": "Manuscript writing",
+    "workflowStatusDate": "2025-11-15",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Elias Skissius",
+      "Christoffer Testius",
+      "Martin Provby",
+      "Greta af Låtsasby",
+      "Lisa Modellby",
+      "Anna Utkastby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "ED9FC25E-0185-421A-BD3E-E15EFEE04FDA",
+    "independence": "Yes",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "30",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "88C800A9-0185-43D2-8717-33D5815B3B7E",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 37",
+    "volume": "",
+    "workflowStatus": "With co-authors",
+    "workflowStatusDate": "2026-03-28",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Greta af Låtsasby",
+      "Viktor Låtsaswood",
+      "Mikael Modellius",
+      "Karin Selma Fiktivdahl",
+      "Anton Testwood",
+      "Pontus N. Skissgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "correspondingAuthorName": "Greta af Låtsasby",
+    "creditRoleAssignments": [
+      {
+        "authorName": "Greta af Låtsasby",
+        "roleContributions": [
+          {
+            "contribution": "lead",
+            "role": "Data curation"
+          },
+          {
+            "contribution": "lead",
+            "role": "Formal analysis"
+          },
+          {
+            "contribution": "equal",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "lead",
+            "role": "Project administration"
+          },
+          {
+            "contribution": "lead",
+            "role": "Validation"
+          },
+          {
+            "contribution": "lead",
+            "role": "Visualization"
+          },
+          {
+            "contribution": "lead",
+            "role": "Writing - original draft"
+          },
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Data curation",
+          "Formal analysis",
+          "Methodology",
+          "Project administration",
+          "Validation",
+          "Visualization",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Viktor Låtsaswood",
+        "roleContributions": [
+          {
+            "contribution": "supporting",
+            "role": "Data curation"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Formal analysis"
+          },
+          {
+            "contribution": "equal",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "supporting",
+            "role": "Writing - original draft"
+          },
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Data curation",
+          "Formal analysis",
+          "Methodology",
+          "Writing - original draft",
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Mikael Modellius",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Karin Selma Fiktivdahl",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Anton Testwood",
+        "roleContributions": [
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Writing - review & editing"
+        ]
+      },
+      {
+        "authorName": "Pontus N. Skissgren",
+        "roleContributions": [
+          {
+            "contribution": "lead",
+            "role": "Conceptualization"
+          },
+          {
+            "contribution": "lead",
+            "role": "Funding acquisition"
+          },
+          {
+            "contribution": "equal",
+            "role": "Methodology"
+          },
+          {
+            "contribution": "lead",
+            "role": "Supervision"
+          },
+          {
+            "contribution": "equal",
+            "role": "Writing - review & editing"
+          }
+        ],
+        "roles": [
+          "Conceptualization",
+          "Funding acquisition",
+          "Methodology",
+          "Supervision",
+          "Writing - review & editing"
+        ]
+      }
+    ],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "15EF2C62-280D-44D7-9E00-175ABAEDB0B7",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "3.3",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 68",
+    "norwegian2025": "",
+    "norwegianCurrent": "1",
+    "number": "",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "",
+    "position": "First",
+    "previousAttempts": [
+      {
+        "id": "755973C1-1F16-460B-9487-7A98A622C3BB",
+        "journal": "Journal of Examples 50",
+        "rejectedOn": "2025-12-01",
+        "submittedOn": "2025-11-07"
+      },
+      {
+        "id": "EDFA1E15-4956-4AD4-827F-E49CEB063E44",
+        "journal": "Journal of Examples 69",
+        "rejectedOn": "2025-12-07",
+        "submittedOn": "2025-12-03"
+      },
+      {
+        "id": "CB69B22E-11C5-405D-992E-462FDFA05A2D",
+        "journal": "Journal of Examples 11",
+        "rejectedOn": "2025-12-22",
+        "submittedOn": "2025-12-08"
+      },
+      {
+        "id": "4A757743-C6B5-454B-97A2-E65469B8CA5A",
+        "journal": "Journal of Examples 68",
+        "rejectedOn": "2026-04-19",
+        "submittedOn": "2025-12-24"
+      }
+    ],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q2",
+    "status": "Rejected",
+    "statusDate": "2026-04-19",
+    "statusTimeline": [
+      {
+        "date": "2026-04-19",
+        "id": "99A74E60-6B9B-48F8-8305-956034CE2CAE",
+        "journal": "Journal of Examples 68",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-12-24",
+        "id": "D04F0F42-80C6-437E-807E-06FE796D623E",
+        "journal": "Journal of Examples 68",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-12-22",
+        "id": "568CC148-7F88-42C8-8E14-77D8E439425B",
+        "journal": "Journal of Examples 11",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-12-08",
+        "id": "E7D34564-95AE-4B9A-95E1-6C3C5BFC8225",
+        "journal": "Journal of Examples 11",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-12-07",
+        "id": "A56BD967-9E15-4FDB-867E-E4C9F78B18BF",
+        "journal": "Journal of Examples 69",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-12-03",
+        "id": "3F0D2059-01E2-43C3-8893-569DA6E241A6",
+        "journal": "Journal of Examples 69",
+        "status": "Submitted"
+      },
+      {
+        "date": "2025-12-01",
+        "id": "B069BF89-EE77-497E-83A8-6BA327C2427C",
+        "journal": "Journal of Examples 50",
+        "status": "Rejected"
+      },
+      {
+        "date": "2025-11-07",
+        "id": "52A1364D-5D52-4A38-AAF2-442E33C0A63B",
+        "journal": "Journal of Examples 50",
+        "status": "Submitted"
+      },
+      {
+        "id": "961B83BC-FA20-4D07-B3A5-09C45B5C7C73",
+        "journal": "Journal of Examples 38",
+        "status": "In preparation"
+      },
+      {
+        "id": "E5A1FD1F-3AD6-4BC0-82E6-90C493CC9F8B",
+        "journal": "Journal of Examples 42",
+        "status": "In preparation"
+      },
+      {
+        "id": "FC90F524-CE9D-4B3D-B2CB-BF76AEF4A9BB",
+        "journal": "Journal of Examples 70",
+        "status": "In preparation"
+      },
+      {
+        "id": "25FB73EA-3D81-4CA5-A022-5CDF950FEB6E",
+        "journal": "Journal of Examples 31",
+        "status": "In preparation"
+      },
+      {
+        "id": "C2D93EA0-03B8-41B5-9C7C-DF8497465328",
+        "journal": "Journal of Examples 71",
+        "status": "In preparation"
+      },
+      {
+        "id": "2568BAAE-17F9-4C2D-BE85-225E2DA19F8B",
+        "journal": "Journal of Examples 72",
+        "status": "In preparation"
+      },
+      {
+        "id": "746328E4-319C-465B-87D1-E7471058F22B",
+        "journal": "Journal of Examples 73",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 40",
+    "volume": "",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Gustav Mallsson",
+      "Bo Mallberg",
+      "Mikael Exempelberg",
+      "Lena Testander",
+      "Greta af Låtsasby",
+      "Samuel Provander",
+      "Selma Påhittfield",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "correspondingAuthorName": "Gustav Mallsson",
+    "creditRoleAssignments": [],
+    "currentSubmissionDate": "2026-05-04",
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "DDC516E2-91BE-4EB5-BB18-9638F8794865",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "4.2",
+    "jifQuartileCurrent": "Q2",
+    "journal": "Journal of Examples 35",
+    "norwegian2025": "",
+    "norwegianCurrent": "2",
+    "number": "35",
+    "pageRange": "",
+    "phdStage": "After",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "A2C48DF1-EFA2-499E-BCCE-AC9E9CD7C23A",
+    "projectName": "Exempelnamn 27",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "Q1",
+    "status": "Submitted",
+    "statusDate": "2026-05-04",
+    "statusTimeline": [
+      {
+        "date": "2026-05-04",
+        "id": "FA2A9052-50A7-4DF9-97E0-DDADB99CB34D",
+        "journal": "Journal of Examples 35",
+        "status": "Submitted"
+      },
+      {
+        "id": "F3E93DE4-6CD3-4CB1-8F21-F004E2991FBB",
+        "journal": "Journal of Examples 33",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 42",
+    "volume": "",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Lena Testander",
+      "Elin Demoberg",
+      "Lennart Övningsqvist-Övningsander",
+      "Greta af Låtsasby",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "1AE2E1CD-27CE-4B09-9B61-D7AA7F9D5844",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "31",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "0996F188-01D2-4B59-8B53-5C944561EA1E",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 43",
+    "volume": "",
+    "workflowStatus": "Data processing",
+    "workflowStatusDate": "2025-11-25",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Lena Testander",
+      "Therese Modelldahl",
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren",
+      "Greta af Låtsasby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "C6D78DFE-7BE9-4FC8-9A1C-B69A1575B590",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Last",
+    "previousAttempts": [],
+    "projectID": "118A0F88-EBCD-4F1E-8535-459A90BF1E22",
+    "projectName": "Exempelprojekt 10",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "CA596043-7478-4D89-875F-75B0F21D81B0",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 44",
+    "volume": "",
+    "workflowStatus": "Manuscript writing",
+    "workflowStatusDate": "2025-11-15",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Lena Testander",
+      "Bo Mallberg",
+      "Sara NA Utkaststedt",
+      "Rolf Påhittlund",
+      "Gustav Mallsson",
+      "Märta Exempelander",
+      "Julia Mallby",
+      "Susanne Testlund",
+      "Carina Exempelholm Provstedt",
+      "Martin Exempelqvist",
+      "Selma Påhittfield",
+      "Greta af Låtsasby",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "International",
+    "id": "86C5B745-B558-482A-9739-81A1B53AB5F4",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "34",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "FBC7A8E5-1D9C-49D2-8A72-86877EA9F518",
+    "projectName": "Exempelnamn 26",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "6839D970-6E98-412F-BCE6-7ECA5B5E7456",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 45",
+    "volume": "",
+    "workflowStatus": "Data collection",
+    "workflowStatusDate": "2025-11-25",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Lena Testander",
+      "Bo Mallberg",
+      "Sara NA Utkaststedt",
+      "Rolf Påhittlund",
+      "Gustav Mallsson",
+      "Märta Exempelander",
+      "Julia Mallby",
+      "Susanne Testlund",
+      "Carina Exempelholm Provstedt",
+      "Martin Exempelqvist",
+      "Selma Påhittfield",
+      "Greta af Låtsasby",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "International",
+    "id": "462AB020-A7F0-4669-A391-42720020F6E1",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "33",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "FBC7A8E5-1D9C-49D2-8A72-86877EA9F518",
+    "projectName": "Exempelnamn 26",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "6DC9CE67-4417-4F16-99AF-EB941A5324E3",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 46",
+    "volume": "",
+    "workflowStatus": "Data collection",
+    "workflowStatusDate": "2025-11-25",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Lena Testander",
+      "Elin Demoberg",
+      "Lennart Övningsqvist-Övningsander",
+      "Greta af Låtsasby",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Therese Modelldahl",
+      "Karin Selma Fiktivdahl",
+      "Martin Provby"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "D2B6DA4F-E046-47AA-919B-A128EF9AF64A",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "32",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "Middle",
+    "previousAttempts": [],
+    "projectID": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "projectName": "Exempelnamn 35",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": false,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "44832082-80AC-4CFD-BBF9-57A2686A7234",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 47",
+    "volume": "",
+    "workflowStatus": "Data processing",
+    "workflowStatusDate": "2025-11-25",
+    "year": ""
+  },
+  {
+    "articleNumber": "",
+    "authorNames": [
+      "Elsa Övningsius",
+      "Greta af Låtsasby",
+      "Mats Exempelsson",
+      "Karin Selma Fiktivdahl",
+      "Mikael Modellius",
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren"
+    ],
+    "category": "",
+    "citationYears": [],
+    "citations": "",
+    "creditRoleAssignments": [],
+    "doi": "",
+    "epubDate": "",
+    "geography": "National",
+    "id": "C524FAA0-695B-4F0B-83FB-0B087F6B19E1",
+    "independence": "No",
+    "isEditingLocked": false,
+    "isPeerReviewed": true,
+    "issue": "",
+    "jif2024": "",
+    "jifCurrent": "",
+    "jifQuartileCurrent": "",
+    "journal": "",
+    "norwegian2025": "",
+    "norwegianCurrent": "",
+    "number": "36",
+    "pageRange": "",
+    "phdStage": "",
+    "pmid": "",
+    "position": "First",
+    "previousAttempts": [],
+    "projectID": "505B8E89-1963-4657-83A4-088E593F6605",
+    "projectName": "Exempelprojekt 6",
+    "publicationTasks": [],
+    "publicationType": "Original",
+    "reviewRegistrationDate": "",
+    "reviewRegistrationID": "",
+    "reviewRegistrationRegistry": "",
+    "sharedFirstAuthorship": true,
+    "sharedLastAuthorship": false,
+    "sjr2024": "",
+    "sjrCurrent": "",
+    "status": "In preparation",
+    "statusTimeline": [
+      {
+        "id": "747D8C36-B7A4-4744-B1B8-8B732DAA7E05",
+        "journal": "",
+        "status": "In preparation"
+      }
+    ],
+    "title": "Exempelmöte 48",
+    "volume": "",
+    "workflowStatus": "Manuscript writing",
+    "workflowStatusDate": "2026-05-13",
+    "year": ""
+  }
+]

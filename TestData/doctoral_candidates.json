@@ -1,0 +1,336 @@
+[
+  {
+    "admissionDate": "2025-08-29",
+    "admissionDatePreliminary": false,
+    "candidateAuthorID": "C8A5A2BC-DDB6-4CA8-9894-4667EA218CFD",
+    "candidateName": "Elias Skissius",
+    "courses": [
+      {
+        "credits": "1,5",
+        "id": "D0C71F39-3AB8-40C0-B8B7-1C8604F5221B",
+        "title": "Exempelorganisation 6",
+        "year": "2026"
+      },
+      {
+        "credits": "",
+        "id": "ED3052E6-5431-4C30-A5A9-2814018607CB",
+        "title": "Exempelmöte 141",
+        "year": "2026"
+      },
+      {
+        "credits": "1,5",
+        "id": "36122D2F-5F78-434C-A345-D5287A32CA14",
+        "title": "Exempelmöte 142",
+        "year": "2026"
+      },
+      {
+        "credits": "16",
+        "id": "3502EFF1-46EE-44AD-B6D0-88A56B2B41D2",
+        "title": "Exempelmöte 143",
+        "year": "2027"
+      }
+    ],
+    "disputationDate": "",
+    "disputationDatePreliminary": false,
+    "doctoralProjectName": "Exempelavhandling 1",
+    "documents": [
+      {
+        "date": "2025-10-18",
+        "filename": "exempel-847.pdf",
+        "id": "3EA120EF-10D2-4822-A5AE-1BB1A10D7BE5",
+        "path": "Publication PDFs/exempel-846.pdf",
+        "title": "Exempelmöte 144"
+      },
+      {
+        "date": "2026-01-03",
+        "filename": "exempel-850.pdf",
+        "id": "278EEA1A-09A6-4ADA-8109-1393A2BAD3F4",
+        "path": "Publication PDFs/exempel-849.pdf",
+        "title": "Exempelmöte 145"
+      }
+    ],
+    "eISPLink": "https://example.org/eISPLink/844",
+    "estimatedHalftimeDate": "2029-09-17",
+    "estimatedHalftimeDatePreliminary": true,
+    "halftimeDate": "",
+    "halftimeDatePreliminary": true,
+    "id": "31FB059A-8135-4E96-A0E3-CFE57A7050A0",
+    "institution": "Exempelköpings universitet",
+    "institutionID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "isEditingLocked": false,
+    "linkedPublicationIDs": [
+      "ED9FC25E-0185-421A-BD3E-E15EFEE04FDA"
+    ],
+    "notes": "",
+    "plannedDisputationDate": "2033-09-17",
+    "plannedDisputationDatePreliminary": true,
+    "planningSeminarDate": "2025-10-18",
+    "planningSeminarDatePreliminary": false,
+    "sourceAssignmentIDs": [
+      "3D627182-6562-414A-8CF0-68C944CD48EA"
+    ],
+    "supervisionPeriods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2025-09-11",
+        "hoursPerSemester": "10",
+        "id": "3E326910-51DA-4A3F-A1CD-94B62E662231",
+        "semesterLabel": "VT 2026",
+        "to": "2033-09-17"
+      }
+    ],
+    "supervisors": [
+      {
+        "authorID": "730233C8-33E3-4A44-8679-7C4CCB1DD0D0",
+        "from": "2025-08-29",
+        "id": "4B9B9FE2-95F0-478D-A7A0-3A830BDDF309",
+        "name": "Lisa Modellby",
+        "to": ""
+      },
+      {
+        "authorID": "E3C43D22-886C-4F04-9978-6B040E1A08B5",
+        "from": "2025-08-29",
+        "id": "2A1F98C6-A4E4-43A1-93BA-EE0595B416C8",
+        "name": "Christoffer Testius",
+        "to": ""
+      },
+      {
+        "authorID": "E12E6971-4AD5-4F8A-8F3B-35CABB4F807A",
+        "from": "2025-08-29",
+        "id": "25D244F1-33C0-44FA-96D3-F1C048A474DE",
+        "name": "Martin Provby",
+        "to": ""
+      },
+      {
+        "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+        "from": "2025-08-29",
+        "id": "44307D6A-BA43-40DF-B7D5-1B19050FD89E",
+        "name": "Greta af Låtsasby",
+        "to": ""
+      }
+    ]
+  },
+  {
+    "admissionDate": "2025-07-07",
+    "admissionDatePreliminary": false,
+    "candidateAuthorID": "ACC1B520-A0E3-49EE-A7AC-ABCA65D1A175",
+    "candidateName": "Lena Testander",
+    "courses": [
+      {
+        "credits": "3",
+        "id": "8D15F626-5B50-4E04-AE3C-34F453952B1E",
+        "title": "Exempelmöte 146",
+        "year": "2026"
+      },
+      {
+        "credits": "3",
+        "id": "BE4E9FBB-AE83-4C6A-91C6-070390CF99E5",
+        "title": "Exempelmöte 147",
+        "year": "2026"
+      },
+      {
+        "credits": "5",
+        "id": "4E250A32-F16A-4BB5-9B30-169F56E4F05B",
+        "title": "Exempelmöte 148",
+        "year": "2027"
+      },
+      {
+        "credits": "4",
+        "id": "422477A9-645C-4168-85B8-C3389CD2379B",
+        "title": "Exempelmöte 149",
+        "year": "2027"
+      },
+      {
+        "credits": "1,5",
+        "id": "6F23AAD3-B1B3-490F-A436-B79411A9BF5E",
+        "title": "Exempelmöte 150",
+        "year": "2027"
+      },
+      {
+        "credits": "5",
+        "id": "55015334-6991-4985-8F74-898A8014D85D",
+        "title": "Exempelmöte 151",
+        "year": "2028"
+      },
+      {
+        "credits": "1,5",
+        "id": "520CCAE0-61D0-42FE-B7F3-B841347F9EC9",
+        "title": "Exempelmöte 150",
+        "year": "2028"
+      },
+      {
+        "credits": "5",
+        "id": "3949BF2F-A869-462B-949F-3FEA4B257AC7",
+        "title": "Exempelmöte 152",
+        "year": "2029"
+      },
+      {
+        "credits": "4",
+        "id": "8D807444-0EAA-4195-864A-1E5E11D376A8",
+        "title": "Exempelmöte 153",
+        "year": "2030"
+      },
+      {
+        "credits": "5",
+        "id": "2C5DEE99-7E7E-43C5-941B-E25DC341C6A5",
+        "title": "Exempelmöte 154",
+        "year": "2032"
+      }
+    ],
+    "disputationDate": "",
+    "disputationDatePreliminary": false,
+    "doctoralProjectName": "Exempelavhandling 2",
+    "documents": [
+      {
+        "date": "2025-09-19",
+        "filename": "exempel-863.pdf",
+        "id": "23FFEEF7-84B4-4662-98C0-5B0AAC67B32D",
+        "path": "Publication PDFs/exempel-862.pdf",
+        "title": "Exempelmöte 155"
+      },
+      {
+        "date": "2025-09-19",
+        "filename": "exempel-866.pdf",
+        "id": "949B7DA3-7814-4ACD-B567-25E09296FF5A",
+        "path": "Publication PDFs/exempel-865.pdf",
+        "title": "Exempelmöte 156"
+      }
+    ],
+    "eISPLink": "https://example.org/eISPLink/860",
+    "estimatedHalftimeDate": "2027-09-17",
+    "estimatedHalftimeDatePreliminary": true,
+    "halftimeDate": "",
+    "halftimeDatePreliminary": false,
+    "id": "154620B0-8341-43F6-8306-AE7023D7EE71",
+    "institution": "Exempelköpings universitet",
+    "institutionID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "isEditingLocked": false,
+    "linkedPublicationIDs": [
+      "1AE2E1CD-27CE-4B09-9B61-D7AA7F9D5844",
+      "86C5B745-B558-482A-9739-81A1B53AB5F4",
+      "462AB020-A7F0-4669-A391-42720020F6E1",
+      "D2B6DA4F-E046-47AA-919B-A128EF9AF64A"
+    ],
+    "notes": "",
+    "plannedDisputationDate": "2033-02-13",
+    "plannedDisputationDatePreliminary": true,
+    "planningSeminarDate": "2025-09-19",
+    "planningSeminarDatePreliminary": false,
+    "sourceAssignmentIDs": [
+      "368D6BE9-D0AF-46C4-BAEB-10611C021BCD",
+      "D852727D-D62F-4A8D-8B8E-EC8DE7876089",
+      "2B10EE0F-1331-425F-8558-BE28F2A43DFE",
+      "9C83C1D4-4C03-46A4-9DE9-A61714A77C21",
+      "48DC4BE5-0F99-4E43-A7A0-37ABE24BDE4D",
+      "2F6B83D3-2A6A-4B39-BEFE-9A7674DBD989",
+      "69532C9F-6A6A-4784-A40F-EB628D7A7F6A",
+      "C0D0700E-0170-40D6-9EFD-8706829DD2C5"
+    ],
+    "supervisionPeriods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2025-07-10",
+        "hoursPerSemester": "20",
+        "id": "277B1F75-1920-4570-926B-87EBF9BBFEE8",
+        "semesterLabel": "HT 2025",
+        "to": "2033-02-13"
+      }
+    ],
+    "supervisors": [
+      {
+        "authorID": "FC9370A1-88A6-435D-A6E2-F3050A1CAF40",
+        "from": "2025-07-07",
+        "id": "9F6217B0-8F89-4EEC-966A-A15DDB15CD20",
+        "name": "Gustav Utkastgren",
+        "to": ""
+      },
+      {
+        "authorID": "E4543593-DBF0-450D-8205-5BC16E120B52",
+        "from": "2025-07-07",
+        "id": "6A814102-1ED2-47AD-A13B-BE48CF8B36A8",
+        "name": "Elin Demoberg",
+        "to": ""
+      },
+      {
+        "authorID": "D1BDFA21-CC20-4A33-97A9-A56A3E7A9497",
+        "from": "2025-07-07",
+        "id": "A7DF7054-1250-4DCB-A4EE-C2A489711517",
+        "name": "Lennart Övningsqvist-Övningsander",
+        "to": ""
+      },
+      {
+        "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+        "from": "2025-07-07",
+        "id": "FFE2F25E-5270-4217-8E53-44DFDE44F932",
+        "name": "Greta af Låtsasby",
+        "to": ""
+      }
+    ]
+  },
+  {
+    "admissionDate": "2023-01-07",
+    "admissionDatePreliminary": false,
+    "candidateAuthorID": "56802007-2589-4035-A719-26C6B957DCB9",
+    "candidateName": "Johanna Utkastfield",
+    "disputationDate": "",
+    "disputationDatePreliminary": false,
+    "doctoralProjectName": "Exempelavhandling 3",
+    "estimatedHalftimeDate": "2026-10-15",
+    "estimatedHalftimeDatePreliminary": false,
+    "halftimeDate": "",
+    "halftimeDatePreliminary": false,
+    "id": "6104FD9B-0EA5-4A9A-BE5D-1943F334750D",
+    "institution": "Exempelköpings universitet",
+    "institutionID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+    "isEditingLocked": false,
+    "linkedPublicationIDs": [
+      "E637E3D5-B7C9-45A8-AA5D-49457788E7CE"
+    ],
+    "notes": "",
+    "plannedDisputationDate": "2029-08-16",
+    "plannedDisputationDatePreliminary": false,
+    "planningSeminarDate": "2023-12-09",
+    "planningSeminarDatePreliminary": false,
+    "sourceAssignmentIDs": [],
+    "supervisionPeriods": [
+      {
+        "confirmedInRetendo": false,
+        "from": "2024-09-22",
+        "hoursPerSemester": "5",
+        "id": "C69AACCA-666F-4426-AD59-985A113F38FC",
+        "semesterLabel": "VT 2025",
+        "to": ""
+      }
+    ],
+    "supervisors": [
+      {
+        "authorID": "DFA44A1D-FBB4-4EB5-A504-99522946F181",
+        "from": "2023-01-07",
+        "id": "8F65D573-00EB-418F-B1CA-987B6F4D1D6D",
+        "name": "Tobias Modellström",
+        "to": ""
+      },
+      {
+        "authorID": "668EE24E-034A-465D-A6B9-5F22122D2595",
+        "from": "2023-01-07",
+        "id": "C35DD6EF-638D-4F86-82FB-C1ED10624CFA",
+        "name": "Joakim Demo",
+        "to": ""
+      },
+      {
+        "authorID": "655A87D0-2A40-40D4-9C43-A45E7507517F",
+        "from": "2024-09-22",
+        "id": "76B00638-B06F-4F9E-BEDC-D659D440648D",
+        "name": "Greta af Låtsasby",
+        "to": ""
+      },
+      {
+        "authorID": "EBB0C8C7-4D69-422C-89C0-E5755F2781F9",
+        "from": "2023-01-07",
+        "id": "4F9F57D6-7CCA-433B-8ADA-A85A395615B4",
+        "name": "Bengt Demogren",
+        "to": "2025-12-31"
+      }
+    ]
+  }
+]

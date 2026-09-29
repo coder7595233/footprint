@@ -1,0 +1,1086 @@
+[
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Ove Provström",
+      "Martin Provby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "33D4B81E-9E39-433C-91F8-0F70A779475B"
+    },
+    "fullNameEn": "Exempelprojekt 16",
+    "fullNameSv": "Exempelprojekt 16",
+    "hasDataCollection": false,
+    "id": "5785F6BF-5A37-4045-BA43-F5FC440D435C",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 3",
+    "nameSv": "Exempelprojekt 3",
+    "principalOrganizations": [],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Lisa Modellby",
+      "Signe Påhittberg",
+      "Jonas Mallwood",
+      "Erik Test"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "71B81294-B682-460F-AE44-5CB3AD9D293F"
+    },
+    "fullNameEn": "Example project 1",
+    "fullNameSv": "Exempelprojekt 17",
+    "hasDataCollection": false,
+    "id": "5C4898F5-801D-4E9A-BCD8-4F5239AF9F98",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Example name 29",
+    "nameSv": "Exempelprojekt 7",
+    "principalOrganizations": [],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Gustav Utkastgren",
+      "Mikael Exempelberg",
+      "Bo Mallberg",
+      "Malin Utkastling",
+      "Martin Demoqvist Skissfield",
+      "Oskar Demodahl Provgren",
+      "Göran Testström",
+      "Signe Påhittberg",
+      "Leo Påhittling",
+      "Vera Påhittholm",
+      "Elin Demoberg",
+      "Axel Z. Utkastström",
+      "Jakob Modellholm",
+      "Greta af Låtsasby",
+      "Lennart Övningsqvist-Övningsander",
+      "Theo Provdahl",
+      "Kevin Demoby",
+      "Jan Modellsson",
+      "Martin Mallgren"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "2026-01-17",
+      "caseNumber": "Exempel 260",
+      "grantedOn": "2026-04-05",
+      "id": "069F731F-5A01-4CC6-B1BB-E615A9F9CFD5"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "Exempelprojekt 18",
+    "hasDataCollection": true,
+    "id": "5F386A16-3AC3-4A1A-9CA7-DDE5ABECEE62",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 14",
+    "nameSv": "Exempelprojekt 14",
+    "principalOrganizations": [
+      {
+        "caseNumber": "",
+        "id": "7FD87C22-4FD0-4476-AC76-205652EEBB2E",
+        "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+        "organizationName": "Exempelköpings universitet"
+      },
+      {
+        "caseNumber": "",
+        "id": "CF8DCF6C-7FE6-48B4-A96A-088E67DDEE40",
+        "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+        "organizationName": "Region Exempelgöta"
+      },
+      {
+        "caseNumber": "",
+        "id": "35E18A5D-6958-4075-B6B5-1D8C23B08827",
+        "organizationID": "13ABE39D-CA6B-4D52-B5E6-E69813CCC3CB",
+        "organizationName": "Exempel 2"
+      },
+      {
+        "caseNumber": "",
+        "id": "C13D42CE-9D87-4C32-B8B0-D33EEAD3AC13",
+        "organizationID": "4A6717EE-1B7F-42F6-A977-53A356DA2F8C",
+        "organizationName": "Exempelstiftelsen 12"
+      },
+      {
+        "caseNumber": "",
+        "id": "C199A871-C43A-4952-B689-63B7AE78E3EC",
+        "organizationID": "1BEEFE55-CB1B-4388-8891-7BB2008E14CF",
+        "organizationName": "Exempelnamn 25"
+      }
+    ],
+    "projectStatus": "ongoing",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [
+      {
+        "id": "A9AC0182-6942-4F4A-9D24-7726EB15D12E",
+        "registeredOn": "2023-02-19",
+        "trialID": "Exempel 265",
+        "updatedOn": "2025-05-11"
+      }
+    ],
+    "collaboratorNames": [
+      "Gustav Utkastgren",
+      "Bo Mallberg",
+      "Lena Testander",
+      "Sara NA Utkaststedt",
+      "Rolf Påhittlund",
+      "Gustav Mallsson",
+      "Märta Exempelander",
+      "Julia Mallby",
+      "Susanne Testlund",
+      "Carina Exempelholm Provstedt",
+      "Selma Påhittfield",
+      "Greta af Låtsasby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [
+      {
+        "appliedOn": "2024-05-30",
+        "caseNumber": "Exempel 261",
+        "grantedOn": "2024-06-20",
+        "id": "6360EBC8-F115-45A1-8FCC-C371F7B30491"
+      },
+      {
+        "appliedOn": "2024-06-24",
+        "caseNumber": "Exempel 262",
+        "grantedOn": "2024-07-17",
+        "id": "2671A748-5C38-4E0B-BEAD-27B49782A14E"
+      },
+      {
+        "appliedOn": "2024-09-27",
+        "caseNumber": "Exempel 263",
+        "grantedOn": "2024-10-14",
+        "id": "B0AAE010-370D-41C1-A0D5-9740FCBDDE30"
+      }
+    ],
+    "ethicsBaseApplication": {
+      "appliedOn": "2023-06-13",
+      "caseNumber": "Exempel 264",
+      "grantedOn": "2023-09-09",
+      "id": "6236129D-7133-495E-BA3E-DB960CCA0A90"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "Exempelprojekt 19",
+    "hasDataCollection": true,
+    "id": "FBC7A8E5-1D9C-49D2-8A72-86877EA9F518",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelnamn 26",
+    "nameSv": "Exempelnamn 26",
+    "principalOrganizations": [
+      {
+        "caseNumber": "",
+        "id": "EA50A1B2-7547-4048-B8EB-97C56A238761",
+        "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+        "organizationName": "Exempelköpings universitet"
+      },
+      {
+        "caseNumber": "",
+        "id": "F77C9A34-5285-4404-882C-31AE71AA176E",
+        "organizationID": "4A6717EE-1B7F-42F6-A977-53A356DA2F8C",
+        "organizationName": "Exempelstiftelsen 12"
+      }
+    ],
+    "projectStatus": "ongoing",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Gustav Utkastgren",
+      "Märta Exempelander",
+      "Carina Exempelholm Provstedt",
+      "Martin Exempelqvist",
+      "Greta af Låtsasby",
+      "Åsa Testqvist",
+      "Sara NA Utkaststedt",
+      "Julia Mallby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [
+      {
+        "appliedOn": "2022-07-23",
+        "caseNumber": "Exempel 266",
+        "grantedOn": "2022-08-12",
+        "id": "5DDF8E80-D752-47F9-94F6-68E97185E276"
+      }
+    ],
+    "ethicsBaseApplication": {
+      "appliedOn": "2022-02-14",
+      "caseNumber": "Exempel 267",
+      "grantedOn": "2022-04-09",
+      "id": "3E7E3C07-9278-489B-ADDD-BE3FDB2FBEF4"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": true,
+    "id": "A2C48DF1-EFA2-499E-BCCE-AC9E9CD7C23A",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Example name 30",
+    "nameSv": "Exempelnamn 27",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "DDCF6516-11CE-4937-BA5B-22746D891E4B"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "B852A318-C112-4ACD-BEEA-50E1DF304178",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Example name 31",
+    "nameSv": "Doktorandprojekt",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Vera Påhittholm",
+      "Gustav Utkastgren",
+      "Sven Utkastlund",
+      "Martin G. Testander",
+      "Maja Testby",
+      "Axel Övningsling"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "46982DB1-F356-46D6-AC49-C06DEEB0314A"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "Exempelprojekt 20",
+    "hasDataCollection": false,
+    "id": "E5E1C7D8-F178-4DB6-9E54-DB9C0A70A95B",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Exempelnamn 28",
+    "nameSv": "Exempelnamn 28",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "10065708-4C5E-4369-80FE-FE5BB9B823D9"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "4F3A6A92-5A45-47C5-A05D-628D7BB6BCFA",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Example name 32",
+    "nameSv": "Exempelnamn 29",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Gustav Utkastgren",
+      "Greta af Låtsasby",
+      "Bo Mallberg",
+      "Mikael Exempelberg",
+      "Rolf Påhittlund",
+      "Klara Låtsasdahl",
+      "Martin Övningsberg",
+      "Signe Påhittberg",
+      "Martin Fiktivling",
+      "Henrik Övningsdahl",
+      "Amanda Demostedt",
+      "Cecilia Låtsasling",
+      "Wilma Utkastwood",
+      "Alva Låtsasqvist",
+      "Selma Påhittfield",
+      "Magnus Övnings"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "1EE7423B-C76B-4C92-B3FF-1E967C95D61B"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "9BBC3466-0611-4838-A2C0-6E97DA70C6C0",
+    "isArchived": true,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 8",
+    "nameSv": "Exempelprojekt 8",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "11F16D7E-2A2E-4CAE-98D8-71BAFE150939"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "505B8E89-1963-4657-83A4-088E593F6605",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Independent",
+    "nameSv": "Exempelprojekt 6",
+    "principalOrganizations": [],
+    "projectStatus": "ongoing",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Tobias Modellström",
+      "Johanna Utkastfield",
+      "Harald Mallius",
+      "Greta af Låtsasby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "1485B0AC-5A51-47C9-B42E-4C0B2C6FC01E"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "36F94DF6-5607-460A-B2D6-7425194193DA",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Example name 33",
+    "nameSv": "Exempelnamn 30",
+    "principalOrganizations": [],
+    "projectStatus": "ongoing",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Kerstin Påhittstedt Fiktiv",
+      "Klara Låtsasdahl"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "8C9DA526-05CD-41D4-8E8A-AF5C0B41B0D5"
+    },
+    "fullNameEn": "Exempelprojekt 21",
+    "fullNameSv": "Exempelprojekt 21",
+    "hasDataCollection": false,
+    "id": "870EE5A5-96DB-4EBF-A3D3-842270CC70C8",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 12",
+    "nameSv": "Exempelprojekt 12",
+    "principalOrganizations": [],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [
+      "s"
+    ],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Harald Mallius",
+      "Vera Påhittholm",
+      "Lisa Modellby",
+      "Martin Demoander Fiktivby",
+      "Signe Påhittberg",
+      "Margareta Demofield",
+      "Elin Provqvist",
+      "Therese Modelldahl",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Karin Selma Fiktivdahl"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "E2208A48-1318-44BE-8009-4ABBF00FCA86"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "4F677B54-2858-404C-A59D-F54B8CA9E482",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 1",
+    "nameSv": "Exempelprojekt 1",
+    "principalOrganizations": [],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [
+      "Exempel 268"
+    ],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Harald Mallius",
+      "Vera Påhittholm",
+      "Lisa Modellby",
+      "Elin Provqvist",
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "224E8C75-9A0B-4525-8937-530128421170"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "B9680DCC-DF73-45EA-9029-6E2FD87F2012",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Example name 34",
+    "nameSv": "Exempelprojekt 11",
+    "principalOrganizations": [],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Elin Provqvist",
+      "Martin Provby",
+      "Martin Demoander Fiktivby",
+      "Harald Mallius",
+      "Vera Påhittholm"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "EBF3A15E-2521-422E-8812-92B598C07A9A"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "Exempelprojekt 22",
+    "hasDataCollection": false,
+    "id": "884260A3-30CE-4E2E-9CF4-83F06BCA0CD1",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 4",
+    "nameSv": "Exempelprojekt 4",
+    "principalOrganizations": [],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [
+      "Exempel 269",
+      "Exempel 270",
+      "Exempel 271",
+      "Exempel 272"
+    ],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Kjell Låtsasander",
+      "Elin Provqvist",
+      "Peter Exempel",
+      "Siri Påhittström",
+      "Kjell Malldahl"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "CEEFE6A4-AF44-4126-A43C-1DA77CA96C4C"
+    },
+    "fullNameEn": "Example project 2",
+    "fullNameSv": "Exempelprojekt 23",
+    "hasDataCollection": false,
+    "id": "158B5ECD-DCD3-49E9-A9A7-0CC861A893EC",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Example name 35",
+    "nameSv": "Exempelprojekt 9",
+    "principalOrganizations": [],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [
+      "Exempel 273",
+      "Exempel 274",
+      "Exempel 275"
+    ],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [
+      {
+        "id": "1F175137-B8C4-4EBD-851F-91C641B5E54B",
+        "registeredOn": "2022-07-28",
+        "trialID": "Exempel 278",
+        "updatedOn": "2023-04-13"
+      }
+    ],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren",
+      "Therese Modelldahl"
+    ],
+    "dataCollections": [
+      {
+        "from": "2022-08-19",
+        "id": "69600655-1AD8-4C6C-AC06-4A9BE507056F",
+        "to": "2023-01-22"
+      }
+    ],
+    "ethicsAmendments": [
+      {
+        "appliedOn": "2023-03-16",
+        "caseNumber": "Exempel 276",
+        "grantedOn": "2023-03-20",
+        "id": "F7171B01-38BF-43B2-AEC5-3380E23B591B"
+      }
+    ],
+    "ethicsBaseApplication": {
+      "appliedOn": "2022-06-30",
+      "caseNumber": "Exempel 277",
+      "grantedOn": "2022-07-16",
+      "id": "EDD06C69-FE79-4001-B2EA-054B9E7D58A1"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": true,
+    "id": "DF0E70FB-273D-42A0-BAA9-56CE060C6415",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Example name 36",
+    "nameSv": "Exempelnamn 31",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "F33BC158-B940-4F81-903C-97E6B2940178"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "42012CE9-414A-4714-87B3-411ECB1AE086",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Exempelnamn 32",
+    "nameSv": "Exempelnamn 32",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [
+      {
+        "id": "832D51F8-5CD4-4EF0-B86F-894C8ECF313C",
+        "registeredOn": "2024-08-19",
+        "trialID": "Exempel 300",
+        "updatedOn": "2026-01-02"
+      }
+    ],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Martin Provby",
+      "Elin Provqvist",
+      "Martin Mallgren",
+      "Britt Utkastsson"
+    ],
+    "dataCollections": [
+      {
+        "from": "2025-01-25",
+        "id": "DF76CB73-70FF-4E4D-A925-351FF2A6A74A",
+        "to": "2026-01-04"
+      }
+    ],
+    "ethicsAmendments": [
+      {
+        "appliedOn": "2024-11-08",
+        "caseNumber": "Exempel 279",
+        "grantedOn": "2024-12-05",
+        "id": "0FE97012-40B7-4766-99F4-B2AA9C8E1BDA"
+      },
+      {
+        "appliedOn": "2025-01-11",
+        "caseNumber": "Exempel 280",
+        "grantedOn": "2025-02-12",
+        "id": "61CCE29A-ECEB-47D0-8FE4-1FF63351DA5A"
+      }
+    ],
+    "ethicsBaseApplication": {
+      "appliedOn": "2024-09-19",
+      "caseNumber": "Exempel 299",
+      "grantedOn": "2024-11-02",
+      "id": "17DB035D-AE4F-40EB-9137-D7FBB83602D2"
+    },
+    "ethicsLink": "https://example.org/ethicsLink/1027",
+    "fullNameEn": "Example project 3",
+    "fullNameSv": "Exempelansökan 6",
+    "hasDataCollection": true,
+    "id": "A28FDCC4-B5E9-4275-8E8E-12D0EE3E914F",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 2",
+    "nameSv": "Exempelprojekt 2",
+    "principalOrganizations": [
+      {
+        "caseNumber": "",
+        "id": "ABC8C55F-BDFA-41E3-BE71-CD0DF3B0C082",
+        "organizationID": "47B74433-7AE5-43D4-8E49-830A64331C86",
+        "organizationName": "Region Exempelgöta"
+      },
+      {
+        "caseNumber": "Exempel 281",
+        "id": "CCED4E75-976E-422F-B837-131E2036985A",
+        "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+        "organizationName": "Exempelköpings universitet"
+      },
+      {
+        "caseNumber": "",
+        "id": "D6F94D29-06C6-40CD-8B76-79CF61ACFFF1",
+        "organizationID": "CC4627B0-B647-46CE-8485-D83191D811AD",
+        "organizationName": "Exempelstiftelsen 28"
+      }
+    ],
+    "projectStatus": "ongoing",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [
+      "Exempel 282",
+      "Exempel 283",
+      "Exempel 284",
+      "Exempel 285",
+      "Exempel 286",
+      "Exempel 287",
+      "Exempel 288",
+      "Exempel 289",
+      "Exempel 290",
+      "Exempel 291",
+      "Exempel 292",
+      "Exempel 293",
+      "Exempel 294",
+      "Exempel 295",
+      "Exempel 296",
+      "Exempel 297",
+      "Exempel 298"
+    ],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Vera Påhittholm",
+      "Gustav Utkastgren",
+      "Martin Provby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "8C593559-866F-4737-993C-AE0A6CA32FAF"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "F434A311-A987-4B14-992C-E32B32FC4DA5",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Example name 37",
+    "nameSv": "Exempelprojekt 15",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Gustav Utkastgren",
+      "Bo Mallberg",
+      "Mikael Exempelberg",
+      "Greta af Låtsasby",
+      "Rolf Påhittlund",
+      "Magnus Övnings",
+      "Tove Låtsas",
+      "Annika Modellstedt",
+      "Stig Påhittdahl",
+      "Martin Övningsberg"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "2025-10-06",
+      "caseNumber": "Exempel 301",
+      "grantedOn": "2026-04-11",
+      "id": "EE60327E-332B-4433-93D6-91BA49649CED"
+    },
+    "fullNameEn": "Exempelprojekt 5",
+    "fullNameSv": "Exempelprojekt 5",
+    "hasDataCollection": true,
+    "id": "6FCECEF6-EFF0-4534-A743-25543530241B",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelprojekt 5",
+    "nameSv": "Exempelprojekt 5",
+    "principalOrganizations": [
+      {
+        "caseNumber": "",
+        "id": "DD53B16C-5585-4079-A847-F854295874AF",
+        "organizationID": "C75BB8BE-3368-4074-A5BD-D0FBD55B0442",
+        "organizationName": "Exempelköpings universitet"
+      }
+    ],
+    "projectStatus": "planned",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Elin Exempelstedt",
+      "Elin Provqvist",
+      "Hugo Fiktivlund-Fiktivfield",
+      "Linnea Skisswood",
+      "Erik Fiktivgren",
+      "Ellen Övningslund",
+      "Sofia Provfield",
+      "Sven Mallsson Påhittqvist",
+      "Sofia Påhittwood",
+      "Greta af Låtsasby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "64732BAA-DDB6-4C49-8C10-B4CB1B4E1283"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "78BA3244-D756-4A55-BFDF-B32100FAFA7C",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelnamn 33",
+    "nameSv": "Exempelnamn 33",
+    "principalOrganizations": [],
+    "projectStatus": "ongoing",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Sven Utkastlund",
+      "Maja Testby",
+      "Hanna Skissby"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "90422B77-4D5D-49F3-BB6F-B86BEDF1FB80"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "E91C6783-9111-4247-9C78-3DF6DD7B3FCE",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Example name 38",
+    "nameSv": "Exempelnamn 34",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Elin Provqvist",
+      "Kjell Malldahl",
+      "Mats Exempelsson",
+      "Karin Selma Fiktivdahl"
+    ],
+    "dataCollections": [],
+    "ethicsAmendments": [],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "",
+      "grantedOn": "",
+      "id": "32999DA3-27E7-4DAD-8D10-7436C75592DC"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": false,
+    "id": "CDE902DB-1D42-482D-B914-17AD69006419",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Example name 39",
+    "nameSv": "Exempelprojekt 13",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [
+      {
+        "id": "CF596B1C-C4D6-412B-A0C4-FC562E6D69F6",
+        "registeredOn": "2019-01-24",
+        "trialID": "Exempel 307",
+        "updatedOn": "2025-10-18"
+      }
+    ],
+    "collaboratorNames": [
+      "Gustav Utkastgren",
+      "Pontus N. Skissgren",
+      "Greta af Låtsasby",
+      "Therese Modelldahl",
+      "Karin Selma Fiktivdahl",
+      "Martin Provby"
+    ],
+    "dataCollections": [
+      {
+        "from": "2019-04-21",
+        "id": "40CA6763-7BF8-44BF-B6B0-1A32A009DD01",
+        "to": "2025-09-16"
+      }
+    ],
+    "ethicsAmendments": [
+      {
+        "appliedOn": "2020-01-06",
+        "caseNumber": "Exempel 302",
+        "grantedOn": "2020-01-25",
+        "id": "DF64B4E9-7C28-4A91-954D-2639EA8CE5A3"
+      }
+    ],
+    "ethicsBaseApplication": {
+      "appliedOn": "",
+      "caseNumber": "Exempel 306",
+      "grantedOn": "",
+      "id": "F87FC0FD-606F-49E0-B020-4EF5F9B05C9A"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "Exempelprojekt 24",
+    "hasDataCollection": true,
+    "id": "AA603652-51D0-4BB6-9CE2-E5A741BFC85E",
+    "isArchived": false,
+    "isEditingLocked": false,
+    "nameEn": "Exempelnamn 35",
+    "nameSv": "Exempelnamn 35",
+    "principalOrganizations": [
+      {
+        "caseNumber": "",
+        "id": "0298A0F0-F601-46FC-8BE9-7BA6ED7F5E92",
+        "organizationID": "4A6717EE-1B7F-42F6-A977-53A356DA2F8C",
+        "organizationName": "Exempelstiftelsen 12"
+      }
+    ],
+    "projectStatus": "ongoing",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [
+      "Exempel 303",
+      "Exempel 304",
+      "Exempel 305"
+    ],
+    "websiteURL": ""
+  },
+  {
+    "clinicalTrialRegistrations": [],
+    "collaboratorNames": [
+      "Greta af Låtsasby",
+      "Pontus N. Skissgren",
+      "Gustav Utkastgren",
+      "Therese Modelldahl"
+    ],
+    "dataCollections": [
+      {
+        "from": "2023-05-25",
+        "id": "2EBBA1D4-9796-4BA0-837F-970D17208DC4",
+        "to": "2023-10-19"
+      },
+      {
+        "from": "2024-05-24",
+        "id": "7CE79E83-EB8A-47CC-B20B-4C3A8AFE42D1",
+        "to": "2024-12-11"
+      }
+    ],
+    "ethicsAmendments": [
+      {
+        "appliedOn": "2023-06-15",
+        "caseNumber": "Exempel 308",
+        "grantedOn": "2023-07-05",
+        "id": "ABA3EFA1-DACE-432A-A4E6-92A597386428"
+      },
+      {
+        "appliedOn": "2023-10-03",
+        "caseNumber": "Exempel 309",
+        "grantedOn": "2023-11-05",
+        "id": "7278342E-C29E-40DE-AD56-F8D358F9B824"
+      },
+      {
+        "appliedOn": "2024-03-17",
+        "caseNumber": "Exempel 310",
+        "grantedOn": "2024-04-22",
+        "id": "858FD0FF-B069-4333-81CA-B6DAF22F2030"
+      }
+    ],
+    "ethicsBaseApplication": {
+      "appliedOn": "2023-01-12",
+      "caseNumber": "Exempel 311",
+      "grantedOn": "2023-01-28",
+      "id": "5F7458C4-C479-4FF7-A51B-FEEF11A15D02"
+    },
+    "fullNameEn": "",
+    "fullNameSv": "",
+    "hasDataCollection": true,
+    "id": "118A0F88-EBCD-4F1E-8535-459A90BF1E22",
+    "isArchived": true,
+    "isEditingLocked": true,
+    "nameEn": "Exempelprojekt 10",
+    "nameSv": "Exempelprojekt 10",
+    "principalOrganizations": [],
+    "projectStatus": "completed",
+    "projectTasks": [],
+    "suppressedSeedProjectTaskComments": [],
+    "websiteURL": ""
+  }
+]
