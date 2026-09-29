@@ -360,8 +360,13 @@ struct ApplicationEditorView: View {
         var pending = draft
         pending.applicantCriteria = criteriaText
         pending.projectCriteria = nil
-        pending.approximateAmountValue = approximateAmountComputedValue
-        pending.approximateAmount = approximateAmountComputedValue.flatMap { GrantParsing.formatAmountInput(String(Int($0.rounded()))) }
+        // The salary estimate is worked out only while the record is open
+        // and not yet applied for. A locked or applied record keeps the
+        // amount it has, so opening it never changes it.
+        if !draft.isEditingLocked, draft.isNotYetApplied {
+            pending.approximateAmountValue = approximateAmountComputedValue
+            pending.approximateAmount = approximateAmountComputedValue.flatMap { GrantParsing.formatAmountInput(String(Int($0.rounded()))) }
+        }
         return pending
     }
 
@@ -934,7 +939,15 @@ struct ApplicationEditorView: View {
             criteriaText = newValue.applicantCriteria ?? newValue.projectCriteria ?? ""
             scheduleCalendarEventsRefresh()
         }
-        .onChange(of: draft) { _, _ in
+        .onChange(of: draft) { oldValue, newValue in
+            // Round 10: the OH rules in force on the application day count
+            // for the whole period; they are read once, when the record gets
+            // its application date, and then stay as they are.
+            if oldValue.id == newValue.id,
+               oldValue.appliedOn?.trimmedOrNil == nil,
+               newValue.appliedOn?.trimmedOrNil != nil {
+                copyOverheadDefaultsForApplicationDay()
+            }
             scheduleAutosave()
         }
         .onChange(of: criteriaText) { _, _ in
@@ -1451,9 +1464,21 @@ struct ApplicationEditorView: View {
     /// gets copies of their OH numbers. They can be changed afterwards, and a
     /// later change on the organizations never reaches this record.
     private func copyOverheadDefaultsIntoDraft() {
-        guard !draft.isEditingLocked else { return }
+        guard !draft.isEditingLocked, draft.isNotYetApplied else { return }
         let managerID = store.linkedFundManager(of: draft)?.id
         draft.applyOverheadDefaults(store.overheadDefaults(forFunderID: draft.organizationID, managerID: managerID))
+    }
+
+    /// When the record gets its application date: the numbers in force that
+    /// day, unless they were typed by hand. After this they never change.
+    private func copyOverheadDefaultsForApplicationDay() {
+        guard !draft.isEditingLocked else { return }
+        let managerID = store.linkedFundManager(of: draft)?.id
+        draft.applyOverheadDefaults(store.overheadDefaults(
+            forFunderID: draft.organizationID,
+            managerID: managerID,
+            on: draft.overheadDefaultsDate
+        ))
     }
 
     private func commitProjectSelection(language: AppLanguage) {
@@ -2262,10 +2287,15 @@ struct ApplicationEditorView: View {
             get: { draft[keyPath: keyPath].map { formatOverheadPercentInput(String($0)) } ?? "" },
             set: { newValue in
                 let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                let previous = draft[keyPath: keyPath]
                 if trimmed.isEmpty {
                     draft[keyPath: keyPath] = nil
                 } else if let value = GrantParsing.numericValue(from: trimmed) {
                     draft[keyPath: keyPath] = min(100, max(0, value))
+                }
+                // A number typed here is kept: the defaults never replace it.
+                if draft[keyPath: keyPath] != previous {
+                    draft.overheadNumbersSetByHand = true
                 }
             }
         )
@@ -2325,8 +2355,13 @@ struct ApplicationEditorView: View {
         }
     }
 
+    /// Shown when the record's numbers leave a gap, and also when the kr
+    /// line under the salary budget shows a co-funding need (records whose
+    /// numbers are not filled in), so the two never disagree.
     private var showsCofundingQuestion: Bool {
-        draft.cofundingOverheadGapPercent > 0 || draft.cofundingDecision != nil
+        draft.cofundingOverheadGapPercent > 0
+            || (approximateAmountBreakdown?.cofundingAmount ?? 0) >= 0.5
+            || draft.cofundingDecision != nil
     }
 
     private func cofundingExplanation(language: AppLanguage) -> String? {
@@ -2422,6 +2457,18 @@ struct ApplicationEditorView: View {
     }
 
     private func approximateAmountMetrics(language: AppLanguage) -> [ApproximateAmountMetric] {
+        // A locked or applied record shows the amount it was saved with, not
+        // a new estimate from today's salary calculator.
+        if draft.isEditingLocked || !draft.isNotYetApplied {
+            return [
+                ApproximateAmountMetric(
+                    id: "total",
+                    label: language.text("Total", "Totalt"),
+                    value: draft.approximateAmountValue.map { CurrencyFormatter.format($0, code: "SEK") } ?? "—",
+                    emphasized: true
+                )
+            ]
+        }
         guard let approximateAmountBreakdown else {
             return [
                 ApproximateAmountMetric(
@@ -3508,6 +3555,11 @@ private struct ApplicationTimelineStepper: View {
             application[keyPath: option.dateKeyPath] = nil
             application[keyPath: option.uncertaintyKeyPath] = false
         }
+        // The old decision date and status went with the decision; without
+        // this the record stayed "Beviljat" and kept the old date.
+        application.decisionOn = nil
+        application.decisionOnUncertain = false
+        application.result = application.appliedOn?.trimmedOrNil == nil ? "Att söka" : "Väntar svar"
     }
 
     private func clearSubmission() {

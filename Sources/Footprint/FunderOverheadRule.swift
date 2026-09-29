@@ -321,18 +321,25 @@ extension FunderOverheadRule {
 
 extension ManagerSalaryCalculator {
     /// The OH in the salary calculator's period that covers `date`, in
-    /// percent; nil when no filled-in period covers it.
+    /// percent. When no period covers it, the latest period that ended
+    /// before it (the same rule as the salary budget); nil when there is none.
     func overheadPercent(on date: Date) -> Double? {
         let day = Calendar.current.startOfDay(for: date)
+        var latestPast: (end: Date, value: Double)?
         for period in overheadPeriods {
             guard let value = GrantParsing.numericValue(from: period.value),
                   let from = DateParsers.isoDay.date(from: period.from),
                   let to = DateParsers.isoDay.date(from: period.to) else { continue }
-            if min(from, to) <= day, day <= max(from, to) {
+            let start = min(from, to)
+            let end = max(from, to)
+            if start <= day, day <= end {
                 return value
             }
+            if end < day, latestPast.map({ end > $0.end }) ?? true {
+                latestPast = (end, value)
+            }
         }
-        return nil
+        return latestPast?.value
     }
 }
 
@@ -361,6 +368,21 @@ struct GrantOverheadDefaults: Equatable {
 }
 
 extension GrantApplication {
+    /// Round 10 (user decision 2026-09-29): the OH rules that count are the
+    /// ones in force when the application is sent, for the whole period.
+    /// Before that the record follows the organizations' defaults; after it
+    /// the numbers are fixed.
+    var isNotYetApplied: Bool {
+        let status = resultLabel
+        return status == "Att söka" || status == "Ej sökt"
+    }
+
+    /// The day the defaults are read for: the application day when there is
+    /// one, otherwise today.
+    var overheadDefaultsDate: Date {
+        appliedOn?.trimmedOrNil.flatMap { DateParsers.isoDay.date(from: DateParsers.canonicalizedDayInput($0)) } ?? Date()
+    }
+
     /// The part of the fund manager's OH the funder does not accept, in
     /// percentage points; 0 when there is nothing to co-fund or a number is
     /// missing.
@@ -369,10 +391,20 @@ extension GrantApplication {
         return max(0, manager - funder)
     }
 
-    /// Writes the copied OH numbers into the record.
-    mutating func applyOverheadDefaults(_ defaults: GrantOverheadDefaults) {
+    /// Writes the copied OH numbers into the record. Numbers typed by hand
+    /// are never replaced. When a number changes, an earlier answer about
+    /// co-funding no longer applies and is cleared. Returns true when
+    /// anything changed.
+    @discardableResult
+    mutating func applyOverheadDefaults(_ defaults: GrantOverheadDefaults) -> Bool {
+        guard !overheadNumbersSetByHand else { return false }
+        guard funderMaxOverheadPercent != defaults.funderMaxPercent
+            || managerOverheadPercent != defaults.managerPercent else { return false }
         funderMaxOverheadPercent = defaults.funderMaxPercent
         managerOverheadPercent = defaults.managerPercent
+        cofundingDecision = nil
+        cofundingDecisionOn = nil
+        return true
     }
 }
 
@@ -410,11 +442,13 @@ extension GrantDataStore {
         return nil
     }
 
-    /// The copied OH numbers for a record with this funder and fund manager.
-    func overheadDefaults(forFunderID funderID: String?, managerID: String?) -> GrantOverheadDefaults {
+    /// The copied OH numbers for a record with this funder and fund manager,
+    /// as they are on `date` (the application day).
+    func overheadDefaults(forFunderID funderID: String?, managerID: String?, on date: Date = Date()) -> GrantOverheadDefaults {
         GrantOverheadDefaults.resolved(
             funder: funderID.flatMap { organization(id: $0) },
-            manager: managerID.flatMap { organization(id: $0) }
+            manager: managerID.flatMap { organization(id: $0) },
+            on: date
         )
     }
 }

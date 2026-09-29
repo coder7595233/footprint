@@ -91,12 +91,15 @@ final class Round10RecordOverheadTests: XCTestCase {
         locked: Bool = false,
         managerID: String? = universityID
     ) -> GrantApplication {
+        // "Väntar svar" is shown only with an application date.
+        let appliedOn: String? = status == "Väntar svar" ? "2026-09-01" : nil
         var application = GrantApplication(
             id: id,
             rowNumber: 1,
             organizationID: funderID,
             organization: "Stiftelsen Exempel",
             grantName: "Projektbidrag",
+            appliedOn: appliedOn,
             result: status,
             applicationManagerID: managerID,
             applicationManager: managerID == nil ? nil : "Exempelköpings universitet"
@@ -270,5 +273,78 @@ final class Round10RecordOverheadTests: XCTestCase {
         XCTAssertEqual(copy.managerOverheadPercent, 30)
         XCTAssertNil(copy.cofundingDecision)
         XCTAssertNil(copy.cofundingDecisionOn)
+    }
+
+    // MARK: Rules in force on the application day (user decision 2026-09-29)
+
+    func testNumbersTypedByHandAreNeverReplaced() {
+        var application = Self.record(id: "a", status: "Att söka")
+        XCTAssertTrue(application.applyOverheadDefaults(GrantOverheadDefaults(funderMaxPercent: 20, managerPercent: 30)))
+        application.cofundingDecision = .yes
+        application.cofundingDecisionOn = "2026-09-29"
+
+        // A new default (another funder) replaces the numbers and the answer.
+        XCTAssertTrue(application.applyOverheadDefaults(GrantOverheadDefaults(funderMaxPercent: 15, managerPercent: 30)))
+        XCTAssertEqual(application.funderMaxOverheadPercent, 15)
+        XCTAssertNil(application.cofundingDecision, "the answer was about the earlier numbers")
+
+        // The same numbers again change nothing and keep the answer.
+        application.cofundingDecision = .no
+        XCTAssertFalse(application.applyOverheadDefaults(GrantOverheadDefaults(funderMaxPercent: 15, managerPercent: 30)))
+        XCTAssertEqual(application.cofundingDecision, .no)
+
+        // Typed by hand: never replaced.
+        application.managerOverheadPercent = 32
+        application.overheadNumbersSetByHand = true
+        XCTAssertFalse(application.applyOverheadDefaults(GrantOverheadDefaults(funderMaxPercent: 25, managerPercent: 29)))
+        XCTAssertEqual(application.managerOverheadPercent, 32)
+        XCTAssertEqual(application.funderMaxOverheadPercent, 15)
+    }
+
+    func testOnlyRecordsNotYetAppliedFollowTheDefaults() {
+        XCTAssertTrue(Self.record(id: "a", status: "Att söka").isNotYetApplied)
+        XCTAssertTrue(Self.record(id: "b", status: "Ej sökt").isNotYetApplied)
+        XCTAssertFalse(Self.record(id: "c", status: "Väntar svar").isNotYetApplied)
+        XCTAssertFalse(Self.record(id: "d", status: "Beviljat").isNotYetApplied)
+        let applied = Self.record(id: "e", status: "Väntar svar")
+        XCTAssertEqual(DateParsers.isoDay.string(from: applied.overheadDefaultsDate), "2026-09-01", "read on the application day")
+    }
+
+    func testCalculatorOverheadFallsBackToTheLatestEndedPeriod() throws {
+        let calculator = ManagerSalaryCalculator(
+            birthDate: "",
+            monthlySalaryPeriods: [],
+            employerFeePeriods: [],
+            regionalCostPeriods: [],
+            itInfrastructureFeePeriods: [],
+            listedPatientCountPeriods: [],
+            overheadPeriods: [
+                SalaryCalculatorPeriod(value: "31 %", from: "2024-01-01", to: "2024-12-31"),
+                SalaryCalculatorPeriod(value: "30 %", from: "2025-01-01", to: "2025-12-31"),
+            ],
+            annualIncreaseAfterCurrentYearPercent: "3",
+            allocationPercent: "",
+            allocationMonths: ""
+        )
+        XCTAssertEqual(calculator.overheadPercent(on: try XCTUnwrap(DateParsers.isoDay.date(from: "2024-06-01"))), 31)
+        XCTAssertEqual(calculator.overheadPercent(on: try XCTUnwrap(DateParsers.isoDay.date(from: "2027-03-01"))), 30, "no period this year: the latest one")
+        XCTAssertNil(calculator.overheadPercent(on: try XCTUnwrap(DateParsers.isoDay.date(from: "2020-01-01"))))
+    }
+
+    // MARK: Numbers in free text
+
+    func testYearCountAndAmountsAreReadAsWritten() {
+        XCTAssertEqual(GrantParsing.largestNumber(in: "2-3"), 3)
+        XCTAssertEqual(GrantParsing.largestNumber(in: "1,5 år"), 1.5)
+        XCTAssertNil(GrantParsing.largestNumber(in: "okänt"))
+        var application = Self.record(id: "a", status: "Att söka")
+        application.maxAmount = "500 000"
+        application.yearCount = "2-3"
+        XCTAssertEqual(application.maximumTotalAmountValue, 1_500_000, "was 23 years before")
+
+        XCTAssertEqual(GrantParsing.formatAmountInput("1 250 000,50"), "1 250 000")
+        XCTAssertEqual(GrantParsing.formatAmountInput("1250000.5 kr"), "1 250 000")
+        XCTAssertEqual(GrantParsing.formatAmountInput("1 500 000"), "1 500 000")
+        XCTAssertEqual(GrantParsing.formatAmountInput("1.500.000"), "1 500 000", "points between thousands stay thousands")
     }
 }

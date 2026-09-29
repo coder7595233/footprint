@@ -29330,13 +29330,13 @@ extension GrantDataStore {
     /// Running it again changes nothing.
     @discardableResult
     func migrateRecordOverheadDefaultsForRound10() -> Bool {
-        let notAppliedStatuses: Set<String> = ["Att söka", "Ej sökt"]
         var updated = applications
         var filled = 0
         for index in updated.indices {
             let record = updated[index]
+            // The status as shown (derived from the dates), not the stored text.
             guard !record.isEditingLocked,
-                  let status = record.result?.trimmedOrNil, notAppliedStatuses.contains(status),
+                  record.isNotYetApplied,
                   record.funderMaxOverheadPercent == nil,
                   record.managerOverheadPercent == nil else { continue }
             let manager = linkedFundManager(of: record).flatMap { organization(id: $0.id) }

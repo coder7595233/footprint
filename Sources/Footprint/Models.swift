@@ -102,6 +102,9 @@ struct GrantApplication: Identifiable, Codable, Hashable {
     var cofundingDecision: GrantCofundingDecision?
     /// The day of that answer (ISO day).
     var cofundingDecisionOn: String?
+    /// Round 10: true once either OH number has been typed in the record.
+    /// Such numbers are never replaced by the organizations' defaults.
+    var overheadNumbersSetByHand: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -185,6 +188,7 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         case managerOverheadPercent
         case cofundingDecision
         case cofundingDecisionOn
+        case overheadNumbersSetByHand
     }
 
     init(
@@ -267,7 +271,8 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         funderMaxOverheadPercent: Double? = nil,
         managerOverheadPercent: Double? = nil,
         cofundingDecision: GrantCofundingDecision? = nil,
-        cofundingDecisionOn: String? = nil
+        cofundingDecisionOn: String? = nil,
+        overheadNumbersSetByHand: Bool = false
     ) {
         self.id = id
         self.rowNumber = rowNumber
@@ -348,6 +353,7 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         self.managerOverheadPercent = managerOverheadPercent
         self.cofundingDecision = cofundingDecision
         self.cofundingDecisionOn = cofundingDecisionOn
+        self.overheadNumbersSetByHand = overheadNumbersSetByHand
     }
 
     init(from decoder: Decoder) throws {
@@ -454,7 +460,8 @@ struct GrantApplication: Identifiable, Codable, Hashable {
             managerOverheadPercent: try container.decodeIfPresent(Double.self, forKey: .managerOverheadPercent),
             cofundingDecision: (try container.decodeIfPresent(String.self, forKey: .cofundingDecision))
                 .flatMap(GrantCofundingDecision.init(rawValue:)),
-            cofundingDecisionOn: try container.decodeIfPresent(String.self, forKey: .cofundingDecisionOn)
+            cofundingDecisionOn: try container.decodeIfPresent(String.self, forKey: .cofundingDecisionOn),
+            overheadNumbersSetByHand: try container.decodeIfPresent(Bool.self, forKey: .overheadNumbersSetByHand) ?? false
         )
     }
 
@@ -542,6 +549,9 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         try container.encodeIfPresent(managerOverheadPercent, forKey: .managerOverheadPercent)
         try container.encodeIfPresent(cofundingDecision?.rawValue, forKey: .cofundingDecision)
         try container.encodeIfPresent(cofundingDecisionOn, forKey: .cofundingDecisionOn)
+        if overheadNumbersSetByHand {
+            try container.encode(true, forKey: .overheadNumbersSetByHand)
+        }
     }
 
     var displayTitle: String {
@@ -638,7 +648,7 @@ struct GrantApplication: Identifiable, Codable, Hashable {
 
     var maximumTotalAmountValue: Double? {
         guard let annual = maximumAmountValue else { return nil }
-        let years = Double(yearCount?.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression) ?? "") ?? 0
+        let years = GrantParsing.largestNumber(in: yearCount) ?? 0
         guard years > 0 else { return annual }
         return annual * years
     }
@@ -4759,9 +4769,23 @@ enum GrantParsing {
         ISO8601DateFormatter().string(from: Date())
     }
 
+    /// The largest number written in a free-text field ("2-3" gives 3,
+    /// "1,5" gives 1.5). Nil when there is none. Used for "Antal år", where
+    /// removing every non-digit used to turn "2-3" into 23.
+    static func largestNumber(in raw: String?) -> Double? {
+        guard let raw, let regex = try? NSRegularExpression(pattern: #"\d+(?:[.,]\d+)?"#) else { return nil }
+        let nsRaw = raw as NSString
+        return regex.matches(in: raw, range: NSRange(location: 0, length: nsRaw.length))
+            .compactMap { Double(nsRaw.substring(with: $0.range).replacingOccurrences(of: ",", with: ".")) }
+            .max()
+    }
+
     static func formatAmountInput(_ raw: String?) -> String? {
         guard let raw = raw?.trimmedOrNil else { return nil }
-        let digits = raw.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        // Amounts are whole kronor: öre after a decimal comma or point
+        // ("1 250 000,50") are dropped instead of being read as more digits.
+        let withoutDecimals = raw.replacingOccurrences(of: #"[.,]\d{1,2}\s*(kr|SEK)?\s*$"#, with: "", options: [.regularExpression, .caseInsensitive])
+        let digits = withoutDecimals.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         guard !digits.isEmpty else { return nil }
         var parts: [String] = []
         var current = digits

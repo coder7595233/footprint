@@ -838,8 +838,7 @@ final class SnapshotTrialRunTests: XCTestCase {
         let storedApplications = try XCTUnwrap(rawStore.load([GrantApplication].self, named: "applications"))
         let storedOrganizations = try XCTUnwrap(rawStore.load([OrganizationRecord].self, named: "organizations"))
         let storedByID = Dictionary(storedApplications.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let notApplied: Set<String> = ["Att söka", "Ej sökt"]
-        let eligible = storedApplications.filter { !$0.isEditingLocked && notApplied.contains($0.result?.trimmedOrNil ?? "") }
+        let eligible = storedApplications.filter { !$0.isEditingLocked && $0.isNotYetApplied }
         print("SNAPSHOT: R10 Poster: \(storedApplications.count), varav låsta \(storedApplications.filter(\.isEditingLocked).count)")
         print("SNAPSHOT: R10 Olåsta poster med Att söka eller Ej sökt: \(eligible.count)")
         print("SNAPSHOT: R10 Förvaltare utan OH som tas ut före: \(storedOrganizations.filter { $0.roles.contains(.fundManager) && $0.managerOverheadPercent == nil }.count)")
@@ -862,7 +861,7 @@ final class SnapshotTrialRunTests: XCTestCase {
         var changedOutsideScope = 0
         for application in reloaded.applications {
             guard let stored = storedByID[application.id] else { continue }
-            let inScope = !stored.isEditingLocked && notApplied.contains(stored.result?.trimmedOrNil ?? "")
+            let inScope = !stored.isEditingLocked && stored.isNotYetApplied
             let gotNumbers = application.funderMaxOverheadPercent != stored.funderMaxOverheadPercent
                 || application.managerOverheadPercent != stored.managerOverheadPercent
             if gotNumbers {
