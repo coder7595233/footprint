@@ -20663,7 +20663,6 @@ final class GrantDataStore: ObservableObject {
 
     private func ensureManagedCVMediaAppearancePDFAttachmentsStored() -> Bool {
         var changed = false
-        logMediaPDFLookupForDiagnostics()
 
         for index in cvMediaAppearances.indices {
             do {
@@ -20679,7 +20678,7 @@ final class GrantDataStore: ObservableObject {
 
     /// F49: one line per media record in startup_diagnostics.log with where
     /// its PDF is looked for and what is found (ids and file names only).
-    private func logMediaPDFLookupForDiagnostics() {
+    func logMediaPDFLookupForDiagnostics() {
         let fileManager = FileManager.default
         let filesDirectory = Self.mediaAppearanceFilesDirectory
         let pdfsDirectory = Self.mediaAppearancePDFsDirectory

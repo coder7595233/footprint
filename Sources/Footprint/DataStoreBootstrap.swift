@@ -218,6 +218,8 @@ extension GrantDataStore {
                 // their organization and unit (one correct spelling). Runs on
                 // every start; changes and saves only what differs.
                 applyOfficialOrganizationNamesAtLaunch()
+                // F49: where each media PDF is looked for; runs on every start.
+                logMediaPDFLookupForDiagnostics()
                 compactDatabaseIfNeeded()
                 // Captured on main before detaching; see sweep doc comment.
                 let sweepStorageRoot = Self.storageDirectory
