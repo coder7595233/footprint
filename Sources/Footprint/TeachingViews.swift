@@ -1495,19 +1495,18 @@ struct TeachingWorkspaceView: View {
                         HStack(spacing: 0) {
                             TeachingAssignmentDirectoryCell(
                                 text: row.kindLabel,
-                                state: row.retendoState,
                                 alignment: .leading
                             )
                             .padding(.trailing, reminderCount > 0 ? 34 : 0)
                             .frame(width: typeWidth, alignment: .leading)
                             .appReminderListBadge(reminderCount, help: reminderHelp)
-                            teachingListCell(assignmentStructureSummary(row.assignment).nonEmpty ?? "—", width: contextWidth, state: row.retendoState)
-                            teachingListCell(row.activityName, width: momentWidth, state: row.retendoState)
-                            teachingListCell(row.roleLabel.nonEmpty ?? "—", width: roleWidth, state: row.retendoState)
-                            teachingListCell(row.yearLabel.nonEmpty ?? "—", width: yearWidth, state: row.retendoState)
-                            teachingListCell(row.statusLabel.nonEmpty ?? "—", width: statusWidth, state: row.retendoState)
-                            teachingListCell(row.hoursLabel, width: hoursWidth, state: row.retendoState, alignment: .trailing)
-                            teachingListCell(row.studentLabel.nonEmpty ?? "—", width: studentWidth, state: row.retendoState)
+                            teachingListCell(assignmentStructureSummary(row.assignment).nonEmpty ?? "—", width: contextWidth)
+                            teachingListCell(row.activityName, width: momentWidth)
+                            teachingListCell(row.roleLabel.nonEmpty ?? "—", width: roleWidth)
+                            teachingListCell(row.yearLabel.nonEmpty ?? "—", width: yearWidth)
+                            teachingListCell(row.statusLabel.nonEmpty ?? "—", width: statusWidth)
+                            teachingListCell(row.hoursLabel, width: hoursWidth, alignment: .trailing)
+                            teachingListCell(row.studentLabel.nonEmpty ?? "—", width: studentWidth)
                         }
                     }
                     .id(row.id)
@@ -1575,29 +1574,20 @@ struct TeachingWorkspaceView: View {
     private func teachingListCell(
         _ text: String,
         width: CGFloat,
-        state: TeachingRetendoState,
         alignment: Alignment = .leading
     ) -> some View {
-        TeachingAssignmentDirectoryCell(text: text, state: state, alignment: alignment)
+        TeachingAssignmentDirectoryCell(text: text, alignment: alignment)
             .frame(width: width, alignment: alignment)
     }
 
+    /// Same marking as the other lists: a selected row is filled blue, and
+    /// an assignment that is only partly confirmed in Retendo gets a red bar
+    /// on the left, which stays visible when the row is selected.
     private func teachingListRowBackground(for row: TeachingAssignmentDirectoryRow) -> some View {
-        Group {
-            if row.id == selectedAssignmentID {
-                // Selection marker only — the wide assignment table made the
-                // standard full-row tint read as the whole row being painted,
-                // so this list shows just the leading indicator rectangle.
-                StatusIndicatorListRowBackground(
-                    fill: AppPalette.vividBlue,
-                    indicatorWidth: 4,
-                    leadingPadding: 4,
-                    verticalPadding: 5
-                )
-            } else {
-                Color.clear
-            }
-        }
+        AppListRowBackground(
+            isSelected: row.id == selectedAssignmentID,
+            toneFill: row.retendoState == .partial ? AppPalette.vividRed : nil
+        )
     }
 
     private func localizedActivityName(for canonicalName: String) -> String {
@@ -3303,36 +3293,14 @@ private struct TeachingAssignmentPeriodsEditor: View {
 
 private struct TeachingAssignmentDirectoryCell: View {
     let text: String
-    let state: TeachingRetendoState
     var alignment: Alignment = .leading
 
     var body: some View {
         Text(text)
             .lineLimit(1)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
-            .background(
-                Group {
-                    if let backgroundColor {
-                        Rectangle()
-                            .fill(backgroundColor)
-                    }
-                }
-            )
-    }
-
-    private var backgroundColor: Color? {
-        switch state {
-        case .none:
-            return nil
-        case .partial:
-            return currentVisualModePreference() == .darkNew ? AppPalette.vividYellow : AppPalette.vividYellow.opacity(0.55)
-        case .full:
-            return nil
-        }
     }
 }
-
-
 
 private struct TeachingCheckGrid<Item: Identifiable & Hashable>: View {
     let items: [Item]
