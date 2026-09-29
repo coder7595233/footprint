@@ -24229,18 +24229,13 @@ final class GrantDataStore: ObservableObject {
                 fallback: normalized.category
             )
             normalized.note = normalized.note?.trimmedOrNil
-            normalized.roles = normalizedRoles(from: normalized.roles, name: name, category: normalized.category)
+            normalized.roles = normalizedRoles(from: normalized.roles)
             mergedByName[name] = normalized
         }
 
-        // User decision: an existing organization keeps the roles ticked on
-        // it. Suggested roles (employer, institution by name) are only given
-        // to an organization created here; an existing one only gets the role
-        // its use in an application requires (fund manager / grant provider).
-        let existingNames = Set(mergedByName.keys)
-        func managedRoles(for name: String) -> Set<OrganizationRole> {
-            existingNames.contains(name) ? [.fundManager] : defaultRolesForManagedOrganization(named: name)
-        }
+        // User decision: an organization only gets the role its use in an
+        // application requires (fund manager / grant provider); other roles
+        // are ticked by hand. Nothing is guessed from the name (F40).
 
         for manager in legacyManagers {
             guard let name = manager.nameSv.nonEmpty else { continue }
@@ -24249,35 +24244,21 @@ final class GrantDataStore: ObservableObject {
             option.note = option.note?.trimmedOrNil ?? manager.reason?.trimmedOrNil
             option.salaryCalculator = option.salaryCalculator ?? manager.salaryCalculator
             option.category = derivedOrganizationCategory(city: option.city, country: option.country, fallback: option.category)
-            option.roles = normalizedRoles(
-                from: Array(Set(option.roles).union(managedRoles(for: name))),
-                name: name,
-                category: option.category,
-                allowNameInferredInstitution: !existingNames.contains(name)
-            )
+            option.roles = normalizedRoles(from: Array(Set(option.roles).union([.fundManager])))
             mergedByName[name] = option
         }
 
         for name in canonicalFunders {
             var option = mergedByName[name] ?? OrganizationRecord(id: StableRecordID.legacy(prefix: "organization", name: name), nameSv: name, nameEn: name)
             option.category = derivedOrganizationCategory(city: option.city, country: option.country, fallback: option.category)
-            option.roles = normalizedRoles(
-                from: Array(Set(option.roles).union([.grantProvider])),
-                name: name,
-                category: option.category
-            )
+            option.roles = normalizedRoles(from: Array(Set(option.roles).union([.grantProvider])))
             mergedByName[name] = option
         }
 
         for name in canonicalManagers {
             var option = mergedByName[name] ?? OrganizationRecord(id: StableRecordID.legacy(prefix: "organization", name: name), nameSv: name, nameEn: name)
             option.category = derivedOrganizationCategory(city: option.city, country: option.country, fallback: option.category)
-            option.roles = normalizedRoles(
-                from: Array(Set(option.roles).union(managedRoles(for: name))),
-                name: name,
-                category: option.category,
-                allowNameInferredInstitution: !existingNames.contains(name)
-            )
+            option.roles = normalizedRoles(from: Array(Set(option.roles).union([.fundManager])))
             mergedByName[name] = option
         }
 
@@ -24294,15 +24275,9 @@ final class GrantDataStore: ObservableObject {
         return names
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
             .map { name in
-                let roles = normalizedRoles(
-                    from: inferredOrganizationRoles(
-                        for: name,
-                        isGrantProvider: canonicalFunders.contains(name),
-                        isFundManager: canonicalManagers.contains(name)
-                    ),
-                    name: name,
-                    category: nil,
-                    allowNameInferredInstitution: true
+                let roles = inferredOrganizationRoles(
+                    isGrantProvider: canonicalFunders.contains(name),
+                    isFundManager: canonicalManagers.contains(name)
                 )
                 return OrganizationRecord(
                     id: StableRecordID.legacy(prefix: "organization", name: name),
@@ -24315,50 +24290,24 @@ final class GrantDataStore: ObservableObject {
             }
     }
 
-    private func normalizedRoles(
-        from roles: [OrganizationRole],
-        name: String,
-        category: String?,
-        allowNameInferredInstitution: Bool = false
-    ) -> [OrganizationRole] {
-        var values = Set(roles)
-
-        if allowNameInferredInstitution && organizationLooksLikeInstitution(name) {
-            values.insert(.institution)
-        }
-        // User decision: no roles are added or removed because of an
-        // organization's name; the roles ticked on the organization count.
-
-        let ordered = OrganizationRole.allCases.filter(values.contains)
-        return ordered
+    /// The roles in the app's fixed order. No roles are added or removed
+    /// because of an organization's name; the roles ticked on it count.
+    private func normalizedRoles(from roles: [OrganizationRole]) -> [OrganizationRole] {
+        let values = Set(roles)
+        return OrganizationRole.allCases.filter(values.contains)
     }
 
-    private func inferredOrganizationRoles(for name: String, isGrantProvider: Bool, isFundManager: Bool) -> [OrganizationRole] {
-        var roles = Set<OrganizationRole>()
+    /// F40: a new organization from an application only gets the role the
+    /// application gives it; other roles are ticked by hand.
+    private func inferredOrganizationRoles(isGrantProvider: Bool, isFundManager: Bool) -> [OrganizationRole] {
+        var roles: [OrganizationRole] = []
         if isGrantProvider {
-            roles.insert(.grantProvider)
+            roles.append(.grantProvider)
         }
         if isFundManager {
-            roles.formUnion(defaultRolesForManagedOrganization(named: name))
+            roles.append(.fundManager)
         }
-        return OrganizationRole.allCases.filter(roles.contains)
-    }
-
-    private func defaultRolesForManagedOrganization(named name: String) -> Set<OrganizationRole> {
-        var roles: Set<OrganizationRole> = [.fundManager, .employer]
-        if organizationLooksLikeInstitution(name) {
-            roles.insert(.institution)
-        }
-        return roles
-    }
-
-    private func organizationLooksLikeInstitution(_ name: String) -> Bool {
-        let normalized = name.lowercased()
-        return normalized.contains("universitet")
-            || normalized.contains("university")
-            || normalized.contains("college")
-            || normalized.contains("högskola")
-            || normalized.contains("school")
+        return normalizedRoles(from: roles)
     }
 
     private func derivedManagers(from organizations: [OrganizationRecord]) -> [ManagerOption] {
@@ -24432,7 +24381,7 @@ final class GrantDataStore: ObservableObject {
             city: city,
             country: country,
             category: category,
-            roles: normalizedRoles(from: roles, name: candidateSv, category: category),
+            roles: normalizedRoles(from: roles),
             note: note?.trimmedOrNil,
             websiteURL: websiteURL,
             phoneNumber: phoneNumber,
@@ -24539,7 +24488,7 @@ final class GrantDataStore: ObservableObject {
         let trimmedMembershipFrom = membershipFrom.trimmedOrNil ?? ""
         let trimmedMembershipTo = membershipTo.trimmedOrNil ?? ""
         let normalizedCongresses = normalizedOrganizationCongresses(congresses)
-        let resolvedRoles = normalizedRoles(from: roles, name: trimmedSv, category: derivedCategory)
+        let resolvedRoles = normalizedRoles(from: roles)
         let existing = Set(list.map(\.nameSv)).subtracting([excludedValue])
         if !existing.contains(trimmedSv) {
             return OrganizationRecord(
@@ -24581,7 +24530,7 @@ final class GrantDataStore: ObservableObject {
             city: trimmedCity,
             country: trimmedCountry,
             category: derivedCategory,
-            roles: normalizedRoles(from: roles, name: candidateSv, category: derivedCategory),
+            roles: normalizedRoles(from: roles),
             note: trimmedNote,
             websiteURL: trimmedWebsiteURL,
             phoneNumber: trimmedPhoneNumber,

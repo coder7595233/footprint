@@ -406,6 +406,27 @@ extension PublicationAffiliation {
         }
         return self != before
     }
+
+    /// F48: fills in city and country from the chosen unit, else its nearest
+    /// parent unit, else the organization. A value that is not known is left
+    /// as it is, and both fields can still be changed by hand afterwards.
+    @discardableResult
+    mutating func applyPlace(organization: OrganizationRecord, unit: OrganizationUnit?) -> Bool {
+        let before = self
+        var cityCandidates: [String] = []
+        if let unit {
+            let path = organization.unitPath(to: unit.id)
+            cityCandidates = path.isEmpty ? [unit.city] : path.reversed().map(\.city)
+        }
+        cityCandidates.append(organization.city)
+        if let placeCity = cityCandidates.lazy.compactMap(\.trimmedOrNil).first {
+            city = placeCity
+        }
+        if let placeCountry = organization.country.trimmedOrNil {
+            country = placeCountry
+        }
+        return self != before
+    }
 }
 
 extension PublicationAuthorEmployment {

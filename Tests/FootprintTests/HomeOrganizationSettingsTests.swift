@@ -155,7 +155,7 @@ final class HomeOrganizationSettingsTests: XCTestCase {
     }
 
     @MainActor
-    func testNewOrganizationFromApplicationStillGetsSuggestedRoles() {
+    func testNewOrganizationFromApplicationOnlyGetsItsApplicationRole() {
         let application = GrantApplication(
             id: "app-1",
             rowNumber: 1,
@@ -167,7 +167,8 @@ final class HomeOrganizationSettingsTests: XCTestCase {
         store.refreshOptionListsFromApplications(preserveCustomLists: true)
 
         let manager = store.organizations.first { $0.nameSv == "Nytt universitet" }
-        XCTAssertEqual(Set(manager?.roles ?? []), [.fundManager, .employer, .institution])
+        // F40: no employer or institution role guessed from the name.
+        XCTAssertEqual(manager?.roles, [.fundManager])
         let funder = store.organizations.first { $0.nameSv == "Ny finansiär" }
         XCTAssertEqual(funder?.roles, [.grantProvider])
     }

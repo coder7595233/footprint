@@ -608,16 +608,16 @@ final class SnapshotTrialRunTests: XCTestCase {
     }
 
     /// Doktorandvyns tidslinje: admission and planning seminar get their own
-    /// stored status ("Genomfört"). Old data has none, so nothing changes at
-    /// start; marking one planning seminar as done keeps every record and
-    /// every date, and the choice is still there after reloading.
+    /// stored status ("Genomfört"). Nothing changes at start (data from
+    /// before the feature has no status, newer data keeps the one it has);
+    /// marking one planning seminar as done keeps every record and every
+    /// date, and the choice is still there after reloading.
     @MainActor
     func testSnapshotDoctoralMilestoneStatusKeepsRecords() throws {
         let rawStore = try SQLiteDocumentStore(url: GrantDataStore.databaseURL, createIfMissing: false)
         let storedCandidates = try rawStore.load([DoctoralCandidateRecord].self, named: "doctoral_candidates") ?? []
         let storedWithStatus = storedCandidates.filter { $0.planningSeminarOutcomeRaw != nil || $0.admissionOutcomeRaw != nil }.count
         print("SNAPSHOT: Tidslinje doktorander i databasen: \(storedCandidates.count), med sparad status för antagning/planeringsseminarium: \(storedWithStatus)")
-        XCTAssertEqual(storedWithStatus, 0, "old data has no such status")
 
         let store = GrantDataStore.loadFromBundle()
         XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
@@ -654,8 +654,9 @@ final class SnapshotTrialRunTests: XCTestCase {
             )
             XCTAssertEqual(candidate.halftimeOutcomeRaw, stored.halftimeOutcomeRaw)
             XCTAssertEqual(candidate.plannedDisputationOutcomeRaw, stored.plannedDisputationOutcomeRaw)
+            XCTAssertEqual(candidate.admissionOutcomeRaw, stored.admissionOutcomeRaw, "a stored admission status is kept")
             if stored.id != target.id {
-                XCTAssertNil(candidate.planningSeminarOutcomeRaw)
+                XCTAssertEqual(candidate.planningSeminarOutcomeRaw, stored.planningSeminarOutcomeRaw, "a stored planning seminar status is kept")
                 XCTAssertEqual(candidate.planningSeminarDatePreliminary, stored.planningSeminarDatePreliminary)
             }
         }
