@@ -1768,14 +1768,32 @@ extension GrantDataStore {
         return "unsafe-id-\(digest)"
     }
 
+    /// A plain file name: not empty, not "." or "..", and no "/", "\\",
+    /// "%" or control or format characters. Checked character by character
+    /// (F49: the earlier check refused plain names on the owner's Mac).
     nonisolated private static func isSafeAttachmentLeafName(_ value: String) -> Bool {
-        !value.isEmpty
-            && value != "."
-            && value != ".."
-            && !value.contains("/")
-            && !value.contains("\\")
-            && !value.contains("%")
-            && !value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
+        guard !value.isEmpty, value != ".", value != ".." else { return false }
+        for scalar in value.unicodeScalars {
+            switch scalar.value {
+            case 0x2F, 0x5C, 0x25: // "/", "\\", "%"
+                return false
+            case 0x00...0x1F, 0x7F...0x9F:
+                return false
+            default:
+                switch scalar.properties.generalCategory {
+                case .control, .format:
+                    return false
+                default:
+                    continue
+                }
+            }
+        }
+        return true
+    }
+
+    /// F49 diagnostics: which part of the earlier name check refused.
+    nonisolated static func earlierLeafNameCheckParts(_ value: String) -> String {
+        "slash=\(value.contains("/")) backslash=\(value.contains("\\")) percent=\(value.contains("%")) control=\(value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains))"
     }
 
     /// F1: attachment locations are stored relative to the storage
@@ -2053,7 +2071,7 @@ extension GrantDataStore {
         var isDirectory: ObjCBool = false
         let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
         let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
-        return "safeName=\(isSafeAttachmentLeafName(name)) exists=\(exists) isDirectory=\(isDirectory.boolValue) isLink=\(isLink) nameLength=\(name.count) nameScalars=\(name.unicodeScalars.count)"
+        return "safeName=\(isSafeAttachmentLeafName(name)) exists=\(exists) isDirectory=\(isDirectory.boolValue) isLink=\(isLink) nameLength=\(name.count) nameScalars=\(name.unicodeScalars.count) earlier={\(earlierLeafNameCheckParts(name))}"
     }
 
     static func canonicalizePublicationPDFAttachment(for publication: inout PublicationRecord) throws -> Bool {
