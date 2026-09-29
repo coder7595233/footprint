@@ -339,17 +339,26 @@ struct OrganizationUnitsSection: View {
     @ViewBuilder
     private func editorPane(organization: OrganizationRecord, usageCounts: [String: Int]) -> some View {
         if let unit = organization.unit(withID: selectedUnitID) {
-            OrganizationUnitEditorPane(
-                store: store,
-                organization: organization,
-                unit: unit,
-                hasChildren: organization.unitIDsWithChildren().contains(unit.id),
-                usageCount: usageCounts[unit.id] ?? 0,
-                language: language,
-                addChild: { addUnit(organizationID: organization.id, parentUnitID: unit.id) },
-                requestRemoval: { pendingRemovalUnitID = unit.id }
-            )
-            .id(unit.id)
+            VStack(alignment: .leading, spacing: 12) {
+                OrganizationUnitEditorPane(
+                    store: store,
+                    organization: organization,
+                    unit: unit,
+                    hasChildren: organization.unitIDsWithChildren().contains(unit.id),
+                    usageCount: usageCounts[unit.id] ?? 0,
+                    language: language,
+                    addChild: { addUnit(organizationID: organization.id, parentUnitID: unit.id) },
+                    requestRemoval: { pendingRemovalUnitID = unit.id }
+                )
+                .id(unit.id)
+                if (usageCounts[unit.id] ?? 0) > 0 {
+                    OrganizationUnitResearcherList(
+                        researchers: store.organizationUnitResearchers(organizationID: organization.id, unitID: unit.id),
+                        language: language,
+                        openResearcher: { store.openRoute(for: $0) }
+                    )
+                }
+            }
         } else {
             Text(language.text(
                 "Choose a unit in the list to see and change it here.",
@@ -478,6 +487,42 @@ struct OrganizationUnitsSection: View {
     }
 }
 
+/// The researchers whose rows point to the chosen unit, shown under the
+/// unit editor. Clicking a name opens the researcher.
+private struct OrganizationUnitResearcherList: View {
+    let researchers: [OrganizationUnitResearcher]
+    let language: AppLanguage
+    let openResearcher: (PublicationAuthor) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(language.text("Researchers at the unit", "Forskare vid enheten"))
+                .appTypography(.fieldLabel)
+                .foregroundStyle(AppPalette.appText)
+            ForEach(researchers) { entry in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Button(entry.author.displayName) {
+                        openResearcher(entry.author)
+                    }
+                    .buttonStyle(.link)
+                    .help(language.text("Open the researcher", "Öppna forskaren"))
+                    Text(entry.rowKinds.map { $0.title(language: language) }.joined(separator: ", "))
+                        .appTypography(.secondary)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(AppPalette.cardSurface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(AppPalette.subtleBorder, lineWidth: 1)
+        )
+    }
+}
+
 /// F21: the editor to the right of the unit list: names, city, the address
 /// settings, the address line the unit gives, how many researcher rows use
 /// it, and the actions (add a sub-unit, move, remove).
@@ -556,15 +601,22 @@ private struct OrganizationUnitEditorPane: View {
                     "Leave empty to use the city of the unit above or of the organization.",
                     "Lämna tomt för att använda orten för enheten ovanför eller för organisationen."
                 ),
-                text: unitTextBinding(\.city)
+                text: unitTextBinding(\.city),
+                fieldMaxWidth: 240
             )
-            .frame(maxWidth: 240, alignment: .leading)
         }
     }
 
-    private func labeledField(label: String, help: String?, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    /// Label to the left of the field, so the editor takes less height.
+    private func labeledField(
+        label: String,
+        help: String?,
+        text: Binding<String>,
+        fieldMaxWidth: CGFloat = .infinity
+    ) -> some View {
+        HStack(alignment: .center, spacing: 10) {
             AppFieldLabelText(text: label, help: help)
+                .frame(width: 110, alignment: .leading)
             CommitFormattingTextField(
                 placeholder: label,
                 text: text,
@@ -572,6 +624,7 @@ private struct OrganizationUnitEditorPane: View {
                 updatesContinuously: false
             )
             .appTextInputChrome()
+            .frame(maxWidth: fieldMaxWidth, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

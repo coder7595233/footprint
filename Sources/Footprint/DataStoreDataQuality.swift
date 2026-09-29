@@ -1855,6 +1855,25 @@ extension GrantDataStore {
                     details: media.link
                 )
             }
+            let hasMediaPDF = media.pdfFilename?.trimmedOrNil != nil
+                || media.pdfPath?.trimmedOrNil != nil
+                || media.attachments.contains { $0.filename.lowercased().hasSuffix(".pdf") }
+            if hasMediaPDF,
+               GrantDataStore.resolveCVMediaAppearancePDFURL(
+                   mediaAppearanceID: media.id,
+                   pdfPath: media.pdfPath,
+                   pdfFilename: media.pdfFilename,
+                   legacyStoredFilenames: GrantDataStore.legacyMediaPDFCandidateNames(media.attachments)
+               ) == nil {
+                appendIssue(
+                    kind: .brokenLink,
+                    destination: .cv,
+                    recordID: "mediaAppearance:\(media.id)",
+                    title: media.localizedTitle(language: language).nonEmpty ?? media.displayTitle,
+                    subtitle: language.text("Missing linked PDF file", "Saknar länkad PDF-fil"),
+                    details: media.pdfFilename ?? media.pdfPath ?? media.attachments.first?.filename ?? ""
+                )
+            }
         }
 
         for review in cvReviewEntries {

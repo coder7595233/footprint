@@ -1196,10 +1196,6 @@ private struct LocalizedOptionDetailView: View {
         selectedRoles.contains(.employer)
     }
 
-    private var showsInstitutionTeaching: Bool {
-        selectedRoles.contains(.institution)
-    }
-
     private var organizationTaskReminderOptions: [ProjectTaskReminder] {
         ProjectTaskReminder.organizationOptions(for: selectedRoles)
     }
@@ -1620,15 +1616,14 @@ private struct LocalizedOptionDetailView: View {
                 )
             }
 
-            if showsInstitutionTeaching {
-                OrganizationLinkedResearchersPanel(
-                    researchers: linkedInstitutionResearchers,
-                    language: language,
-                    openResearcher: { author in
-                        store.openRoute(for: author)
-                    }
-                )
-            }
+            // Shown for every organization, whatever its roles.
+            OrganizationLinkedResearchersPanel(
+                researchers: linkedInstitutionResearchers,
+                language: language,
+                openResearcher: { author in
+                    store.openRoute(for: author)
+                }
+            )
         }
     }
 

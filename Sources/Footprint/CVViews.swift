@@ -3842,7 +3842,8 @@ private struct CVMediaAppearanceDetailView: View {
         GrantDataStore.resolveCVMediaAppearancePDFURL(
             mediaAppearanceID: draft.id,
             pdfPath: draft.pdfPath,
-            pdfFilename: draft.pdfFilename
+            pdfFilename: draft.pdfFilename,
+            legacyStoredFilenames: GrantDataStore.legacyMediaPDFCandidateNames(draft.attachments)
         )
     }
 
@@ -3862,11 +3863,11 @@ private struct CVMediaAppearanceDetailView: View {
     }
 
     private var displayedPDFURL: URL? {
-        if let legacyGenericPDFAttachment {
-            return GrantDataStore.resolveLegacyMediaAppearanceFileURL(
-                storedFilename: legacyGenericPDFAttachment.storedFilename
-            )
+        if let legacyGenericPDFAttachment,
+           let legacyURL = GrantDataStore.resolveLegacyMediaAppearanceAttachmentURL(legacyGenericPDFAttachment) {
+            return legacyURL
         }
+        // F49: also looks under the record's id and in the older folder.
         return resolvedPDFURL
     }
 

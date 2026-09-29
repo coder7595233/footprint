@@ -218,6 +218,8 @@ extension GrantDataStore {
                 // their organization and unit (one correct spelling). Runs on
                 // every start; changes and saves only what differs.
                 applyOfficialOrganizationNamesAtLaunch()
+                // F49: where each media PDF is looked for; runs on every start.
+                logMediaPDFLookupForDiagnostics()
                 compactDatabaseIfNeeded()
                 // Captured on main before detaching; see sweep doc comment.
                 let sweepStorageRoot = Self.storageDirectory
@@ -1291,7 +1293,16 @@ extension GrantDataStore {
         return nil
     }
 
-    nonisolated static func resolveCVMediaAppearancePDFURL(mediaAppearanceID: String?, pdfPath: String?, pdfFilename: String?) -> URL? {
+    /// `legacyStoredFilenames`: the stored names of the record's files from
+    /// the earlier Media attachment UI. They lie in "Media Appearance Files"
+    /// and are the last place looked, so a PDF that was only ever saved there
+    /// is still found (and copied into place at the next start).
+    nonisolated static func resolveCVMediaAppearancePDFURL(
+        mediaAppearanceID: String?,
+        pdfPath: String?,
+        pdfFilename: String?,
+        legacyStoredFilenames: [String] = []
+    ) -> URL? {
         if let mediaAppearanceID = mediaAppearanceID?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty,
            let managedURL = try? validatedManagedAttachmentURL(
                root: mediaAppearancePDFsDirectory,
@@ -1303,6 +1314,12 @@ extension GrantDataStore {
             }
             if let legacyURL = legacyManagedAttachmentURL(root: mediaAppearancePDFsDirectory, id: mediaAppearanceID, fileExtension: "pdf") {
                 return legacyURL
+            }
+            // F49: a PDF saved under the record's id in the older folder.
+            if let olderFolderURL = resolveLegacyMediaAppearanceFileURL(
+                storedFilename: "\(managedAttachmentFileStem(for: mediaAppearanceID)).pdf"
+            ) {
+                return olderFolderURL
             }
         }
 
@@ -1319,26 +1336,33 @@ extension GrantDataStore {
         let fallbackFilename =
             normalizedPath.flatMap { URL(fileURLWithPath: $0).lastPathComponent.nonEmpty }
             ?? pdfFilename?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let fallbackFilename,
-              isSafeAttachmentLeafName(fallbackFilename) else { return nil }
 
-        let applicationSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let candidateDirectories = [
-            mediaAppearancePDFsDirectory,
-            applicationSupportDirectory
-                .appendingPathComponent(appSupportFolderName, isDirectory: true)
-                .appendingPathComponent("Media Appearance PDFs", isDirectory: true),
-            legacyStorageDirectory
-                .appendingPathComponent("Media Appearance PDFs", isDirectory: true)
-        ]
+        if let fallbackFilename, isSafeAttachmentLeafName(fallbackFilename) {
+            let applicationSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            let candidateDirectories = [
+                mediaAppearancePDFsDirectory,
+                applicationSupportDirectory
+                    .appendingPathComponent(appSupportFolderName, isDirectory: true)
+                    .appendingPathComponent("Media Appearance PDFs", isDirectory: true),
+                legacyStorageDirectory
+                    .appendingPathComponent("Media Appearance PDFs", isDirectory: true),
+                mediaAppearanceFilesDirectory
+            ]
 
-        for directory in candidateDirectories {
-            guard let candidateURL = try? validatedContainedAttachmentURL(
-                directory.appendingPathComponent(fallbackFilename),
-                within: directory
-            ) else { continue }
-            if FileManager.default.fileExists(atPath: candidateURL.path) {
-                return candidateURL
+            for directory in candidateDirectories {
+                guard let candidateURL = try? validatedContainedAttachmentURL(
+                    directory.appendingPathComponent(fallbackFilename),
+                    within: directory
+                ) else { continue }
+                if FileManager.default.fileExists(atPath: candidateURL.path) {
+                    return candidateURL
+                }
+            }
+        }
+
+        for storedFilename in legacyStoredFilenames {
+            if let legacyURL = resolveLegacyMediaAppearanceFileURL(storedFilename: storedFilename) {
+                return legacyURL
             }
         }
 
@@ -1744,14 +1768,32 @@ extension GrantDataStore {
         return "unsafe-id-\(digest)"
     }
 
+    /// A plain file name: not empty, not "." or "..", and no "/", "\\",
+    /// "%" or control or format characters. Checked character by character
+    /// (F49: the earlier check refused plain names on the owner's Mac).
     nonisolated private static func isSafeAttachmentLeafName(_ value: String) -> Bool {
-        !value.isEmpty
-            && value != "."
-            && value != ".."
-            && !value.contains("/")
-            && !value.contains("\\")
-            && !value.contains("%")
-            && !value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains)
+        guard !value.isEmpty, value != ".", value != ".." else { return false }
+        for scalar in value.unicodeScalars {
+            switch scalar.value {
+            case 0x2F, 0x5C, 0x25: // "/", "\\", "%"
+                return false
+            case 0x00...0x1F, 0x7F...0x9F:
+                return false
+            default:
+                switch scalar.properties.generalCategory {
+                case .control, .format:
+                    return false
+                default:
+                    continue
+                }
+            }
+        }
+        return true
+    }
+
+    /// F49 diagnostics: which part of the earlier name check refused.
+    nonisolated static func earlierLeafNameCheckParts(_ value: String) -> String {
+        "slash=\(value.contains("/")) backslash=\(value.contains("\\")) percent=\(value.contains("%")) control=\(value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains))"
     }
 
     /// F1: attachment locations are stored relative to the storage
@@ -1958,16 +2000,78 @@ extension GrantDataStore {
         return FileManager.default.fileExists(atPath: directURL.path) ? directURL : nil
     }
 
+    /// The names a PDF from the earlier Media attachment UI can have in
+    /// "Media Appearance Files": the stored name, and the attachment's id
+    /// (the files there are named by the attachment's id).
+    nonisolated static func legacyMediaPDFCandidateNames(_ attachments: [CVMediaAttachment]) -> [String] {
+        attachments
+            .filter {
+                $0.filename.lowercased().hasSuffix(".pdf") || $0.storedFilename.lowercased().hasSuffix(".pdf")
+            }
+            .flatMap { attachment -> [String] in
+                var names = [attachment.storedFilename]
+                if let id = attachment.id.trimmedOrNil {
+                    names.append("\(managedAttachmentFileStem(for: id)).pdf")
+                }
+                return names
+            }
+    }
+
+    /// The file of one attachment from the earlier Media attachment UI.
+    nonisolated static func resolveLegacyMediaAppearanceAttachmentURL(_ attachment: CVMediaAttachment) -> URL? {
+        for name in legacyMediaPDFCandidateNames([attachment]) {
+            if let url = resolveLegacyMediaAppearanceFileURL(storedFilename: name) {
+                return url
+            }
+        }
+        return resolveLegacyMediaAppearanceFileURL(storedFilename: attachment.storedFilename)
+    }
+
+    /// A file from the earlier Media attachment UI in "Media Appearance
+    /// Files". A stored name that carries a folder or a full path is looked
+    /// up by its last part, so the file is found wherever the name came from.
     nonisolated static func resolveLegacyMediaAppearanceFileURL(storedFilename: String) -> URL? {
-        guard isSafeAttachmentLeafName(storedFilename),
-              let url = try? validatedContainedAttachmentURL(
-                  mediaAppearanceFilesDirectory.appendingPathComponent(storedFilename),
-                  within: mediaAppearanceFilesDirectory
-              ),
-              FileManager.default.fileExists(atPath: url.path) else {
+        let trimmed = storedFilename.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        var candidates = [trimmed]
+        let leaf = URL(fileURLWithPath: trimmed).lastPathComponent
+        if leaf != trimmed {
+            candidates.append(leaf)
+        }
+        for candidate in candidates {
+            if let url = plainFileDirectlyInside(mediaAppearanceFilesDirectory, named: candidate) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    /// F49: a regular file (not a link) with a plain name directly inside
+    /// `directory`. The name may not contain a folder part, "..", "%" or
+    /// control characters, so nothing outside the folder can be reached.
+    /// Used for "Media Appearance Files", where the stricter path check
+    /// refused files that were there.
+    nonisolated static func plainFileDirectlyInside(_ directory: URL, named name: String) -> URL? {
+        // The name has no folder part and is not "." or "..", so the file
+        // can only be directly inside `directory`.
+        guard isSafeAttachmentLeafName(name) else { return nil }
+        let url = directory.appendingPathComponent(name)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              !isDirectory.boolValue,
+              (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil else {
             return nil
         }
         return url
+    }
+
+    /// F49 diagnostics: which step of `plainFileDirectlyInside` stops.
+    nonisolated static func plainFileCheckSteps(_ directory: URL, named name: String) -> String {
+        let url = directory.appendingPathComponent(name)
+        var isDirectory: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+        let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+        return "safeName=\(isSafeAttachmentLeafName(name)) exists=\(exists) isDirectory=\(isDirectory.boolValue) isLink=\(isLink) nameLength=\(name.count) nameScalars=\(name.unicodeScalars.count) earlier={\(earlierLeafNameCheckParts(name))}"
     }
 
     static func canonicalizePublicationPDFAttachment(for publication: inout PublicationRecord) throws -> Bool {
@@ -2029,7 +2133,8 @@ extension GrantDataStore {
         let resolvedURL = resolveCVMediaAppearancePDFURL(
             mediaAppearanceID: appearance.id,
             pdfPath: appearance.pdfPath,
-            pdfFilename: appearance.pdfFilename
+            pdfFilename: appearance.pdfFilename,
+            legacyStoredFilenames: legacyMediaPDFCandidateNames(appearance.attachments)
         )
 
         var didChange = false

@@ -488,4 +488,55 @@ extension GrantDataStore {
     func organizationUnitUsageCount(organizationID: String, unitID: String) -> Int {
         organizationUnitUsageCounts(organizationID: organizationID)[unitID] ?? 0
     }
+
+    /// The researchers with a row (affiliation, employment or education)
+    /// that points to the unit, with which kinds of rows, sorted by name.
+    func organizationUnitResearchers(
+        organizationID: String,
+        unitID: String
+    ) -> [OrganizationUnitResearcher] {
+        func points(_ rowOrganizationID: String?, _ rowUnitID: String?) -> Bool {
+            rowOrganizationID == organizationID && rowUnitID == unitID
+        }
+        return publicationAuthors
+            .compactMap { author -> OrganizationUnitResearcher? in
+                var kinds: [OrganizationUnitRowKind] = []
+                if author.affiliations.contains(where: { points($0.organizationID, $0.unitID) }) {
+                    kinds.append(.affiliation)
+                }
+                if author.employments.contains(where: { points($0.organizationID, $0.unitID) }) {
+                    kinds.append(.employment)
+                }
+                if author.educationEntries.contains(where: { points($0.organizationID, $0.unitID) }) {
+                    kinds.append(.education)
+                }
+                return kinds.isEmpty ? nil : OrganizationUnitResearcher(author: author, rowKinds: kinds)
+            }
+            .sorted { $0.author.displayName.localizedStandardCompare($1.author.displayName) == .orderedAscending }
+    }
+}
+
+/// A researcher with rows that point to an organization unit.
+struct OrganizationUnitResearcher: Identifiable {
+    let author: PublicationAuthor
+    let rowKinds: [OrganizationUnitRowKind]
+    var id: String { author.id }
+}
+
+/// The kind of researcher row that can point to an organization unit.
+enum OrganizationUnitRowKind {
+    case affiliation
+    case employment
+    case education
+
+    func title(language: AppLanguage) -> String {
+        switch self {
+        case .affiliation:
+            return language.text("affiliation", "affiliering")
+        case .employment:
+            return language.text("employment", "anställning")
+        case .education:
+            return language.text("education", "utbildning")
+        }
+    }
 }

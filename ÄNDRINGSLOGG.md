@@ -75,6 +75,15 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
+## Omgång 9 – 2026-09-29
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F49 | Media, bilagor | Media-PDF:erna fanns kvar i "Media Appearance Files" men hittades inte. Orsaken var kontrollen av filnamn för bilagor, som nekade helt vanliga namn på ägarens Mac (men inte i GitHubs tester). Den kontrollen används också i reservvägarna för publikationer, granskningsintyg och konferensbidrag. Nu granskas namnet tecken för tecken, med samma regler: inga mappdelar, inget "%", inga styrtecken. Appen letar dessutom efter äldre mediabilagor under bilagans id, och filer i "Media Appearance Files" får inte vara genvägar. Datakvalitet visar "Saknar länkad PDF-fil" för mediaposter vars PDF inte hittas. Startloggen skriver en rad per mediapost om var PDF:en söks (tillfälligt, för felsökning). | Pågår |
+| F50 | Undervisning | Listan över undervisningsuppdrag markerar vald rad som övriga listor (helt blå). Uppdrag med tillfällen som inte är bekräftade i Retendo (inga eller bara några) får en röd kant till vänster i stället för gul bakgrund, och kanten syns även när raden är vald. Uppdrag utan tillfällen markeras inte. | Pågår |
+| F51 | Organisationer | "Kopplade forskare" visas för alla organisationer, inte bara lärosäten. | Pågår |
+| F52 | Organisationer | Enhetsrutan har fältrubriken till vänster om fältet (svenskt namn, engelskt namn, ort). Under rutan listas forskarna vars affiliering, anställning eller utbildning pekar på enheten; ett klick på namnet öppnar forskaren. | Pågår |
+
 ## Omgång 8 – offentlig version
 
 - Engångsrättningen av en enskild granskning är borttagen. Granskningar sparas som de är skrivna och hittar sin organisation via den fasta kopplingen.

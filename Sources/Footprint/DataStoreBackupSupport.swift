@@ -1579,7 +1579,8 @@ extension GrantDataStore {
             guard let sourceURL = resolveCVMediaAppearancePDFURL(
                 mediaAppearanceID: appearance.id,
                 pdfPath: appearance.pdfPath,
-                pdfFilename: appearance.pdfFilename
+                pdfFilename: appearance.pdfFilename,
+                legacyStoredFilenames: legacyMediaPDFCandidateNames(appearance.attachments)
             ) else { continue }
             let destination = try validatedManagedAttachmentURL(
                 root: backupDirectory.appendingPathComponent("Media Appearance PDFs", isDirectory: true),

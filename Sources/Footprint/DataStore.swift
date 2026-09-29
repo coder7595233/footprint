@@ -20676,6 +20676,44 @@ final class GrantDataStore: ObservableObject {
         return changed
     }
 
+    /// F49: one line per media record in startup_diagnostics.log with where
+    /// its PDF is looked for and what is found (ids and file names only).
+    func logMediaPDFLookupForDiagnostics() {
+        let fileManager = FileManager.default
+        let filesDirectory = Self.mediaAppearanceFilesDirectory
+        let pdfsDirectory = Self.mediaAppearancePDFsDirectory
+        appendStartupDiagnostic(
+            "media-pdf dirs files=\(filesDirectory.path) exists=\(fileManager.fileExists(atPath: filesDirectory.path)) pdfs=\(pdfsDirectory.path) exists=\(fileManager.fileExists(atPath: pdfsDirectory.path))"
+        )
+        for appearance in cvMediaAppearances {
+            let attachmentParts = appearance.attachments.map { attachment -> String in
+                let byStored = Self.resolveLegacyMediaAppearanceFileURL(storedFilename: attachment.storedFilename) != nil
+                let idName = "\(Self.managedAttachmentFileStem(for: attachment.id)).pdf"
+                let byID = fileManager.fileExists(atPath: filesDirectory.appendingPathComponent(idName).path)
+                let strictCheck: String
+                do {
+                    _ = try Self.validatedContainedAttachmentURL(
+                        filesDirectory.appendingPathComponent(idName),
+                        within: filesDirectory
+                    )
+                    strictCheck = "ok"
+                } catch {
+                    strictCheck = "refused(\((error as NSError).code))"
+                }
+                return "[id=\(attachment.id) stored=\(attachment.storedFilename) foundByStored=\(byStored) idFileExists=\(byID) strictCheck=\(strictCheck) storedSteps={\(Self.plainFileCheckSteps(filesDirectory, named: attachment.storedFilename))} idSteps={\(Self.plainFileCheckSteps(filesDirectory, named: idName))} found=\(Self.resolveLegacyMediaAppearanceAttachmentURL(attachment)?.lastPathComponent ?? "nil")]"
+            }
+            let resolved = Self.resolveCVMediaAppearancePDFURL(
+                mediaAppearanceID: appearance.id,
+                pdfPath: appearance.pdfPath,
+                pdfFilename: appearance.pdfFilename,
+                legacyStoredFilenames: Self.legacyMediaPDFCandidateNames(appearance.attachments)
+            )
+            appendStartupDiagnostic(
+                "media-pdf id=\(appearance.id) pdfPath=\(appearance.pdfPath ?? "nil") pdfFilename=\(appearance.pdfFilename == nil ? "nil" : "set") candidates=\(Self.legacyMediaPDFCandidateNames(appearance.attachments)) attachments=\(attachmentParts.joined(separator: " ")) resolved=\(resolved?.path ?? "nil")"
+            )
+        }
+    }
+
     private func ensureManagedCVReviewCertificatePDFsStored() -> Bool {
         var changed = false
 
