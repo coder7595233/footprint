@@ -3433,8 +3433,11 @@ private struct PublicationAuthorEditorView: View {
                         ) { unit in
                             selectAffiliationUnit(unit, at: index)
                         }
-                        TextField(language.text("Department", "Avdelning"), text: localizedAffiliationDepartmentBinding(index, language: language))
-                            .appTextInputChrome()
+                        // F48: the chosen unit is the department; the free text is only for rows without a unit.
+                        if !affiliationHasUnit(at: index) {
+                            TextField(language.text("Department", "Avdelning"), text: localizedAffiliationDepartmentBinding(index, language: language))
+                                .appTextInputChrome()
+                        }
                         TextField(language.text("City", "Ort"), text: affiliationBinding(index, \.city))
                             .appTextInputChrome()
                             .frame(width: 150)
@@ -3999,6 +4002,13 @@ private struct PublicationAuthorEditorView: View {
         ) ?? affiliationOrganizationRecord(for: index, language: language)
     }
 
+    /// F48: true when the row points to a unit that exists in its organization.
+    private func affiliationHasUnit(at index: Int) -> Bool {
+        guard index < draft.affiliations.count,
+              let unitID = draft.affiliations[index].unitID?.trimmedOrNil else { return false }
+        return affiliationTreeOrganization(for: index)?.unit(withID: unitID) != nil
+    }
+
     /// F21: points the affiliation to a unit and writes the organization's
     /// and the unit's official names as the text (round 7: one correct
     /// spelling); "no unit" keeps the department text as it is.
@@ -4008,6 +4018,7 @@ private struct PublicationAuthorEditorView: View {
         draft.affiliations[index].organizationID = organization.id
         draft.affiliations[index].unitID = unit?.id
         draft.affiliations[index].applyOfficialNames(organization: organization, unit: unit)
+        draft.affiliations[index].applyPlace(organization: organization, unit: unit)
         normalizeAffiliationRow(at: index)
         ensureTrailingEditorRows()
         synchronizePrimaryAffiliations()
@@ -4065,6 +4076,7 @@ private struct PublicationAuthorEditorView: View {
             set: { newValue in
                 guard index < draft.affiliations.count else { return }
                 let previousText = language == .swedish ? draft.affiliations[index].organizationSv : draft.affiliations[index].organizationEn
+                let previousOrganizationID = affiliationTreeOrganization(for: index)?.id
                 var matchedName: String?
                 if let match = store.organizations.first(where: {
                     store.organizationLabel(for: $0.nameSv, language: language) == newValue || $0.nameSv == newValue || $0.nameEn == newValue
@@ -4086,6 +4098,15 @@ private struct PublicationAuthorEditorView: View {
                 )
                 draft.affiliations[index].organizationID = linked.organizationID
                 draft.affiliations[index].unitID = linked.unitID
+                // F48: a newly chosen organization fills in city and country.
+                if matchedName != nil,
+                   let organization = affiliationTreeOrganization(for: index),
+                   organization.id != previousOrganizationID {
+                    draft.affiliations[index].applyPlace(
+                        organization: organization,
+                        unit: organization.unit(withID: linked.unitID)
+                    )
+                }
                 normalizeAffiliationRow(at: index)
                 ensureTrailingEditorRows()
                 synchronizePrimaryAffiliations()
