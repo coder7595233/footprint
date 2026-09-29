@@ -615,6 +615,10 @@ final class GrantDataStore: ObservableObject {
             invalidateWorkspaceSearchCache()
             invalidatePublicationAuthorOrganizationOptionsCache()
             invalidateDataQualityCaches()
+            // Keep the id and name lookups in step with the list, so
+            // organization(id:) never returns a copy from before a change.
+            organizationByID = organizations.reduce(into: [:]) { $0[$1.id] = $1 }
+            organizationByName = organizations.reduce(into: [:]) { $0[$1.nameSv] = $1 }
         }
     }
     @Published private(set) var managers: [ManagerOption] {
