@@ -2034,15 +2034,26 @@ extension GrantDataStore {
     /// Used for "Media Appearance Files", where the stricter path check
     /// refused files that were there.
     nonisolated static func plainFileDirectlyInside(_ directory: URL, named name: String) -> URL? {
+        // The name has no folder part and is not "." or "..", so the file
+        // can only be directly inside `directory`.
         guard isSafeAttachmentLeafName(name) else { return nil }
-        let folder = directory.standardizedFileURL
-        let url = folder.appendingPathComponent(name, isDirectory: false).standardizedFileURL
-        guard url.deletingLastPathComponent().standardizedFileURL.path == folder.path,
-              let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
-              (attributes[.type] as? FileAttributeType) == .typeRegular else {
+        let url = directory.appendingPathComponent(name)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              !isDirectory.boolValue,
+              (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil else {
             return nil
         }
         return url
+    }
+
+    /// F49 diagnostics: which step of `plainFileDirectlyInside` stops.
+    nonisolated static func plainFileCheckSteps(_ directory: URL, named name: String) -> String {
+        let url = directory.appendingPathComponent(name)
+        var isDirectory: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+        let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+        return "safeName=\(isSafeAttachmentLeafName(name)) exists=\(exists) isDirectory=\(isDirectory.boolValue) isLink=\(isLink) nameLength=\(name.count) nameScalars=\(name.unicodeScalars.count)"
     }
 
     static func canonicalizePublicationPDFAttachment(for publication: inout PublicationRecord) throws -> Bool {

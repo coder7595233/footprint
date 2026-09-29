@@ -20700,7 +20700,7 @@ final class GrantDataStore: ObservableObject {
                 } catch {
                     strictCheck = "refused(\((error as NSError).code))"
                 }
-                return "[id=\(attachment.id) stored=\(attachment.storedFilename) foundByStored=\(byStored) idFileExists=\(byID) strictCheck=\(strictCheck) found=\(Self.resolveLegacyMediaAppearanceAttachmentURL(attachment)?.lastPathComponent ?? "nil")]"
+                return "[id=\(attachment.id) stored=\(attachment.storedFilename) foundByStored=\(byStored) idFileExists=\(byID) strictCheck=\(strictCheck) storedSteps={\(Self.plainFileCheckSteps(filesDirectory, named: attachment.storedFilename))} idSteps={\(Self.plainFileCheckSteps(filesDirectory, named: idName))} found=\(Self.resolveLegacyMediaAppearanceAttachmentURL(attachment)?.lastPathComponent ?? "nil")]"
             }
             let resolved = Self.resolveCVMediaAppearancePDFURL(
                 mediaAppearanceID: appearance.id,
