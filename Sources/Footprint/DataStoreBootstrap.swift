@@ -2021,17 +2021,28 @@ extension GrantDataStore {
             candidates.append(leaf)
         }
         for candidate in candidates {
-            guard isSafeAttachmentLeafName(candidate),
-                  let url = try? validatedContainedAttachmentURL(
-                      mediaAppearanceFilesDirectory.appendingPathComponent(candidate),
-                      within: mediaAppearanceFilesDirectory
-                  ),
-                  FileManager.default.fileExists(atPath: url.path) else {
-                continue
+            if let url = plainFileDirectlyInside(mediaAppearanceFilesDirectory, named: candidate) {
+                return url
             }
-            return url
         }
         return nil
+    }
+
+    /// F49: a regular file (not a link) with a plain name directly inside
+    /// `directory`. The name may not contain a folder part, "..", "%" or
+    /// control characters, so nothing outside the folder can be reached.
+    /// Used for "Media Appearance Files", where the stricter path check
+    /// refused files that were there.
+    nonisolated static func plainFileDirectlyInside(_ directory: URL, named name: String) -> URL? {
+        guard isSafeAttachmentLeafName(name) else { return nil }
+        let folder = directory.standardizedFileURL
+        let url = folder.appendingPathComponent(name, isDirectory: false).standardizedFileURL
+        guard url.deletingLastPathComponent().standardizedFileURL.path == folder.path,
+              let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              (attributes[.type] as? FileAttributeType) == .typeRegular else {
+            return nil
+        }
+        return url
     }
 
     static func canonicalizePublicationPDFAttachment(for publication: inout PublicationRecord) throws -> Bool {

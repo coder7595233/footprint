@@ -20690,7 +20690,17 @@ final class GrantDataStore: ObservableObject {
                 let byStored = Self.resolveLegacyMediaAppearanceFileURL(storedFilename: attachment.storedFilename) != nil
                 let idName = "\(Self.managedAttachmentFileStem(for: attachment.id)).pdf"
                 let byID = fileManager.fileExists(atPath: filesDirectory.appendingPathComponent(idName).path)
-                return "[id=\(attachment.id) stored=\(attachment.storedFilename) foundByStored=\(byStored) idFileExists=\(byID) found=\(Self.resolveLegacyMediaAppearanceAttachmentURL(attachment)?.lastPathComponent ?? "nil")]"
+                let strictCheck: String
+                do {
+                    _ = try Self.validatedContainedAttachmentURL(
+                        filesDirectory.appendingPathComponent(idName),
+                        within: filesDirectory
+                    )
+                    strictCheck = "ok"
+                } catch {
+                    strictCheck = "refused(\((error as NSError).code))"
+                }
+                return "[id=\(attachment.id) stored=\(attachment.storedFilename) foundByStored=\(byStored) idFileExists=\(byID) strictCheck=\(strictCheck) found=\(Self.resolveLegacyMediaAppearanceAttachmentURL(attachment)?.lastPathComponent ?? "nil")]"
             }
             let resolved = Self.resolveCVMediaAppearancePDFURL(
                 mediaAppearanceID: appearance.id,

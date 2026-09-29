@@ -97,6 +97,20 @@ final class MediaPDFLocationTests: XCTestCase {
         )
     }
 
+    func testLinksAndPathsOutsideTheFolderAreRefused() throws {
+        let outside = storageDirectory.appendingPathComponent("utanfor.pdf")
+        try Data("%PDF-1.4 utanför".utf8).write(to: outside)
+        let directory = GrantDataStore.mediaAppearanceFilesDirectory
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(
+            at: directory.appendingPathComponent("genvag.pdf"),
+            withDestinationURL: outside
+        )
+
+        XCTAssertNil(GrantDataStore.resolveLegacyMediaAppearanceFileURL(storedFilename: "genvag.pdf"), "a link is not followed")
+        XCTAssertNil(GrantDataStore.resolveLegacyMediaAppearanceFileURL(storedFilename: "../utanfor.pdf"), "no way out of the folder")
+    }
+
     func testMissingFileStaysMissing() {
         XCTAssertNil(GrantDataStore.resolveCVMediaAppearancePDFURL(
             mediaAppearanceID: "MEDIA-ID-3",
