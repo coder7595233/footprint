@@ -65,9 +65,36 @@ final class MediaPDFLocationTests: XCTestCase {
             mediaAppearanceID: appearance.id,
             pdfPath: appearance.pdfPath,
             pdfFilename: appearance.pdfFilename,
-            legacyStoredFilenames: appearance.attachments.map(\.storedFilename)
+            legacyStoredFilenames: GrantDataStore.legacyMediaPDFCandidateNames(appearance.attachments)
         )
         XCTAssertEqual(found?.standardizedFileURL.path, oldURL.standardizedFileURL.path)
+    }
+
+    /// The data seen on the Mac: no PDF fields on the record, one old
+    /// attachment whose stored name does not match any file, and the file in
+    /// "Media Appearance Files" named by the attachment's id.
+    func testOldAttachmentIsFoundByItsID() throws {
+        let attachmentID = "36FF84D6-0819-4B24-8194-51E5D6F7B003"
+        let oldURL = try writeOldMediaFile(named: "\(attachmentID).pdf")
+        let attachment = CVMediaAttachment(
+            id: attachmentID,
+            filename: "Artikel om studien.pdf",
+            storedFilename: "någon-annan-fil.pdf"
+        )
+
+        XCTAssertEqual(
+            GrantDataStore.resolveLegacyMediaAppearanceAttachmentURL(attachment)?.standardizedFileURL.path,
+            oldURL.standardizedFileURL.path
+        )
+        XCTAssertEqual(
+            GrantDataStore.resolveCVMediaAppearancePDFURL(
+                mediaAppearanceID: "MEDIA-ID-4",
+                pdfPath: nil,
+                pdfFilename: nil,
+                legacyStoredFilenames: GrantDataStore.legacyMediaPDFCandidateNames([attachment])
+            )?.standardizedFileURL.path,
+            oldURL.standardizedFileURL.path
+        )
     }
 
     func testMissingFileStaysMissing() {

@@ -1855,12 +1855,15 @@ extension GrantDataStore {
                     details: media.link
                 )
             }
-            if media.pdfFilename?.trimmedOrNil != nil || media.pdfPath?.trimmedOrNil != nil,
+            let hasMediaPDF = media.pdfFilename?.trimmedOrNil != nil
+                || media.pdfPath?.trimmedOrNil != nil
+                || media.attachments.contains { $0.filename.lowercased().hasSuffix(".pdf") }
+            if hasMediaPDF,
                GrantDataStore.resolveCVMediaAppearancePDFURL(
                    mediaAppearanceID: media.id,
                    pdfPath: media.pdfPath,
                    pdfFilename: media.pdfFilename,
-                   legacyStoredFilenames: media.attachments.map(\.storedFilename)
+                   legacyStoredFilenames: GrantDataStore.legacyMediaPDFCandidateNames(media.attachments)
                ) == nil {
                 appendIssue(
                     kind: .brokenLink,
@@ -1868,7 +1871,7 @@ extension GrantDataStore {
                     recordID: "mediaAppearance:\(media.id)",
                     title: media.localizedTitle(language: language).nonEmpty ?? media.displayTitle,
                     subtitle: language.text("Missing linked PDF file", "Saknar länkad PDF-fil"),
-                    details: media.pdfFilename ?? media.pdfPath ?? ""
+                    details: media.pdfFilename ?? media.pdfPath ?? media.attachments.first?.filename ?? ""
                 )
             }
         }

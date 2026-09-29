@@ -1313,6 +1313,12 @@ extension GrantDataStore {
             if let legacyURL = legacyManagedAttachmentURL(root: mediaAppearancePDFsDirectory, id: mediaAppearanceID, fileExtension: "pdf") {
                 return legacyURL
             }
+            // F49: a PDF saved under the record's id in the older folder.
+            if let olderFolderURL = resolveLegacyMediaAppearanceFileURL(
+                storedFilename: "\(managedAttachmentFileStem(for: mediaAppearanceID)).pdf"
+            ) {
+                return olderFolderURL
+            }
         }
 
         if let directPath = pdfPath?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -1352,7 +1358,7 @@ extension GrantDataStore {
             }
         }
 
-        for storedFilename in legacyStoredFilenames where storedFilename.lowercased().hasSuffix(".pdf") {
+        for storedFilename in legacyStoredFilenames {
             if let legacyURL = resolveLegacyMediaAppearanceFileURL(storedFilename: storedFilename) {
                 return legacyURL
             }
@@ -1974,16 +1980,56 @@ extension GrantDataStore {
         return FileManager.default.fileExists(atPath: directURL.path) ? directURL : nil
     }
 
-    nonisolated static func resolveLegacyMediaAppearanceFileURL(storedFilename: String) -> URL? {
-        guard isSafeAttachmentLeafName(storedFilename),
-              let url = try? validatedContainedAttachmentURL(
-                  mediaAppearanceFilesDirectory.appendingPathComponent(storedFilename),
-                  within: mediaAppearanceFilesDirectory
-              ),
-              FileManager.default.fileExists(atPath: url.path) else {
-            return nil
+    /// The names a PDF from the earlier Media attachment UI can have in
+    /// "Media Appearance Files": the stored name, and the attachment's id
+    /// (the files there are named by the attachment's id).
+    nonisolated static func legacyMediaPDFCandidateNames(_ attachments: [CVMediaAttachment]) -> [String] {
+        attachments
+            .filter {
+                $0.filename.lowercased().hasSuffix(".pdf") || $0.storedFilename.lowercased().hasSuffix(".pdf")
+            }
+            .flatMap { attachment -> [String] in
+                var names = [attachment.storedFilename]
+                if let id = attachment.id.trimmedOrNil {
+                    names.append("\(managedAttachmentFileStem(for: id)).pdf")
+                }
+                return names
+            }
+    }
+
+    /// The file of one attachment from the earlier Media attachment UI.
+    nonisolated static func resolveLegacyMediaAppearanceAttachmentURL(_ attachment: CVMediaAttachment) -> URL? {
+        for name in legacyMediaPDFCandidateNames([attachment]) {
+            if let url = resolveLegacyMediaAppearanceFileURL(storedFilename: name) {
+                return url
+            }
         }
-        return url
+        return resolveLegacyMediaAppearanceFileURL(storedFilename: attachment.storedFilename)
+    }
+
+    /// A file from the earlier Media attachment UI in "Media Appearance
+    /// Files". A stored name that carries a folder or a full path is looked
+    /// up by its last part, so the file is found wherever the name came from.
+    nonisolated static func resolveLegacyMediaAppearanceFileURL(storedFilename: String) -> URL? {
+        let trimmed = storedFilename.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        var candidates = [trimmed]
+        let leaf = URL(fileURLWithPath: trimmed).lastPathComponent
+        if leaf != trimmed {
+            candidates.append(leaf)
+        }
+        for candidate in candidates {
+            guard isSafeAttachmentLeafName(candidate),
+                  let url = try? validatedContainedAttachmentURL(
+                      mediaAppearanceFilesDirectory.appendingPathComponent(candidate),
+                      within: mediaAppearanceFilesDirectory
+                  ),
+                  FileManager.default.fileExists(atPath: url.path) else {
+                continue
+            }
+            return url
+        }
+        return nil
     }
 
     static func canonicalizePublicationPDFAttachment(for publication: inout PublicationRecord) throws -> Bool {
@@ -2046,7 +2092,7 @@ extension GrantDataStore {
             mediaAppearanceID: appearance.id,
             pdfPath: appearance.pdfPath,
             pdfFilename: appearance.pdfFilename,
-            legacyStoredFilenames: appearance.attachments.map(\.storedFilename)
+            legacyStoredFilenames: legacyMediaPDFCandidateNames(appearance.attachments)
         )
 
         var didChange = false
