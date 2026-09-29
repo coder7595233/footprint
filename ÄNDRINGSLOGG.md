@@ -175,3 +175,4 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F39 | Förråd | Privat dataförråd `footprint-data` med kopia av Application Support; koden i ett publikt förråd med ny historik. Ersätter F20. | Öppen |
 | F40 | Inställningar | Reglerna för hemregionen och lärosätet blir inställningar. | Öppen |
+| F48 | Forskare | Affilieringar: fritextfältet för avdelning tas bort när en enhet är vald, och ort och land fylls i automatiskt från enheten (annars organisationen). Fälten går att ändra om något avviker. | Öppen |
