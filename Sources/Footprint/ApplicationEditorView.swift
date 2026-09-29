@@ -584,7 +584,7 @@ struct ApplicationEditorView: View {
 
                         Group {
                         if shouldShowFundingAndCriteriaSection {
-                            DetailGroup(title: language.text("Funding and criteria", "Finansiering och kriterier"), showsSurface: false) {
+                            DetailGroup(title: language.text("Call", "Utlysning"), showsSurface: false) {
                             VStack(alignment: .leading, spacing: 10) {
                                 if maximumFundingRowShouldShowWhenLocked {
                                     HStack(alignment: .top, spacing: 12) {
@@ -767,7 +767,7 @@ struct ApplicationEditorView: View {
                         }
 
                         if showsGrantedFollowUpPanel {
-                            DetailGroup(title: language.text("Follow-up", "Uppföljning"), showsSurface: false) {
+                            DetailGroup(title: language.text("Grant", "Anslag"), showsSurface: false) {
                                 VStack(alignment: .leading, spacing: 10) {
                                     HStack(alignment: .top, spacing: 14) {
                                         compactField(
@@ -1201,6 +1201,7 @@ struct ApplicationEditorView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
+            copyToNextYearButton(language: language)
             applicationEditorLockButton(language: language)
 
             if !draft.isEditingLocked {
@@ -1213,6 +1214,29 @@ struct ApplicationEditorView: View {
             }
         }
         .zIndex(20)
+    }
+
+    /// "Kopiera till nästa år": next year's record for the same call, with
+    /// every date one year later; opens the copy. Works on locked records too.
+    private func copyToNextYearButton(language: AppLanguage) -> some View {
+        Button {
+            persistDraftIfNeeded()
+            guard let newID = store.copyApplicationToNextYear(id: application.id),
+                  let copy = store.applications.first(where: { $0.id == newID }) else { return }
+            store.openRoute(for: copy)
+        } label: {
+            Image(systemName: "calendar.badge.plus")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppPalette.linkAction)
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(language.text(
+            "Copy to next year: a new record for the same call with every date one year later",
+            "Kopiera till nästa år: en ny post för samma utlysning med alla datum ett år senare"
+        ))
+        .accessibilityLabel(language.text("Copy to next year", "Kopiera till nästa år"))
     }
 
     private func applicationEditorLockButton(language: AppLanguage) -> some View {

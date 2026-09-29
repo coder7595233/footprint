@@ -579,8 +579,8 @@ struct ApplicationsView: View {
     private func applicationsSidebarContent(language: AppLanguage) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             AppWorkspaceSidebarHeader(
-                title: language.text("Grants", "Anslag"),
-                actionTitle: language.text("New application", "Ny ansökan")
+                title: language.text("Calls and grants", "Utlysningar och anslag"),
+                actionTitle: language.text("New call", "Ny utlysning")
             ) {
                 applicationRoleFilter = .all
                 selectedApplicationID = store.addApplication()

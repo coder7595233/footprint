@@ -21857,7 +21857,7 @@ final class GrantDataStore: ObservableObject {
     private func localizedDestinationName(_ destination: AppRoute.Destination) -> String {
         switch destination {
         case .applications:
-            return language.text("Applications", "Ansökningar")
+            return language.text("Calls and grants", "Utlysningar och anslag")
         case .congresses:
             return language.text("Congresses", "Kongresser")
         case .cv:

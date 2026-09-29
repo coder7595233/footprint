@@ -4357,7 +4357,7 @@ enum ListFilterPersistenceKey: String, Codable, CaseIterable, Identifiable {
     func title(language: AppLanguage) -> String {
         switch self {
         case .applications:
-            return language.text("Applications", "Ansökningar")
+            return language.text("Calls and grants", "Utlysningar och anslag")
         case .teaching:
             return language.text("Teaching", "Undervisning")
         case .doctoralCandidates:
