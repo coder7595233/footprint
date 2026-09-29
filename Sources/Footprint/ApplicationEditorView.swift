@@ -52,6 +52,10 @@ struct GrantSalaryApproximationYearAmount: Equatable, Identifiable {
 
 struct GrantSalaryApproximationBreakdown: Equatable {
     let yearlyAmounts: [GrantSalaryApproximationYearAmount]
+    /// "Behov av samfinansiering": the fund manager's full OH minus the OH
+    /// that counts, on the same salary base, for the whole period. 0 when
+    /// the grant provider accepts the full OH or overhead is not included.
+    var cofundingAmount: Double = 0
 
     var totalAmount: Double {
         yearlyAmounts.reduce(0) { $0 + $1.amount }
@@ -64,7 +68,8 @@ func calculateGrantSalaryApproximation(
     monthsText: String?,
     startMonth: Date?,
     includesOverhead: Bool,
-    maxOverheadPercent: Double? = nil
+    maxOverheadPercent: Double? = nil,
+    overheadPlan: GrantOverheadPlan? = nil
 ) -> GrantSalaryApproximationBreakdown? {
     guard let percentage = GrantParsing.numericValue(from: percentageText),
           let months = GrantParsing.numericValue(from: monthsText),
@@ -79,39 +84,46 @@ func calculateGrantSalaryApproximation(
     let fullMonths = Int(totalMonths.rounded(.down))
     let partialMonth = totalMonths - Double(fullMonths)
     let calendar = Calendar.current
+    // Without a plan, the earlier single "Max OH (%)" (nil = no cap) counts.
+    let plan = overheadPlan ?? GrantOverheadPlan(legacyMaxOverheadPercent: maxOverheadPercent)
     var yearlyAmounts: [Int: Double] = [:]
+    var cofundingAmount: Double = 0
 
     for monthOffset in 0..<fullMonths {
         guard let monthDate = calendar.date(byAdding: .month, value: monthOffset, to: startMonth) else { continue }
         let year = calendar.component(.year, from: monthDate)
         let vacationDays = grantVacationDays(for: year, calculator: calculator)
-        yearlyAmounts[year, default: 0] += grantMonthlySalaryCost(
+        let cost = grantMonthlySalaryCost(
             on: monthDate,
             calculator: calculator,
             vacationDays: vacationDays,
             includesOverhead: includesOverhead,
-            maxOverheadPercent: maxOverheadPercent
-        ) * allocationFraction
+            plan: plan
+        )
+        yearlyAmounts[year, default: 0] += cost.amount * allocationFraction
+        cofundingAmount += cost.cofunding * allocationFraction
     }
 
     if partialMonth > 0,
        let partialMonthDate = calendar.date(byAdding: .month, value: fullMonths, to: startMonth) {
         let year = calendar.component(.year, from: partialMonthDate)
         let vacationDays = grantVacationDays(for: year, calculator: calculator)
-        yearlyAmounts[year, default: 0] += grantMonthlySalaryCost(
+        let cost = grantMonthlySalaryCost(
             on: partialMonthDate,
             calculator: calculator,
             vacationDays: vacationDays,
             includesOverhead: includesOverhead,
-            maxOverheadPercent: maxOverheadPercent
-        ) * allocationFraction * partialMonth
+            plan: plan
+        )
+        yearlyAmounts[year, default: 0] += cost.amount * allocationFraction * partialMonth
+        cofundingAmount += cost.cofunding * allocationFraction * partialMonth
     }
 
     let rows = yearlyAmounts.keys.sorted().map {
         GrantSalaryApproximationYearAmount(year: $0, amount: yearlyAmounts[$0] ?? 0)
     }
     guard !rows.isEmpty else { return nil }
-    return GrantSalaryApproximationBreakdown(yearlyAmounts: rows)
+    return GrantSalaryApproximationBreakdown(yearlyAmounts: rows, cofundingAmount: cofundingAmount)
 }
 
 func applyingGrantConsumptionPeriodEdit(
@@ -134,11 +146,50 @@ func applyingGrantTimelineDateEdit(
     return updated
 }
 
-/// The overhead rate (a fraction, 0.2 = 20 %) after the funder's cap
-/// "Max OH (%)": nil = no cap, 0 = no overhead.
+/// The overhead rate (a fraction, 0.2 = 20 %) after a cap in percent
+/// ("Högst __ %" in the grant provider's OH rule): nil = no cap, 0 = no
+/// overhead.
 func grantOverheadRate(_ rate: Double, cappedAtPercent maxOverheadPercent: Double?) -> Double {
     guard let maxOverheadPercent else { return rate }
     return min(rate, max(0, maxOverheadPercent) / 100)
+}
+
+/// The OH rates (fractions, 0.2 = 20 %) in one month: the fund manager's
+/// full OH and the OH that counts after the grant provider's rule.
+struct GrantOverheadRates: Equatable {
+    let manager: Double
+    let effective: Double
+}
+
+/// The fund manager's full OH in a month: its own OH periods when any are
+/// filled in, otherwise "Förvaltarens fulla OH (%)", otherwise (no fund
+/// manager, or nothing entered on it) the OH periods of the salary
+/// calculator used for applications, as before. Then the grant provider's
+/// rule gives the OH that counts.
+func grantOverheadRates(on date: Date, calculator: ManagerSalaryCalculator, plan: GrantOverheadPlan) -> GrantOverheadRates {
+    let managerRate: Double
+    if grantHasUsableSalaryPeriods(plan.managerOverheadPeriods) {
+        managerRate = grantResolvedSalaryPercentage(on: date, from: plan.managerOverheadPeriods)
+    } else if let percent = plan.managerOverheadPercent {
+        managerRate = percent / 100
+    } else {
+        managerRate = grantResolvedSalaryPercentage(on: date, from: calculator.overheadPeriods)
+    }
+    let manager = max(0, managerRate)
+    return GrantOverheadRates(manager: manager, effective: plan.rule.effectiveRate(managerRate: manager))
+}
+
+private func grantHasUsableSalaryPeriods(_ periods: [SalaryCalculatorPeriod]) -> Bool {
+    periods.contains { period in
+        GrantParsing.numericValue(from: period.value) != nil
+            && DateParsers.isoDay.date(from: period.from) != nil
+            && DateParsers.isoDay.date(from: period.to) != nil
+    }
+}
+
+private struct GrantMonthlySalaryCost {
+    let amount: Double
+    let cofunding: Double
 }
 
 private func grantMonthlySalaryCost(
@@ -146,8 +197,8 @@ private func grantMonthlySalaryCost(
     calculator: ManagerSalaryCalculator,
     vacationDays: Int,
     includesOverhead: Bool,
-    maxOverheadPercent: Double?
-) -> Double {
+    plan: GrantOverheadPlan
+) -> GrantMonthlySalaryCost {
     let monthlySalary = grantResolvedSalaryPeriodValue(
         on: monthDate,
         from: calculator.monthlySalaryPeriods,
@@ -156,17 +207,17 @@ private func grantMonthlySalaryCost(
     )
     let employerRate = grantResolvedSalaryPercentage(on: monthDate, from: calculator.employerFeePeriods)
     let regionalRate = grantResolvedSalaryPercentage(on: monthDate, from: calculator.regionalCostPeriods)
-    let overheadRate = includesOverhead
-        ? grantOverheadRate(
-            grantResolvedSalaryPercentage(on: monthDate, from: calculator.overheadPeriods),
-            cappedAtPercent: maxOverheadPercent
-        )
-        : 0
+    let rates = includesOverhead
+        ? grantOverheadRates(on: monthDate, calculator: calculator, plan: plan)
+        : GrantOverheadRates(manager: 0, effective: 0)
 
     let vacationSupplement = monthlySalary * calculator.vacationSupplementRatePerDay * Double(vacationDays) / 12
     let salaryWithVacation = monthlySalary + vacationSupplement
     let salaryWithSocialCosts = salaryWithVacation * (1 + employerRate + regionalRate)
-    return salaryWithSocialCosts * (1 + overheadRate)
+    return GrantMonthlySalaryCost(
+        amount: salaryWithSocialCosts * (1 + rates.effective),
+        cofunding: salaryWithSocialCosts * max(0, rates.manager - rates.effective)
+    )
 }
 
 private func grantVacationDays(for year: Int, calculator: ManagerSalaryCalculator) -> Int {
@@ -322,10 +373,14 @@ struct ApplicationEditorView: View {
             monthsText: draft.employmentMonths,
             startMonth: approximationStartMonth,
             includesOverhead: draft.salaryIncludesOverhead,
-            // Round 8: the funder's "Max OH (%)", found by the application's
-            // organization id first.
-            maxOverheadPercent: store.linkedFunder(of: draft)?.maxOverheadPercent
+            // Round 8: the grant provider's OH rule for the application's
+            // fund manager, both found by id first.
+            overheadPlan: applicationOverheadPlan
         )
+    }
+
+    private var applicationOverheadPlan: GrantOverheadPlan {
+        store.overheadPlan(for: draft)
     }
 
     private var approximateAmountComputedValue: Double? {
@@ -600,6 +655,7 @@ struct ApplicationEditorView: View {
                                         }
                                         Spacer(minLength: 0)
                                     }
+                                    overheadRuleSummaryView(language: language)
                                 }
 
                                 if !draft.isEditingLocked || draft.fundingSalary || draft.fundingMaterials || draft.fundingPhDStudents {
@@ -2106,6 +2162,54 @@ struct ApplicationEditorView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private struct OverheadRuleSummaryLine {
+        let text: String
+        let cofundingText: String?
+    }
+
+    /// Round 8: "OH: X % (förvaltarens Y %, anslagsgivarens tak Z %)" for
+    /// the budget's first month, and "Behov av samfinansiering: N kr" when
+    /// the grant provider pays less OH than the fund manager's full OH.
+    /// Shown only when the salary budget includes OH.
+    private func overheadRuleSummaryLine(language: AppLanguage) -> OverheadRuleSummaryLine? {
+        guard draft.salaryIncludesOverhead,
+              let breakdown = approximateAmountBreakdown,
+              let calculator = applicationSalaryCalculator(),
+              let startMonth = approximationStartMonth else {
+            return nil
+        }
+        let plan = applicationOverheadPlan
+        let rates = grantOverheadRates(on: startMonth, calculator: calculator, plan: plan)
+        let text = grantOverheadSummaryText(
+            managerPercent: rates.manager * 100,
+            effectivePercent: rates.effective * 100,
+            rule: plan.rule,
+            language: language
+        )
+        let cofundingText: String? = breakdown.cofundingAmount >= 0.5
+            ? language.text("Co-funding needed: ", "Behov av samfinansiering: ")
+                + CurrencyFormatter.format(breakdown.cofundingAmount, code: "SEK")
+            : nil
+        return OverheadRuleSummaryLine(text: text, cofundingText: cofundingText)
+    }
+
+    @ViewBuilder
+    private func overheadRuleSummaryView(language: AppLanguage) -> some View {
+        if let summary = overheadRuleSummaryLine(language: language) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(summary.text)
+                    .appTypography(.secondary)
+                    .foregroundStyle(.secondary)
+                if let cofundingText = summary.cofundingText {
+                    Text(cofundingText)
+                        .appTypography(.secondary)
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     private func approximateAmountMetrics(language: AppLanguage) -> [ApproximateAmountMetric] {

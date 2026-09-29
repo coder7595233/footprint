@@ -1,9 +1,10 @@
 import XCTest
 @testable import Footprint
 
-/// Round 8: "Max OH (%)" is a setting on each funder (grant provider). The
-/// old checkbox that left overhead out of a salary calculator is moved to
-/// that setting once, without any organization names in the code.
+/// Round 8: the old checkbox that left overhead out of a salary calculator
+/// is cleared once, without any organization names in the code. The funder
+/// setting that replaced it, "Max OH (%)", is now the "OH-regel" (see
+/// Round8FunderOverheadRuleTests); these tests check it through that rule.
 final class Round8FunderMaxOverheadTests: XCTestCase {
     private var storageDirectory: URL!
 
@@ -53,7 +54,8 @@ final class Round8FunderMaxOverheadTests: XCTestCase {
         )
     }
 
-    /// Ticked the old checkbox, but already has a maximum of its own.
+    /// Ticked the old checkbox, but already has a maximum of its own
+    /// (stored with the earlier "Max OH (%)").
     private static var funderB: OrganizationRecord {
         OrganizationRecord(
             id: "org-b",
@@ -61,7 +63,7 @@ final class Round8FunderMaxOverheadTests: XCTestCase {
             nameEn: "Organisation B",
             roles: [.grantProvider],
             salaryCalculator: calculator(excludesOverhead: true),
-            maxOverheadPercent: 15
+            legacyMaxOverheadPercent: 15
         )
     }
 
@@ -95,16 +97,21 @@ final class Round8FunderMaxOverheadTests: XCTestCase {
         let store = makeStore()
         XCTAssertTrue(store.runRound8OneTimeDataMigrations())
 
-        XCTAssertNil(store.organization(id: "org-a")?.maxOverheadPercent, "no cap is guessed from the old checkbox")
-        XCTAssertEqual(store.organization(id: "org-b")?.maxOverheadPercent, 15, "a maximum already set is kept")
-        XCTAssertNil(store.organization(id: "org-c")?.maxOverheadPercent, "an organization without the checkbox gets no cap")
+        XCTAssertNil(store.organization(id: "org-a")?.overheadRule, "no cap is guessed from the old checkbox")
+        XCTAssertEqual(
+            store.organization(id: "org-b")?.overheadRule,
+            FunderOverheadRule(kind: .cap, capPercent: 15),
+            "a maximum already set is kept, now as the OH rule"
+        )
+        XCTAssertNil(store.organization(id: "org-b")?.legacyMaxOverheadPercent, "the earlier Max OH is no longer kept")
+        XCTAssertNil(store.organization(id: "org-c")?.overheadRule, "an organization without the checkbox gets no cap")
         XCTAssertTrue(store.organizations.allSatisfy { $0.salaryCalculator?.legacyExcludesOverhead != true }, "the checkbox is cleared")
         XCTAssertEqual(store.organizations.count, 3, "no organization is lost or added")
         XCTAssertTrue((store.metadata.migrationLog ?? []).contains { $0.key == "round8-funder-max-overhead" })
 
         XCTAssertFalse(store.runRound8OneTimeDataMigrations(), "the migration runs only once")
         XCTAssertFalse(store.migrateLegacyOverheadCheckboxToFunderCapForRound8(), "running the step again changes nothing")
-        XCTAssertNil(store.organization(id: "org-a")?.maxOverheadPercent)
+        XCTAssertNil(store.organization(id: "org-a")?.overheadRule)
     }
 
     @MainActor
@@ -114,15 +121,15 @@ final class Round8FunderMaxOverheadTests: XCTestCase {
         renamed.nameEn = "Another name"
         let store = makeStore(organizations: [renamed, Self.funderC])
         XCTAssertTrue(store.migrateLegacyOverheadCheckboxToFunderCapForRound8())
-        XCTAssertNil(store.organization(id: "org-a")?.maxOverheadPercent)
-        XCTAssertNil(store.organization(id: "org-c")?.maxOverheadPercent)
+        XCTAssertNil(store.organization(id: "org-a")?.overheadRule)
+        XCTAssertNil(store.organization(id: "org-c")?.overheadRule)
     }
 
     @MainActor
     func testMigrationWithoutCheckboxChangesNothing() {
         let store = makeStore(organizations: [Self.funderC])
         XCTAssertFalse(store.migrateLegacyOverheadCheckboxToFunderCapForRound8())
-        XCTAssertNil(store.organization(id: "org-c")?.maxOverheadPercent)
+        XCTAssertNil(store.organization(id: "org-c")?.overheadRule)
     }
 
     @MainActor
@@ -138,21 +145,23 @@ final class Round8FunderMaxOverheadTests: XCTestCase {
         store.runRound8OneTimeDataMigrations()
         let stored = try XCTUnwrap(store.applications.first)
         XCTAssertEqual(store.linkedFunder(of: stored)?.id, "org-a")
-        XCTAssertEqual(store.linkedFunder(of: stored)?.maxOverheadPercent, 0)
+        // The old checkbox gives no rule (nothing is guessed): the standard.
+        XCTAssertNil(store.linkedFunder(of: stored)?.overheadRule)
+        XCTAssertEqual(store.overheadPlan(for: stored).rule, FunderOverheadRule())
     }
 
     @MainActor
-    func testSettingMaxOverheadKeepsItBetweenZeroAndHundred() {
+    func testSettingMaxOverheadSetsTheOverheadRuleBetweenZeroAndHundred() {
         let store = makeStore(organizations: [Self.funderC])
         XCTAssertTrue(store.setOrganizationMaxOverheadPercent(organizationID: "org-c", percent: 10))
-        XCTAssertEqual(store.organization(id: "org-c")?.maxOverheadPercent, 10)
+        XCTAssertEqual(store.organization(id: "org-c")?.overheadRule, FunderOverheadRule(kind: .cap, capPercent: 10))
         XCTAssertFalse(store.setOrganizationMaxOverheadPercent(organizationID: "org-c", percent: 10), "no change, nothing saved")
         store.setOrganizationMaxOverheadPercent(organizationID: "org-c", percent: 250)
-        XCTAssertEqual(store.organization(id: "org-c")?.maxOverheadPercent, 100)
+        XCTAssertEqual(store.organization(id: "org-c")?.overheadRule, FunderOverheadRule(kind: .cap, capPercent: 100))
         store.setOrganizationMaxOverheadPercent(organizationID: "org-c", percent: -5)
-        XCTAssertEqual(store.organization(id: "org-c")?.maxOverheadPercent, 0)
+        XCTAssertEqual(store.organization(id: "org-c")?.overheadRule, FunderOverheadRule(kind: .noOverhead), "0 or less = no OH")
         store.setOrganizationMaxOverheadPercent(organizationID: "org-c", percent: nil)
-        XCTAssertNil(store.organization(id: "org-c")?.maxOverheadPercent, "empty = no cap")
+        XCTAssertNil(store.organization(id: "org-c")?.overheadRule, "empty = the fund manager's full OH (the standard)")
     }
 
     // MARK: 2. Calculation
@@ -214,17 +223,22 @@ final class Round8FunderMaxOverheadTests: XCTestCase {
         XCTAssertFalse(missing.legacyExcludesOverhead)
     }
 
-    func testOrganizationMaxOverheadDecodesFromOldAndNewData() throws {
+    func testOrganizationMaxOverheadDecodesFromOldDataIntoTheOverheadRule() throws {
         let old = #"{"id":"o1","nameSv":"Organisation","nameEn":"Organisation"}"#
         let decodedOld = try JSONDecoder().decode(OrganizationRecord.self, from: Data(old.utf8))
-        XCTAssertNil(decodedOld.maxOverheadPercent, "older data has no cap")
+        XCTAssertNil(decodedOld.overheadRule, "older data has no rule")
+        XCTAssertNil(decodedOld.legacyMaxOverheadPercent)
         let writtenOld = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(decodedOld)) as? [String: Any])
         XCTAssertNil(writtenOld["maxOverheadPercent"], "no cap is not written")
+        XCTAssertNil(writtenOld["overheadRule"], "no rule is not written")
 
-        let new = #"{"id":"o2","nameSv":"Organisation","nameEn":"Organisation","maxOverheadPercent":12.5}"#
-        let decodedNew = try JSONDecoder().decode(OrganizationRecord.self, from: Data(new.utf8))
-        XCTAssertEqual(decodedNew.maxOverheadPercent, 12.5)
-        let roundTripped = try JSONDecoder().decode(OrganizationRecord.self, from: JSONEncoder().encode(decodedNew))
-        XCTAssertEqual(roundTripped.maxOverheadPercent, 12.5)
+        let withMax = #"{"id":"o2","nameSv":"Organisation","nameEn":"Organisation","maxOverheadPercent":12.5}"#
+        let decodedWithMax = try JSONDecoder().decode(OrganizationRecord.self, from: Data(withMax.utf8))
+        XCTAssertEqual(decodedWithMax.overheadRule, FunderOverheadRule(kind: .cap, capPercent: 12.5))
+        let written = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(decodedWithMax)) as? [String: Any])
+        XCTAssertNil(written["maxOverheadPercent"], "the earlier Max OH is no longer written")
+        XCTAssertNotNil(written["overheadRule"])
+        let roundTripped = try JSONDecoder().decode(OrganizationRecord.self, from: JSONEncoder().encode(decodedWithMax))
+        XCTAssertEqual(roundTripped.overheadRule, FunderOverheadRule(kind: .cap, capPercent: 12.5))
     }
 }

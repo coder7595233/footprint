@@ -78,9 +78,12 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 ## Omgång 8 – offentlig version
 
 - Engångsrättningen av en enskild granskning är borttagen. Granskningar sparas som de är skrivna och hittar sin organisation via den fasta kopplingen.
-- Kryssrutan för ansökningar utan overhead i lönekalkylen är borttagen. I stället har varje anslagsgivare fältet "Max OH (%)" på organisationens sida. Tomt betyder inget tak, 0 betyder ingen overhead.
-- När en ansökan räknas fram i lönekalkylen används högst finansiärens Max OH. Finansiären hittas via ansökans fasta koppling.
-- Den gamla kryssrutan tas bort en gång vid start. Inget tak sätts automatiskt, eftersom rutan inte angav vilken finansiär den gällde; Max OH fylls i på finansiären.
+- Kryssrutan för ansökningar utan overhead i lönekalkylen är borttagen. I stället har varje anslagsgivare en OH-regel på organisationens sida (se nedan).
+- Den gamla kryssrutan tas bort en gång vid start. Ingen regel sätts automatiskt, eftersom rutan inte angav vilken finansiär den gällde; regeln fylls i på finansiären.
+- OH beror nu på både medelsförvaltaren och anslagsgivaren. Varje anslagsgivare har "OH-regel" med tre val: "Förvaltarens fulla OH" (standard), "Högst … %" och "Ingen OH", och rutan "Taket inkluderar lokalkostnad" (en anteckning; appen räknar inte lokalkostnad för sig). Under "Undantag per medelsförvaltare" kan man lägga rader av typen "När [medelsförvaltare] förvaltar: …" som gäller i stället för grundregeln när just den medelsförvaltaren förvaltar ansökan.
+- Varje medelsförvaltare har fältet "Förvaltarens fulla OH (%)". Har organisationens lönekalkyl OH-perioder används de i stället, och då står det under fältet. Saknar ansökan medelsförvaltare, eller är inget ifyllt på den, används OH i lönekalkylen för ansökningar som förut.
+- I ansökan, under lönebudgeten, står till exempel "OH: 15 % (förvaltarens 20 %, anslagsgivarens tak 15 %)", och när anslagsgivaren betalar mindre än förvaltarens fulla OH även "Behov av samfinansiering: N kr" (skillnaden räknad på samma lönesumma). Raden visas när "Inkluderar OH" är ikryssad; utan kryss räknas lönebudgeten som förut utan OH. Anslagsgivaren och medelsförvaltaren hittas via ansökans fasta kopplingar. Inga värden gissas utifrån namn.
+- Fältet "Max OH (%)" som fanns en kort tid ersätts av OH-regeln. Ett ifyllt värde flyttas en gång vid start: ett tal blir "Högst tal %", 0 blir "Ingen OH", tomt blir "Förvaltarens fulla OH". Äldre data går fortfarande att läsa.
 - Lönetabellen på organisationens sida visar nu alltid hela kostnaden med overhead.
 
 ## Omgång 7 – pågår

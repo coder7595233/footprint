@@ -2099,10 +2099,20 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
     /// calculator is the budget source in the application editor and follows
     /// your birth date. Stored only when ticked.
     var usesAsApplicationSalaryCalculator: Bool
-    /// Grant provider setting "Max OH (%)": the highest overhead, in percent,
-    /// that this funder accepts in an application's salary calculation.
-    /// nil = no cap; 0 = no overhead. Stored only when set.
-    var maxOverheadPercent: Double?
+    /// The earlier grant provider setting "Max OH (%)" (nil = no cap, 0 = no
+    /// overhead). Still read from older data, where it becomes `overheadRule`
+    /// ("Högst value %", 0 = "Ingen OH"); the one-time round 8 step then
+    /// clears it. It is no longer written and no longer used in calculations.
+    var legacyMaxOverheadPercent: Double?
+    /// Grant provider setting "OH-regel": the fund manager's full OH (nil =
+    /// the standard), at most a percent, or no OH. Stored only when set.
+    var overheadRule: FunderOverheadRule?
+    /// Grant provider exceptions "När [medelsförvaltare] förvaltar: …", found
+    /// by the fund manager organization's id. Stored only when there are any.
+    var overheadRuleExceptions: [FunderOverheadRuleException]?
+    /// Fund manager setting "Förvaltarens fulla OH (%)", used when the fund
+    /// manager's salary calculator has no OH periods. Stored only when set.
+    var managerOverheadPercent: Double?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -2131,7 +2141,11 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
         case addressNameEn
         case addressOrder
         case usesAsApplicationSalaryCalculator
-        case maxOverheadPercent
+        /// The earlier "Max OH (%)": read from older data, not written.
+        case legacyMaxOverheadPercent = "maxOverheadPercent"
+        case overheadRule
+        case overheadRuleExceptions
+        case managerOverheadPercent
     }
 
     init(
@@ -2161,7 +2175,10 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
         addressNameEn: String = "",
         addressOrder: Int? = nil,
         usesAsApplicationSalaryCalculator: Bool = false,
-        maxOverheadPercent: Double? = nil
+        legacyMaxOverheadPercent: Double? = nil,
+        overheadRule: FunderOverheadRule? = nil,
+        overheadRuleExceptions: [FunderOverheadRuleException]? = nil,
+        managerOverheadPercent: Double? = nil
     ) {
         self.id = id
         self.nameSv = nameSv
@@ -2189,12 +2206,17 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
         self.addressNameEn = addressNameEn
         self.addressOrder = addressOrder
         self.usesAsApplicationSalaryCalculator = usesAsApplicationSalaryCalculator
-        self.maxOverheadPercent = maxOverheadPercent
+        self.legacyMaxOverheadPercent = legacyMaxOverheadPercent
+        self.overheadRule = overheadRule
+        self.overheadRuleExceptions = overheadRuleExceptions
+        self.managerOverheadPercent = managerOverheadPercent
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let decodedNameSv = try container.decodeIfPresent(String.self, forKey: .nameSv) ?? ""
+        let decodedLegacyMaxOverheadPercent = try container.decodeIfPresent(Double.self, forKey: .legacyMaxOverheadPercent)
+        let decodedExceptions = try container.decodeIfPresent([FunderOverheadRuleException].self, forKey: .overheadRuleExceptions)
         self.init(
             id: try container.decodeIfPresent(String.self, forKey: .id) ?? StableRecordID.legacy(prefix: "organization", name: decodedNameSv),
             nameSv: decodedNameSv,
@@ -2222,7 +2244,13 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
             addressNameEn: try container.decodeIfPresent(String.self, forKey: .addressNameEn) ?? "",
             addressOrder: try container.decodeIfPresent(Int.self, forKey: .addressOrder),
             usesAsApplicationSalaryCalculator: try container.decodeIfPresent(Bool.self, forKey: .usesAsApplicationSalaryCalculator) ?? false,
-            maxOverheadPercent: try container.decodeIfPresent(Double.self, forKey: .maxOverheadPercent)
+            legacyMaxOverheadPercent: decodedLegacyMaxOverheadPercent,
+            // Older data with only "Max OH (%)" gets the same rule at once, so
+            // nothing is lost even before the one-time step has run.
+            overheadRule: try container.decodeIfPresent(FunderOverheadRule.self, forKey: .overheadRule)
+                ?? FunderOverheadRule.migrated(fromLegacyMaxOverheadPercent: decodedLegacyMaxOverheadPercent),
+            overheadRuleExceptions: (decodedExceptions?.isEmpty ?? true) ? nil : decodedExceptions,
+            managerOverheadPercent: try container.decodeIfPresent(Double.self, forKey: .managerOverheadPercent)
         )
     }
 
@@ -2258,7 +2286,12 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
         if usesAsApplicationSalaryCalculator {
             try container.encode(true, forKey: .usesAsApplicationSalaryCalculator)
         }
-        try container.encodeIfPresent(maxOverheadPercent, forKey: .maxOverheadPercent)
+        // The earlier "Max OH (%)" (legacyMaxOverheadPercent) is not written.
+        try container.encodeIfPresent(overheadRule, forKey: .overheadRule)
+        if let overheadRuleExceptions, !overheadRuleExceptions.isEmpty {
+            try container.encode(overheadRuleExceptions, forKey: .overheadRuleExceptions)
+        }
+        try container.encodeIfPresent(managerOverheadPercent, forKey: .managerOverheadPercent)
     }
 
     init(legacy: LocalizedOption) {
@@ -2799,7 +2832,7 @@ struct ManagerSalaryCalculator: Codable, Hashable {
     var allocationMonths: String
     /// The old checkbox that left overhead out of this calculator. It is
     /// still read from older data so the one-time round 8 migration can move
-    /// it to the funder setting "Max OH (%)" (`OrganizationRecord.maxOverheadPercent`),
+    /// it to the funder setting "OH-regel" (`OrganizationRecord.overheadRule`),
     /// but it no longer affects any calculation and is not written.
     var legacyExcludesOverhead: Bool
     /// Vacation days per year below the first age limit (default 25).

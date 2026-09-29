@@ -767,11 +767,11 @@ final class SnapshotTrialRunTests: XCTestCase {
     }
 
     /// Round 8 (user decision): the old no-overhead checkbox on a salary
-    /// calculator becomes the funder setting "Max OH (%)". Every organization
-    /// whose stored calculator had the checkbox gets Max OH 0 % (unless a
-    /// value was already set), no other organization changes, no record is
-    /// lost or added, and running the step again changes nothing. Only
-    /// counts are printed.
+    /// calculator is cleared without guessing a cap, and the funder setting
+    /// "Max OH (%)" becomes the "OH-regel" (a value = "Högst value %", 0 =
+    /// "Ingen OH"). No other organization changes, no record is lost or
+    /// added, and running the steps again changes nothing. Only counts are
+    /// printed.
     @MainActor
     func testSnapshotFunderMaxOverheadMigrationKeepsRecords() throws {
         let databaseURL = storageDirectory.appendingPathComponent("footprint.sqlite")
@@ -780,7 +780,8 @@ final class SnapshotTrialRunTests: XCTestCase {
         let storedByID = Dictionary(storedOrganizations.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let flaggedIDs = Set(storedOrganizations.filter { $0.salaryCalculator?.legacyExcludesOverhead == true }.map(\.id))
         print("SNAPSHOT: R8 Organisationer med gamla kryssrutan utan OH: \(flaggedIDs.count)")
-        print("SNAPSHOT: R8 Organisationer med Max OH före: \(storedOrganizations.filter { $0.maxOverheadPercent != nil }.count)")
+        print("SNAPSHOT: R8 Organisationer med Max OH före: \(storedOrganizations.filter { $0.legacyMaxOverheadPercent != nil }.count)")
+        print("SNAPSHOT: R8 Organisationer med OH-regel före: \(storedOrganizations.filter { $0.overheadRule != nil }.count)")
 
         let store = GrantDataStore.loadFromBundle()
         XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
@@ -799,21 +800,27 @@ final class SnapshotTrialRunTests: XCTestCase {
         var changedOther = 0
         for organization in reloaded.organizations {
             guard let stored = storedByID[organization.id] else { continue }
-            if organization.maxOverheadPercent != stored.maxOverheadPercent {
+            // The rule after the steps is exactly what the stored data gives
+            // (a stored rule, or the one made from Max OH); nothing is guessed.
+            if organization.overheadRule != stored.overheadRule {
                 changedOther += 1
             }
+            XCTAssertNil(organization.legacyMaxOverheadPercent, "Max OH is no longer stored")
             XCTAssertNotEqual(organization.salaryCalculator?.legacyExcludesOverhead, true, "the old checkbox is no longer stored")
         }
-        XCTAssertEqual(changedOther, 0, "no organization gets Max OH automatically")
-        let capped = reloaded.organizations.filter { $0.maxOverheadPercent != nil }
+        XCTAssertEqual(changedOther, 0, "no organization gets an OH rule automatically")
+        let capped = reloaded.organizations.filter { $0.overheadRule != nil }
         let cappedIDs = Set(capped.map(\.id))
         let linkedApplications = reloaded.applications.filter { application in
             application.organizationID.map { cappedIDs.contains($0) } ?? false
         }
-        print("SNAPSHOT: R8 Organisationer med Max OH efter: \(capped.count)")
-        print("SNAPSHOT: R8 Ansökningar kopplade (via id) till en finansiär med Max OH: \(linkedApplications.count)")
+        print("SNAPSHOT: R8 Organisationer med OH-regel efter: \(capped.count)")
+        print("SNAPSHOT: R8 Organisationer med OH-undantag efter: \(reloaded.organizations.filter { !($0.overheadRuleExceptions ?? []).isEmpty }.count)")
+        print("SNAPSHOT: R8 Ansökningar kopplade (via id) till en finansiär med OH-regel: \(linkedApplications.count)")
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round8-funder-max-overhead" })
+        XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round8-funder-overhead-rule" })
         XCTAssertFalse(reloaded.runRound8OneTimeDataMigrations(), "running the step again changes nothing")
         XCTAssertFalse(reloaded.migrateLegacyOverheadCheckboxToFunderCapForRound8(), "no checkbox is left to move")
+        XCTAssertFalse(reloaded.migrateFunderMaxOverheadToOverheadRuleForRound8(), "no Max OH is left to move")
     }
 }
