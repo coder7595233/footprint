@@ -1724,7 +1724,11 @@ private struct LocalizedOptionDetailView: View {
                         OrganizationPublicationAddressFields(store: store, organizationID: option.id, language: language)
 
                         if selectedRoles.contains(.grantProvider) {
-                            OrganizationMaxOverheadField(store: store, organizationID: option.id, language: language)
+                            OrganizationOverheadRuleSection(store: store, organizationID: option.id, language: language)
+                        }
+
+                        if selectedRoles.contains(.fundManager) {
+                            OrganizationManagerOverheadField(store: store, organizationID: option.id, language: language)
                         }
 
                         EditableTextArea(

@@ -1093,7 +1093,9 @@ extension GrantDataStore {
     // maintenance does not run again for data it has already handled.
     // 22: round 8, the old no-overhead checkbox on a salary calculator
     // becomes the funder setting Max OH (runRound8OneTimeDataMigrations).
-    private static let startupMaintenanceVersion = 22
+    // 23: round 8, Max OH on a grant provider becomes its OH rule
+    // (migrateFunderMaxOverheadToOverheadRuleForRound8).
+    private static let startupMaintenanceVersion = 23
     private static let deferredLaunchMaintenanceVersion = 4
     private static let bundledJournalMetricVersion = 1
     private static let maintenanceMarkersStorageKey = "maintenance_markers"

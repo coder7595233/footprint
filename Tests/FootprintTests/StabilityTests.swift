@@ -10307,8 +10307,8 @@ final class StabilityTests: XCTestCase {
             ContributorCompositionDistributionEntry(label: "Saknas", count: 1, contributorNames: ["Okänd Person"]),
         ])
         XCTAssertEqual(snapshot.organizationDistribution, [
-            ContributorCompositionDistributionEntry(label: "Karolinska Institutet", count: 1, contributorNames: ["Björn Berg"]),
             ContributorCompositionDistributionEntry(label: "Exempelköpings universitet", count: 1, contributorNames: ["Anna Andersson"]),
+            ContributorCompositionDistributionEntry(label: "Karolinska Institutet", count: 1, contributorNames: ["Björn Berg"]),
             ContributorCompositionDistributionEntry(label: "Saknas", count: 1, contributorNames: ["Okänd Person"]),
         ])
         XCTAssertEqual(snapshot.countryDistribution, [

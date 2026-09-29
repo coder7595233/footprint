@@ -615,6 +615,10 @@ final class GrantDataStore: ObservableObject {
             invalidateWorkspaceSearchCache()
             invalidatePublicationAuthorOrganizationOptionsCache()
             invalidateDataQualityCaches()
+            // Keep the id and name lookups in step with the list, so
+            // organization(id:) never returns a copy from before a change.
+            organizationByID = organizations.reduce(into: [:]) { $0[$1.id] = $1 }
+            organizationByName = organizations.reduce(into: [:]) { $0[$1.nameSv] = $1 }
         }
     }
     @Published private(set) var managers: [ManagerOption] {
@@ -12481,21 +12485,76 @@ final class GrantDataStore: ObservableObject {
         }
     }
 
-    /// "Max OH (%)" on a grant provider: the highest overhead the funder
-    /// accepts in an application's salary calculation. nil = no cap. The
-    /// value is kept between 0 and 100.
+    /// The earlier "Max OH (%)" on a grant provider, kept for older callers:
+    /// it now sets the "OH-regel". nil = the fund manager's full OH, 0 = no
+    /// OH, any other value = at most that percent (kept between 0 and 100).
+    /// The "Taket inkluderar lokalkostnad" box and the exceptions are kept.
     @discardableResult
     func setOrganizationMaxOverheadPercent(organizationID: String, percent: Double?) -> Bool {
         guard let index = organizations.firstIndex(where: { $0.id == organizationID }) else { return false }
-        let clamped = percent.map { min(100, max(0, $0)) }
-        guard organizations[index].maxOverheadPercent != clamped else { return false }
+        let includesPremises = organizations[index].overheadRule?.capIncludesPremises ?? false
+        var rule = FunderOverheadRule.migrated(fromLegacyMaxOverheadPercent: percent) ?? FunderOverheadRule()
+        rule.capIncludesPremises = includesPremises
+        return setOrganizationOverheadRule(organizationID: organizationID, rule: rule)
+    }
+
+    /// "OH-regel" on a grant provider. The standard (the fund manager's full
+    /// OH, no number, box not ticked) is stored as nothing. The cap is kept
+    /// between 0 and 100.
+    @discardableResult
+    func setOrganizationOverheadRule(organizationID: String, rule: FunderOverheadRule?) -> Bool {
+        guard let index = organizations.firstIndex(where: { $0.id == organizationID }) else { return false }
+        let normalized = rule.map { $0.normalized() }
+        let stored: FunderOverheadRule? = (normalized?.isStandard ?? true) ? nil : normalized
+        guard organizations[index].overheadRule != stored else { return false }
         return performUndoableChange(
-            actionName: language.text("Edit maximum overhead", "Redigera max OH"),
-            successMessage: language.text("Saved the maximum overhead.", "Max OH sparades."),
-            failureMessage: language.text("Could not save the maximum overhead.", "Kunde inte spara max OH."),
+            actionName: language.text("Edit OH rule", "Redigera OH-regel"),
+            successMessage: language.text("Saved the OH rule.", "OH-regeln sparades."),
+            failureMessage: language.text("Could not save the OH rule.", "Kunde inte spara OH-regeln."),
             scope: .organizations
         ) {
-            organizations[index].maxOverheadPercent = clamped
+            organizations[index].overheadRule = stored
+        }
+    }
+
+    /// The exceptions "När [medelsförvaltare] förvaltar: …" on a grant
+    /// provider. Rows without a chosen fund manager are kept so a new row
+    /// can be filled in; an empty list is stored as nothing.
+    @discardableResult
+    func setOrganizationOverheadRuleExceptions(organizationID: String, exceptions: [FunderOverheadRuleException]) -> Bool {
+        guard let index = organizations.firstIndex(where: { $0.id == organizationID }) else { return false }
+        let normalized = exceptions.map { exception -> FunderOverheadRuleException in
+            var copy = exception
+            copy.managerOrganizationID = exception.managerOrganizationID.trimmingCharacters(in: .whitespacesAndNewlines)
+            copy.rule = exception.rule.normalized()
+            return copy
+        }
+        let stored: [FunderOverheadRuleException]? = normalized.isEmpty ? nil : normalized
+        guard organizations[index].overheadRuleExceptions != stored else { return false }
+        return performUndoableChange(
+            actionName: language.text("Edit OH exceptions", "Redigera OH-undantag"),
+            successMessage: language.text("Saved the OH exceptions.", "OH-undantagen sparades."),
+            failureMessage: language.text("Could not save the OH exceptions.", "Kunde inte spara OH-undantagen."),
+            scope: .organizations
+        ) {
+            organizations[index].overheadRuleExceptions = stored
+        }
+    }
+
+    /// "Förvaltarens fulla OH (%)" on a fund manager. nil = not set. The
+    /// value is kept between 0 and 100.
+    @discardableResult
+    func setOrganizationManagerOverheadPercent(organizationID: String, percent: Double?) -> Bool {
+        guard let index = organizations.firstIndex(where: { $0.id == organizationID }) else { return false }
+        let clamped = percent.map { min(100, max(0, $0)) }
+        guard organizations[index].managerOverheadPercent != clamped else { return false }
+        return performUndoableChange(
+            actionName: language.text("Edit fund manager's OH", "Redigera förvaltarens OH"),
+            successMessage: language.text("Saved the fund manager's OH.", "Förvaltarens OH sparades."),
+            failureMessage: language.text("Could not save the fund manager's OH.", "Kunde inte spara förvaltarens OH."),
+            scope: .organizations
+        ) {
+            organizations[index].managerOverheadPercent = clamped
         }
     }
 
@@ -14023,7 +14082,10 @@ final class GrantDataStore: ObservableObject {
             updated.addressNameEn = previousOrganization.addressNameEn
             updated.addressOrder = previousOrganization.addressOrder
             updated.usesAsApplicationSalaryCalculator = previousOrganization.usesAsApplicationSalaryCalculator
-            updated.maxOverheadPercent = previousOrganization.maxOverheadPercent
+            updated.legacyMaxOverheadPercent = previousOrganization.legacyMaxOverheadPercent
+            updated.overheadRule = previousOrganization.overheadRule
+            updated.overheadRuleExceptions = previousOrganization.overheadRuleExceptions
+            updated.managerOverheadPercent = previousOrganization.managerOverheadPercent
             let congressesChanged = previousOrganization.congresses != updated.congresses
             organizations[index] = updated
             if hasLinkedResearcherRows {
@@ -14130,7 +14192,10 @@ final class GrantDataStore: ObservableObject {
             updated.addressNameEn = previousOrganization.addressNameEn
             updated.addressOrder = previousOrganization.addressOrder
             updated.usesAsApplicationSalaryCalculator = previousOrganization.usesAsApplicationSalaryCalculator
-            updated.maxOverheadPercent = previousOrganization.maxOverheadPercent
+            updated.legacyMaxOverheadPercent = previousOrganization.legacyMaxOverheadPercent
+            updated.overheadRule = previousOrganization.overheadRule
+            updated.overheadRuleExceptions = previousOrganization.overheadRuleExceptions
+            updated.managerOverheadPercent = previousOrganization.managerOverheadPercent
             let pendingSelectionAffectedSet: PersistenceSet = completePendingSelection
                 ? pendingSelectionPersistenceSet(for: .organization, entityID: updated.id)
                     .union(pendingSelectionPersistenceSet(for: .manager, entityID: updated.id))
@@ -29134,7 +29199,7 @@ extension GrantDataStore {
     }
 }
 
-// MARK: - Round 8: maximum overhead per funder
+// MARK: - Round 8: OH rule per funder
 // Lives in this file because organizations and managers have private setters.
 
 extension GrantDataStore {
@@ -29143,22 +29208,57 @@ extension GrantDataStore {
     /// `migrateRecordsIfNeeded()`. Returns true when anything changed.
     @discardableResult
     func runRound8OneTimeDataMigrations() -> Bool {
-        runRound7MigrationOnce(
+        let clearedCheckbox = runRound7MigrationOnce(
             key: "round8-funder-max-overhead",
-            details: "Organizations whose salary calculator had the old no-overhead checkbox get Max OH 0 %; the checkbox is no longer stored."
+            details: "The old no-overhead checkbox on salary calculators is cleared; no cap is guessed. The checkbox is no longer stored."
         ) {
             migrateLegacyOverheadCheckboxToFunderCapForRound8()
         }
+        let movedMaxOverhead = runRound7MigrationOnce(
+            key: "round8-funder-overhead-rule",
+            details: "Max OH (%) on grant providers becomes the OH rule: a value gives \"at most value %\", 0 gives \"no OH\". Max OH is no longer stored."
+        ) {
+            migrateFunderMaxOverheadToOverheadRuleForRound8()
+        }
+        return clearedCheckbox || movedMaxOverhead
+    }
+
+    /// Round 8, one-time migration (user decision): the earlier grant
+    /// provider setting "Max OH (%)" becomes the "OH-regel": a value gives
+    /// "Högst value %", 0 gives "Ingen OH", no value gives nothing (the fund
+    /// manager's full OH). A rule already set is kept. The old value is then
+    /// cleared so it is no longer stored. No organization is chosen by name.
+    /// Returns true when an organization changed; running it again changes
+    /// nothing.
+    @discardableResult
+    func migrateFunderMaxOverheadToOverheadRuleForRound8() -> Bool {
+        var updated = organizations
+        var moved = 0
+        for index in updated.indices {
+            guard let legacy = updated[index].legacyMaxOverheadPercent else { continue }
+            if updated[index].overheadRule == nil {
+                updated[index].overheadRule = FunderOverheadRule.migrated(fromLegacyMaxOverheadPercent: legacy)
+            }
+            updated[index].legacyMaxOverheadPercent = nil
+            moved += 1
+        }
+        // A migration must never lose a record.
+        guard moved > 0, updated.count == organizations.count else { return false }
+        organizations = updated
+        managers = derivedManagers(from: organizations)
+        refreshOrganizationLookupCaches()
+        rebuildOrganizationRowSnapshots()
+        appendStartupDiagnostic("migration:funderOverheadRule moved=\(moved)")
+        return true
     }
 
     /// Round 8, one-time migration (user decision): the old checkbox that
-    /// left overhead out of an organization's salary calculator becomes the
-    /// general funder setting "Max OH (%)". The funder is the organization
-    /// that holds the calculator with the checkbox ticked; it gets a maximum
-    /// overhead of 0 %, unless a maximum is already set. No organization is
-    /// chosen by name. The checkbox is then cleared (older data still
-    /// decodes, but it is no longer written). Returns true when an
-    /// organization changed; running it again changes nothing.
+    /// left overhead out of an organization's salary calculator is replaced
+    /// by the grant provider setting "OH-regel". The checkbox never said
+    /// which funder it meant, so no rule is guessed; it is only cleared
+    /// (older data still decodes, but it is no longer written). No
+    /// organization is chosen by name. Returns true when an organization
+    /// changed; running it again changes nothing.
     @discardableResult
     func migrateLegacyOverheadCheckboxToFunderCapForRound8() -> Bool {
         var updated = organizations
@@ -29167,7 +29267,7 @@ extension GrantDataStore {
             guard var calculator = updated[index].salaryCalculator, calculator.legacyExcludesOverhead else { continue }
             // The old checkbox sat on an employer's salary calculator and never
             // said which funder it meant, so no cap is guessed: the user sets
-            // Max OH on the funder.
+            // the OH rule on the funder.
             calculator.legacyExcludesOverhead = false
             updated[index].salaryCalculator = calculator
             cleared += 1
