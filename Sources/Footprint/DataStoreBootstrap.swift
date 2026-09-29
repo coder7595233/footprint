@@ -218,8 +218,6 @@ extension GrantDataStore {
                 // their organization and unit (one correct spelling). Runs on
                 // every start; changes and saves only what differs.
                 applyOfficialOrganizationNamesAtLaunch()
-                // F49: where each media PDF is looked for; runs on every start.
-                logMediaPDFLookupForDiagnostics()
                 compactDatabaseIfNeeded()
                 // Captured on main before detaching; see sweep doc comment.
                 let sweepStorageRoot = Self.storageDirectory
@@ -1791,11 +1789,6 @@ extension GrantDataStore {
         return true
     }
 
-    /// F49 diagnostics: which part of the earlier name check refused.
-    nonisolated static func earlierLeafNameCheckParts(_ value: String) -> String {
-        "slash=\(value.contains("/")) backslash=\(value.contains("\\")) percent=\(value.contains("%")) control=\(value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains))"
-    }
-
     /// F1: attachment locations are stored relative to the storage
     /// directory so they survive a move to another user account.
     nonisolated static func portableAttachmentPath(for url: URL) -> String {
@@ -2063,15 +2056,6 @@ extension GrantDataStore {
             return nil
         }
         return url
-    }
-
-    /// F49 diagnostics: which step of `plainFileDirectlyInside` stops.
-    nonisolated static func plainFileCheckSteps(_ directory: URL, named name: String) -> String {
-        let url = directory.appendingPathComponent(name)
-        var isDirectory: ObjCBool = false
-        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
-        let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
-        return "safeName=\(isSafeAttachmentLeafName(name)) exists=\(exists) isDirectory=\(isDirectory.boolValue) isLink=\(isLink) nameLength=\(name.count) nameScalars=\(name.unicodeScalars.count) earlier={\(earlierLeafNameCheckParts(name))}"
     }
 
     static func canonicalizePublicationPDFAttachment(for publication: inout PublicationRecord) throws -> Bool {
