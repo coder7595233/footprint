@@ -83,6 +83,22 @@ enum DoctoralTimelineLayout {
         guard let first = usable.min(), let last = usable.max() else { return nil }
         return max(first, last - maxSpan)...last
     }
+
+    /// The years the scrollable timeline covers: everything `axisYears`
+    /// shows, widened so that `visibleYears` years can be centred on today.
+    /// Nil when there is nothing to draw.
+    static func scrollableAxisYears(
+        _ years: [Int],
+        today: Double,
+        visibleYears: Int = 5,
+        maxSpan: Int = 25
+    ) -> ClosedRange<Int>? {
+        guard let base = axisYears(years, maxSpan: maxSpan) else { return nil }
+        let half = Double(visibleYears) / 2
+        let lower = min(base.lowerBound, Int((today - half).rounded(.down)))
+        let upper = max(base.upperBound, Int((today + half).rounded(.down)), lower + visibleYears - 1)
+        return lower...upper
+    }
 }
 
 /// The status choices in a milestone's popover: Preliminärt / Bokat /

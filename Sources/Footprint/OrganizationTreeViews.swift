@@ -5,7 +5,7 @@ import SwiftUI
 //  - OrganizationPublicationAddressFields: the organization's English
 //    address name and address order (organization page, general fields).
 //  - OrganizationUnitsSection: the "Enheter" section on the organization page.
-//  - OrganizationUnitPickerMenu: "Enhet: …" on researcher rows.
+//  - OrganizationUnitPickerMenu: the unit drop-down on researcher rows.
 //  - ResearcherPublicationAddressPanel: "Publikationsadress" on the researcher page.
 
 private let organizationUnitIndentWidth: CGFloat = 24
@@ -147,7 +147,9 @@ struct OrganizationUnitsSection: View {
                 title: unitCount == 0
                     ? language.text("Units", "Enheter")
                     : language.text("Units (\(unitCount))", "Enheter (\(unitCount))"),
-                isExpanded: $isExpanded
+                isExpanded: $isExpanded,
+                // Same size as the other panel headings, e.g. Kontaktpersoner.
+                titleRole: .panelTitle
             )
             if isExpanded, let organization {
                 expandedContent(organization: organization)
@@ -181,14 +183,6 @@ struct OrganizationUnitsSection: View {
     private func expandedContent(organization: OrganizationRecord) -> some View {
         let usageCounts = store.organizationUnitUsageCounts(organizationID: organization.id)
         VStack(alignment: .leading, spacing: 10) {
-            Text(language.text(
-                "Faculties, departments, centres, clinics and divisions in any number of levels. Choose a unit in the list to see and change it on the right. The researchers' affiliations, employments and education can point to a unit.",
-                "Fakulteter, institutioner, centrum, kliniker och avdelningar i hur många nivåer som helst. Välj en enhet i listan för att se och ändra den till höger. Forskarnas affilieringar, anställningar och utbildningar kan peka på en enhet."
-            ))
-            .appTypography(.secondary)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-
             toolbar(organization: organization)
 
             if organization.units.isEmpty {
@@ -1037,7 +1031,7 @@ private struct OrganizationUnitRowEditor: View {
 
 // MARK: - Researcher rows: unit picker
 
-/// "Enhet: …" drop-down for an affiliation, employment or education row.
+/// Unit drop-down for an affiliation, employment or education row.
 /// Lists the organization's units as an indented tree (all units, since
 /// validity dates are not shown; templates never), plus "Ingen enhet".
 struct OrganizationUnitPickerMenu: View {
@@ -1053,12 +1047,12 @@ struct OrganizationUnitPickerMenu: View {
 
     private var labelText: String {
         if organization == nil {
-            return language.text("Unit: choose organization first", "Enhet: välj organisation först")
+            return language.text("Choose organization first", "Välj organisation först")
         }
         if let selectedUnit {
-            return language.text("Unit: ", "Enhet: ") + selectedUnit.displayName(language: language)
+            return selectedUnit.displayName(language: language)
         }
-        return language.text("Unit: Choose…", "Enhet: Välj…")
+        return language.text("Choose unit…", "Välj enhet…")
     }
 
     private var helpText: String {

@@ -133,6 +133,84 @@ func doctoralStatisticsYearRows(
     return rows.values.sorted { $0.year < $1.year }
 }
 
+/// One half-year of supervision on the doctoral timeline: the hours of every
+/// supervision period that covers it, and how many of them are confirmed in
+/// Retendo. A semester that has ended without full confirmation needs
+/// attention (red mark, as in the teaching list).
+struct DoctoralSupervisionSemesterBlock: Identifiable, Equatable {
+    let year: Int
+    /// 1 = spring (Jan–Jun), 2 = autumn (Jul–Dec).
+    let half: Int
+    var hours: Double = 0
+    var confirmedHours: Double = 0
+    var hasEnded: Bool = false
+
+    var id: String { "\(year)-\(half)" }
+    var isFullyConfirmed: Bool { hours > 0 && confirmedHours >= hours }
+    var needsConfirmation: Bool { hasEnded && !isFullyConfirmed }
+    /// Start of the semester as a fractional year (2025.0 or 2025.5).
+    var startFraction: Double { Double(year) + (half == 1 ? 0 : 0.5) }
+}
+
+func doctoralSupervisionSemesterBlocks(
+    periods: [DoctoralSupervisionPeriod],
+    referenceDate: Date = Date()
+) -> [DoctoralSupervisionSemesterBlock] {
+    let today = Calendar.current.startOfDay(for: referenceDate)
+    var blocks: [DoctoralStatisticsSemester: DoctoralSupervisionSemesterBlock] = [:]
+    for period in periods where !period.isEmpty {
+        guard let startDate = period.from.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) else { continue }
+        let endDate = period.to.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) ?? today
+        let hoursPerSemester = GrantParsing.numericValue(from: period.hoursPerSemester) ?? 0
+        guard hoursPerSemester > 0 else { continue }
+        for semester in doctoralStatisticsSemesters(from: startDate, to: endDate) {
+            var block = blocks[semester] ?? DoctoralSupervisionSemesterBlock(year: semester.year, half: semester.half)
+            block.hours += hoursPerSemester
+            if period.confirmedInRetendo {
+                block.confirmedHours += hoursPerSemester
+            }
+            let endComponents = DateComponents(
+                year: semester.year,
+                month: semester.half == 1 ? 6 : 12,
+                day: semester.half == 1 ? 30 : 31
+            )
+            let semesterEnd = Calendar.current.date(from: endComponents) ?? today
+            block.hasEnded = semesterEnd < today
+            blocks[semester] = block
+        }
+    }
+    return blocks.values.sorted { ($0.year, $0.half) < ($1.year, $1.half) }
+}
+
+private func doctoralParsedDay(_ raw: String?) -> Date? {
+    guard let raw = raw?.trimmedOrNil else { return nil }
+    return DateParsers.isoDay.date(from: DateParsers.canonicalizedDayInput(raw))
+}
+
+/// When work on a paper first began: the earliest date stored on it (status
+/// history, work status, submissions). Nil when the paper has no dates.
+func doctoralPaperStartDate(_ publication: PublicationRecord) -> Date? {
+    var raws: [String?] = publication.statusTimeline.map(\.date)
+    raws += [publication.workflowStatusDate, publication.currentSubmissionDate, publication.statusDate]
+    raws += publication.previousAttempts.map(\.submittedOn)
+    return raws.compactMap(doctoralParsedDay).min()
+}
+
+/// The day a published paper came out: its "Published" status date, else
+/// the e-pub date. Nil for papers that are not published or have no date.
+func doctoralPaperPublishedDate(_ publication: PublicationRecord) -> Date? {
+    guard publication.isPublished else { return nil }
+    let statusDates = publication.statusTimeline
+        .filter { PublicationStatus.fromStored($0.status) == .published }
+        .compactMap { doctoralParsedDay($0.date) }
+    if let date = statusDates.min() { return date }
+    if let date = doctoralParsedDay(publication.epubDate) { return date }
+    if PublicationStatus.fromStored(publication.statusLabel) == .published {
+        return doctoralParsedDay(publication.statusDate)
+    }
+    return nil
+}
+
 private struct DoctoralStatisticsSemester: Hashable {
     let year: Int
     let half: Int

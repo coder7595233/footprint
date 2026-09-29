@@ -75,6 +75,14 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
+## Omgång 10 – pågår
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F53 | Doktorander | Tidslinjen överst på doktorandsidan: de tre ringarna till höger är borttagna (Anslag står kvar under tidslinjen, bredvid en rad som förklarar markeringarna). Fem år syns åt gången och resten nås genom att rulla i sidled; vyn öppnas centrerad på i dag och knappen "Idag" rullar tillbaka. Tunna linjer visar årsgränserna. Delarbeten får en linje från den dag arbetet påbörjades (tidigaste datum i statushistoriken, arbetsstatus eller inskickning) fram till markeringen; heldragen när arbetet är publicerat, streckad annars, och ett publicerat arbete står på sitt publiceringsdatum. Kurser: heldragen del = genomförda poäng, streckad del = ej genomförda. Handledning visas per termin: heldragen = bekräftad i Retendo, streckad = ej bekräftad, och en röd kant till vänster när terminen är slut men inte bekräftad. | Pågår |
+| F54 | Forskare | Affilieringar: "Enhet: " står inte längre framför enhetens namn. Organisation, ort och land är cirka 30 % smalare så att enhetens namn får plats, och "Ta bort" är en papperskorg så att e-postfältet får mer plats. | Pågår |
+| F55 | Organisationer | Rubriken "Enheter" har samma storlek som till exempel "Kontaktpersoner", och den långa hjälptexten under rubriken är borttagen. | Pågår |
+
 ## Omgång 9 – klar 2026-09-29 (#3)
 
 | Nr | Område | Ändring | Status |
