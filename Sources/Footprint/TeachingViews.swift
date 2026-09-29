@@ -82,9 +82,17 @@ enum TeachingAssignmentRowCachePolicy {
 }
 
 private enum TeachingRetendoState {
+    /// No periods, so nothing to confirm.
     case none
+    /// Periods, none of them confirmed in Retendo.
+    case unconfirmed
     case partial
     case full
+
+    /// Marked with a red bar in the list: something is left to confirm.
+    var needsConfirmation: Bool {
+        self == .unconfirmed || self == .partial
+    }
 }
 
 @MainActor
@@ -1581,12 +1589,12 @@ struct TeachingWorkspaceView: View {
     }
 
     /// Same marking as the other lists: a selected row is filled blue, and
-    /// an assignment that is only partly confirmed in Retendo gets a red bar
-    /// on the left, which stays visible when the row is selected.
+    /// an assignment that is not (or only partly) confirmed in Retendo gets
+    /// a red bar on the left, which stays visible when the row is selected.
     private func teachingListRowBackground(for row: TeachingAssignmentDirectoryRow) -> some View {
         AppListRowBackground(
             isSelected: row.id == selectedAssignmentID,
-            toneFill: row.retendoState == .partial ? AppPalette.vividRed : nil
+            toneFill: row.retendoState.needsConfirmation ? AppPalette.vividRed : nil
         )
     }
 
@@ -1631,7 +1639,7 @@ struct TeachingWorkspaceView: View {
         let periods = assignment.periods.filter { !$0.isEmpty }
         guard !periods.isEmpty else { return .none }
         let confirmedCount = periods.filter(\.confirmedInRetendo).count
-        if confirmedCount == 0 { return .none }
+        if confirmedCount == 0 { return .unconfirmed }
         if confirmedCount == periods.count { return .full }
         return .partial
     }
