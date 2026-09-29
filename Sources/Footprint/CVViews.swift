@@ -3842,7 +3842,8 @@ private struct CVMediaAppearanceDetailView: View {
         GrantDataStore.resolveCVMediaAppearancePDFURL(
             mediaAppearanceID: draft.id,
             pdfPath: draft.pdfPath,
-            pdfFilename: draft.pdfFilename
+            pdfFilename: draft.pdfFilename,
+            legacyStoredFilenames: draft.attachments.map(\.storedFilename)
         )
     }
 

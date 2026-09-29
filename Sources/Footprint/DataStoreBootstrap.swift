@@ -1291,7 +1291,16 @@ extension GrantDataStore {
         return nil
     }
 
-    nonisolated static func resolveCVMediaAppearancePDFURL(mediaAppearanceID: String?, pdfPath: String?, pdfFilename: String?) -> URL? {
+    /// `legacyStoredFilenames`: the stored names of the record's files from
+    /// the earlier Media attachment UI. They lie in "Media Appearance Files"
+    /// and are the last place looked, so a PDF that was only ever saved there
+    /// is still found (and copied into place at the next start).
+    nonisolated static func resolveCVMediaAppearancePDFURL(
+        mediaAppearanceID: String?,
+        pdfPath: String?,
+        pdfFilename: String?,
+        legacyStoredFilenames: [String] = []
+    ) -> URL? {
         if let mediaAppearanceID = mediaAppearanceID?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty,
            let managedURL = try? validatedManagedAttachmentURL(
                root: mediaAppearancePDFsDirectory,
@@ -1319,26 +1328,33 @@ extension GrantDataStore {
         let fallbackFilename =
             normalizedPath.flatMap { URL(fileURLWithPath: $0).lastPathComponent.nonEmpty }
             ?? pdfFilename?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let fallbackFilename,
-              isSafeAttachmentLeafName(fallbackFilename) else { return nil }
 
-        let applicationSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let candidateDirectories = [
-            mediaAppearancePDFsDirectory,
-            applicationSupportDirectory
-                .appendingPathComponent(appSupportFolderName, isDirectory: true)
-                .appendingPathComponent("Media Appearance PDFs", isDirectory: true),
-            legacyStorageDirectory
-                .appendingPathComponent("Media Appearance PDFs", isDirectory: true)
-        ]
+        if let fallbackFilename, isSafeAttachmentLeafName(fallbackFilename) {
+            let applicationSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            let candidateDirectories = [
+                mediaAppearancePDFsDirectory,
+                applicationSupportDirectory
+                    .appendingPathComponent(appSupportFolderName, isDirectory: true)
+                    .appendingPathComponent("Media Appearance PDFs", isDirectory: true),
+                legacyStorageDirectory
+                    .appendingPathComponent("Media Appearance PDFs", isDirectory: true),
+                mediaAppearanceFilesDirectory
+            ]
 
-        for directory in candidateDirectories {
-            guard let candidateURL = try? validatedContainedAttachmentURL(
-                directory.appendingPathComponent(fallbackFilename),
-                within: directory
-            ) else { continue }
-            if FileManager.default.fileExists(atPath: candidateURL.path) {
-                return candidateURL
+            for directory in candidateDirectories {
+                guard let candidateURL = try? validatedContainedAttachmentURL(
+                    directory.appendingPathComponent(fallbackFilename),
+                    within: directory
+                ) else { continue }
+                if FileManager.default.fileExists(atPath: candidateURL.path) {
+                    return candidateURL
+                }
+            }
+        }
+
+        for storedFilename in legacyStoredFilenames where storedFilename.lowercased().hasSuffix(".pdf") {
+            if let legacyURL = resolveLegacyMediaAppearanceFileURL(storedFilename: storedFilename) {
+                return legacyURL
             }
         }
 
@@ -2029,7 +2045,8 @@ extension GrantDataStore {
         let resolvedURL = resolveCVMediaAppearancePDFURL(
             mediaAppearanceID: appearance.id,
             pdfPath: appearance.pdfPath,
-            pdfFilename: appearance.pdfFilename
+            pdfFilename: appearance.pdfFilename,
+            legacyStoredFilenames: appearance.attachments.map(\.storedFilename)
         )
 
         var didChange = false
