@@ -1095,7 +1095,9 @@ extension GrantDataStore {
     // becomes the funder setting Max OH (runRound8OneTimeDataMigrations).
     // 23: round 8, Max OH on a grant provider becomes its OH rule
     // (migrateFunderMaxOverheadToOverheadRuleForRound8).
-    private static let startupMaintenanceVersion = 23
+    // 24: round 10, the fund managers' "OH som tas ut" and the OH numbers on
+    // open records not yet applied for (runRound10OneTimeDataMigrations).
+    private static let startupMaintenanceVersion = 24
     private static let deferredLaunchMaintenanceVersion = 4
     private static let bundledJournalMetricVersion = 1
     private static let maintenanceMarkersStorageKey = "maintenance_markers"

@@ -55,6 +55,10 @@ extension GrantApplication {
             fundingMaterials: fundingMaterials,
             fundingPhDStudents: fundingPhDStudents
         )
+        // The record's own OH rules come along; the fund manager's answer
+        // about co-funding belongs to this year's application and does not.
+        copy.funderMaxOverheadPercent = funderMaxOverheadPercent
+        copy.managerOverheadPercent = managerOverheadPercent
         copy.isEditingLocked = false
         return copy
     }
@@ -87,29 +91,4 @@ func grantApplicationYearShifted(_ text: String) -> String {
     }
     result += nsText.substring(from: cursor)
     return result
-}
-
-extension GrantDataStore {
-    /// "Kopiera till nästa år": adds next year's record for the call and
-    /// returns its id. Nil when the record is not found.
-    @discardableResult
-    func copyApplicationToNextYear(id: String) -> String? {
-        guard let source = applications.first(where: { $0.id == id }) else { return nil }
-        let newID = UUID().uuidString
-        let nextRow = (applications.map(\.rowNumber).max() ?? 0) + 1
-        let copy = source.copiedToNextYear(
-            newID: newID,
-            rowNumber: nextRow,
-            status: workflowDefaultSettings.resolvedStatus
-        )
-        performUndoableChange(
-            actionName: language.text("Copy to next year", "Kopiera till nästa år"),
-            successMessage: language.text("Created next year's record.", "Skapade nästa års post."),
-            failureMessage: language.text("Could not copy the record.", "Kunde inte kopiera posten."),
-            scope: .applications
-        ) {
-            applications.insert(copy, at: 0)
-        }
-        return newID
-    }
 }

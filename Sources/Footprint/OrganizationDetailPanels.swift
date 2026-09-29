@@ -949,17 +949,17 @@ func funderOverheadRuleKindLabel(_ kind: FunderOverheadRuleKind, language: AppLa
     }
 }
 
-/// "OH-regel" on a grant provider: the fund manager's full OH (standard),
-/// at most a percent, or no OH; the box "Taket inkluderar lokalkostnad";
-/// and exceptions for single fund managers. Everything is saved on the
-/// organization as soon as it is changed.
+/// Round 10: the grant provider's OH as one number, "Godkänd OH, högst"
+/// (100 = full, 0 = none; stored as the OH rule), the note "Taket inkluderar
+/// lokalkostnad", exceptions for single fund managers, and "Prioriterad
+/// förvaltare". All are defaults copied into new records. Everything is
+/// saved on the organization as soon as it is changed.
 struct OrganizationOverheadRuleSection: View {
     @ObservedObject var store: GrantDataStore
     let organizationID: String
     let language: AppLanguage
 
     private let percentFieldWidth: CGFloat = 110
-    private let kindPickerWidth: CGFloat = 210
     private let managerPickerWidth: CGFloat = 240
     private let deleteActionWidth: CGFloat = 18
 
@@ -978,25 +978,22 @@ struct OrganizationOverheadRuleSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             AppFieldLabelText(
-                text: language.text("OH rule", "OH-regel"),
+                text: language.text("Approved OH, at most (%)", "Godkänd OH, högst (%)"),
                 help: language.text(
-                    "How much overhead (OH) this grant provider pays on salaries in an application.",
-                    "Hur mycket overhead (OH) den här anslagsgivaren betalar på löner i en ansökan."
+                    "The highest overhead (OH) this grant provider accepts on the money it grants. 100 = full OH, 0 = no OH.",
+                    "Den högsta overhead (OH) som den här anslagsgivaren godkänner på medlen den beviljar. 100 = full OH, 0 = ingen OH."
                 )
             )
             HStack(alignment: .center, spacing: 10) {
-                kindPicker(selection: ruleKindBinding)
-                if rule.kind == .cap {
-                    percentField(text: capBinding)
+                percentField(text: approvedMaxBinding, placeholder: "100")
+                if let percent = rule.approvedMaxPercent, percent > 0, percent < 100 {
+                    Toggle(
+                        language.text("The cap includes premises costs", "Taket inkluderar lokalkostnad"),
+                        isOn: premisesBinding
+                    )
+                    .appCheckboxStyle()
                 }
                 Spacer(minLength: 0)
-            }
-            if rule.kind == .cap {
-                Toggle(
-                    language.text("The cap includes premises costs", "Taket inkluderar lokalkostnad"),
-                    isOn: premisesBinding
-                )
-                .appCheckboxStyle()
             }
 
             AppFieldLabelText(text: language.text("Exceptions per fund manager", "Undantag per medelsförvaltare"))
@@ -1008,28 +1005,50 @@ struct OrganizationOverheadRuleSection: View {
             }
             .buttonStyle(.borderless)
 
+            AppFieldLabelText(
+                text: language.text("Preferred fund manager", "Prioriterad förvaltare"),
+                help: language.text(
+                    "The fund manager chosen for new records to this grant provider. When a region is the only allowed fund manager, choose the region here.",
+                    "Den medelsförvaltare som väljs för nya poster hos den här anslagsgivaren. När bara en region får förvalta väljer du regionen här."
+                )
+            )
+            preferredManagerPicker
+
             SettingsEffectNote(language.text(
-                "Affects: the OH in the salary budget of applications to this grant provider. \"Fund manager's full OH\" uses the fund manager's own OH, \"At most … %\" uses the lower of the fund manager's OH and the cap, \"No OH\" uses 0 %. An exception applies only when that fund manager manages the application. \"The cap includes premises costs\" is a note only; the app does not count premises costs separately. The difference to the fund manager's full OH is shown in the application as the need for co-funding.",
-                "Påverkar: OH i lönebudgeten för ansökningar till den här anslagsgivaren. \"Förvaltarens fulla OH\" använder medelsförvaltarens egen OH, \"Högst … %\" det lägsta av förvaltarens OH och taket, \"Ingen OH\" 0 %. Ett undantag gäller bara när just den medelsförvaltaren förvaltar ansökan. \"Taket inkluderar lokalkostnad\" är bara en anteckning; appen räknar inte lokalkostnad för sig. Skillnaden mot förvaltarens fulla OH visas i ansökan som behov av samfinansiering."
+                "Affects: new records under Calls and grants. When the grant provider or the fund manager is chosen in a record, these values are copied into it and can be changed there. A later change here never changes existing records. An exception applies only when that fund manager manages the record. \"The cap includes premises costs\" is a note only. When the fund manager takes more OH than the grant provider accepts, the record shows the co-funding question.",
+                "Påverkar: nya poster under Utlysningar och anslag. När anslagsgivaren eller förvaltaren väljs i en post kopieras värdena in i posten och kan ändras där. En senare ändring här ändrar aldrig befintliga poster. Ett undantag gäller bara när just den medelsförvaltaren förvaltar posten. \"Taket inkluderar lokalkostnad\" är bara en anteckning. När förvaltaren tar ut mer OH än anslagsgivaren godkänner visar posten frågan om samfinansiering."
             ))
         }
+    }
+
+    private var preferredManagerPicker: some View {
+        let selectedID = organization?.preferredFundManagerID ?? ""
+        return Picker("", selection: Binding(
+            get: { selectedID },
+            set: { _ = store.setOrganizationPreferredFundManager(organizationID: organizationID, managerID: $0) }
+        )) {
+            Text(language.text("Default (from Settings)", "Förval (från Inställningar)")).tag("")
+            ForEach(managerOptions(including: selectedID), id: \.id) { option in
+                Text(option.label).tag(option.id)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .frame(width: managerPickerWidth)
     }
 
     // MARK: Rows
 
     @ViewBuilder
     private func exceptionRow(exceptionID: String) -> some View {
-        if let exception = exceptions.first(where: { $0.id == exceptionID }) {
+        if exceptions.contains(where: { $0.id == exceptionID }) {
             HStack(alignment: .center, spacing: 10) {
                 Text(language.text("When", "När"))
                     .appTypography(.body)
                 managerPicker(selection: exceptionManagerBinding(exceptionID: exceptionID))
-                Text(language.text("manages:", "förvaltar:"))
+                Text(language.text("manages, at most:", "förvaltar, högst:"))
                     .appTypography(.body)
-                kindPicker(selection: exceptionKindBinding(exceptionID: exceptionID))
-                if exception.rule.kind == .cap {
-                    percentField(text: exceptionCapBinding(exceptionID: exceptionID))
-                }
+                percentField(text: exceptionApprovedMaxBinding(exceptionID: exceptionID), placeholder: "100")
                 AppIconDeleteButton(
                     title: language.text("Delete exception", "Ta bort undantaget"),
                     width: deleteActionWidth
@@ -1040,17 +1059,6 @@ struct OrganizationOverheadRuleSection: View {
                 Spacer(minLength: 0)
             }
         }
-    }
-
-    private func kindPicker(selection: Binding<FunderOverheadRuleKind>) -> some View {
-        Picker("", selection: selection) {
-            ForEach(FunderOverheadRuleKind.allCases, id: \.self) { kind in
-                Text(funderOverheadRuleKindLabel(kind, language: language)).tag(kind)
-            }
-        }
-        .labelsHidden()
-        .pickerStyle(.menu)
-        .frame(width: kindPickerWidth)
     }
 
     private func managerPicker(selection: Binding<String>) -> some View {
@@ -1065,11 +1073,11 @@ struct OrganizationOverheadRuleSection: View {
         .frame(width: managerPickerWidth)
     }
 
-    private func percentField(text: Binding<String>) -> some View {
+    private func percentField(text: Binding<String>, placeholder: String? = nil) -> some View {
         CommitFormattingTextField(
-            placeholder: language.text("Percent", "Procent"),
+            placeholder: placeholder ?? language.text("Percent", "Procent"),
             text: text,
-            formatter: formatPercentageInput,
+            formatter: formatOverheadPercentInput,
             updatesContinuously: false
         )
         .appTextInputChrome()
@@ -1098,24 +1106,32 @@ struct OrganizationOverheadRuleSection: View {
 
     // MARK: Bindings
 
-    private var ruleKindBinding: Binding<FunderOverheadRuleKind> {
+    /// "Godkänd OH, högst": one number (100 = full, 0 = none). An empty
+    /// field is the standard, full OH.
+    private var approvedMaxBinding: Binding<String> {
         Binding(
-            get: { rule.kind },
+            get: { organization?.overheadRule == nil ? "" : Self.percentText(rule.approvedMaxPercent) },
             set: { newValue in
-                var updated = rule
-                updated.kind = newValue
-                store.setOrganizationOverheadRule(organizationID: organizationID, rule: updated)
+                guard let percent = Self.parsedPercent(newValue) else {
+                    store.setOrganizationOverheadRule(organizationID: organizationID, rule: nil)
+                    return
+                }
+                store.setOrganizationOverheadRule(
+                    organizationID: organizationID,
+                    rule: FunderOverheadRule(approvedMaxPercent: percent, keepingPremisesFrom: rule)
+                )
             }
         )
     }
 
-    private var capBinding: Binding<String> {
+    private func exceptionApprovedMaxBinding(exceptionID: String) -> Binding<String> {
         Binding(
-            get: { Self.percentText(rule.capPercent) },
+            get: { Self.percentText(exceptions.first(where: { $0.id == exceptionID })?.rule.approvedMaxPercent) },
             set: { newValue in
-                var updated = rule
-                updated.capPercent = Self.parsedPercent(newValue)
-                store.setOrganizationOverheadRule(organizationID: organizationID, rule: updated)
+                updateException(exceptionID: exceptionID) { exception in
+                    let percent = Self.parsedPercent(newValue) ?? 100
+                    exception.rule = FunderOverheadRule(approvedMaxPercent: percent, keepingPremisesFrom: exception.rule)
+                }
             }
         )
     }
@@ -1136,24 +1152,6 @@ struct OrganizationOverheadRuleSection: View {
             get: { exceptions.first(where: { $0.id == exceptionID })?.managerOrganizationID ?? "" },
             set: { newValue in
                 updateException(exceptionID: exceptionID) { $0.managerOrganizationID = newValue }
-            }
-        )
-    }
-
-    private func exceptionKindBinding(exceptionID: String) -> Binding<FunderOverheadRuleKind> {
-        Binding(
-            get: { exceptions.first(where: { $0.id == exceptionID })?.rule.kind ?? .managerFull },
-            set: { newValue in
-                updateException(exceptionID: exceptionID) { $0.rule.kind = newValue }
-            }
-        )
-    }
-
-    private func exceptionCapBinding(exceptionID: String) -> Binding<String> {
-        Binding(
-            get: { Self.percentText(exceptions.first(where: { $0.id == exceptionID })?.rule.capPercent) },
-            set: { newValue in
-                updateException(exceptionID: exceptionID) { $0.rule.capPercent = Self.parsedPercent(newValue) }
             }
         )
     }
@@ -1180,7 +1178,7 @@ struct OrganizationOverheadRuleSection: View {
 
     private static func percentText(_ percent: Double?) -> String {
         guard let percent else { return "" }
-        return formatPercentageInput(String(percent))
+        return formatOverheadPercentInput(String(percent))
     }
 
     private static func parsedPercent(_ text: String) -> Double? {
@@ -1211,29 +1209,24 @@ struct OrganizationManagerOverheadField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             AppFieldLabelText(
-                text: language.text("Fund manager's full OH (%)", "Förvaltarens fulla OH (%)"),
+                text: language.text("OH taken (%)", "OH som tas ut (%)"),
                 help: language.text(
-                    "The overhead this fund manager takes on salaries. Leave empty when the OH periods in the salary calculator are used.",
-                    "Den overhead som medelsförvaltaren tar på löner. Lämna tomt när OH-perioderna i lönekalkylen används."
+                    "The overhead this fund manager wants to take. Copied into records when this fund manager is chosen.",
+                    "Den overhead som medelsförvaltaren vill ta ut. Kopieras in i en post när den här förvaltaren väljs."
                 )
             )
             CommitFormattingTextField(
                 placeholder: language.text("Not set", "Inte angiven"),
                 text: percentBinding,
-                formatter: formatPercentageInput,
+                formatter: formatOverheadPercentInput,
                 updatesContinuously: false
             )
             .appTextInputChrome()
             .frame(width: 160, alignment: .leading)
-            SettingsEffectNote(hasCalculatorOverheadPeriods
-                ? language.text(
-                    "Affects: nothing right now. This organization's salary calculator has OH periods, and they are used as the fund manager's full OH in applications it manages.",
-                    "Påverkar: inget just nu. Organisationens lönekalkyl har OH-perioder, och de används som förvaltarens fulla OH i ansökningar som den förvaltar."
-                )
-                : language.text(
-                    "Affects: the OH in the salary budget of applications managed by this organization, before the grant provider's OH rule. Used when the salary calculator has no OH periods.",
-                    "Påverkar: OH i lönebudgeten för ansökningar som den här organisationen förvaltar, innan anslagsgivarens OH-regel räknas in. Används när lönekalkylen saknar OH-perioder."
-                ))
+            SettingsEffectNote(language.text(
+                "Affects: new records under Calls and grants. When this fund manager is chosen in a record, the value is copied into it and can be changed there; a later change here never changes existing records. When empty, the OH of this year's period in the salary calculator is copied instead\(hasCalculatorOverheadPeriods ? "" : " (none is filled in)").",
+                "Påverkar: nya poster under Utlysningar och anslag. När den här förvaltaren väljs i en post kopieras värdet in och kan ändras där; en senare ändring här ändrar aldrig befintliga poster. När fältet är tomt kopieras i stället OH för årets period i lönekalkylen\(hasCalculatorOverheadPeriods ? "" : " (ingen är ifylld)")."
+            ))
         }
     }
 
@@ -1241,7 +1234,7 @@ struct OrganizationManagerOverheadField: View {
         Binding(
             get: {
                 guard let percent = store.organization(id: organizationID)?.managerOverheadPercent else { return "" }
-                return formatPercentageInput(String(percent))
+                return formatOverheadPercentInput(String(percent))
             },
             set: { newValue in
                 let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)

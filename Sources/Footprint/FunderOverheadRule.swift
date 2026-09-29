@@ -209,7 +209,8 @@ extension GrantDataStore {
     /// manager are found by id first (the written name only for older rows).
     func overheadPlan(for application: GrantApplication) -> GrantOverheadPlan {
         let managerOrganization = linkedFundManager(of: application).flatMap { organization(id: $0.id) }
-        return GrantOverheadPlan.resolved(funder: linkedFunder(of: application), manager: managerOrganization)
+        // Round 10: the record's own OH numbers count where it has them.
+        return GrantOverheadPlan.resolved(for: application, funder: linkedFunder(of: application), manager: managerOrganization)
     }
 
     /// The organizations with the role fund manager, for the exception rows
@@ -262,4 +263,165 @@ func grantFormattedPercent(_ percent: Double) -> String {
         text = text.replacingOccurrences(of: ".", with: ",")
     }
     return "\(text) %"
+}
+
+// MARK: - Round 10: OH as one number on each side, copied into the record
+//
+// The funder has one number, "Godkänd OH, högst (%)" (100 = full OH, 0 = no
+// OH), and the fund manager one, "OH som tas ut (%)". Both are defaults: they
+// are copied into a record when its funder or fund manager is chosen, can be
+// changed there, and a later change on the organization never changes a
+// record. The difference is the co-funding question.
+
+/// "Förvaltaren samfinansierar": the fund manager's answer when it takes
+/// more OH than the funder accepts.
+enum GrantCofundingDecision: String, Codable, Hashable, CaseIterable {
+    case yes
+    case no
+
+    func title(language: AppLanguage) -> String {
+        switch self {
+        case .yes:
+            return language.text("Yes", "Ja")
+        case .no:
+            return language.text("No", "Nej")
+        }
+    }
+}
+
+extension FunderOverheadRule {
+    /// The rule as one number: the highest OH the funder accepts, in percent.
+    /// The fund manager's full OH is 100, no OH 0; "Högst" without a number
+    /// has no value.
+    var approvedMaxPercent: Double? {
+        switch kind {
+        case .managerFull:
+            return 100
+        case .cap:
+            return capPercent.map { min(100, max(0, $0)) }
+        case .noOverhead:
+            return 0
+        }
+    }
+
+    /// The rule for "Godkänd OH, högst `percent` %": 100 or more is the fund
+    /// manager's full OH, 0 or less no OH, anything between a cap. The note
+    /// "Taket inkluderar lokalkostnad" is kept from `keepingPremisesFrom`.
+    init(approvedMaxPercent percent: Double, keepingPremisesFrom earlier: FunderOverheadRule? = nil) {
+        let premises = earlier?.capIncludesPremises ?? false
+        if percent >= 100 {
+            self.init(kind: .managerFull, capIncludesPremises: premises)
+        } else if percent <= 0 {
+            self.init(kind: .noOverhead, capIncludesPremises: premises)
+        } else {
+            self.init(kind: .cap, capPercent: percent, capIncludesPremises: premises)
+        }
+    }
+}
+
+extension ManagerSalaryCalculator {
+    /// The OH in the salary calculator's period that covers `date`, in
+    /// percent; nil when no filled-in period covers it.
+    func overheadPercent(on date: Date) -> Double? {
+        let day = Calendar.current.startOfDay(for: date)
+        for period in overheadPeriods {
+            guard let value = GrantParsing.numericValue(from: period.value),
+                  let from = DateParsers.isoDay.date(from: period.from),
+                  let to = DateParsers.isoDay.date(from: period.to) else { continue }
+            if min(from, to) <= day, day <= max(from, to) {
+                return value
+            }
+        }
+        return nil
+    }
+}
+
+extension OrganizationRecord {
+    /// "OH som tas ut (%)" as a default for new records: the fund manager's
+    /// own setting, otherwise the salary calculator's OH for `date`.
+    func managerOverheadDefaultPercent(on date: Date = Date()) -> Double? {
+        managerOverheadPercent ?? salaryCalculator?.overheadPercent(on: date)
+    }
+}
+
+/// The two OH numbers for a record, as copied from the organizations.
+struct GrantOverheadDefaults: Equatable {
+    var funderMaxPercent: Double?
+    var managerPercent: Double?
+
+    /// The funder's number for this fund manager (its exception when there
+    /// is one) and the fund manager's number. nil where the organization is
+    /// missing.
+    static func resolved(funder: OrganizationRecord?, manager: OrganizationRecord?, on date: Date = Date()) -> GrantOverheadDefaults {
+        GrantOverheadDefaults(
+            funderMaxPercent: funder?.resolvedOverheadRule(forManagerOrganizationID: manager?.id).approvedMaxPercent,
+            managerPercent: manager?.managerOverheadDefaultPercent(on: date)
+        )
+    }
+}
+
+extension GrantApplication {
+    /// The part of the fund manager's OH the funder does not accept, in
+    /// percentage points; 0 when there is nothing to co-fund or a number is
+    /// missing.
+    var cofundingOverheadGapPercent: Double {
+        guard let manager = managerOverheadPercent, let funder = funderMaxOverheadPercent else { return 0 }
+        return max(0, manager - funder)
+    }
+
+    /// Writes the copied OH numbers into the record.
+    mutating func applyOverheadDefaults(_ defaults: GrantOverheadDefaults) {
+        funderMaxOverheadPercent = defaults.funderMaxPercent
+        managerOverheadPercent = defaults.managerPercent
+    }
+}
+
+extension GrantOverheadPlan {
+    /// The plan for a record: the funder's rule and the fund manager's OH as
+    /// before, replaced by the record's own numbers where it has them.
+    static func resolved(
+        for application: GrantApplication,
+        funder: OrganizationRecord?,
+        manager: OrganizationRecord?
+    ) -> GrantOverheadPlan {
+        var plan = GrantOverheadPlan.resolved(funder: funder, manager: manager)
+        if let funderMax = application.funderMaxOverheadPercent {
+            plan.rule = FunderOverheadRule(approvedMaxPercent: funderMax, keepingPremisesFrom: plan.rule)
+        }
+        if let managerPercent = application.managerOverheadPercent {
+            plan.managerOverheadPeriods = []
+            plan.managerOverheadPercent = managerPercent
+        }
+        return plan
+    }
+}
+
+extension GrantDataStore {
+    /// The fund manager chosen for new records to this funder: the funder's
+    /// "Prioriterad förvaltare", otherwise the default in Settings. Only an
+    /// organization that exists counts.
+    func preferredFundManagerOrganization(forFunderID funderID: String?) -> OrganizationRecord? {
+        let funderPreferred = funderID.flatMap { organization(id: $0) }?.preferredFundManagerID
+        for candidate in [funderPreferred, metadata.defaultFundManagerOrganizationID] {
+            if let id = candidate?.trimmedOrNil, let found = organization(id: id) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    /// The copied OH numbers for a record with this funder and fund manager.
+    func overheadDefaults(forFunderID funderID: String?, managerID: String?) -> GrantOverheadDefaults {
+        GrantOverheadDefaults.resolved(
+            funder: funderID.flatMap { organization(id: $0) },
+            manager: managerID.flatMap { organization(id: $0) }
+        )
+    }
+}
+
+/// OH fields keep two decimals ("21,95 %"), as funders write their caps;
+/// other percent fields in the app keep one.
+func formatOverheadPercentInput(_ raw: String) -> String {
+    let formatted = AppFieldParsers.canonicalDecimal(raw, maximumFractionDigits: 2)
+    return formatted.isEmpty ? formatted : "\(formatted) %"
 }

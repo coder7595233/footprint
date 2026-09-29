@@ -5067,6 +5067,29 @@ final class GrantDataStore: ObservableObject {
         return newID
     }
 
+    /// "Kopiera till nästa år": adds next year's record for the call and
+    /// returns its id. Nil when the record is not found.
+    @discardableResult
+    func copyApplicationToNextYear(id: String) -> String? {
+        guard let source = applications.first(where: { $0.id == id }) else { return nil }
+        let newID = UUID().uuidString
+        let nextRow = (applications.map(\.rowNumber).max() ?? 0) + 1
+        let copy = source.copiedToNextYear(
+            newID: newID,
+            rowNumber: nextRow,
+            status: workflowDefaultSettings.resolvedStatus
+        )
+        performUndoableChange(
+            actionName: language.text("Copy to next year", "Kopiera till nästa år"),
+            successMessage: language.text("Created next year's record.", "Skapade nästa års post."),
+            failureMessage: language.text("Could not copy the record.", "Kunde inte kopiera posten."),
+            scope: .applications
+        ) {
+            applications.insert(copy, at: 0)
+        }
+        return newID
+    }
+
     func deleteApplication(id: String) {
         performUndoableChange(
             actionName: language.text("Archive application", "Arkivera ansökan"),
@@ -12555,6 +12578,24 @@ final class GrantDataStore: ObservableObject {
             scope: .organizations
         ) {
             organizations[index].managerOverheadPercent = clamped
+        }
+    }
+
+    /// Round 10, "Prioriterad förvaltare" on a grant provider: the fund
+    /// manager organization (by id) chosen for new records. nil or "" = the
+    /// default fund manager in Settings.
+    @discardableResult
+    func setOrganizationPreferredFundManager(organizationID: String, managerID: String?) -> Bool {
+        guard let index = organizations.firstIndex(where: { $0.id == organizationID }) else { return false }
+        let stored = managerID?.trimmedOrNil
+        guard organizations[index].preferredFundManagerID != stored else { return false }
+        return performUndoableChange(
+            actionName: language.text("Edit preferred fund manager", "Redigera prioriterad förvaltare"),
+            successMessage: language.text("Saved the preferred fund manager.", "Prioriterad förvaltare sparades."),
+            failureMessage: language.text("Could not save the preferred fund manager.", "Kunde inte spara prioriterad förvaltare."),
+            scope: .organizations
+        ) {
+            organizations[index].preferredFundManagerID = stored
         }
     }
 
@@ -20139,6 +20180,7 @@ final class GrantDataStore: ObservableObject {
         didChange = !migrateNameReferencesToIDsForF13().isEmpty || didChange
         didChange = runRound7OneTimeDataMigrations() || didChange
         didChange = runRound8OneTimeDataMigrations() || didChange
+        didChange = runRound10OneTimeDataMigrations() || didChange
         didChange = normalizeConferenceContributionsForRound1() || didChange
         didChange = clearPlaceholderProjectNames() || didChange
         didChange = ensureManagedPublicationPDFAttachmentsStored() || didChange
@@ -29228,6 +29270,85 @@ extension GrantDataStore {
         refreshOrganizationLookupCaches()
         rebuildOrganizationRowSnapshots()
         appendStartupDiagnostic("migration:funderMaxOverhead cleared=\(cleared)")
+        return true
+    }
+}
+
+// MARK: - Round 10: OH numbers copied into records
+// Lives in this file because organizations and applications have private setters.
+
+extension GrantDataStore {
+    /// Round 10: the one-time data changes, run once per database and then
+    /// recorded in the migration log. Called from `migrateRecordsIfNeeded()`.
+    /// Returns true when anything changed.
+    @discardableResult
+    func runRound10OneTimeDataMigrations() -> Bool {
+        let filledManagers = runRound7MigrationOnce(
+            key: "round10-manager-overhead",
+            details: "Fund managers without \"OH som tas ut\" get this year's OH from their own salary calculator. Nothing else changes."
+        ) {
+            migrateManagerOverheadPercentForRound10()
+        }
+        let records = runRound7MigrationOnce(
+            key: "round10-record-overhead",
+            details: "Unlocked records with the status \"Att söka\" or \"Ej sökt\" get copies of the funder's and the fund manager's OH numbers. Locked records and records already applied for are not changed."
+        ) {
+            migrateRecordOverheadDefaultsForRound10()
+        }
+        return filledManagers || records
+    }
+
+    /// Round 10, one-time (user decision 2026-09-29): a fund manager whose
+    /// "OH som tas ut" is empty gets the OH of its own salary calculator for
+    /// today, when it has one. A value already set is kept. No organization
+    /// is chosen by name. Running it again changes nothing.
+    @discardableResult
+    func migrateManagerOverheadPercentForRound10(on date: Date = Date()) -> Bool {
+        var updated = organizations
+        var filled = 0
+        for index in updated.indices where updated[index].roles.contains(.fundManager) {
+            guard updated[index].managerOverheadPercent == nil,
+                  let percent = updated[index].salaryCalculator?.overheadPercent(on: date) else { continue }
+            updated[index].managerOverheadPercent = min(100, max(0, percent))
+            filled += 1
+        }
+        // A migration must never lose a record.
+        guard filled > 0, updated.count == organizations.count else { return false }
+        organizations = updated
+        managers = derivedManagers(from: organizations)
+        refreshOrganizationLookupCaches()
+        rebuildOrganizationRowSnapshots()
+        appendStartupDiagnostic("migration:managerOverheadPercent filled=\(filled)")
+        return true
+    }
+
+    /// Round 10, one-time (user decision 2026-09-29): only records that are
+    /// unlocked and not yet applied for ("Att söka", "Ej sökt") get copies of
+    /// the funder's and the fund manager's OH numbers, as a new record would.
+    /// Locked records and records already applied for ("Väntar svar",
+    /// decided) are left exactly as they are; their new fields stay empty.
+    /// Running it again changes nothing.
+    @discardableResult
+    func migrateRecordOverheadDefaultsForRound10() -> Bool {
+        let notAppliedStatuses: Set<String> = ["Att söka", "Ej sökt"]
+        var updated = applications
+        var filled = 0
+        for index in updated.indices {
+            let record = updated[index]
+            guard !record.isEditingLocked,
+                  let status = record.result?.trimmedOrNil, notAppliedStatuses.contains(status),
+                  record.funderMaxOverheadPercent == nil,
+                  record.managerOverheadPercent == nil else { continue }
+            let manager = linkedFundManager(of: record).flatMap { organization(id: $0.id) }
+            let defaults = GrantOverheadDefaults.resolved(funder: linkedFunder(of: record), manager: manager)
+            guard defaults.funderMaxPercent != nil || defaults.managerPercent != nil else { continue }
+            updated[index].applyOverheadDefaults(defaults)
+            filled += 1
+        }
+        // A migration must never lose a record.
+        guard filled > 0, updated.count == applications.count else { return false }
+        applications = updated
+        appendStartupDiagnostic("migration:recordOverheadDefaults filled=\(filled)")
         return true
     }
 }
