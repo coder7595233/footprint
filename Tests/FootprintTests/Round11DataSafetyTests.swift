@@ -255,12 +255,15 @@ final class Round11DataSafetyTests: XCTestCase {
 
     @MainActor
     func testRowWithoutIDIsLinkedByNameOnlyWhenTheNameIsUnique() {
-        let first = OrganizationRecord(id: "org-a", nameSv: "Fonden", nameEn: "The Fund", roles: [.grantProvider])
-        let second = OrganizationRecord(id: "org-b", nameSv: "Fonden", nameEn: "Another Fund", roles: [.grantProvider])
+        // Same English name, different Swedish names (organizations with the
+        // same Swedish name are already combined into one by the app).
+        let first = OrganizationRecord(id: "org-a", nameSv: "Fonden", nameEn: "Shared Fund", roles: [.grantProvider])
+        let second = OrganizationRecord(id: "org-b", nameSv: "Stiftelsen Fonden", nameEn: "Shared Fund", roles: [.grantProvider])
         let unique = OrganizationRecord(id: "org-c", nameSv: "Stiftelsen Exempel", nameEn: "Example Foundation", roles: [.grantProvider])
         let store = makeStore(organizations: [first, second, unique])
+        XCTAssertEqual(store.organizations.count, 3)
 
-        let shared = GrantApplication(id: "a1", rowNumber: 1, organization: "Fonden", grantName: "Bidrag")
+        let shared = GrantApplication(id: "a1", rowNumber: 1, organization: "Shared Fund", grantName: "Bidrag")
         XCTAssertNil(store.linkedFunder(of: shared), "two organizations share the name, so none is picked")
         let named = GrantApplication(id: "a2", rowNumber: 2, organization: "stiftelsen exempel", grantName: "Bidrag")
         XCTAssertEqual(store.linkedFunder(of: named)?.id, "org-c", "a unique name still links")
