@@ -92,8 +92,11 @@ final class Round12ExportsAndSupervisionTests: XCTestCase {
         let paper = PublicationRecord(id: "p1", projectID: "proj-1", title: "Invented article", status: PublicationStatus.accepted.rawValue)
         let store = GrantDataStore(projects: [project], publicationRecords: [paper])
 
-        var published = paper
+        // Edit the record as the store holds it (as the editor does).
+        guard var published = store.publicationRecords.first else { return XCTFail("the publication is loaded") }
         published.status = PublicationStatus.published.rawValue
+        published.statusDate = "2026-09-01"
+        published.statusTimeline.append(PublicationStatusEntry(status: PublicationStatus.published.rawValue, date: "2026-09-01"))
         XCTAssertEqual(store.projects.map(\.id), ["proj-1"])
         XCTAssertEqual(store.projects.first?.projectTasks.map(\.reminder), [.publicationPublished])
         XCTAssertEqual(store.publicationRecords.first?.projectID, "proj-1", "linked before saving")
