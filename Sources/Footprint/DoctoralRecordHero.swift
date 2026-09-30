@@ -674,7 +674,7 @@ struct DoctoralRecordHeroView: View {
             }
 
             // Supervision per semester: solid = confirmed in Retendo, dashed =
-            // not confirmed; a red left edge once the semester has ended unconfirmed.
+            // not confirmed; a red left edge whenever it is not confirmed (round 12).
             if let base = geometry.supervisionBase {
                 let purple = StatisticsEditorialStyle.palettePurple
                 let maxHours = data.supervisionBlocks.map(\.hours).max() ?? 1

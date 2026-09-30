@@ -7831,8 +7831,9 @@ final class StabilityTests: XCTestCase {
         let year2026 = try XCTUnwrap(rows.first { $0.year == 2026 })
         XCTAssertEqual(year2026.completedCourseCredits, 0)
         XCTAssertEqual(year2026.plannedCourseCredits, 3)
-        XCTAssertEqual(year2026.completedSupervisionHours, 10)
-        XCTAssertEqual(year2026.plannedSupervisionHours, 10)
+        // Round 12: in proportion to days; 1–27 July is 27 of 184 autumn days.
+        XCTAssertEqual(year2026.completedSupervisionHours, 10 + 10.0 * 27 / 184, accuracy: 0.001)
+        XCTAssertEqual(year2026.plannedSupervisionHours, 10.0 * 157 / 184, accuracy: 0.001)
 
         let year2027 = try XCTUnwrap(rows.first { $0.year == 2027 })
         XCTAssertEqual(year2027.completedSupervisionHours, 0)

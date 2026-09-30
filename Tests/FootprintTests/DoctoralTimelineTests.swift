@@ -140,11 +140,15 @@ final class DoctoralTimelineTests: XCTestCase {
         ]
         let blocks = doctoralSupervisionSemesterBlocks(periods: periods, referenceDate: day("2026-09-29"))
         XCTAssertEqual(blocks.map(\.id), ["2025-1", "2025-2", "2026-1", "2026-2"])
-        XCTAssertEqual(blocks.map(\.hours), [5, 5, 20, 20])
-        // Ended and not confirmed: needs attention.
+        // Round 12: in proportion to days; a whole half-year gives the full hours.
+        XCTAssertEqual(blocks[0].hours, 5 * 150 / 181, accuracy: 0.001, "1 Feb–30 Jun is 150 of 181 days")
+        XCTAssertEqual(blocks[1].hours, 5, accuracy: 0.001)
+        XCTAssertEqual(blocks[2].hours, 20 * 172 / 181, accuracy: 0.001, "10 Jan–30 Jun is 172 of 181 days")
+        XCTAssertEqual(blocks[3].hours, 20, accuracy: 0.001)
+        // Not confirmed: needs attention.
         XCTAssertTrue(blocks[0].needsConfirmation)
         XCTAssertTrue(blocks[1].needsConfirmation)
-        // Confirmed: fine. The running semester is never flagged.
+        // Confirmed: fine, also the running semester.
         XCTAssertTrue(blocks[2].isFullyConfirmed)
         XCTAssertFalse(blocks[2].needsConfirmation)
         XCTAssertFalse(blocks[3].needsConfirmation)
@@ -157,9 +161,24 @@ final class DoctoralTimelineTests: XCTestCase {
         ]
         let blocks = doctoralSupervisionSemesterBlocks(periods: periods, referenceDate: day("2026-09-29"))
         XCTAssertEqual(blocks.count, 1)
-        XCTAssertEqual(blocks[0].hours, 14)
-        XCTAssertEqual(blocks[0].confirmedHours, 10)
+        XCTAssertEqual(blocks[0].hours, 10 + 4.0 * 122 / 181, accuracy: 0.001, "1 Mar–30 Jun is 122 of 181 days")
+        XCTAssertEqual(blocks[0].confirmedHours, 10, accuracy: 0.001)
         XCTAssertTrue(blocks[0].needsConfirmation)
+    }
+
+    /// Round 12 (user decision 2026-09-30): not confirmed in Retendo is red
+    /// also while the semester runs and before it has started, and a period
+    /// without hours still shows.
+    func testUnconfirmedRunningAndFutureSemestersAreFlagged() {
+        let periods = [
+            DoctoralSupervisionPeriod(from: "2026-07-01", to: "2027-06-30", hoursPerSemester: "", confirmedInRetendo: false),
+        ]
+        let blocks = doctoralSupervisionSemesterBlocks(periods: periods, referenceDate: day("2026-09-29"))
+        XCTAssertEqual(blocks.map(\.id), ["2026-2", "2027-1"])
+        XCTAssertTrue(blocks.allSatisfy(\.needsConfirmation))
+        XCTAssertFalse(blocks[0].hasEnded)
+        XCTAssertTrue(periods[0].needsRetendoConfirmation)
+        XCTAssertFalse(DoctoralSupervisionPeriod(from: "2026-07-01", to: "2027-06-30", hoursPerSemester: "10", confirmedInRetendo: true).needsRetendoConfirmation)
     }
 
     // MARK: Paper lines

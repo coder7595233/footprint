@@ -10785,6 +10785,9 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func statisticsWorkbookSheets() -> [WorkbookExportSheet] {
+        // Round 12: the user's own grants as main applicant (as the default
+        // elsewhere), not every grant in the app.
+        let applications = self.applications.filter { isCurrentUserFirstApplicant($0) }
         let grantYears = Array(Set(applications.map(\.statsYear))).sorted()
         let grantRows = [[
             language.text("Year", "År"),
@@ -10805,7 +10808,14 @@ final class GrantDataStore: ObservableObject {
             ]
         }
 
-        let publicationYears = Array(Set(publicationRecords.compactMap { $0.year.nonEmpty })).sorted()
+        // Round 12: the user's own publications, and the citations each year
+        // to all of them (before, only citations to papers from the same year
+        // counted, which is almost none).
+        let ownPublications = currentUserPublications()
+        let ownCitationEntries = ownPublications.flatMap(\.citationYears)
+        let publicationYears = Array(Set(
+            ownPublications.compactMap { $0.year.nonEmpty } + ownCitationEntries.compactMap { $0.year.nonEmpty }
+        )).sorted()
         let publicationRows = [[
             language.text("Year", "År"),
             language.text("Original", "Original"),
@@ -10815,10 +10825,8 @@ final class GrantDataStore: ObservableObject {
             language.text("Self-citations", "Självciteringar"),
             language.text("Total citations", "Citeringar totalt"),
         ]] + publicationYears.map { year in
-            let publicationsForYear = publicationRecords.filter { $0.year == year && $0.isPublished && $0.isPeerReviewed }
-            let citationEntriesForYear = publicationsForYear
-                .flatMap(\.citationYears)
-                .filter { $0.year == year }
+            let publicationsForYear = ownPublications.filter { $0.year == year && $0.isPublished && $0.isPeerReviewed }
+            let citationEntriesForYear = ownCitationEntries.filter { $0.year == year }
             let externalCitations = citationEntriesForYear.map(\.countValue).reduce(0, +)
             let selfCitations = citationEntriesForYear.map(\.selfCitationCountValue).reduce(0, +)
             return [

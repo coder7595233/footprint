@@ -451,12 +451,9 @@ extension GrantDataStore {
                 .joined(separator: " - ")
                 .nonEmpty ?? annualReportText(language, english: "Doctoral candidate", swedish: "Doktorand")
             for period in candidate.supervisionPeriods where !period.isEmpty {
-                guard let hoursPerTerm = GrantParsing.numericValue(from: period.hoursPerSemester), hoursPerTerm > 0 else { continue }
-                let matchingTermCount = annualReportTeachingTerms(from: period.from, to: period.to)
-                    .filter { $0.year == year }
-                    .count
-                guard matchingTermCount > 0 else { continue }
-                let hours = Double(matchingTermCount) * hoursPerTerm
+                // Round 12: hours in proportion to days (one rule everywhere).
+                let hours = period.supervisionHours(inYear: year, untilReferenceDate: false)
+                guard hours > 0 else { continue }
                 sortedRows.append((
                     sortDate: period.to.nonEmpty ?? period.from.nonEmpty ?? "",
                     row: [
@@ -824,16 +821,10 @@ extension GrantDataStore {
     }
 
     private func annualReportDoctoralCandidateHours(_ candidate: DoctoralCandidateRecord, year: Int) -> Double {
-        candidate.supervisionPeriods.reduce(0) { partial, period in
-            guard !period.isEmpty,
-                  let hoursPerTerm = GrantParsing.numericValue(from: period.hoursPerSemester),
-                  hoursPerTerm > 0 else {
-                return partial
-            }
-            let terms = annualReportTeachingTerms(from: period.from, to: period.to)
-            let matchingTermCount = terms.filter { $0.year == year }.count
-            return partial + (Double(matchingTermCount) * hoursPerTerm)
-        }
+        // Round 12: hours in proportion to days (one rule everywhere).
+        candidate.supervisionPeriods
+            .filter { !$0.isEmpty }
+            .reduce(0) { $0 + $1.supervisionHours(inYear: year, untilReferenceDate: false) }
     }
 
     private func annualReportTeachingTerms(from rawFrom: String, to rawTo: String) -> Set<AnnualReportTeachingTerm> {
