@@ -618,6 +618,10 @@ struct PublicationExportOptions: Codable, Hashable {
     var underlineDoctoralMainSupervisor: Bool = false
     var underlinedNames: [String] = []
     var sortOrder: PublicationExportSortOrder = .newestFirst
+    /// Round 12: the language of the export the citations are written for
+    /// (status words, "citeringar"). Set while exporting, never saved; nil
+    /// means the app's language.
+    var exportLanguage: AppLanguage? = nil
 
     enum CodingKeys: String, CodingKey {
         case authorCountBeforeEtAl
@@ -1227,6 +1231,21 @@ struct CVConferenceContribution: Codable, Hashable, Identifiable {
 
     var isAcceptedOrPresented: Bool {
         submissionOutcome == .granted || status == .presented
+    }
+
+    /// Round 12 (user decision 2026-09-30): the CV and the annual report list
+    /// only contributions that are submitted (awaiting a decision) or
+    /// accepted/presented. Planned, not yet submitted and rejected ones are
+    /// left out.
+    var isCVReportable: Bool {
+        switch effectiveStatus {
+        case .accepted, .presented:
+            return true
+        case .planned:
+            return submissionAppliedOn.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        case .rejected:
+            return false
+        }
     }
 
     mutating func setLocalizedComments(_ value: String, language: AppLanguage) {

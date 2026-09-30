@@ -2132,19 +2132,19 @@ struct PublicationJournal: Codable, Hashable, Identifiable {
     func metric(for kind: JournalRankingKind, publicationYear: Int?) -> PublicationMetricValue? {
         let relevantRows = rankingRows.filter { $0.kind == kind }
         guard !relevantRows.isEmpty else { return nil }
-        let chosenMetric = relevantRows.compactMap { row -> PublicationMetricValue? in
+        let metrics = relevantRows.compactMap { row -> PublicationMetricValue? in
             metric(in: row, publicationYear: publicationYear)
-        }.first
-        return chosenMetric
+        }
+        // Round 12: a value for the exact year wins over another row's
+        // latest-year fallback.
+        return metrics.first { !$0.uncertain } ?? metrics.first
     }
 
     func preferredMetric(for kinds: [JournalRankingKind], publicationYear: Int?) -> PublicationMetricValue? {
-        for kind in kinds {
-            if let metric = metric(for: kind, publicationYear: publicationYear) {
-                return metric
-            }
-        }
-        return nil
+        // Round 12: the exact year in any of the kinds wins over a fallback
+        // to the latest year in the first kind.
+        let metrics = kinds.compactMap { metric(for: $0, publicationYear: publicationYear) }
+        return metrics.first { !$0.uncertain } ?? metrics.first
     }
 
     private func latestMetric(for preferredKinds: [JournalRankingKind]) -> PublicationMetricValue? {

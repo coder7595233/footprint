@@ -708,34 +708,93 @@ struct DoctoralSupervisionPeriod: Codable, Hashable, Identifiable {
     }
 }
 
-/// Round 7 (user decision): the hours on a supervision period are hours per
-/// term. The hours so far are the hours per term times the terms supervised,
-/// counted in proportion to the months from the period's start to its end
-/// date (or today, when the period is open or ends later).
-extension DoctoralSupervisionPeriod {
-    /// Average days per month (365.25 / 12), used to turn days into months.
-    static let averageDaysPerMonth = 365.25 / 12
+/// One half-year (VT = Jan–Jun, HT = Jul–Dec) that a supervision period
+/// covers, and how large a share of it (by days).
+struct DoctoralSupervisionTermShare: Equatable {
+    let year: Int
+    /// 1 = spring (Jan–Jun), 2 = autumn (Jul–Dec).
+    let half: Int
+    /// Share of the half-year's days the period covers (0...1).
+    let fraction: Double
+    /// Share of the half-year's days the period covers up to and including
+    /// the reference date (0...fraction).
+    let fractionUntilReference: Double
+    /// Last day of the half-year.
+    let termEnd: Date
+}
 
-    /// Terms supervised: months / 6, rounded to one decimal. Months are the
-    /// days from `from` to `to` (both days included) divided by 365.25 / 12.
-    /// An empty `to`, or one later than the reference date, counts to the
-    /// reference date. Zero when `from` is missing or later than the reference date.
-    static func accruedTerms(from rawFrom: String, to rawTo: String, referenceDate: Date) -> Double {
+/// Round 7 (user decision): the hours on a supervision period are hours per
+/// term. Round 12 (user decision 2026-09-30): the hours are counted in
+/// proportion to days, per half-year: a whole VT or HT gives the full hours
+/// per term, half of its days half the hours. Every view and export uses
+/// this one rule.
+extension DoctoralSupervisionPeriod {
+    /// The half-years a period covers, from `from` to `to` (both days
+    /// included). An empty `to` counts to the reference date. Empty when
+    /// `from` is missing or later than the end.
+    static func termShares(from rawFrom: String, to rawTo: String, referenceDate: Date) -> [DoctoralSupervisionTermShare] {
         let formatter = DateParsers.isoDay
-        guard let start = rawFrom.trimmedOrNil.flatMap({ formatter.date(from: $0) }) else { return 0 }
+        guard let rawStart = rawFrom.trimmedOrNil.flatMap({ formatter.date(from: $0) }) else { return [] }
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = formatter.timeZone ?? TimeZone.current
         let reference = calendar.startOfDay(for: referenceDate)
-        var end = rawTo.trimmedOrNil.flatMap({ formatter.date(from: $0) }) ?? reference
-        if end > reference {
-            end = reference
+        let start = calendar.startOfDay(for: rawStart)
+        let end = calendar.startOfDay(for: rawTo.trimmedOrNil.flatMap({ formatter.date(from: $0) }) ?? reference)
+        guard end >= start else { return [] }
+        func dayCount(_ first: Date, _ last: Date) -> Int {
+            (calendar.dateComponents([.day], from: first, to: last).day ?? 0) + 1
         }
-        let startDay = calendar.startOfDay(for: start)
-        let endDay = calendar.startOfDay(for: end)
-        guard endDay >= startDay else { return 0 }
-        let days = (calendar.dateComponents([.day], from: startDay, to: endDay).day ?? 0) + 1
-        let months = Double(days) / averageDaysPerMonth
-        return (months / 6 * 10).rounded() / 10
+        var year = calendar.component(.year, from: start)
+        var half = calendar.component(.month, from: start) <= 6 ? 1 : 2
+        var shares: [DoctoralSupervisionTermShare] = []
+        while shares.count < 400 {
+            guard let termStart = calendar.date(from: DateComponents(year: year, month: half == 1 ? 1 : 7, day: 1)),
+                  let termEnd = calendar.date(from: DateComponents(year: year, month: half == 1 ? 6 : 12, day: half == 1 ? 30 : 31)),
+                  termStart <= end else { break }
+            let first = max(start, termStart)
+            let last = min(end, termEnd)
+            let termDays = Double(dayCount(termStart, termEnd))
+            let coveredUntilReference = min(last, reference) < first ? 0 : Double(dayCount(first, min(last, reference)))
+            shares.append(DoctoralSupervisionTermShare(
+                year: year,
+                half: half,
+                fraction: Double(dayCount(first, last)) / termDays,
+                fractionUntilReference: coveredUntilReference / termDays,
+                termEnd: termEnd
+            ))
+            if half == 1 {
+                half = 2
+            } else {
+                half = 1
+                year += 1
+            }
+        }
+        return shares
+    }
+
+    /// Terms supervised so far: the shares of each half-year up to the
+    /// reference date, rounded to one decimal. Zero when `from` is missing or
+    /// later than the reference date.
+    static func accruedTerms(from rawFrom: String, to rawTo: String, referenceDate: Date) -> Double {
+        let terms = termShares(from: rawFrom, to: rawTo, referenceDate: referenceDate)
+            .reduce(0) { $0 + $1.fractionUntilReference }
+        return (terms * 10).rounded() / 10
+    }
+
+    /// Hours for this period by the one rule, optionally only in one
+    /// calendar year and/or only up to the reference date. Zero without
+    /// hours per term.
+    func supervisionHours(inYear year: Int? = nil, untilReferenceDate: Bool, referenceDate: Date = Date()) -> Double {
+        guard let hoursPerTerm = hoursPerTermValue else { return 0 }
+        return Self.termShares(from: from, to: to, referenceDate: referenceDate)
+            .filter { year == nil || $0.year == year }
+            .reduce(0) { $0 + (untilReferenceDate ? $1.fractionUntilReference : $1.fraction) * hoursPerTerm }
+    }
+
+    /// Round 12 (user decision 2026-09-30): a period that is not confirmed in
+    /// Retendo is marked red, whether it has ended, is running or lies ahead.
+    var needsRetendoConfirmation: Bool {
+        !isEmpty && !confirmedInRetendo
     }
 
     /// The hours per term as a number, or nil when none (or not a positive number) is entered.
@@ -747,8 +806,8 @@ extension DoctoralSupervisionPeriod {
     /// Hours so far for this period, rounded to whole hours. Nil when no hours
     /// per term are entered; zero when the start date is missing or in the future.
     func accruedSupervisionHours(referenceDate: Date = Date()) -> Double? {
-        guard let hoursPerTerm = hoursPerTermValue else { return nil }
-        return (hoursPerTerm * Self.accruedTerms(from: from, to: to, referenceDate: referenceDate)).rounded()
+        guard hoursPerTermValue != nil else { return nil }
+        return supervisionHours(untilReferenceDate: true, referenceDate: referenceDate).rounded()
     }
 
     /// True when the count for this period stops at the reference date

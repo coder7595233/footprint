@@ -95,27 +95,15 @@ func doctoralStatisticsYearRows(
         }
     }
 
+    // Round 12: hours in proportion to days (the one rule, see
+    // `DoctoralSupervisionPeriod.termShares`); days up to today are
+    // completed, the rest planned.
     for period in candidate.supervisionPeriods where !period.isEmpty {
-        guard let startDate = period.from.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) else { continue }
-        let endDate = period.to.nonEmpty.flatMap(DateParsers.isoDay.date(from:))
-            ?? Calendar.current.startOfDay(for: Date())
-        let hoursPerSemester = GrantParsing.numericValue(from: period.hoursPerSemester) ?? 0
-        guard hoursPerSemester > 0 else { continue }
-        let semesters = doctoralStatisticsSemesters(from: startDate, to: endDate)
-        let today = Calendar.current.startOfDay(for: referenceDate)
-        for semester in semesters {
-            ensureYear(semester.year)
-            let endComponents = DateComponents(
-                year: semester.year,
-                month: semester.half == 1 ? 6 : 12,
-                day: semester.half == 1 ? 30 : 31
-            )
-            let semesterEnd = Calendar.current.date(from: endComponents) ?? today
-            if semesterEnd < today {
-                rows[semester.year]?.completedSupervisionHours += hoursPerSemester
-            } else {
-                rows[semester.year]?.plannedSupervisionHours += hoursPerSemester
-            }
+        guard let hoursPerSemester = period.hoursPerTermValue else { continue }
+        for share in DoctoralSupervisionPeriod.termShares(from: period.from, to: period.to, referenceDate: referenceDate) {
+            ensureYear(share.year)
+            rows[share.year]?.completedSupervisionHours += share.fractionUntilReference * hoursPerSemester
+            rows[share.year]?.plannedSupervisionHours += (share.fraction - share.fractionUntilReference) * hoursPerSemester
         }
     }
 
@@ -134,9 +122,10 @@ func doctoralStatisticsYearRows(
 }
 
 /// One half-year of supervision on the doctoral timeline: the hours of every
-/// supervision period that covers it, and how many of them are confirmed in
-/// Retendo. A semester that has ended without full confirmation needs
-/// attention (red mark, as in the teaching list).
+/// supervision period that covers it (in proportion to days), and how many of
+/// them are confirmed in Retendo. Round 12 (user decision 2026-09-30): a
+/// semester with any period not confirmed needs attention (red mark),
+/// whether it has ended, is running or lies ahead.
 struct DoctoralSupervisionSemesterBlock: Identifiable, Equatable {
     let year: Int
     /// 1 = spring (Jan–Jun), 2 = autumn (Jul–Dec).
@@ -144,10 +133,11 @@ struct DoctoralSupervisionSemesterBlock: Identifiable, Equatable {
     var hours: Double = 0
     var confirmedHours: Double = 0
     var hasEnded: Bool = false
+    var hasUnconfirmedPeriod: Bool = false
 
     var id: String { "\(year)-\(half)" }
-    var isFullyConfirmed: Bool { hours > 0 && confirmedHours >= hours }
-    var needsConfirmation: Bool { hasEnded && !isFullyConfirmed }
+    var isFullyConfirmed: Bool { !hasUnconfirmedPeriod && hours > 0 }
+    var needsConfirmation: Bool { hasUnconfirmedPeriod }
     /// Start of the semester as a fractional year (2025.0 or 2025.5).
     var startFraction: Double { Double(year) + (half == 1 ? 0 : 0.5) }
 }
@@ -159,23 +149,19 @@ func doctoralSupervisionSemesterBlocks(
     let today = Calendar.current.startOfDay(for: referenceDate)
     var blocks: [DoctoralStatisticsSemester: DoctoralSupervisionSemesterBlock] = [:]
     for period in periods where !period.isEmpty {
-        guard let startDate = period.from.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) else { continue }
-        let endDate = period.to.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) ?? today
-        let hoursPerSemester = GrantParsing.numericValue(from: period.hoursPerSemester) ?? 0
-        guard hoursPerSemester > 0 else { continue }
-        for semester in doctoralStatisticsSemesters(from: startDate, to: endDate) {
-            var block = blocks[semester] ?? DoctoralSupervisionSemesterBlock(year: semester.year, half: semester.half)
-            block.hours += hoursPerSemester
+        // A period without hours still shows (and turns red if unconfirmed).
+        let hoursPerSemester = period.hoursPerTermValue ?? 0
+        for share in DoctoralSupervisionPeriod.termShares(from: period.from, to: period.to, referenceDate: referenceDate) {
+            let semester = DoctoralStatisticsSemester(year: share.year, half: share.half)
+            var block = blocks[semester] ?? DoctoralSupervisionSemesterBlock(year: share.year, half: share.half)
+            let hours = share.fraction * hoursPerSemester
+            block.hours += hours
             if period.confirmedInRetendo {
-                block.confirmedHours += hoursPerSemester
+                block.confirmedHours += hours
+            } else {
+                block.hasUnconfirmedPeriod = true
             }
-            let endComponents = DateComponents(
-                year: semester.year,
-                month: semester.half == 1 ? 6 : 12,
-                day: semester.half == 1 ? 30 : 31
-            )
-            let semesterEnd = Calendar.current.date(from: endComponents) ?? today
-            block.hasEnded = semesterEnd < today
+            block.hasEnded = share.termEnd < today
             blocks[semester] = block
         }
     }

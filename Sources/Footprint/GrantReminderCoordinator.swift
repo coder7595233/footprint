@@ -77,7 +77,9 @@ final class GrantReminderCoordinator: NSObject, @unchecked Sendable {
         }
 
         let oldScheduledIDs = Set(UserDefaults.standard.stringArray(forKey: scheduledDefaultsKey) ?? [])
-        let pendingRemovalIDs = Array(oldScheduledIDs.union(futurePlans.map(\.id)).union(overduePlans.map(\.id)))
+        // Round 12: an immediate reminder already handed over is never
+        // removed again (two quick refreshes lost it).
+        let pendingRemovalIDs = Array(oldScheduledIDs.union(futurePlans.map(\.id)))
         center.removePendingNotificationRequests(withIdentifiers: pendingRemovalIDs)
 
         for plan in futurePlans {
@@ -85,13 +87,20 @@ final class GrantReminderCoordinator: NSObject, @unchecked Sendable {
         }
 
         var sentIDs = Set(UserDefaults.standard.stringArray(forKey: sentDefaultsKey) ?? [])
+        // Round 12: a reminder handed to the system earlier whose time has now
+        // passed has been delivered; it is not sent a second time as overdue.
+        sentIDs.formUnion(plans.filter { oldScheduledIDs.contains($0.id) && $0.fireDate <= now.addingTimeInterval(60) }.map(\.id))
         for plan in overduePlans where !sentIDs.contains(plan.id) {
             scheduleImmediateNotification(for: plan)
             sentIDs.insert(plan.id)
         }
 
-        let activePlanIDs = Set(plans.map(\.id))
-        sentIDs = sentIDs.intersection(activePlanIDs)
+        // Forget sent reminders whose plan is gone, but not while the grants
+        // are not loaded yet (they would all be sent again later).
+        if !applications.isEmpty {
+            let activePlanIDs = Set(plans.map(\.id))
+            sentIDs = sentIDs.intersection(activePlanIDs)
+        }
 
         UserDefaults.standard.set(Array(Set(futurePlans.map(\.id))), forKey: scheduledDefaultsKey)
         UserDefaults.standard.set(Array(sentIDs), forKey: sentDefaultsKey)

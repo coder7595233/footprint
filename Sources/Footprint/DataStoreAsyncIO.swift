@@ -750,6 +750,7 @@ extension GrantDataStore {
     func exportAnnualReportDocumentAsync(
         year: Int,
         exportLanguage: AppLanguage,
+        includeCoApplicantGrants: Bool = false,
         layout: ExportDocumentLayoutOptions,
         to destinationURL: URL,
         openOnSuccess: Bool = true
@@ -757,6 +758,7 @@ extension GrantDataStore {
         let payload = annualReportPreviewDocument(
             year: year,
             exportLanguage: exportLanguage,
+            includeCoApplicantGrants: includeCoApplicantGrants,
             layout: layout
         )
 

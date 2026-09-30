@@ -1363,23 +1363,13 @@ struct StatisticsView: View {
         }
 
         for candidate in store.doctoralCandidates {
+            // Round 12: hours in proportion to days (one rule everywhere).
             for period in candidate.supervisionPeriods where !period.isEmpty {
-                guard let startDate = period.from.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) else { continue }
-                let endDate = period.to.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) ?? Calendar.current.startOfDay(for: Date())
-                let hoursPerTerm = GrantParsing.numericValue(from: period.hoursPerSemester) ?? 0
-                guard hoursPerTerm > 0 else { continue }
-
-                var terms = Set<String>()
-                collectStatisticsTeachingTerms(from: startDate, to: endDate, into: &terms)
-                let termsByYear = Dictionary(grouping: terms) { term in
-                    Int(String(term.split(separator: "-").first ?? "")) ?? 0
-                }
-
-                for (year, yearTerms) in termsByYear where year > 0 {
-                    let addedHours = Double(yearTerms.count) * hoursPerTerm
-                    var existing = result[year] ?? TeachingYearHours()
-                    existing.doctoral += addedHours
-                    result[year] = existing
+                guard let hoursPerTerm = period.hoursPerTermValue else { continue }
+                for share in DoctoralSupervisionPeriod.termShares(from: period.from, to: period.to, referenceDate: Date()) {
+                    var existing = result[share.year] ?? TeachingYearHours()
+                    existing.doctoral += share.fraction * hoursPerTerm
+                    result[share.year] = existing
                 }
             }
         }
@@ -1619,18 +1609,12 @@ struct StatisticsView: View {
         let doctoralCandidateItems = store.doctoralCandidates.compactMap { candidate -> StatisticsDrilldownItem? in
             guard selection.rowKey == "doctoral" || selection.rowKey == "total" else { return nil }
 
+            // Round 12: hours in proportion to days (one rule everywhere).
             let hours = candidate.supervisionPeriods.reduce(0.0) { partial, period in
-                guard let startDate = period.from.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) else { return partial }
-                let endDate = period.to.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) ?? Calendar.current.startOfDay(for: Date())
-                let hoursPerTerm = GrantParsing.numericValue(from: period.hoursPerSemester) ?? 0
-                guard hoursPerTerm > 0 else { return partial }
-                var terms = Set<String>()
-                collectStatisticsTeachingTerms(from: startDate, to: endDate, into: &terms)
-                let count = terms.filter { term in
-                    guard let year = statisticsTeachingYear(from: term) else { return false }
-                    return selectedYear.map { year == $0 } ?? visibleTeachingYearNumbers.contains(year)
-                }.count
-                return partial + (Double(count) * hoursPerTerm)
+                guard let hoursPerTerm = period.hoursPerTermValue else { return partial }
+                let shares = DoctoralSupervisionPeriod.termShares(from: period.from, to: period.to, referenceDate: Date())
+                    .filter { share in selectedYear.map { share.year == $0 } ?? visibleTeachingYearNumbers.contains(share.year) }
+                return partial + shares.reduce(0) { $0 + $1.fraction * hoursPerTerm }
             }
             guard hours > 0 else { return nil }
 

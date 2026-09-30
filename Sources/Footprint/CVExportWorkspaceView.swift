@@ -380,6 +380,9 @@ struct CVExportWorkspaceView: View {
     @State private var cvConfiguration = CVCustomExportConfiguration()
     @State private var annualReportYear = Calendar.current.component(.year, from: Date())
     @State private var annualReportLanguage: AppLanguage = .swedish
+    /// Round 12: grants where the user is only co-applicant are left out
+    /// unless chosen here.
+    @State private var annualReportIncludeCoApplicantGrants = false
     @State private var teachingMeritsConfiguration = TeachingMeritsWorkspaceConfiguration()
     @State private var publicationTemplate: PublicationWorkspaceTemplate = .own
     @State private var publicationConfiguration = PublicationCustomExportConfiguration()
@@ -473,6 +476,7 @@ struct CVExportWorkspaceView: View {
                 store.annualReportPreviewDocument(
                     year: annualReportYear,
                     exportLanguage: annualReportLanguage,
+                    includeCoApplicantGrants: annualReportIncludeCoApplicantGrants,
                     layout: layoutOptions
                 )
             )
@@ -746,6 +750,16 @@ struct CVExportWorkspaceView: View {
                             options: [
                                 (language.text("English", "Engelska"), .english),
                                 (language.text("Swedish", "Svenska"), .swedish),
+                            ],
+                            labelWidth: documentSetupLabelWidth
+                        )
+
+                        segmentedControl(
+                            title: language.text("Grants", "Anslag"),
+                            selection: $annualReportIncludeCoApplicantGrants,
+                            options: [
+                                (language.text("Mine", "Mina"), false),
+                                (language.text("Mine + co-applicant", "Mina + medsökande"), true),
                             ],
                             labelWidth: documentSetupLabelWidth
                         )
@@ -1524,13 +1538,14 @@ struct CVExportWorkspaceView: View {
         let grants = store.applications.filter { application in
             annualReportPreviewYearValue(application.statsYear) == year &&
                 annualReportPreviewHasReportableGrantStatus(application) &&
-                store.isCurrentUserAmong(ids: application.coApplicantAuthorIDs, names: application.coApplicants)
+                store.isCurrentUserAmong(ids: application.coApplicantAuthorIDs, names: application.coApplicants) &&
+                (annualReportIncludeCoApplicantGrants || store.isCurrentUserFirstApplicant(application))
         }
         let publications = store.publications.filter { publication in
             store.isCurrentUserAmong(ids: publication.authorIDs, names: publication.authorNames)
         }
         let conferences = store.cvConferenceContributions.filter {
-            !$0.isRejected && annualReportPreviewYearValue($0.to.nonEmpty ?? $0.from) == year
+            $0.isCVReportable && annualReportPreviewYearValue($0.to.nonEmpty ?? $0.from) == year
         }
         let mediaAppearances = store.cvMediaAppearances.filter {
             annualReportPreviewYearValue($0.publicationDate) == year &&
@@ -2404,6 +2419,7 @@ struct CVExportWorkspaceView: View {
             store.exportAnnualReportDocumentAsync(
                 year: annualReportYear,
                 exportLanguage: annualReportLanguage,
+                includeCoApplicantGrants: annualReportIncludeCoApplicantGrants,
                 layout: layoutOptions,
                 to: destinationURL
             )

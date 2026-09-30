@@ -623,6 +623,11 @@ struct DoctoralCandidatesWorkspaceView: View {
     }
 
     private func doctoralCandidateStatusColor(_ candidate: DoctoralCandidateRecord) -> Color {
+        // Round 12: supervision not confirmed in Retendo is marked red, as in
+        // the teaching list.
+        if candidate.supervisionPeriods.contains(where: \.needsRetendoConfirmation) {
+            return AppPalette.vividRed
+        }
         if DoctoralMilestoneOutcome(rawValue: candidate.halftimeOutcomeRaw ?? "") == .endedBefore ||
             DoctoralMilestoneOutcome(rawValue: candidate.plannedDisputationOutcomeRaw ?? "") == .endedBefore {
             return AppPalette.shadeRed
@@ -1245,6 +1250,11 @@ private struct DoctoralCandidateDetailView: View {
                             let placeholder = period.isEmpty
                             let periodHasIllogicalDateRange = validationDateRangeIsIllogical(from: period.from, to: period.to)
                             HStack(spacing: 8) {
+                                // Round 12: red bar while not confirmed in Retendo.
+                                RoundedRectangle(cornerRadius: 1.5)
+                                    .fill(period.needsRetendoConfirmation ? AppPalette.vividRed : Color.clear)
+                                    .frame(width: 3, height: 22)
+                                    .help(period.needsRetendoConfirmation ? language.text("Not confirmed in Retendo", "Inte bekräftad i Retendo") : "")
                                 if draft.isEditingLocked {
                                     lockedDoctoralValueText(period.from, isInvalid: periodHasIllogicalDateRange)
                                         .frame(width: 120, alignment: .leading)

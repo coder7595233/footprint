@@ -4423,11 +4423,20 @@ final class StabilityTests: XCTestCase {
             publicationAuthors: [currentUserAuthor]
         )
 
+        // Round 12: co-applicant grants are included only when chosen.
         let document = store.annualReportPreviewDocument(
+            year: 2026,
+            exportLanguage: .swedish,
+            includeCoApplicantGrants: true,
+            layout: ExportDocumentLayoutOptions(currentDatePlacement: .none, includePageNumbers: false)
+        )
+        let mainOnly = store.annualReportPreviewDocument(
             year: 2026,
             exportLanguage: .swedish,
             layout: ExportDocumentLayoutOptions(currentDatePlacement: .none, includePageNumbers: false)
         )
+        XCTAssertNil(mainOnly.sections.first { $0.title == "Detaljerade poster - anslag, medsökande" }, "by default only main-applicant grants")
+        XCTAssertEqual(mainOnly.sections.first { $0.title == "Anslag" }?.headers.count, 2)
         let grants = try XCTUnwrap(document.sections.first { $0.title == "Anslag" })
         let mainGrantDetails = try XCTUnwrap(document.sections.first { $0.title == "Detaljerade poster - anslag, huvudsökande" })
         let coApplicantGrantDetails = try XCTUnwrap(document.sections.first { $0.title == "Detaljerade poster - anslag, medsökande" })
@@ -4513,8 +4522,10 @@ final class StabilityTests: XCTestCase {
             date: "2026-03-01",
             organizationName: "Grant council"
         )
+        // Round 12: only submitted or accepted contributions are reported.
         let conferenceContribution = CVConferenceContribution(
             id: "conference-contribution",
+            status: .accepted,
             from: "2026-05-05",
             to: "2026-05-10",
             title: "Conference abstract",
@@ -7831,8 +7842,9 @@ final class StabilityTests: XCTestCase {
         let year2026 = try XCTUnwrap(rows.first { $0.year == 2026 })
         XCTAssertEqual(year2026.completedCourseCredits, 0)
         XCTAssertEqual(year2026.plannedCourseCredits, 3)
-        XCTAssertEqual(year2026.completedSupervisionHours, 10)
-        XCTAssertEqual(year2026.plannedSupervisionHours, 10)
+        // Round 12: in proportion to days; 1–27 July is 27 of 184 autumn days.
+        XCTAssertEqual(year2026.completedSupervisionHours, 10 + 10.0 * 27 / 184, accuracy: 0.001)
+        XCTAssertEqual(year2026.plannedSupervisionHours, 10.0 * 157 / 184, accuracy: 0.001)
 
         let year2027 = try XCTUnwrap(rows.first { $0.year == 2027 })
         XCTAssertEqual(year2027.completedSupervisionHours, 0)

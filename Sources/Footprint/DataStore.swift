@@ -4875,11 +4875,16 @@ final class GrantDataStore: ObservableObject {
 
         do {
             let normalized = normalizedApplicationForPersistence(updated, previous: previous)
-            let updatedProjects = projectsByApplyingNewFundsReceivedTasks(
+            let fundsProjects = projectsByApplyingNewFundsReceivedTasks(
                 projects,
                 application: normalized,
                 previousApplication: previous
             )
+            let updatedProjects = projectsByApplyingFundsRunOutTasks(
+                fundsProjects ?? projects,
+                application: normalized,
+                previousApplication: previous
+            ) ?? fundsProjects
             guard previous != normalized || updatedProjects != nil else { return }
             applications[index] = normalized
             if let updatedProjects {
@@ -4888,6 +4893,10 @@ final class GrantDataStore: ObservableObject {
             }
             refreshApplicationsState(afterUpdating: normalized, previous: previous, at: index)
             try persistScope(.applications)
+            if updatedProjects != nil {
+                // The project tasks that followed the grant are saved too.
+                try persistScope(.projects)
+            }
             registerUndo(snapshot: previousSnapshot, actionName: actionName)
             appendRecentRecordRevision(actionName: actionName)
             notice = StoreNotice(message: successMessage, tone: .success)
@@ -4907,11 +4916,16 @@ final class GrantDataStore: ObservableObject {
         let previousProjects = projects
         do {
             let normalized = normalizedApplicationForPersistence(updated, previous: previous)
-            let updatedProjects = projectsByApplyingNewFundsReceivedTasks(
+            let fundsProjects = projectsByApplyingNewFundsReceivedTasks(
                 projects,
                 application: normalized,
                 previousApplication: previous
             )
+            let updatedProjects = projectsByApplyingFundsRunOutTasks(
+                fundsProjects ?? projects,
+                application: normalized,
+                previousApplication: previous
+            ) ?? fundsProjects
             guard previous != normalized || updatedProjects != nil else { return }
             let affectedSet: PersistenceSet = updatedProjects == nil ? [.applications] : [.applications, .projects]
             let previousStates = try persistedBaselineDocumentStates(for: affectedSet)
@@ -4949,6 +4963,71 @@ final class GrantDataStore: ObservableObject {
         ) as? [String] ?? normalized.coApplicants
 
         return normalized
+    }
+
+    /// Round 12: an event happened for a project ("Publikation tillagd",
+    /// "Publikation publicerad", "Medlen tar slut"): its open tasks waiting for
+    /// that event are due today, as tasks waiting for "Datainsamling klar"
+    /// already were. Nil when nothing changes.
+    private func projectsByTriggeringEventTasks(
+        _ projectRecords: [ProjectRecord],
+        projectID: String?,
+        reminder: ProjectTaskReminder
+    ) -> [ProjectRecord]? {
+        guard let projectID = projectID?.trimmedOrNil,
+              let projectIndex = projectRecords.firstIndex(where: { $0.id == projectID }) else { return nil }
+        let todayString = DateParsers.isoDay.string(from: Calendar.current.startOfDay(for: Date()))
+        var changed = false
+        let tasks = projectRecords[projectIndex].projectTasks.map { task -> ProjectTaskItem in
+            guard task.reminder == reminder,
+                  !task.isEmpty,
+                  !task.isCompleted,
+                  DateParsers.canonicalizedDayInput(task.deadline).trimmingCharacters(in: .whitespacesAndNewlines) != todayString else {
+                return task
+            }
+            var copy = task
+            if copy.createdOn.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                copy.createdOn = todayString
+            }
+            copy.deadline = todayString
+            copy.updatedOn = todayString
+            changed = true
+            return copy
+        }
+        guard changed else { return nil }
+        var updated = projectRecords
+        updated[projectIndex].projectTasks = tasks
+        return updated
+    }
+
+    /// Round 12: "Medlen tar slut" when a grant becomes fully spent.
+    private func projectsByApplyingFundsRunOutTasks(
+        _ projectRecords: [ProjectRecord],
+        application: GrantApplication,
+        previousApplication: GrantApplication
+    ) -> [ProjectRecord]? {
+        guard application.isFullySpent, !previousApplication.isFullySpent else { return nil }
+        return projectsByTriggeringEventTasks(projectRecords, projectID: application.projectID, reminder: .fundsRunOut)
+    }
+
+    /// Round 12: "Publikation tillagd" when a publication is linked to a
+    /// project, and "Publikation publicerad" when a linked one is published.
+    private func projectsByApplyingPublicationEventTasks(
+        _ projectRecords: [ProjectRecord],
+        publication: PublicationRecord,
+        previousPublication: PublicationRecord
+    ) -> [ProjectRecord]? {
+        var result: [ProjectRecord]?
+        let projectID = publication.projectID?.trimmedOrNil
+        if let projectID, projectID != previousPublication.projectID?.trimmedOrNil {
+            result = projectsByTriggeringEventTasks(result ?? projectRecords, projectID: projectID, reminder: .publicationAdded) ?? result
+        }
+        if projectID != nil,
+           PublicationStatus.fromStored(publication.statusLabel) == .published,
+           PublicationStatus.fromStored(previousPublication.statusLabel) != .published {
+            result = projectsByTriggeringEventTasks(result ?? projectRecords, projectID: projectID, reminder: .publicationPublished) ?? result
+        }
+        return result
     }
 
     private func projectsByApplyingNewFundsReceivedTasks(
@@ -5258,7 +5337,8 @@ final class GrantDataStore: ObservableObject {
         let authorEntries = amaAuthorEntries(for: publication)
         let visibleAuthorIndices = amaVisibleAuthorIndices(for: authorEntries, options: options)
         let authorText = amaAuthorList(from: authorEntries, visibleAuthorIndices: visibleAuthorIndices, options: options)
-        let titleText = publication.title.nonEmpty ?? language.text("Untitled", "Utan titel")
+        let exportLanguage = options.exportLanguage ?? language
+        let titleText = publication.title.nonEmpty ?? exportLanguage.text("Untitled", "Utan titel")
         let journal = linkedJournal(of: publication)
         let journalText: String = {
             switch options.journalNameMode {
@@ -5325,16 +5405,18 @@ final class GrantDataStore: ObservableObject {
             )
         }
 
+        // Round 12: the status in the export's language; an accepted article
+        // says so in the citation itself.
         let statusPhrase: String
         switch status {
         case .submitted:
-            statusPhrase = "In review"
+            statusPhrase = exportLanguage.text("In review", "Under granskning")
         case .planned, .inPreparation:
-            statusPhrase = "In preparation"
+            statusPhrase = exportLanguage.text("In preparation", "Under arbete")
         case .accepted:
-            statusPhrase = ""
+            statusPhrase = exportLanguage.text("Accepted for publication", "Accepterad för publicering")
         case .rejected:
-            statusPhrase = "Rejected"
+            statusPhrase = exportLanguage.text("Rejected", "Refuserad")
         case .published:
             statusPhrase = ""
         }
@@ -5359,10 +5441,7 @@ final class GrantDataStore: ObservableObject {
             tailSegments.append("(\(metrics))")
         }
         let tail = tailSegments.joined(separator: ". ")
-        let trailingStatusNote: String? = status == .accepted ? "(Accepted for publication)." : nil
-        let finalNote: String = [note.nonEmpty, trailingStatusNote]
-            .compactMap { $0 }
-            .joined(separator: " ")
+        let finalNote: String = note
         let citation = PublicationCitationFormatting.terminated(
             PublicationCitationFormatting.joinedSegments([authorText, titleText, journalText, tail])
         )
@@ -8312,11 +8391,12 @@ final class GrantDataStore: ObservableObject {
         underlineDoctoralMainSupervisor: Bool,
         underlineDoctoralCoSupervisor: Bool
     ) -> CVExportDocument {
-        let effectivePublicationOptions = publicationExportOptions(
+        var effectivePublicationOptions = publicationExportOptions(
             from: publicationOptions,
             underlineDoctoralMainSupervisor: underlineDoctoralMainSupervisor,
             underlineDoctoralCoSupervisor: underlineDoctoralCoSupervisor
         )
+        effectivePublicationOptions.exportLanguage = exportLanguage
         let currentAuthor = currentUserAuthor()
         let userPublications = currentUserPublications(sortOrder: effectivePublicationOptions.sortOrder)
         let name = currentAuthor?.name.nonEmpty ?? cvText(exportLanguage, english: "Curriculum vitae", swedish: "CV")
@@ -8324,8 +8404,11 @@ final class GrantDataStore: ObservableObject {
         let manuscriptsInWriting = userPublications.filter { PublicationStatus.fromStored($0.statusLabel) == .inPreparation }
         let submittedManuscripts = userPublications.filter { PublicationStatus.fromStored($0.statusLabel) == .submitted }
         let acceptedManuscripts = userPublications.filter { PublicationStatus.fromStored($0.statusLabel) == .accepted }
+        // Round 12: research letters are listed with the original articles
+        // (as in the AMA publication list); they fell out of the CV before.
         let publishedOriginals = userPublications.filter {
-            isPeerReviewedPublishedPublication($0) && publicationTypeBucket(for: $0) == "original"
+            isPeerReviewedPublishedPublication($0)
+                && (publicationTypeBucket(for: $0) == "original" || normalizedPublicationType(for: $0) == "research letter")
         }
         let publishedReviews = userPublications.filter {
             isPeerReviewedPublishedPublication($0) && publicationTypeBucket(for: $0) == "review"
@@ -8358,7 +8441,7 @@ final class GrantDataStore: ObservableObject {
             )
         }
         let conferenceItems = cvNumberedLinkedItems(
-            cvConferenceContributions.filter { !$0.isRejected }.map { contribution in
+            cvConferenceContributions.filter(\.isCVReportable).map { contribution in
                 CVLinkedTextItem(
                     text: cvOwnConferenceLine(for: contribution, language: exportLanguage),
                     sourceID: "conference-\(contribution.id)"
@@ -8524,11 +8607,12 @@ final class GrantDataStore: ObservableObject {
         underlineDoctoralMainSupervisor: Bool,
         underlineDoctoralCoSupervisor: Bool
     ) -> CVExportDocument {
-        let effectivePublicationOptions = publicationExportOptions(
+        var effectivePublicationOptions = publicationExportOptions(
             from: publicationOptions,
             underlineDoctoralMainSupervisor: underlineDoctoralMainSupervisor,
             underlineDoctoralCoSupervisor: underlineDoctoralCoSupervisor
         )
+        effectivePublicationOptions.exportLanguage = exportLanguage
         let currentAuthor = currentUserAuthor()
         let userPublications = currentUserPublications(sortOrder: effectivePublicationOptions.sortOrder)
         let peerReviewedPublications = numberedAMAItems(userPublications.filter(isPeerReviewedPublishedPublication).map { amaCitationItem(for: $0, options: effectivePublicationOptions) })
@@ -8582,7 +8666,7 @@ final class GrantDataStore: ObservableObject {
                 sourceID: "application-\(application.id)"
             )
         }
-        let conferenceItems = cvConferenceContributions.filter { !$0.isRejected }.map { contribution in
+        let conferenceItems = cvConferenceContributions.filter(\.isCVReportable).map { contribution in
             CVLinkedTextItem(
                 text: cvLiUConferenceLine(for: contribution, language: exportLanguage),
                 sourceID: "conference-\(contribution.id)"
@@ -9340,8 +9424,23 @@ final class GrantDataStore: ObservableObject {
             .joined(separator: "\t")
     }
 
+    /// Round 12: the amount with the grant's own currency ("50 000 EUR");
+    /// every amount used to be labelled SEK.
+    private func cvGrantAmountText(_ application: GrantApplication) -> String? {
+        preferredGrantAmountText(application).nonEmpty.map { "\($0) \(application.currencyCode)" }
+    }
+
+    /// Round 12: review assignments newest first (they came in stored order).
+    private func cvReviewEntriesForExport() -> [CVReviewEntry] {
+        cvReviewEntries.sorted { lhs, rhs in
+            let left = lhs.date.trimmingCharacters(in: .whitespacesAndNewlines)
+            let right = rhs.date.trimmingCharacters(in: .whitespacesAndNewlines)
+            return left == right ? lhs.id < rhs.id : left > right
+        }
+    }
+
     private func cvOwnReviewLinkedItems(language: AppLanguage) -> [CVLinkedTextItem] {
-        cvReviewEntries.map { review in
+        cvReviewEntriesForExport().map { review in
             CVLinkedTextItem(
                 text: cvOwnReviewLine(for: review, language: language),
                 sourceID: "review-\(review.id)"
@@ -9354,7 +9453,7 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func cvLiUReviewLinkedItems(language: AppLanguage) -> [CVLinkedTextItem] {
-        cvReviewEntries.map { review in
+        cvReviewEntriesForExport().map { review in
             CVLinkedTextItem(
                 text: cvLiUReviewLine(for: review, language: language),
                 sourceID: "review-\(review.id)"
@@ -9400,7 +9499,7 @@ final class GrantDataStore: ObservableObject {
         let year = yearString(from: application.grantedOn ?? application.appliedOn ?? "")
         let funder = organizationLabel(for: application, language: language).nonEmpty
         let caseNumber = application.appliedCaseNumber.nonEmpty.map { "(\($0))" }
-        let amount = preferredGrantAmountText(application).nonEmpty.map { "\($0) SEK" } ?? nil
+        let amount = cvGrantAmountText(application)
         let label = funder
         let details = [[label, caseNumber].compactMap { $0 }.joined(separator: " "), amount]
             .compactMap { $0?.nonEmpty }
@@ -9414,7 +9513,7 @@ final class GrantDataStore: ObservableObject {
         let year = yearString(from: application.grantedOn ?? application.appliedOn ?? "")
         let funder = organizationLabel(for: application, language: language).nonEmpty
         let caseNumber = application.appliedCaseNumber.nonEmpty.map { "(\($0))" }
-        let amount = preferredGrantAmountText(application).nonEmpty.map { "\($0) SEK" } ?? nil
+        let amount = cvGrantAmountText(application)
         let label = funder
         return [year.nonEmpty, [label, caseNumber].compactMap { $0 }.joined(separator: " "), amount]
             .compactMap { $0?.nonEmpty }
@@ -10765,6 +10864,9 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func statisticsWorkbookSheets() -> [WorkbookExportSheet] {
+        // Round 12: the user's own grants as main applicant (as the default
+        // elsewhere), not every grant in the app.
+        let applications = self.applications.filter { isCurrentUserFirstApplicant($0) }
         let grantYears = Array(Set(applications.map(\.statsYear))).sorted()
         let grantRows = [[
             language.text("Year", "År"),
@@ -10785,7 +10887,14 @@ final class GrantDataStore: ObservableObject {
             ]
         }
 
-        let publicationYears = Array(Set(publicationRecords.compactMap { $0.year.nonEmpty })).sorted()
+        // Round 12: the user's own publications, and the citations each year
+        // to all of them (before, only citations to papers from the same year
+        // counted, which is almost none).
+        let ownPublications = currentUserPublications()
+        let ownCitationEntries = ownPublications.flatMap(\.citationYears)
+        let publicationYears = Array(Set(
+            ownPublications.compactMap { $0.year.nonEmpty } + ownCitationEntries.compactMap { $0.year.nonEmpty }
+        )).sorted()
         let publicationRows = [[
             language.text("Year", "År"),
             language.text("Original", "Original"),
@@ -10795,10 +10904,8 @@ final class GrantDataStore: ObservableObject {
             language.text("Self-citations", "Självciteringar"),
             language.text("Total citations", "Citeringar totalt"),
         ]] + publicationYears.map { year in
-            let publicationsForYear = publicationRecords.filter { $0.year == year && $0.isPublished && $0.isPeerReviewed }
-            let citationEntriesForYear = publicationsForYear
-                .flatMap(\.citationYears)
-                .filter { $0.year == year }
+            let publicationsForYear = ownPublications.filter { $0.year == year && $0.isPublished && $0.isPeerReviewed }
+            let citationEntriesForYear = ownCitationEntries.filter { $0.year == year }
             let externalCitations = citationEntriesForYear.map(\.countValue).reduce(0, +)
             let selfCitations = citationEntriesForYear.map(\.selfCitationCountValue).reduce(0, +)
             return [
@@ -12659,6 +12766,8 @@ final class GrantDataStore: ObservableObject {
         options: PublicationExportOptions = PublicationExportOptions(),
         includedSections: Set<PublicationExportSectionKey> = Set(PublicationExportSectionKey.allCases)
     ) -> [PublicationAMASection] {
+        var options = options
+        options.exportLanguage = exportLanguage
         let orderedPeerReviewed = publicationRecords
             .filter(\.isPeerReviewed)
             .sorted { lhs, rhs in
@@ -12688,9 +12797,11 @@ final class GrantDataStore: ObservableObject {
             (.publishedNonPeerReviewedPublications, "Other publications, non-peer-reviewed", "Övriga publikationer, ej expertgranskade", orderedNonPeerReviewed, { publication in
                 PublicationStatus.fromStored(publication.statusLabel) == .published
             }),
-            (.articlesInReview, "Articles in review", "Artiklar under granskning", orderedPeerReviewed, { publication in
+            // Round 12: accepted articles belong here too (they fell out of
+            // every group before).
+            (.articlesInReview, "Articles accepted or in review", "Artiklar accepterade eller under granskning", orderedPeerReviewed, { publication in
                 let status = PublicationStatus.fromStored(publication.statusLabel)
-                return status.isSubmittedFamily
+                return status.isSubmittedFamily || status == .accepted
             }),
             (.articlesInWriting, "Articles in writing", "Artiklar under arbete", orderedPeerReviewed, { publication in
                 let status = PublicationStatus.fromStored(publication.statusLabel)
@@ -12862,11 +12973,12 @@ final class GrantDataStore: ObservableObject {
         if options.includeQuartile, let quartile = quartileMetric?.quartile.nonEmpty {
             parts.append(quartile)
         }
+        let exportLanguage = options.exportLanguage ?? language
         if options.includeNorwegianList, let norwegian = norwegianMetric?.value.nonEmpty {
-            parts.append("Norwegian list \(norwegian)")
+            parts.append(exportLanguage.text("Norwegian list \(norwegian)", "Norska listan \(norwegian)"))
         }
         if options.includeCitations {
-            parts.append("\(publication.citationsValue) citations")
+            parts.append(exportLanguage.text("\(publication.citationsValue) citations", "\(publication.citationsValue) citeringar"))
         }
         guard !parts.isEmpty else { return nil }
         return parts.joined(separator: ", ")
@@ -17002,6 +17114,21 @@ final class GrantDataStore: ObservableObject {
         ].joined(separator: "|")
     }
 
+    /// Round 12: the key a missing-field warning is hidden under from now on.
+    /// It includes how many fields are missing, so a new problem on the same
+    /// record (one more missing field) shows again instead of staying hidden.
+    /// Warnings hidden earlier (the key above) stay hidden as before.
+    func dataQualityWarningPreciseKey(for issue: MissingFieldIssue) -> String {
+        [
+            "data-quality-warning:v2",
+            "missing",
+            issue.entityKind.rawValue,
+            Self.duplicateWarningKeyComponent(issue.recordID),
+            Self.duplicateWarningKeyComponent(issue.id),
+            "\(issue.missingFields.count)",
+        ].joined(separator: "|")
+    }
+
     func dataQualityWarningKey(for issue: DuplicateIssue) -> String? {
         duplicateWarningSuppressionKey(
             groupKind: issue.groupKind,
@@ -17021,7 +17148,8 @@ final class GrantDataStore: ObservableObject {
     }
 
     func isDataQualityWarningHidden(_ issue: MissingFieldIssue) -> Bool {
-        isDataQualityWarningHidden(key: dataQualityWarningKey(for: issue))
+        isDataQualityWarningHidden(key: dataQualityWarningPreciseKey(for: issue))
+            || isDataQualityWarningHidden(key: dataQualityWarningKey(for: issue))
     }
 
     func isDataQualityWarningHidden(_ issue: DuplicateIssue) -> Bool {
@@ -17035,7 +17163,7 @@ final class GrantDataStore: ObservableObject {
 
     @discardableResult
     func hideDataQualityWarning(_ issue: MissingFieldIssue) -> Bool {
-        hideDataQualityWarning(key: dataQualityWarningKey(for: issue))
+        hideDataQualityWarning(key: dataQualityWarningPreciseKey(for: issue))
     }
 
     @discardableResult
@@ -17051,7 +17179,9 @@ final class GrantDataStore: ObservableObject {
 
     @discardableResult
     func showDataQualityWarning(_ issue: MissingFieldIssue) -> Bool {
-        showDataQualityWarning(key: dataQualityWarningKey(for: issue))
+        let shownPrecise = showDataQualityWarning(key: dataQualityWarningPreciseKey(for: issue))
+        let shownEarlier = showDataQualityWarning(key: dataQualityWarningKey(for: issue))
+        return shownPrecise || shownEarlier
     }
 
     @discardableResult
@@ -19916,6 +20046,11 @@ final class GrantDataStore: ObservableObject {
                 publicationRecords[index] = normalized
                 refreshPublicationRecordCaches(afterUpdating: normalized, previous: previous)
                 try persistScope(.publicationRecords)
+                if let updatedProjects = projectsByApplyingPublicationEventTasks(projects, publication: normalized, previousPublication: previous) {
+                    projects = updatedProjects
+                    refreshProjectIndexesAndCaches()
+                    try persistScope(.projects)
+                }
                 loadError = nil
             } catch {
                 loadError = error.localizedDescription
@@ -19924,16 +20059,29 @@ final class GrantDataStore: ObservableObject {
             return
         }
 
+        // Round 12: project tasks waiting for this publication follow in the
+        // same step (and are saved with it).
+        let eventProjects: [ProjectRecord]? = {
+            guard let index = publicationRecords.firstIndex(where: { $0.id == updated.id }) else { return nil }
+            let previous = publicationRecords[index]
+            var candidate = updated
+            candidate.normalize()
+            return projectsByApplyingPublicationEventTasks(projects, publication: candidate, previousPublication: previous)
+        }()
         performUndoableChange(
             actionName: language.text("Edit publication", "Redigera publikation"),
             successMessage: language.text("Saved publication changes.", "Sparade ändringar i publikationen."),
             failureMessage: language.text("Could not save publication changes.", "Kunde inte spara ändringar i publikationen."),
-            scope: .publicationRecords
+            scope: eventProjects == nil ? .publicationRecords : .all
         ) {
             guard let index = publicationRecords.firstIndex(where: { $0.id == updated.id }) else { return }
             let previous = publicationRecords[index]
             let normalized = try normalizedPublicationForPersistence(updated, previous: previous)
             publicationRecords[index] = normalized
+            if let eventProjects {
+                projects = eventProjects
+                refreshProjectIndexesAndCaches()
+            }
         }
     }
 
@@ -19942,13 +20090,19 @@ final class GrantDataStore: ObservableObject {
         let previousRecords = publicationRecords
         let previousAuthors = publicationAuthors
 
+        let previousProjects = projects
         do {
-            let affectedSet: PersistenceSet = [.publicationRecords]
-            let previousStates = try persistedBaselineDocumentStates(for: affectedSet)
             let previous = publicationRecords[index]
             let normalized = try normalizedPublicationForPersistence(updated, previous: previous)
             guard normalized != previous else { return }
+            let updatedProjects = projectsByApplyingPublicationEventTasks(projects, publication: normalized, previousPublication: previous)
+            let affectedSet: PersistenceSet = updatedProjects == nil ? [.publicationRecords] : [.publicationRecords, .projects]
+            let previousStates = try persistedBaselineDocumentStates(for: affectedSet)
             publicationRecords[index] = normalized
+            if let updatedProjects {
+                projects = updatedProjects
+                refreshProjectIndexesAndCaches()
+            }
             refreshPublicationRecordCaches(afterUpdating: normalized, previous: previous)
             try enqueueAutosavePersistence(
                 affectedSet,
@@ -19958,6 +20112,8 @@ final class GrantDataStore: ObservableObject {
         } catch {
             publicationRecords = previousRecords
             publicationAuthors = previousAuthors
+            projects = previousProjects
+            refreshProjectIndexesAndCaches()
             refreshPublicationRecordCaches(projectCacheBehavior: .markDirty)
             persistenceStatus.isSaving = false
             loadError = error.localizedDescription

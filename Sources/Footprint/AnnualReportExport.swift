@@ -20,22 +20,26 @@ extension GrantDataStore {
     func annualReportPreviewDocument(
         year: Int,
         exportLanguage: AppLanguage,
+        includeCoApplicantGrants: Bool = false,
         layout: ExportDocumentLayoutOptions
     ) -> CVExportDocument {
-        var payload = annualReportDocument(year: year, exportLanguage: exportLanguage)
+        var payload = annualReportDocument(year: year, exportLanguage: exportLanguage, includeCoApplicantGrants: includeCoApplicantGrants)
         applyLayout(layout, to: &payload, exportLanguage: exportLanguage)
         return payload
     }
 
-    private func annualReportDocument(year: Int, exportLanguage: AppLanguage) -> CVExportDocument {
+    private func annualReportDocument(year: Int, exportLanguage: AppLanguage, includeCoApplicantGrants: Bool) -> CVExportDocument {
         let author = currentUserAuthor()
         let name = author?.name.nonEmpty ?? annualReportText(exportLanguage, english: "CV profile", swedish: "CV-profil")
         let userPublications = annualReportCurrentUserPublications()
         let publishedPeerReviewed = userPublications.filter {
             $0.isPublished && $0.isPeerReviewed && $0.yearValue == year
         }
+        // Round 12 (user decision 2026-09-30): by default only grants where
+        // the user is main applicant; co-applicant grants on request.
         let grants = annualReportCurrentUserGrantApplications().filter {
             annualReportYearValue($0.statsYear) == year && annualReportGrantStatus($0) != nil
+                && (includeCoApplicantGrants || annualReportCurrentUserIsFirstApplicant($0))
         }
         let teaching = annualReportTeachingHours(year: year)
         let citationEntries = userPublications.flatMap(\.citationYears).filter {
@@ -77,7 +81,7 @@ extension GrantDataStore {
 
         let summarySections = ([
             summarySection,
-            annualReportGrantSection(grants: grants, year: year, language: exportLanguage),
+            annualReportGrantSection(grants: grants, year: year, language: exportLanguage, includeCoApplicantGrants: includeCoApplicantGrants),
             annualReportPublicationSection(
                 publications: userPublications,
                 publishedPeerReviewed: publishedPeerReviewed,
@@ -120,7 +124,8 @@ extension GrantDataStore {
     private func annualReportGrantSection(
         grants: [GrantApplication],
         year: Int,
-        language: AppLanguage
+        language: AppLanguage,
+        includeCoApplicantGrants: Bool
     ) -> CVExportSection {
         let mainApplicantGrants = grants.filter(annualReportCurrentUserIsFirstApplicant)
         let coApplicantGrants = grants.filter { !annualReportCurrentUserIsFirstApplicant($0) }
@@ -141,7 +146,7 @@ extension GrantDataStore {
             annualReportCurrencyText(source.map(annualReportGrantAmount).reduce(0, +), language: language)
         }
 
-        return CVExportSection(
+        let section = CVExportSection(
             title: annualReportText(language, english: "Grants", swedish: "Anslag"),
             headers: [
                 annualReportText(language, english: "Metric", swedish: "Mått"),
@@ -181,6 +186,12 @@ extension GrantDataStore {
                 ],
             ]
         )
+        guard !includeCoApplicantGrants else { return section }
+        // Only main applicant: the co-applicant column is left out.
+        var mainOnly = section
+        mainOnly.headers = Array(section.headers.prefix(2))
+        mainOnly.rows = section.rows.map { Array($0.prefix(2)) }
+        return mainOnly
     }
 
     private func annualReportPublicationSection(
@@ -246,8 +257,9 @@ extension GrantDataStore {
 
     private func annualReportMeritsSection(year: Int, language: AppLanguage) -> CVExportSection {
         let currentAuthorID = currentUserAuthor()?.id
+        // Round 12: only submitted and accepted contributions count.
         let conferences = cvConferenceContributions.filter {
-            annualReportYearValue($0.to.nonEmpty ?? $0.from) == year
+            $0.isCVReportable && annualReportYearValue($0.to.nonEmpty ?? $0.from) == year
         }
         let media = cvMediaAppearances.filter {
             annualReportYearValue($0.publicationDate) == year && mediaAppearanceIncludesCurrentUser($0)
@@ -277,7 +289,8 @@ extension GrantDataStore {
         year: Int,
         language: AppLanguage
     ) -> [CVExportSection] {
-        annualReportGrantDetailSections(grants: grants, language: language) + [
+        annualReportGrantDetailSections(grants: grants, language: language)
+            .filter { !$0.rows.isEmpty || !$0.title.contains(annualReportText(language, english: "co-applicant", swedish: "medsökande")) } + [
             annualReportPublicationDetailSection(
                 publications: publications,
                 publishedPeerReviewed: publishedPeerReviewed,
@@ -438,12 +451,9 @@ extension GrantDataStore {
                 .joined(separator: " - ")
                 .nonEmpty ?? annualReportText(language, english: "Doctoral candidate", swedish: "Doktorand")
             for period in candidate.supervisionPeriods where !period.isEmpty {
-                guard let hoursPerTerm = GrantParsing.numericValue(from: period.hoursPerSemester), hoursPerTerm > 0 else { continue }
-                let matchingTermCount = annualReportTeachingTerms(from: period.from, to: period.to)
-                    .filter { $0.year == year }
-                    .count
-                guard matchingTermCount > 0 else { continue }
-                let hours = Double(matchingTermCount) * hoursPerTerm
+                // Round 12: hours in proportion to days (one rule everywhere).
+                let hours = period.supervisionHours(inYear: year, untilReferenceDate: false)
+                guard hours > 0 else { continue }
                 sortedRows.append((
                     sortDate: period.to.nonEmpty ?? period.from.nonEmpty ?? "",
                     row: [
@@ -483,7 +493,8 @@ extension GrantDataStore {
         var journalReviewRows: [(sortDate: String, row: [String], sourceID: String)] = []
         var otherRows: [(sortDate: String, row: [String], sourceID: String)] = []
 
-        for contribution in cvConferenceContributions where annualReportYearValue(contribution.to.nonEmpty ?? contribution.from) == year {
+        for contribution in cvConferenceContributions
+        where contribution.isCVReportable && annualReportYearValue(contribution.to.nonEmpty ?? contribution.from) == year {
             otherRows.append((
                 sortDate: contribution.to.nonEmpty ?? contribution.from,
                 row: [
@@ -810,16 +821,10 @@ extension GrantDataStore {
     }
 
     private func annualReportDoctoralCandidateHours(_ candidate: DoctoralCandidateRecord, year: Int) -> Double {
-        candidate.supervisionPeriods.reduce(0) { partial, period in
-            guard !period.isEmpty,
-                  let hoursPerTerm = GrantParsing.numericValue(from: period.hoursPerSemester),
-                  hoursPerTerm > 0 else {
-                return partial
-            }
-            let terms = annualReportTeachingTerms(from: period.from, to: period.to)
-            let matchingTermCount = terms.filter { $0.year == year }.count
-            return partial + (Double(matchingTermCount) * hoursPerTerm)
-        }
+        // Round 12: hours in proportion to days (one rule everywhere).
+        candidate.supervisionPeriods
+            .filter { !$0.isEmpty }
+            .reduce(0) { $0 + $1.supervisionHours(inYear: year, untilReferenceDate: false) }
     }
 
     private func annualReportTeachingTerms(from rawFrom: String, to rawTo: String) -> Set<AnnualReportTeachingTerm> {
