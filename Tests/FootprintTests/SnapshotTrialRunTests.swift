@@ -875,4 +875,61 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round10-record-overhead" })
         XCTAssertFalse(reloaded.runRound10OneTimeDataMigrations(), "running the step again changes nothing")
     }
+
+    /// Round 11 (user decisions 2026-09-30): salary calculators on
+    /// organizations not marked as employer are removed once (the one chosen
+    /// in Settings stays); employers keep theirs. No record is lost or added,
+    /// no other organization field changes, and running the step again
+    /// changes nothing. Only counts are printed.
+    @MainActor
+    func testSnapshotRound11RemovesOnlyHiddenSalaryCalculators() throws {
+        let databaseURL = storageDirectory.appendingPathComponent("footprint.sqlite")
+        let rawStore = try SQLiteDocumentStore(url: databaseURL, createIfMissing: false)
+        let storedOrganizations = try XCTUnwrap(rawStore.load([OrganizationRecord].self, named: "organizations"))
+        let storedApplications = try XCTUnwrap(rawStore.load([GrantApplication].self, named: "applications"))
+        let hidden = storedOrganizations.filter {
+            $0.salaryCalculator != nil && !$0.roles.contains(.employer) && !$0.usesAsApplicationSalaryCalculator
+        }
+        let employersWithCalculator = storedOrganizations.filter { $0.salaryCalculator != nil && $0.roles.contains(.employer) }
+        print("SNAPSHOT: R11 Organisationer: \(storedOrganizations.count), med lönekalkyl: \(storedOrganizations.filter { $0.salaryCalculator != nil }.count)")
+        print("SNAPSHOT: R11 Dolda lönekalkyler (ej arbetsgivare) före: \(hidden.count), varav förvaltare: \(hidden.filter { $0.roles.contains(.fundManager) }.count)")
+        print("SNAPSHOT: R11 Arbetsgivare med lönekalkyl före: \(employersWithCalculator.count)")
+        print("SNAPSHOT: R11 Ej sökt-poster med dolda ansökningsuppgifter: \(storedApplications.filter { $0.isNotAppliedStatus && !$0.hiddenApplicationDetailTitles(hasOtherApplicants: false, language: .swedish).isEmpty }.count)")
+
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let countsBefore = Self.recordCounts(store)
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: R11 \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+
+        let storedByID = Dictionary(storedOrganizations.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var calculatorRemoved = 0
+        var otherwiseChanged = 0
+        var employerCalculatorChanged = 0
+        for organization in reloaded.organizations {
+            guard let stored = storedByID[organization.id] else { continue }
+            if stored.salaryCalculator != nil, organization.salaryCalculator == nil { calculatorRemoved += 1 }
+            if stored.roles.contains(.employer), stored.salaryCalculator != organization.salaryCalculator { employerCalculatorChanged += 1 }
+            var comparable = organization
+            comparable.salaryCalculator = stored.salaryCalculator
+            if comparable.roles != stored.roles || comparable.nameSv != stored.nameSv || comparable.managerOverheadPercent != stored.managerOverheadPercent || comparable.overheadRule != stored.overheadRule {
+                otherwiseChanged += 1
+            }
+        }
+        print("SNAPSHOT: R11 Lönekalkyler borttagna: \(calculatorRemoved)")
+        print("SNAPSHOT: R11 Arbetsgivares lönekalkyler som ändrades: \(employerCalculatorChanged)")
+        print("SNAPSHOT: R11 Organisationer med annan ändring (namn, roller, OH): \(otherwiseChanged)")
+        XCTAssertEqual(calculatorRemoved, hidden.count, "exactly the hidden calculators are removed")
+        XCTAssertEqual(employerCalculatorChanged, 0, "employers keep their calculators")
+        XCTAssertEqual(otherwiseChanged, 0, "nothing else on the organizations changes")
+        XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round11-hidden-salary-calculators" })
+        XCTAssertFalse(reloaded.runRound11OneTimeDataMigrations(), "running the step again changes nothing")
+    }
 }

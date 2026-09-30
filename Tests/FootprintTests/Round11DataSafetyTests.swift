@@ -97,6 +97,7 @@ final class Round11DataSafetyTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testOverheadSuggestionOnlyComesFromAnEmployersCalculator() {
         XCTAssertEqual(Self.employer.managerOverheadDefaultPercent(), 8.8)
         XCTAssertNil(Self.hiddenManager.managerOverheadDefaultPercent(), "a calculator the app does not show is never used")
@@ -139,6 +140,7 @@ final class Round11DataSafetyTests: XCTestCase {
 
     // MARK: "Ej sökt" keeps hidden application details
 
+    @MainActor
     func testHiddenApplicationDetailsAreListed() {
         var record = GrantApplication(id: "a1", rowNumber: 1, organization: "Stiftelsen Exempel", grantName: "Projektbidrag")
         XCTAssertTrue(record.hiddenApplicationDetailTitles(hasOtherApplicants: false, language: .swedish).isEmpty)
@@ -265,5 +267,62 @@ final class Round11DataSafetyTests: XCTestCase {
         var byID = shared
         byID.organizationID = "org-b"
         XCTAssertEqual(store.linkedFunder(of: byID)?.id, "org-b", "the id always decides")
+    }
+
+    // MARK: Merging duplicate organizations loses nothing
+
+    @MainActor
+    func testMergingOrganizationsMovesCongressesTravelTasksAndSettings() throws {
+        let congress = OrganizationCongress(id: "congress-1", title: "Exempelkongressen 2026", from: "2026-05-01", to: "2026-05-03")
+        var kept = OrganizationRecord(id: "org-kept", nameSv: "Exempelsällskapet", nameEn: "Example Society", roles: [.association, .fundManager])
+        kept.congresses = []
+        var duplicate = OrganizationRecord(id: "org-dup", nameSv: "Exempelsallskapet", nameEn: "Example Society", roles: [.association, .fundManager])
+        duplicate.congresses = [congress]
+        let funder = OrganizationRecord(
+            id: "org-funder",
+            nameSv: "Stiftelsen Exempel",
+            nameEn: "Example Foundation",
+            roles: [.grantProvider],
+            overheadRuleExceptions: [FunderOverheadRuleException(managerOrganizationID: "org-dup", rule: FunderOverheadRule(kind: .cap, capPercent: 5))],
+            preferredFundManagerID: "org-dup"
+        )
+        var metadata = DataSourceMetadata.bundledDefault
+        metadata.calendarTravelRecords = [CalendarTravelRecord(id: "travel-1", date: "2026-04-30", congressOrganizationID: "org-dup", congressID: "congress-1")]
+        metadata.taskItems = [TaskItem(id: "task-1", links: [
+            TaskLink(kind: .organization, targetID: "org-dup"),
+            TaskLink(kind: .congress, targetID: "congress-1", ownerID: "org-dup")
+        ])]
+        let store = GrantDataStore(metadata: metadata, organizations: [kept, duplicate, funder], skipInitialMigration: true)
+
+        XCTAssertTrue(store.mergeDuplicateRecords(groupKind: .managers, canonicalRecordID: "org-kept", duplicateRecordIDs: ["org-dup"]))
+
+        XCTAssertNil(store.organization(id: "org-dup"))
+        XCTAssertEqual(store.organization(id: "org-kept")?.congresses.map(\.id), ["congress-1"], "the duplicate's congress is kept")
+        XCTAssertEqual(store.metadata.calendarTravelRecords?.first?.congressOrganizationID, "org-kept", "travel follows the congress")
+        let links = store.metadata.taskItems?.first?.links ?? []
+        XCTAssertTrue(links.contains(TaskLink(kind: .organization, targetID: "org-kept")))
+        XCTAssertTrue(links.contains(TaskLink(kind: .congress, targetID: "congress-1", ownerID: "org-kept")))
+        XCTAssertEqual(store.organization(id: "org-funder")?.preferredFundManagerID, "org-kept")
+        XCTAssertEqual(store.organization(id: "org-funder")?.overheadRuleExceptions?.map(\.managerOrganizationID), ["org-kept"])
+    }
+
+    @MainActor
+    func testMergeListsLockedRecordsBeforeChangingThem() {
+        let kept = OrganizationRecord(id: "org-kept", nameSv: "Fonden", nameEn: "The Fund", roles: [.grantProvider])
+        let duplicate = OrganizationRecord(id: "org-dup", nameSv: "Fonden AB", nameEn: "The Fund Ltd", roles: [.grantProvider])
+        var locked = GrantApplication(id: "a-locked", rowNumber: 1, organizationID: "org-dup", organization: "Fonden AB", grantName: "Bidrag")
+        locked.isEditingLocked = true
+        let open = GrantApplication(id: "a-open", rowNumber: 2, organizationID: "org-dup", organization: "Fonden AB", grantName: "Resa")
+        let store = makeStore(organizations: [kept, duplicate], applications: [locked, open])
+
+        XCTAssertEqual(store.lockedRecordsRewrittenByMerge(groupKind: .funders, duplicateIDs: ["org-dup"]).count, 1, "only the locked record is listed")
+
+        XCTAssertTrue(store.mergeDuplicateRecords(groupKind: .funders, canonicalRecordID: "org-kept", duplicateRecordIDs: ["org-dup"]))
+        XCTAssertNotNil(store.organization(id: "org-dup"), "nothing is merged before the answer")
+        XCTAssertEqual(store.applications.first { $0.id == "a-locked" }?.organization, "Fonden AB")
+
+        XCTAssertTrue(store.mergeDuplicateRecords(groupKind: .funders, canonicalRecordID: "org-kept", duplicateRecordIDs: ["org-dup"], lockedRecordsConfirmed: true))
+        XCTAssertNil(store.organization(id: "org-dup"))
+        XCTAssertEqual(store.applications.first { $0.id == "a-locked" }?.organizationID, "org-kept")
     }
 }
