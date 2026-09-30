@@ -4875,11 +4875,16 @@ final class GrantDataStore: ObservableObject {
 
         do {
             let normalized = normalizedApplicationForPersistence(updated, previous: previous)
-            let updatedProjects = projectsByApplyingNewFundsReceivedTasks(
+            let fundsProjects = projectsByApplyingNewFundsReceivedTasks(
                 projects,
                 application: normalized,
                 previousApplication: previous
             )
+            let updatedProjects = projectsByApplyingFundsRunOutTasks(
+                fundsProjects ?? projects,
+                application: normalized,
+                previousApplication: previous
+            ) ?? fundsProjects
             guard previous != normalized || updatedProjects != nil else { return }
             applications[index] = normalized
             if let updatedProjects {
@@ -4888,6 +4893,10 @@ final class GrantDataStore: ObservableObject {
             }
             refreshApplicationsState(afterUpdating: normalized, previous: previous, at: index)
             try persistScope(.applications)
+            if updatedProjects != nil {
+                // The project tasks that followed the grant are saved too.
+                try persistScope(.projects)
+            }
             registerUndo(snapshot: previousSnapshot, actionName: actionName)
             appendRecentRecordRevision(actionName: actionName)
             notice = StoreNotice(message: successMessage, tone: .success)
@@ -4907,11 +4916,16 @@ final class GrantDataStore: ObservableObject {
         let previousProjects = projects
         do {
             let normalized = normalizedApplicationForPersistence(updated, previous: previous)
-            let updatedProjects = projectsByApplyingNewFundsReceivedTasks(
+            let fundsProjects = projectsByApplyingNewFundsReceivedTasks(
                 projects,
                 application: normalized,
                 previousApplication: previous
             )
+            let updatedProjects = projectsByApplyingFundsRunOutTasks(
+                fundsProjects ?? projects,
+                application: normalized,
+                previousApplication: previous
+            ) ?? fundsProjects
             guard previous != normalized || updatedProjects != nil else { return }
             let affectedSet: PersistenceSet = updatedProjects == nil ? [.applications] : [.applications, .projects]
             let previousStates = try persistedBaselineDocumentStates(for: affectedSet)
@@ -4949,6 +4963,71 @@ final class GrantDataStore: ObservableObject {
         ) as? [String] ?? normalized.coApplicants
 
         return normalized
+    }
+
+    /// Round 12: an event happened for a project ("Publikation tillagd",
+    /// "Publikation publicerad", "Medlen tar slut"): its open tasks waiting for
+    /// that event are due today, as tasks waiting for "Datainsamling klar"
+    /// already were. Nil when nothing changes.
+    private func projectsByTriggeringEventTasks(
+        _ projectRecords: [ProjectRecord],
+        projectID: String?,
+        reminder: ProjectTaskReminder
+    ) -> [ProjectRecord]? {
+        guard let projectID = projectID?.trimmedOrNil,
+              let projectIndex = projectRecords.firstIndex(where: { $0.id == projectID }) else { return nil }
+        let todayString = DateParsers.isoDay.string(from: Calendar.current.startOfDay(for: Date()))
+        var changed = false
+        let tasks = projectRecords[projectIndex].projectTasks.map { task -> ProjectTaskItem in
+            guard task.reminder == reminder,
+                  !task.isEmpty,
+                  !task.isCompleted,
+                  DateParsers.canonicalizedDayInput(task.deadline).trimmingCharacters(in: .whitespacesAndNewlines) != todayString else {
+                return task
+            }
+            var copy = task
+            if copy.createdOn.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                copy.createdOn = todayString
+            }
+            copy.deadline = todayString
+            copy.updatedOn = todayString
+            changed = true
+            return copy
+        }
+        guard changed else { return nil }
+        var updated = projectRecords
+        updated[projectIndex].projectTasks = tasks
+        return updated
+    }
+
+    /// Round 12: "Medlen tar slut" when a grant becomes fully spent.
+    private func projectsByApplyingFundsRunOutTasks(
+        _ projectRecords: [ProjectRecord],
+        application: GrantApplication,
+        previousApplication: GrantApplication
+    ) -> [ProjectRecord]? {
+        guard application.isFullySpent, !previousApplication.isFullySpent else { return nil }
+        return projectsByTriggeringEventTasks(projectRecords, projectID: application.projectID, reminder: .fundsRunOut)
+    }
+
+    /// Round 12: "Publikation tillagd" when a publication is linked to a
+    /// project, and "Publikation publicerad" when a linked one is published.
+    private func projectsByApplyingPublicationEventTasks(
+        _ projectRecords: [ProjectRecord],
+        publication: PublicationRecord,
+        previousPublication: PublicationRecord
+    ) -> [ProjectRecord]? {
+        var result: [ProjectRecord]?
+        let projectID = publication.projectID?.trimmedOrNil
+        if let projectID, projectID != previousPublication.projectID?.trimmedOrNil {
+            result = projectsByTriggeringEventTasks(result ?? projectRecords, projectID: projectID, reminder: .publicationAdded) ?? result
+        }
+        if projectID != nil,
+           PublicationStatus.fromStored(publication.statusLabel) == .published,
+           PublicationStatus.fromStored(previousPublication.statusLabel) != .published {
+            result = projectsByTriggeringEventTasks(result ?? projectRecords, projectID: projectID, reminder: .publicationPublished) ?? result
+        }
+        return result
     }
 
     private func projectsByApplyingNewFundsReceivedTasks(
@@ -19949,6 +20028,11 @@ final class GrantDataStore: ObservableObject {
                 publicationRecords[index] = normalized
                 refreshPublicationRecordCaches(afterUpdating: normalized, previous: previous)
                 try persistScope(.publicationRecords)
+                if let updatedProjects = projectsByApplyingPublicationEventTasks(projects, publication: normalized, previousPublication: previous) {
+                    projects = updatedProjects
+                    refreshProjectIndexesAndCaches()
+                    try persistScope(.projects)
+                }
                 loadError = nil
             } catch {
                 loadError = error.localizedDescription
@@ -19967,6 +20051,11 @@ final class GrantDataStore: ObservableObject {
             let previous = publicationRecords[index]
             let normalized = try normalizedPublicationForPersistence(updated, previous: previous)
             publicationRecords[index] = normalized
+            if let updatedProjects = projectsByApplyingPublicationEventTasks(projects, publication: normalized, previousPublication: previous) {
+                projects = updatedProjects
+                refreshProjectIndexesAndCaches()
+                try persistScope(.projects)
+            }
         }
     }
 
@@ -19975,13 +20064,19 @@ final class GrantDataStore: ObservableObject {
         let previousRecords = publicationRecords
         let previousAuthors = publicationAuthors
 
+        let previousProjects = projects
         do {
-            let affectedSet: PersistenceSet = [.publicationRecords]
-            let previousStates = try persistedBaselineDocumentStates(for: affectedSet)
             let previous = publicationRecords[index]
             let normalized = try normalizedPublicationForPersistence(updated, previous: previous)
             guard normalized != previous else { return }
+            let updatedProjects = projectsByApplyingPublicationEventTasks(projects, publication: normalized, previousPublication: previous)
+            let affectedSet: PersistenceSet = updatedProjects == nil ? [.publicationRecords] : [.publicationRecords, .projects]
+            let previousStates = try persistedBaselineDocumentStates(for: affectedSet)
             publicationRecords[index] = normalized
+            if let updatedProjects {
+                projects = updatedProjects
+                refreshProjectIndexesAndCaches()
+            }
             refreshPublicationRecordCaches(afterUpdating: normalized, previous: previous)
             try enqueueAutosavePersistence(
                 affectedSet,
@@ -19991,6 +20086,8 @@ final class GrantDataStore: ObservableObject {
         } catch {
             publicationRecords = previousRecords
             publicationAuthors = previousAuthors
+            projects = previousProjects
+            refreshProjectIndexesAndCaches()
             refreshPublicationRecordCaches(projectCacheBehavior: .markDirty)
             persistenceStatus.isSaving = false
             loadError = error.localizedDescription
