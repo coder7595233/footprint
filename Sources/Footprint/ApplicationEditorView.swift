@@ -360,8 +360,13 @@ struct ApplicationEditorView: View {
         var pending = draft
         pending.applicantCriteria = criteriaText
         pending.projectCriteria = nil
-        pending.approximateAmountValue = approximateAmountComputedValue
-        pending.approximateAmount = approximateAmountComputedValue.flatMap { GrantParsing.formatAmountInput(String(Int($0.rounded()))) }
+        // The salary estimate is worked out only while the record is open
+        // and not yet applied for. A locked or applied record keeps the
+        // amount it has, so opening it never changes it.
+        if !draft.isEditingLocked, draft.isNotYetApplied {
+            pending.approximateAmountValue = approximateAmountComputedValue
+            pending.approximateAmount = approximateAmountComputedValue.flatMap { GrantParsing.formatAmountInput(String(Int($0.rounded()))) }
+        }
         return pending
     }
 
@@ -584,7 +589,7 @@ struct ApplicationEditorView: View {
 
                         Group {
                         if shouldShowFundingAndCriteriaSection {
-                            DetailGroup(title: language.text("Funding and criteria", "Finansiering och kriterier"), showsSurface: false) {
+                            DetailGroup(title: language.text("Call", "Utlysning"), showsSurface: false) {
                             VStack(alignment: .leading, spacing: 10) {
                                 if maximumFundingRowShouldShowWhenLocked {
                                     HStack(alignment: .top, spacing: 12) {
@@ -746,6 +751,7 @@ struct ApplicationEditorView: View {
                                         compactField(title: language.text("Reason for fund manager", "Skäl till medelsförvaltare"), fieldKey: "managerReason", width: nil, content: AnyView(textField(optionalBinding(\.managerReason), label: language.text("Reason for fund manager", "Skäl till medelsförvaltare"))))
                                         compactField(title: language.text("Case number", "Diarienummer"), fieldKey: "institutionCaseNumber", width: nil, content: AnyView(textField(optionalBinding(\.institutionCaseNumber), label: language.text("Case number", "Diarienummer"))))
                                     }
+                                    overheadNumbersRow(language: language)
                                     if applicationLinksRowShouldShowWhenLocked {
                                         HStack(alignment: .top, spacing: 14) {
                                             compactField(
@@ -767,7 +773,7 @@ struct ApplicationEditorView: View {
                         }
 
                         if showsGrantedFollowUpPanel {
-                            DetailGroup(title: language.text("Follow-up", "Uppföljning"), showsSurface: false) {
+                            DetailGroup(title: language.text("Grant", "Anslag"), showsSurface: false) {
                                 VStack(alignment: .leading, spacing: 10) {
                                     HStack(alignment: .top, spacing: 14) {
                                         compactField(
@@ -933,7 +939,15 @@ struct ApplicationEditorView: View {
             criteriaText = newValue.applicantCriteria ?? newValue.projectCriteria ?? ""
             scheduleCalendarEventsRefresh()
         }
-        .onChange(of: draft) { _, _ in
+        .onChange(of: draft) { oldValue, newValue in
+            // Round 10: the OH rules in force on the application day count
+            // for the whole period; they are read once, when the record gets
+            // its application date, and then stay as they are.
+            if oldValue.id == newValue.id,
+               oldValue.appliedOn?.trimmedOrNil == nil,
+               newValue.appliedOn?.trimmedOrNil != nil {
+                copyOverheadDefaultsForApplicationDay()
+            }
             scheduleAutosave()
         }
         .onChange(of: criteriaText) { _, _ in
@@ -1201,6 +1215,7 @@ struct ApplicationEditorView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
+            copyToNextYearButton(language: language)
             applicationEditorLockButton(language: language)
 
             if !draft.isEditingLocked {
@@ -1213,6 +1228,29 @@ struct ApplicationEditorView: View {
             }
         }
         .zIndex(20)
+    }
+
+    /// "Kopiera till nästa år": next year's record for the same call, with
+    /// every date one year later; opens the copy. Works on locked records too.
+    private func copyToNextYearButton(language: AppLanguage) -> some View {
+        Button {
+            persistDraftIfNeeded()
+            guard let newID = store.copyApplicationToNextYear(id: application.id),
+                  let copy = store.applications.first(where: { $0.id == newID }) else { return }
+            store.openRoute(for: copy)
+        } label: {
+            Image(systemName: "calendar.badge.plus")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppPalette.linkAction)
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(language.text(
+            "Copy to next year: a new record for the same call with every date one year later",
+            "Kopiera till nästa år: en ny post för samma utlysning med alla datum ett år senare"
+        ))
+        .accessibilityLabel(language.text("Copy to next year", "Kopiera till nästa år"))
     }
 
     private func applicationEditorLockButton(language: AppLanguage) -> some View {
@@ -1390,6 +1428,7 @@ struct ApplicationEditorView: View {
 
     private func applyOrganizationSelection(_ value: String, language: AppLanguage) {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let previousFunderID = draft.organizationID
         guard !trimmed.isEmpty else {
             draft.organizationID = nil
             draft.organization = ""
@@ -1404,6 +1443,42 @@ struct ApplicationEditorView: View {
             draft.organizationID = nil
             draft.organization = trimmed
         }
+        if draft.organizationID != previousFunderID {
+            applyPreferredFundManagerIfEmpty()
+            copyOverheadDefaultsIntoDraft()
+        }
+    }
+
+    /// Round 10: a record without a fund manager gets the funder's
+    /// "Prioriterad förvaltare" (or the default in Settings).
+    private func applyPreferredFundManagerIfEmpty() {
+        guard !draft.isEditingLocked,
+              draft.applicationManagerID?.trimmedOrNil == nil,
+              draft.applicationManager?.trimmedOrNil == nil,
+              let preferred = store.preferredFundManagerOrganization(forFunderID: draft.organizationID) else { return }
+        draft.applicationManagerID = preferred.id
+        draft.applicationManager = preferred.nameSv
+    }
+
+    /// Round 10: when the funder or the fund manager is chosen, the record
+    /// gets copies of their OH numbers. They can be changed afterwards, and a
+    /// later change on the organizations never reaches this record.
+    private func copyOverheadDefaultsIntoDraft() {
+        guard !draft.isEditingLocked, draft.isNotYetApplied else { return }
+        let managerID = store.linkedFundManager(of: draft)?.id
+        draft.applyOverheadDefaults(store.overheadDefaults(forFunderID: draft.organizationID, managerID: managerID))
+    }
+
+    /// When the record gets its application date: the numbers in force that
+    /// day, unless they were typed by hand. After this they never change.
+    private func copyOverheadDefaultsForApplicationDay() {
+        guard !draft.isEditingLocked else { return }
+        let managerID = store.linkedFundManager(of: draft)?.id
+        draft.applyOverheadDefaults(store.overheadDefaults(
+            forFunderID: draft.organizationID,
+            managerID: managerID,
+            on: draft.overheadDefaultsDate
+        ))
     }
 
     private func commitProjectSelection(language: AppLanguage) {
@@ -1526,8 +1601,12 @@ struct ApplicationEditorView: View {
                     store.beginAddingManager(fromApplicationID: draft.id)
                     return
                 }
+                let previousManagerID = draft.applicationManagerID
                 draft.applicationManagerID = newValue.flatMap { store.manager(matchingName: $0)?.id }
                 draft.applicationManager = newValue
+                if draft.applicationManagerID != previousManagerID {
+                    copyOverheadDefaultsIntoDraft()
+                }
             }
         )
         let selectedManager = draft.applicationManagerID.flatMap { store.manager(id: $0) }
@@ -2119,6 +2198,12 @@ struct ApplicationEditorView: View {
             return draft.applicationManager?.trimmedOrNil != nil
         case "managerReason":
             return draft.managerReason?.trimmedOrNil != nil
+        case "funderMaxOverheadPercent":
+            return draft.funderMaxOverheadPercent != nil
+        case "managerOverheadPercent":
+            return draft.managerOverheadPercent != nil
+        case "cofundingDecision":
+            return draft.cofundingDecision != nil
         case "institutionCaseNumber":
             return draft.institutionCaseNumber?.trimmedOrNil != nil
         case "receivedDisplayName":
@@ -2195,6 +2280,165 @@ struct ApplicationEditorView: View {
         return OverheadRuleSummaryLine(text: text, cofundingText: cofundingText)
     }
 
+    // MARK: Round 10: the record's OH numbers and co-funding
+
+    private func percentBinding(_ keyPath: WritableKeyPath<GrantApplication, Double?>) -> Binding<String> {
+        Binding(
+            get: { draft[keyPath: keyPath].map { formatOverheadPercentInput(String($0)) } ?? "" },
+            set: { newValue in
+                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                let previous = draft[keyPath: keyPath]
+                if trimmed.isEmpty {
+                    draft[keyPath: keyPath] = nil
+                } else if let value = GrantParsing.numericValue(from: trimmed) {
+                    draft[keyPath: keyPath] = min(100, max(0, value))
+                }
+                // A number typed here is kept: the defaults never replace it.
+                if draft[keyPath: keyPath] != previous {
+                    draft.overheadNumbersSetByHand = true
+                }
+            }
+        )
+    }
+
+    private func percentInputField(_ keyPath: WritableKeyPath<GrantApplication, Double?>, placeholder: String) -> some View {
+        let binding = percentBinding(keyPath)
+        return AppLockableField(isLocked: draft.isEditingLocked, lockedText: binding.wrappedValue) {
+            CommitFormattingTextField(
+                placeholder: placeholder,
+                text: binding,
+                formatter: formatOverheadPercentInput,
+                updatesContinuously: false
+            )
+            .appTextInputChrome()
+        }
+    }
+
+    /// "Förvaltaren samfinansierar": Inte frågat / Ja / Nej, with the day.
+    private func cofundingDecisionField(language: AppLanguage) -> some View {
+        let notAsked = language.text("Not asked", "Inte frågat")
+        return AppLockableField(
+            isLocked: draft.isEditingLocked,
+            lockedText: [draft.cofundingDecision?.title(language: language) ?? notAsked, draft.cofundingDecisionOn?.trimmedOrNil]
+                .compactMap { $0 }
+                .joined(separator: ", ")
+        ) {
+            HStack(spacing: 8) {
+                Picker("", selection: Binding<GrantCofundingDecision?>(
+                    get: { draft.cofundingDecision },
+                    set: { newValue in
+                        draft.cofundingDecision = newValue
+                        if newValue != nil, draft.cofundingDecisionOn?.trimmedOrNil == nil {
+                            draft.cofundingDecisionOn = DateParsers.isoDay.string(from: Calendar.current.startOfDay(for: Date()))
+                        }
+                    }
+                )) {
+                    Text(notAsked).tag(GrantCofundingDecision?.none)
+                    ForEach(GrantCofundingDecision.allCases, id: \.self) { decision in
+                        Text(decision.title(language: language)).tag(Optional(decision))
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(width: 130)
+                if draft.cofundingDecision != nil {
+                    AppDateField(
+                        placeholder: "YYYY-MM-DD",
+                        text: Binding(
+                            get: { draft.cofundingDecisionOn ?? "" },
+                            set: { draft.cofundingDecisionOn = $0.trimmedOrNil }
+                        ),
+                        width: 110
+                    )
+                }
+            }
+        }
+    }
+
+    /// Shown when the record's numbers leave a gap, and also when the kr
+    /// line under the salary budget shows a co-funding need (records whose
+    /// numbers are not filled in), so the two never disagree.
+    private var showsCofundingQuestion: Bool {
+        draft.cofundingOverheadGapPercent > 0
+            || (approximateAmountBreakdown?.cofundingAmount ?? 0) >= 0.5
+            || draft.cofundingDecision != nil
+    }
+
+    private func cofundingExplanation(language: AppLanguage) -> String? {
+        guard let manager = draft.managerOverheadPercent,
+              let funder = draft.funderMaxOverheadPercent,
+              manager > funder else { return nil }
+        let managerText = grantFormattedPercent(manager)
+        let funderText = grantFormattedPercent(funder)
+        let gapText = grantFormattedPercent(manager - funder).replacingOccurrences(of: " %", with: "")
+        switch draft.cofundingDecision {
+        case .yes?:
+            return language.text(
+                "The fund manager takes \(managerText) and the funder accepts at most \(funderText). The fund manager co-funds the difference (\(gapText) percentage points).",
+                "Förvaltaren tar ut \(managerText) och finansiären godkänner högst \(funderText). Förvaltaren samfinansierar skillnaden (\(gapText) procentenheter)."
+            )
+        case .no?:
+            return language.text(
+                "The fund manager takes \(managerText) and the funder accepts at most \(funderText). The fund manager does not co-fund the difference: apply with the region as fund manager and write the reason.",
+                "Förvaltaren tar ut \(managerText) och finansiären godkänner högst \(funderText). Förvaltaren samfinansierar inte skillnaden: sök med regionen som förvaltare och skriv skälet."
+            )
+        case nil:
+            return language.text(
+                "The fund manager takes \(managerText) but the funder accepts at most \(funderText). The difference (\(gapText) percentage points) needs co-funding: ask the fund manager.",
+                "Förvaltaren tar ut \(managerText) men finansiären godkänner högst \(funderText). Skillnaden (\(gapText) procentenheter) behöver samfinansieras: fråga förvaltaren."
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func overheadNumbersRow(language: AppLanguage) -> some View {
+        let showsNumbers = !draft.isEditingLocked
+            || draft.funderMaxOverheadPercent != nil
+            || draft.managerOverheadPercent != nil
+            || draft.cofundingDecision != nil
+        if showsNumbers {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .top, spacing: 14) {
+                    compactField(
+                        title: language.text("Funder accepts OH, at most", "Finansiären godkänner OH, högst"),
+                        fieldKey: "funderMaxOverheadPercent",
+                        width: 230,
+                        help: language.text(
+                            "Copied from the funder when the funder or fund manager is chosen. 100 = full OH, 0 = no OH. A later change on the funder does not change this record.",
+                            "Kopieras från finansiären när finansiär eller förvaltare väljs. 100 = full OH, 0 = ingen OH. En senare ändring hos finansiären ändrar inte den här posten."
+                        ),
+                        content: AnyView(percentInputField(\.funderMaxOverheadPercent, placeholder: language.text("Not set", "Inte angiven")))
+                    )
+                    compactField(
+                        title: language.text("Fund manager takes OH", "Förvaltaren tar ut OH"),
+                        fieldKey: "managerOverheadPercent",
+                        width: 230,
+                        help: language.text(
+                            "Copied from the fund manager when it is chosen. A later change on the fund manager does not change this record.",
+                            "Kopieras från förvaltaren när den väljs. En senare ändring hos förvaltaren ändrar inte den här posten."
+                        ),
+                        content: AnyView(percentInputField(\.managerOverheadPercent, placeholder: language.text("Not set", "Inte angiven")))
+                    )
+                    if showsCofundingQuestion {
+                        compactField(
+                            title: language.text("Fund manager co-funds", "Förvaltaren samfinansierar"),
+                            fieldKey: "cofundingDecision",
+                            width: nil,
+                            content: AnyView(cofundingDecisionField(language: language))
+                        )
+                    }
+                    Spacer(minLength: 0)
+                }
+                if let explanation = cofundingExplanation(language: language) {
+                    Text(explanation)
+                        .appTypography(.secondary)
+                        .foregroundStyle(draft.cofundingDecision == nil ? AppPalette.vividRed : Color.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
     @ViewBuilder
     private func overheadRuleSummaryView(language: AppLanguage) -> some View {
         if let summary = overheadRuleSummaryLine(language: language) {
@@ -2213,6 +2457,18 @@ struct ApplicationEditorView: View {
     }
 
     private func approximateAmountMetrics(language: AppLanguage) -> [ApproximateAmountMetric] {
+        // A locked or applied record shows the amount it was saved with, not
+        // a new estimate from today's salary calculator.
+        if draft.isEditingLocked || !draft.isNotYetApplied {
+            return [
+                ApproximateAmountMetric(
+                    id: "total",
+                    label: language.text("Total", "Totalt"),
+                    value: draft.approximateAmountValue.map { CurrencyFormatter.format($0, code: "SEK") } ?? "—",
+                    emphasized: true
+                )
+            ]
+        }
         guard let approximateAmountBreakdown else {
             return [
                 ApproximateAmountMetric(
@@ -3299,6 +3555,11 @@ private struct ApplicationTimelineStepper: View {
             application[keyPath: option.dateKeyPath] = nil
             application[keyPath: option.uncertaintyKeyPath] = false
         }
+        // The old decision date and status went with the decision; without
+        // this the record stayed "Beviljat" and kept the old date.
+        application.decisionOn = nil
+        application.decisionOnUncertain = false
+        application.result = application.appliedOn?.trimmedOrNil == nil ? "Att söka" : "Väntar svar"
     }
 
     private func clearSubmission() {

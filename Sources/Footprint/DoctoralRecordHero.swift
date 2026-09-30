@@ -2,11 +2,12 @@ import AppKit
 import SwiftUI
 
 /// The doctoral record page's hero: a project-style timeline (milestones,
-/// activities, papers, courses, supervision) with progress rings to the right.
-/// Milestone nodes open a popover for date + status editing; papers and
-/// activity markers open their underlying records. The layout rules (label
-/// lanes, grouping of close activities, the year axis) live in
-/// `DoctoralTimelineLayout` so they can be tested.
+/// activities, papers, courses, supervision). Five years are visible at a
+/// time; the rest is reached by scrolling sideways, and the view opens
+/// centred on today. Milestone nodes open a popover for date + status
+/// editing; papers and activity markers open their underlying records. The
+/// layout rules (label lanes, grouping of close activities, the year axis)
+/// live in `DoctoralTimelineLayout` so they can be tested.
 struct DoctoralRecordHeroView: View {
     @ObservedObject var store: GrantDataStore
     let candidate: DoctoralCandidateRecord
@@ -34,10 +35,12 @@ struct DoctoralRecordHeroView: View {
 
     private static let todayMarkerColor = Color(red: 0.98, green: 0.08, blue: 0.08)
     private static let laneLabelWidth: CGFloat = 100
-    private static let ringsColumnWidth: CGFloat = 236
     private static let yearLabelHeight: CGFloat = 24
-    private static let courseCreditGoal: Double = 30
-    private static let publicationGoal = 4
+    /// Years visible at a time; the rest is reached by scrolling sideways.
+    private static let visibleYears = 5
+    private static let todayAnchorID = "doctoral-timeline-today"
+    private static let paperDiamondBlock: CGFloat = 16
+    private static let edgeMargin: CGFloat = 32
     private static let milestoneNodeSize: CGFloat = 18
     private static let activityDotSize: CGFloat = 12
     private static let activityGroupSize: CGFloat = 24
@@ -130,11 +133,9 @@ struct DoctoralRecordHeroView: View {
     }
 
     private static func courseBars(_ rows: [DoctoralStatisticsYearRow]) -> [DoctoralHeroBar] {
-        rows.filter { $0.courseCredits > 0 }.map { DoctoralHeroBar(year: $0.year, value: $0.courseCredits) }
-    }
-
-    private static func supervisionBars(_ rows: [DoctoralStatisticsYearRow]) -> [DoctoralHeroBar] {
-        rows.filter { $0.supervisionHours > 0 }.map { DoctoralHeroBar(year: $0.year, value: $0.supervisionHours) }
+        rows.filter { $0.courseCredits > 0 }.map {
+            DoctoralHeroBar(year: $0.year, completed: $0.completedCourseCredits, planned: $0.plannedCourseCredits)
+        }
     }
 
     private var todayFraction: Double {
@@ -147,13 +148,25 @@ struct DoctoralRecordHeroView: View {
         var activities: [CalendarLinkedEventRow]
         var publications: [PublicationRecord]
         var courseBars: [DoctoralHeroBar]
-        var supervisionBars: [DoctoralHeroBar]
-        var yearlyRows: [DoctoralStatisticsYearRow]
+        var supervisionBlocks: [DoctoralSupervisionSemesterBlock]
         var yearRange: ClosedRange<Int>?
     }
 
+    /// Where a paper's marker sits: the day it was published, else the middle
+    /// of its year, else today (work still going on).
     private func paperYearFraction(_ publication: PublicationRecord) -> Double {
-        publication.yearValue.map { Double($0) + 0.5 } ?? todayFraction
+        if let published = doctoralPaperPublishedDate(publication) {
+            return doctoralHeroYearFraction(of: published)
+        }
+        return publication.yearValue.map { Double($0) + 0.5 } ?? todayFraction
+    }
+
+    /// Where a paper's line starts: the day work on it first began, when that
+    /// lies before its marker.
+    private func paperStartFraction(_ publication: PublicationRecord) -> Double? {
+        guard let start = doctoralPaperStartDate(publication) else { return nil }
+        let fraction = doctoralHeroYearFraction(of: start)
+        return fraction < paperYearFraction(publication) - 0.01 ? fraction : nil
     }
 
     private var heroData: HeroData {
@@ -162,21 +175,25 @@ struct DoctoralRecordHeroView: View {
         let milestones = self.milestones
         let activities = self.activityRows
         let courseBars = Self.courseBars(rows)
-        let supervisionBars = Self.supervisionBars(rows)
+        let supervisionBlocks = doctoralSupervisionSemesterBlocks(periods: candidate.supervisionPeriods)
         var years: [Int] = []
         years += milestones.compactMap { doctoralHeroYearFraction(from: $0.dateText).map { Int($0) } }
         years += courseBars.map(\.year)
-        years += supervisionBars.map(\.year)
+        years += supervisionBlocks.map(\.year)
         years += activities.map { Calendar.current.component(.year, from: $0.displayDate) }
         years += publications.map { Int(paperYearFraction($0)) }
+        years += publications.compactMap { paperStartFraction($0).map { Int($0) } }
         return HeroData(
             milestones: milestones,
             activities: activities,
             publications: publications,
             courseBars: courseBars,
-            supervisionBars: supervisionBars,
-            yearlyRows: rows,
-            yearRange: DoctoralTimelineLayout.axisYears(years)
+            supervisionBlocks: supervisionBlocks,
+            yearRange: DoctoralTimelineLayout.scrollableAxisYears(
+                years,
+                today: todayFraction,
+                visibleYears: Self.visibleYears
+            )
         )
     }
 
@@ -185,18 +202,11 @@ struct DoctoralRecordHeroView: View {
     var body: some View {
         let data = heroData
         if let yearRange = data.yearRange {
-            HStack(alignment: .top, spacing: 22) {
+            VStack(alignment: .leading, spacing: 8) {
                 timeline(data: data, yearRange: yearRange)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
-                ringsColumn(data: data)
-                    .frame(width: Self.ringsColumnWidth, alignment: .topLeading)
-                    .padding(.top, Self.yearLabelHeight)
-                    .overlay(alignment: .leading) {
-                        Rectangle()
-                            .fill(AppPalette.subtleBorder)
-                            .frame(width: 1)
-                            .padding(.vertical, 6)
-                    }
+                footer
+                    .padding(.leading, Self.laneLabelWidth + 8)
             }
         } else {
             Text(language.text(
@@ -209,85 +219,49 @@ struct DoctoralRecordHeroView: View {
         }
     }
 
-    // MARK: - Rings
+    // MARK: - Footer (grants and legend)
 
-    private func ringsColumn(data: HeroData) -> some View {
-        let rows = data.yearlyRows
-        let publications = data.publications
-        let completedCredits = rows.map(\.completedCourseCredits).reduce(0, +)
-        let creditGoal = max(Self.courseCreditGoal, rows.map(\.courseCredits).reduce(0, +))
-        let publishedCount = publications.filter(\.isPublished).count
-        let publicationGoal = max(Self.publicationGoal, publications.count)
-        let completedHours = rows.map(\.completedSupervisionHours).reduce(0, +)
-        let totalHours = rows.map(\.supervisionHours).reduce(0, +)
-
-        return VStack(alignment: .leading, spacing: 6) {
-            DoctoralHeroRingRow(
-                label: language.text("Course credits", "Högskolepoäng"),
-                value: doctoralStatisticsNumber(completedCredits, language: language),
-                sub: language.text(
-                    "of \(doctoralStatisticsNumber(creditGoal, language: language)) cr",
-                    "av \(doctoralStatisticsNumber(creditGoal, language: language)) hp"
-                ),
-                color: StatisticsEditorialStyle.paletteGreen,
-                fraction: creditGoal > 0 ? completedCredits / creditGoal : 0
-            )
-            DoctoralHeroRingRow(
-                label: language.text("Papers", "Delarbeten"),
-                value: "\(publishedCount)",
-                sub: publishedCount == publications.count
-                    ? language.text("published of \(publicationGoal)", "publicerade av \(publicationGoal)")
-                    : language.text(
-                        "published of \(publicationGoal) · \(publications.count) linked",
-                        "publicerade av \(publicationGoal) · \(publications.count) länkade"
-                    ),
-                color: StatisticsEditorialStyle.paletteOrange,
-                fraction: Double(publishedCount) / Double(publicationGoal)
-            )
-            DoctoralHeroRingRow(
-                label: language.text("Supervision", "Handledning"),
-                value: doctoralStatisticsNumber(completedHours, language: language),
-                sub: language.text(
-                    "h done of \(doctoralStatisticsNumber(totalHours, language: language)) h",
-                    "h genomförda av \(doctoralStatisticsNumber(totalHours, language: language)) h"
-                ),
-                color: StatisticsEditorialStyle.palettePurple,
-                fraction: totalHours > 0 ? completedHours / totalHours : 0
-            )
+    private var footer: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 18) {
             grantRow
+            Spacer(minLength: 12)
+            Text(language.text(
+                "Solid = completed / confirmed in Retendo · dashed = not yet · red edge = supervision not confirmed in Retendo",
+                "Heldragen = genomförd / bekräftad i Retendo · streckad = inte än · röd kant = handledning ej bekräftad i Retendo"
+            ))
+            .appTypography(.secondary)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.trailing)
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.leading, 22)
     }
 
     private var grantRow: some View {
         let applications = grantApplications
         let granted = applications.filter { $0.derivedResult == "Beviljat" }
         let grantedTotal = granted.compactMap(\.grantedAmountValue).reduce(0, +)
-        return HStack(alignment: .firstTextBaseline, spacing: 10) {
+        return HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(language.text("Grants", "Anslag"))
                 .font(appFont(.secondary).weight(.semibold))
                 .foregroundStyle(.secondary)
-                .frame(width: DoctoralHeroRingRow.labelWidth, alignment: .trailing)
             if applications.isEmpty {
                 Text(language.text("None", "Inga"))
                     .appTypography(.body)
                     .foregroundStyle(AppPalette.appText)
             } else {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(doctoralStatisticsNumber(grantedTotal / 1_000_000, language: language) + " mkr")
-                        .font(appFont(.body).weight(.semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(AppPalette.appText)
-                    Text(language.text(
-                        "\(granted.count) awarded of \(applications.count)",
-                        "\(granted.count) beviljade av \(applications.count)"
-                    ))
-                    .appTypography(.secondary)
-                    .foregroundStyle(.secondary)
-                }
+                Text(doctoralStatisticsNumber(grantedTotal / 1_000_000, language: language) + " mkr")
+                    .font(appFont(.body).weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(AppPalette.appText)
+                Text(language.text(
+                    "\(granted.count) awarded of \(applications.count)",
+                    "\(granted.count) beviljade av \(applications.count)"
+                ))
+                .appTypography(.secondary)
+                .foregroundStyle(.secondary)
             }
         }
-        .padding(.top, 6)
+        .fixedSize()
     }
 
     // MARK: - Timeline geometry
@@ -307,6 +281,8 @@ struct DoctoralRecordHeroView: View {
         let publication: PublicationRecord
         let label: String
         let x: CGFloat
+        /// Where the line from "work began" starts; nil when there is no date.
+        let startX: CGFloat?
         let lane: Int
 
         var id: String { publication.id }
@@ -337,6 +313,7 @@ struct DoctoralRecordHeroView: View {
         var coursesHeight: CGFloat = 72
         var supervisionBase: CGFloat?
         var supervisionHeight: CGFloat = 58
+        var paperLabelHeight: CGFloat = 0
         var height: CGFloat = 60
 
         /// Top edge of a milestone label. Even lanes go below the node row,
@@ -438,21 +415,30 @@ struct DoctoralRecordHeroView: View {
         // Papers: markers that would overlap stack in lanes.
         if !data.publications.isEmpty {
             let labelFont = NSFont.systemFont(ofSize: captionFont.pointSize, weight: .semibold)
-            let items: [(PublicationRecord, String, CGFloat)] = data.publications.enumerated().map { item in
-                (item.element, "P\(item.offset + 1)", x(paperYearFraction(item.element)))
+            let items: [(PublicationRecord, String, CGFloat, CGFloat?)] = data.publications.enumerated().map { item in
+                (
+                    item.element,
+                    "P\(item.offset + 1)",
+                    x(paperYearFraction(item.element)),
+                    paperStartFraction(item.element).map(x)
+                )
             }
+            // A paper's lane span covers its line too, so lines never cross markers.
             let paperSpans = items.map { item -> ClosedRange<Double> in
                 let half = Double(max(16, Self.textWidth(item.1, font: labelFont)) / 2 + 3)
-                return (Double(item.2) - half)...(Double(item.2) + half)
+                let lower = min(Double(item.2) - half, item.3.map { Double($0) - 4 } ?? .infinity)
+                return lower...(Double(item.2) + half)
             }
             let paperLanes = DoctoralTimelineLayout.lanes(for: paperSpans, gap: 4)
-            geometry.paperLaneHeight = 16 + ceil(captionFont.pointSize * 1.3) + 6
+            geometry.paperLabelHeight = ceil(captionFont.pointSize * 1.3)
+            geometry.paperLaneHeight = Self.paperDiamondBlock + 2 + geometry.paperLabelHeight + 6
             geometry.papersTopY = y + 4
             geometry.papers = items.indices.map { index in
                 PaperPlacement(
                     publication: items[index].0,
                     label: items[index].1,
                     x: items[index].2,
+                    startX: items[index].3,
                     lane: paperLanes[index]
                 )
             }
@@ -464,7 +450,7 @@ struct DoctoralRecordHeroView: View {
             geometry.coursesBase = y
             y += 8
         }
-        if !data.supervisionBars.isEmpty {
+        if !data.supervisionBlocks.isEmpty {
             y += geometry.supervisionHeight
             geometry.supervisionBase = y
             y += 4
@@ -476,38 +462,74 @@ struct DoctoralRecordHeroView: View {
     // MARK: - Timeline
 
     private func timeline(data: HeroData, yearRange: ClosedRange<Int>) -> some View {
-        let width = plotWidth > 0 ? plotWidth : 640
+        let visibleWidth = plotWidth > 0 ? plotWidth : 640
+        let yearCount = CGFloat(yearRange.upperBound - yearRange.lowerBound + 1)
+        let width = max(visibleWidth, visibleWidth / CGFloat(Self.visibleYears) * yearCount)
         let geometry = timelineGeometry(data: data, yearRange: yearRange, width: width)
         let totalHeight = Self.yearLabelHeight + geometry.height
-        return HStack(alignment: .top, spacing: 8) {
-            laneLabels(geometry: geometry)
-            Color.clear
+        let todayX = Self.xPosition(todayFraction, yearRange: yearRange, width: width)
+        return ScrollViewReader { proxy in
+            HStack(alignment: .top, spacing: 8) {
+                laneLabels(geometry: geometry) {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(Self.todayAnchorID, anchor: .center)
+                    }
+                }
+                ScrollView(.horizontal, showsIndicators: true) {
+                    ZStack(alignment: .topLeading) {
+                        timelinePlot(data: data, width: width, yearRange: yearRange, geometry: geometry)
+                        // Invisible anchor at today, used to centre the view.
+                        HStack(spacing: 0) {
+                            Color.clear.frame(width: max(0, todayX - 0.5), height: 1)
+                            Color.clear.frame(width: 1, height: 1).id(Self.todayAnchorID)
+                        }
+                        .allowsHitTesting(false)
+                    }
+                    .frame(width: width, height: totalHeight, alignment: .topLeading)
+                    // Room at both ends, so a milestone on the first or last
+                    // day of the axis (and its label) is never cut off.
+                    .padding(.horizontal, Self.edgeMargin)
+                    .padding(.bottom, 10)
+                }
                 .frame(maxWidth: .infinity)
-                .frame(height: totalHeight)
+                .frame(height: totalHeight + 10)
                 .background(
-                    GeometryReader { proxy in
+                    GeometryReader { sizeProxy in
                         Color.clear
-                            .onAppear { plotWidth = proxy.size.width }
-                            .onChange(of: proxy.size.width) { _, newWidth in
+                            .onAppear { plotWidth = sizeProxy.size.width }
+                            .onChange(of: sizeProxy.size.width) { _, newWidth in
                                 plotWidth = newWidth
                             }
                     }
                 )
-                .overlay(alignment: .topLeading) {
-                    timelinePlot(data: data, width: width, yearRange: yearRange, geometry: geometry)
-                }
+            }
+            // Opens centred on today, again for every candidate and when the
+            // window changes width.
+            .task(id: "\(candidate.id)|\(Int(visibleWidth))") {
+                await Task.yield()
+                proxy.scrollTo(Self.todayAnchorID, anchor: .center)
+            }
         }
     }
 
-    private func laneLabels(geometry: TimelineGeometry) -> some View {
+    private func laneLabels(geometry: TimelineGeometry, showToday: @escaping () -> Void) -> some View {
         ZStack(alignment: .topLeading) {
             Color.clear
+            Button(action: showToday) {
+                Text(language.text("Today", "Idag"))
+                    .font(appFont(.secondary).weight(.semibold))
+                    .foregroundStyle(AppPalette.linkAction)
+            }
+            .buttonStyle(.plain)
+            .help(language.text("Scroll the timeline back to today", "Rulla tidslinjen tillbaka till idag"))
+            .frame(width: Self.laneLabelWidth, alignment: .leading)
+            .position(x: Self.laneLabelWidth / 2, y: Self.yearLabelHeight / 2 - 2)
             laneLabel(language.text("Milestones", "Milstolpar"), y: geometry.milestoneRowY)
             if let y = geometry.activitiesY {
                 laneLabel(language.text("Activities", "Aktiviteter"), y: y)
             }
             if let top = geometry.papersTopY {
-                laneLabel(language.text("Papers", "Delarbeten"), y: top + geometry.paperLaneHeight / 2)
+                laneLabel(language.text("Papers", "Delarbeten"), y: top + Self.paperDiamondBlock / 2)
             }
             if let base = geometry.coursesBase {
                 laneLabel(language.text("Courses", "Kurser"), y: base - 14)
@@ -529,6 +551,45 @@ struct DoctoralRecordHeroView: View {
             .position(x: Self.laneLabelWidth / 2, y: Self.yearLabelHeight + y)
     }
 
+    private func semesterName(_ block: DoctoralSupervisionSemesterBlock) -> String {
+        block.half == 1
+            ? language.text("Spring \(block.year)", "VT \(block.year)")
+            : language.text("Autumn \(block.year)", "HT \(block.year)")
+    }
+
+    private func supervisionHelpText(_ block: DoctoralSupervisionSemesterBlock) -> String {
+        let hours = doctoralStatisticsNumber(block.hours, language: language) + " h"
+        let confirmation: String
+        if block.isFullyConfirmed {
+            confirmation = language.text("confirmed in Retendo", "bekräftad i Retendo")
+        } else if block.confirmedHours > 0 {
+            confirmation = language.text(
+                "\(doctoralStatisticsNumber(block.confirmedHours, language: language)) h confirmed in Retendo",
+                "\(doctoralStatisticsNumber(block.confirmedHours, language: language)) h bekräftade i Retendo"
+            )
+        } else {
+            confirmation = language.text("not confirmed in Retendo", "ej bekräftad i Retendo")
+        }
+        return [semesterName(block), hours, confirmation].joined(separator: " · ")
+    }
+
+    private func courseHelpText(_ bar: DoctoralHeroBar) -> String {
+        var parts = [String(bar.year)]
+        if bar.completed > 0 {
+            parts.append(language.text(
+                "\(doctoralStatisticsNumber(bar.completed, language: language)) cr completed",
+                "\(doctoralStatisticsNumber(bar.completed, language: language)) hp genomförda"
+            ))
+        }
+        if bar.planned > 0 {
+            parts.append(language.text(
+                "\(doctoralStatisticsNumber(bar.planned, language: language)) cr not completed",
+                "\(doctoralStatisticsNumber(bar.planned, language: language)) hp ej genomförda"
+            ))
+        }
+        return parts.joined(separator: " · ")
+    }
+
     private func timelinePlot(
         data: HeroData,
         width: CGFloat,
@@ -542,12 +603,22 @@ struct DoctoralRecordHeroView: View {
             (x(Double(year) + inset), x(Double(year) + 1 - inset))
         }
         let top = Self.yearLabelHeight
+        let dashed = StrokeStyle(lineWidth: 1.2, dash: [4, 3])
 
         return ZStack(alignment: .topLeading) {
             // Fixes the drawing area; no fill of its own, so the timeline
             // sits on the same background as the rest of the page.
             Color.clear
                 .frame(width: width, height: top + geometry.height)
+
+            // Faint year boundaries through the whole plot
+            ForEach(Array(yearRange.dropFirst()), id: \.self) { year in
+                Rectangle()
+                    .fill(AppPalette.subtleBorder.opacity(0.6))
+                    .frame(width: 1, height: geometry.height)
+                    .offset(x: x(Double(year)), y: top)
+                    .allowsHitTesting(false)
+            }
 
             // Year labels and a thin line under them
             ForEach(yearRange, id: \.self) { year in
@@ -571,17 +642,28 @@ struct DoctoralRecordHeroView: View {
                     .allowsHitTesting(false)
             }
 
-            // Courses
+            // Courses: solid part = completed credits, dashed part = not yet
             if let base = geometry.coursesBase {
                 let maxCredits = data.courseBars.map(\.value).max() ?? 1
                 ForEach(data.courseBars) { bar in
                     let (xa, xb) = yearSpanX(bar.year, inset: 0.08)
                     let h = max(8, CGFloat(bar.value / max(maxCredits, 1)) * (geometry.coursesHeight - 24))
-                    Rectangle()
-                        .fill(LinearGradient(colors: [AppPalette.timelineBarEnd, AppPalette.timelineBarStart], startPoint: .bottom, endPoint: .top))
-                        .overlay(Rectangle().stroke(AppPalette.timelineBarStroke, lineWidth: 1))
-                        .frame(width: xb - xa, height: h)
-                        .offset(x: xa, y: top + base - h)
+                    let doneHeight = bar.value > 0 ? h * CGFloat(bar.completed / bar.value) : 0
+                    ZStack(alignment: .bottom) {
+                        Rectangle()
+                            .fill(AppPalette.timelineBarStart.opacity(0.25))
+                            .overlay(Rectangle().stroke(AppPalette.timelineBarStroke, style: dashed))
+                        if doneHeight > 0 {
+                            Rectangle()
+                                .fill(LinearGradient(colors: [AppPalette.timelineBarEnd, AppPalette.timelineBarStart], startPoint: .bottom, endPoint: .top))
+                                .overlay(Rectangle().stroke(AppPalette.timelineBarStroke, lineWidth: 1))
+                                .frame(height: doneHeight)
+                        }
+                    }
+                    .frame(width: xb - xa, height: h)
+                    .contentShape(Rectangle())
+                    .help(courseHelpText(bar))
+                    .offset(x: xa, y: top + base - h)
                     Text(doctoralStatisticsNumber(bar.value, language: language) + " hp")
                         .font(appFont(.secondary).weight(.semibold))
                         .monospacedDigit()
@@ -591,32 +673,51 @@ struct DoctoralRecordHeroView: View {
                 }
             }
 
-            // Supervision blocks
+            // Supervision per semester: solid = confirmed in Retendo, dashed =
+            // not confirmed; a red left edge once the semester has ended unconfirmed.
             if let base = geometry.supervisionBase {
-                let maxHours = data.supervisionBars.map(\.value).max() ?? 1
-                ForEach(data.supervisionBars) { bar in
-                    let (xa, xb) = yearSpanX(bar.year, inset: 0.08)
-                    let h = max(9, CGFloat(bar.value / max(maxHours, 1)) * (geometry.supervisionHeight - 16))
-                    let hoursText = doctoralStatisticsNumber(bar.value, language: language) + " h"
-                    ZStack {
+                let purple = StatisticsEditorialStyle.palettePurple
+                let maxHours = data.supervisionBlocks.map(\.hours).max() ?? 1
+                ForEach(data.supervisionBlocks) { block in
+                    let xa = x(block.startFraction + 0.02)
+                    let xb = x(block.startFraction + 0.48)
+                    let h = max(9, CGFloat(block.hours / max(maxHours, 1)) * (geometry.supervisionHeight - 16))
+                    let confirmedHeight = block.hours > 0 ? h * CGFloat(min(1, block.confirmedHours / block.hours)) : 0
+                    let hoursText = doctoralStatisticsNumber(block.hours, language: language) + " h"
+                    ZStack(alignment: .bottom) {
                         Rectangle()
-                            .fill(LinearGradient(
-                                colors: [StatisticsEditorialStyle.palettePurple.opacity(0.45), StatisticsEditorialStyle.palettePurple],
-                                startPoint: .bottom,
-                                endPoint: .top
-                            ))
-                            .overlay(Rectangle().stroke(StatisticsEditorialStyle.palettePurple.opacity(0.9), lineWidth: 1))
+                            .fill(purple.opacity(0.22))
+                            .overlay(Rectangle().stroke(purple, style: dashed))
+                        if confirmedHeight > 0 {
+                            Rectangle()
+                                .fill(LinearGradient(
+                                    colors: [purple.opacity(0.45), purple],
+                                    startPoint: .bottom,
+                                    endPoint: .top
+                                ))
+                                .overlay(Rectangle().stroke(purple.opacity(0.9), lineWidth: 1))
+                                .frame(height: confirmedHeight)
+                        }
                         if h >= 18 {
                             Text(hoursText)
                                 .font(appFont(.secondary).weight(.semibold))
                                 .monospacedDigit()
                                 .foregroundStyle(AppPalette.appText)
                                 .lineLimit(1)
-                                .minimumScaleFactor(0.8)
+                                .minimumScaleFactor(0.7)
+                                .frame(maxHeight: .infinity)
                         }
                     }
-                    .frame(width: xb - xa, height: h)
-                    .help(hoursText)
+                    .frame(width: max(4, xb - xa), height: h)
+                    .overlay(alignment: .leading) {
+                        if block.needsConfirmation {
+                            Rectangle()
+                                .fill(AppPalette.vividRed)
+                                .frame(width: 3)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .help(supervisionHelpText(block))
                     .offset(x: xa, y: top + base - h)
                 }
             }
@@ -629,13 +730,17 @@ struct DoctoralRecordHeroView: View {
                 }
             }
 
-            // Paper markers
+            // Papers: a line from the day work began to the marker
             if let papersTop = geometry.papersTopY {
                 ForEach(geometry.papers) { paper in
-                    paperMarkerView(paper)
+                    let laneTop = top + papersTop + CGFloat(paper.lane) * geometry.paperLaneHeight
+                    if let startX = paper.startX {
+                        paperLineView(paper, startX: startX, y: laneTop + Self.paperDiamondBlock / 2)
+                    }
+                    paperMarkerView(paper, labelHeight: geometry.paperLabelHeight)
                         .position(
                             x: paper.x,
-                            y: top + papersTop + CGFloat(paper.lane) * geometry.paperLaneHeight + geometry.paperLaneHeight / 2
+                            y: laneTop + (Self.paperDiamondBlock + 2 + geometry.paperLabelHeight) / 2
                         )
                 }
             }
@@ -943,11 +1048,60 @@ struct DoctoralRecordHeroView: View {
             : language.text("Not yet published", "Ej publicerat")
     }
 
-    private func paperMarkerView(_ paper: PaperPlacement) -> some View {
+    private func paperStartText(_ publication: PublicationRecord) -> String? {
+        doctoralPaperStartDate(publication).map {
+            language.text("started \(DateParsers.isoDay.string(from: $0))", "påbörjat \(DateParsers.isoDay.string(from: $0))")
+        }
+    }
+
+    private func paperHelpText(_ paper: PaperPlacement) -> String {
+        [
+            paper.label,
+            paper.publication.title.nonEmpty,
+            paper.startX == nil ? nil : paperStartText(paper.publication),
+            paperStatusWord(paper.publication),
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    }
+
+    /// The line from the day work on a paper began up to its marker: solid
+    /// once published, dashed while the work is still going on.
+    private func paperLineView(_ paper: PaperPlacement, startX: CGFloat, y: CGFloat) -> some View {
+        let color = paper.publication.isPublished ? AppPalette.timelineBarStroke : Color.secondary
+        let length = max(0, paper.x - 8 - startX)
+        return Button {
+            store.openRoute(for: paper.publication)
+        } label: {
+            HStack(spacing: 0) {
+                Circle()
+                    .fill(color)
+                    .frame(width: 6, height: 6)
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: 5))
+                    path.addLine(to: CGPoint(x: max(0, length - 3), y: 5))
+                }
+                .stroke(
+                    color,
+                    style: paper.publication.isPublished
+                        ? StrokeStyle(lineWidth: 2, lineCap: .round)
+                        : StrokeStyle(lineWidth: 2, lineCap: .round, dash: [4, 3])
+                )
+                .frame(width: max(0, length - 3), height: 10)
+            }
+            .frame(width: length, height: 10, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(paperHelpText(paper))
+        .offset(x: startX - 3, y: y - 5)
+    }
+
+    private func paperMarkerView(_ paper: PaperPlacement, labelHeight: CGFloat) -> some View {
         Button {
             store.openRoute(for: paper.publication)
         } label: {
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Group {
                     if paper.publication.isPublished {
                         Rectangle()
@@ -964,20 +1118,19 @@ struct DoctoralRecordHeroView: View {
                 }
                 .frame(width: 11, height: 11)
                 .rotationEffect(.degrees(45))
-                .padding(.top, 2)
+                .frame(height: Self.paperDiamondBlock)
                 Text(paper.label)
                     .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(AppPalette.appText)
                     .fixedSize()
                     .padding(.horizontal, 2)
                     .background(AppPalette.detailPanelSurface)
+                    .frame(height: labelHeight)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help([paper.label, paper.publication.title.nonEmpty, paperStatusWord(paper.publication)]
-            .compactMap { $0 }
-            .joined(separator: " · "))
+        .help(paperHelpText(paper))
     }
 }
 
@@ -985,8 +1138,10 @@ struct DoctoralRecordHeroView: View {
 
 struct DoctoralHeroBar: Identifiable {
     let year: Int
-    let value: Double
+    let completed: Double
+    let planned: Double
 
+    var value: Double { completed + planned }
     var id: Int { year }
 }
 
@@ -1097,51 +1252,6 @@ struct DoctoralMilestonePopover: View {
         } else {
             date = DateParsers.isoDay.string(from: Calendar.current.startOfDay(for: Date()))
         }
-    }
-}
-
-/// Compact progress ring with its label (and the "of …" text) to the LEFT so
-/// the rings column stays short next to the timeline.
-struct DoctoralHeroRingRow: View {
-    static let labelWidth: CGFloat = 112
-
-    let label: String
-    let value: String
-    let sub: String
-    let color: Color
-    let fraction: Double
-
-    var body: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(label)
-                    .font(appFont(.secondary).weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Text(sub)
-                    .appTypography(.secondary)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .multilineTextAlignment(.trailing)
-            .frame(width: Self.labelWidth, alignment: .trailing)
-            ZStack {
-                Circle()
-                    .stroke(StatisticsEditorialStyle.hairline, lineWidth: 7)
-                Circle()
-                    .trim(from: 0, to: max(0, min(1, fraction)))
-                    .stroke(color, style: StrokeStyle(lineWidth: 7))
-                    .rotationEffect(.degrees(-90))
-                Text(value)
-                    .appTypography(.panelTitle)
-                    .monospacedDigit()
-                    .foregroundStyle(AppPalette.appText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .padding(.horizontal, 8)
-            }
-            .frame(width: 64, height: 64)
-        }
-        .help("\(label): \(value) \(sub)")
     }
 }
 

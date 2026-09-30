@@ -721,7 +721,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         case "projects":
             return language.text("New project", "Nytt projekt")
         case "applications":
-            return language.text("New application", "Ny ansökan")
+            return language.text("New call", "Ny utlysning")
         case "organizations":
             return language.text("New organization", "Ny organisation")
         case "managers":

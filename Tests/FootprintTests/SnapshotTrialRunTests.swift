@@ -824,4 +824,55 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertFalse(reloaded.migrateLegacyOverheadCheckboxToFunderCapForRound8(), "no checkbox is left to move")
         XCTAssertFalse(reloaded.migrateFunderMaxOverheadToOverheadRuleForRound8(), "no Max OH is left to move")
     }
+
+    /// Round 10 (user decision 2026-09-29): the fund managers' empty "OH som
+    /// tas ut" gets this year's OH from their own salary calculator, and only
+    /// unlocked records with the status "Att söka" or "Ej sökt" get copies of
+    /// the OH numbers. Locked records and records already applied for are
+    /// exactly as before, no record is lost or added, and running the step
+    /// again changes nothing. Only counts are printed.
+    @MainActor
+    func testSnapshotRound10RecordOverheadKeepsAppliedRecords() throws {
+        let databaseURL = storageDirectory.appendingPathComponent("footprint.sqlite")
+        let rawStore = try SQLiteDocumentStore(url: databaseURL, createIfMissing: false)
+        let storedApplications = try XCTUnwrap(rawStore.load([GrantApplication].self, named: "applications"))
+        let storedOrganizations = try XCTUnwrap(rawStore.load([OrganizationRecord].self, named: "organizations"))
+        let storedByID = Dictionary(storedApplications.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let eligible = storedApplications.filter { !$0.isEditingLocked && $0.isNotYetApplied }
+        print("SNAPSHOT: R10 Poster: \(storedApplications.count), varav låsta \(storedApplications.filter(\.isEditingLocked).count)")
+        print("SNAPSHOT: R10 Olåsta poster med Att söka eller Ej sökt: \(eligible.count)")
+        print("SNAPSHOT: R10 Förvaltare utan OH som tas ut före: \(storedOrganizations.filter { $0.roles.contains(.fundManager) && $0.managerOverheadPercent == nil }.count)")
+        print("SNAPSHOT: R10 Finansiärer med OH-regel: \(storedOrganizations.filter { $0.overheadRule != nil }.count), med undantag: \(storedOrganizations.filter { !($0.overheadRuleExceptions ?? []).isEmpty }.count)")
+
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let countsBefore = Self.recordCounts(store)
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: R10 \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+
+        var filled = 0
+        var changedOutsideScope = 0
+        for application in reloaded.applications {
+            guard let stored = storedByID[application.id] else { continue }
+            let inScope = !stored.isEditingLocked && stored.isNotYetApplied
+            let gotNumbers = application.funderMaxOverheadPercent != stored.funderMaxOverheadPercent
+                || application.managerOverheadPercent != stored.managerOverheadPercent
+            if gotNumbers {
+                if inScope { filled += 1 } else { changedOutsideScope += 1 }
+            }
+        }
+        print("SNAPSHOT: R10 Poster som fick OH-siffror: \(filled)")
+        print("SNAPSHOT: R10 Låsta eller redan sökta poster som ändrades: \(changedOutsideScope)")
+        print("SNAPSHOT: R10 Förvaltare utan OH som tas ut efter: \(reloaded.organizations.filter { $0.roles.contains(.fundManager) && $0.managerOverheadPercent == nil }.count)")
+        XCTAssertEqual(changedOutsideScope, 0, "locked and applied records are never changed")
+        XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round10-record-overhead" })
+        XCTAssertFalse(reloaded.runRound10OneTimeDataMigrations(), "running the step again changes nothing")
+    }
 }

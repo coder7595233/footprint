@@ -3411,6 +3411,8 @@ private struct PublicationAuthorEditorView: View {
                             placeholder: language.text("Select organization", "Välj organisation"),
                             onCommit: { scheduleAutosave() }
                         )
+                        // About 30 % narrower than before, so the unit fits better.
+                        .frame(width: 280)
                         if let organization = affiliationOrganizationRecord(for: index, language: language) {
                             AppDestinationActionButton(
                                 kind: .app,
@@ -3429,7 +3431,8 @@ private struct PublicationAuthorEditorView: View {
                             organization: affiliationTreeOrganization(for: index),
                             unitID: affiliation.unitID,
                             language: language,
-                            width: 180
+                            // Gets the department field's room when a unit is chosen.
+                            width: affiliationHasUnit(at: index) ? 300 : 180
                         ) { unit in
                             selectAffiliationUnit(unit, at: index)
                         }
@@ -3440,8 +3443,8 @@ private struct PublicationAuthorEditorView: View {
                         }
                         TextField(language.text("City", "Ort"), text: affiliationBinding(index, \.city))
                             .appTextInputChrome()
-                            .frame(width: 150)
-                        CountryPickerField(selection: affiliationBinding(index, \.country), language: language, width: 140)
+                            .frame(width: 105)
+                        CountryPickerField(selection: affiliationBinding(index, \.country), language: language, width: 100)
                         HStack(alignment: .center, spacing: 8) {
                             TextField(language.text("E-mail", "E-post"), text: affiliationBinding(index, \.email))
                                 .appTextInputChrome()
@@ -3459,15 +3462,14 @@ private struct PublicationAuthorEditorView: View {
                                 .frame(width: 62, height: AppPalette.fieldMinHeight)
                         }
                     }
-                        Button(language.text("Remove", "Ta bort")) {
+                        AppIconDeleteButton(
+                            title: language.text("Delete affiliation", "Ta bort affiliering"),
+                            width: 24
+                        ) {
                             guard !affiliation.isEmpty else { return }
                             removeAffiliation(id: affiliation.id)
                         }
-                        .buttonStyle(.borderless)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(AppPalette.actionDelete)
-                        .help(language.text("Delete affiliation", "Ta bort affiliering"))
-                        .frame(width: 60, height: AppPalette.fieldMinHeight, alignment: .leading)
+                        .frame(width: 24, height: AppPalette.fieldMinHeight)
                         .opacity(affiliation.isEmpty ? 0 : 1)
                         .allowsHitTesting(!affiliation.isEmpty)
                     }

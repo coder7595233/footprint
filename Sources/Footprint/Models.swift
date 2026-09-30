@@ -88,6 +88,23 @@ struct GrantApplication: Identifiable, Codable, Hashable {
     var receivedRepaymentDueOn: String?
     var receivedRepaidOn: String?
     var isEditingLocked: Bool
+    /// Round 10: "Finansiären godkänner OH, högst (%)" on this record (0–100;
+    /// 100 = full OH). A copy of the funder's setting made when the funder or
+    /// fund manager is chosen; editable, and never changed afterwards by the
+    /// funder's setting. nil = not set (older records; the funder's setting
+    /// counts, as before).
+    var funderMaxOverheadPercent: Double?
+    /// Round 10: "Förvaltaren tar ut OH (%)" on this record. A copy of the
+    /// fund manager's setting, handled like `funderMaxOverheadPercent`.
+    var managerOverheadPercent: Double?
+    /// Round 10: "Förvaltaren samfinansierar": the fund manager's answer when
+    /// it takes more OH than the funder accepts. nil = not asked.
+    var cofundingDecision: GrantCofundingDecision?
+    /// The day of that answer (ISO day).
+    var cofundingDecisionOn: String?
+    /// Round 10: true once either OH number has been typed in the record.
+    /// Such numbers are never replaced by the organizations' defaults.
+    var overheadNumbersSetByHand: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -167,6 +184,11 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         case receivedRepaymentDueOn
         case receivedRepaidOn
         case isEditingLocked
+        case funderMaxOverheadPercent
+        case managerOverheadPercent
+        case cofundingDecision
+        case cofundingDecisionOn
+        case overheadNumbersSetByHand
     }
 
     init(
@@ -245,7 +267,12 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         receivedRepaymentRequirement: String? = nil,
         receivedRepaymentDueOn: String? = nil,
         receivedRepaidOn: String? = nil,
-        isEditingLocked: Bool = false
+        isEditingLocked: Bool = false,
+        funderMaxOverheadPercent: Double? = nil,
+        managerOverheadPercent: Double? = nil,
+        cofundingDecision: GrantCofundingDecision? = nil,
+        cofundingDecisionOn: String? = nil,
+        overheadNumbersSetByHand: Bool = false
     ) {
         self.id = id
         self.rowNumber = rowNumber
@@ -322,6 +349,11 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         self.receivedRepaymentDueOn = receivedRepaymentDueOn
         self.receivedRepaidOn = receivedRepaidOn
         self.isEditingLocked = isEditingLocked
+        self.funderMaxOverheadPercent = funderMaxOverheadPercent
+        self.managerOverheadPercent = managerOverheadPercent
+        self.cofundingDecision = cofundingDecision
+        self.cofundingDecisionOn = cofundingDecisionOn
+        self.overheadNumbersSetByHand = overheadNumbersSetByHand
     }
 
     init(from decoder: Decoder) throws {
@@ -423,7 +455,13 @@ struct GrantApplication: Identifiable, Codable, Hashable {
             receivedRepaymentRequirement: try container.decodeIfPresent(String.self, forKey: .receivedRepaymentRequirement),
             receivedRepaymentDueOn: try container.decodeIfPresent(String.self, forKey: .receivedRepaymentDueOn),
             receivedRepaidOn: try container.decodeIfPresent(String.self, forKey: .receivedRepaidOn),
-            isEditingLocked: try container.decodeIfPresent(Bool.self, forKey: .isEditingLocked) ?? false
+            isEditingLocked: try container.decodeIfPresent(Bool.self, forKey: .isEditingLocked) ?? false,
+            funderMaxOverheadPercent: try container.decodeIfPresent(Double.self, forKey: .funderMaxOverheadPercent),
+            managerOverheadPercent: try container.decodeIfPresent(Double.self, forKey: .managerOverheadPercent),
+            cofundingDecision: (try container.decodeIfPresent(String.self, forKey: .cofundingDecision))
+                .flatMap(GrantCofundingDecision.init(rawValue:)),
+            cofundingDecisionOn: try container.decodeIfPresent(String.self, forKey: .cofundingDecisionOn),
+            overheadNumbersSetByHand: try container.decodeIfPresent(Bool.self, forKey: .overheadNumbersSetByHand) ?? false
         )
     }
 
@@ -507,6 +545,13 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         try container.encodeIfPresent(receivedRepaymentDueOn, forKey: .receivedRepaymentDueOn)
         try container.encodeIfPresent(receivedRepaidOn, forKey: .receivedRepaidOn)
         try container.encode(isEditingLocked, forKey: .isEditingLocked)
+        try container.encodeIfPresent(funderMaxOverheadPercent, forKey: .funderMaxOverheadPercent)
+        try container.encodeIfPresent(managerOverheadPercent, forKey: .managerOverheadPercent)
+        try container.encodeIfPresent(cofundingDecision?.rawValue, forKey: .cofundingDecision)
+        try container.encodeIfPresent(cofundingDecisionOn, forKey: .cofundingDecisionOn)
+        if overheadNumbersSetByHand {
+            try container.encode(true, forKey: .overheadNumbersSetByHand)
+        }
     }
 
     var displayTitle: String {
@@ -603,7 +648,7 @@ struct GrantApplication: Identifiable, Codable, Hashable {
 
     var maximumTotalAmountValue: Double? {
         guard let annual = maximumAmountValue else { return nil }
-        let years = Double(yearCount?.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression) ?? "") ?? 0
+        let years = GrantParsing.largestNumber(in: yearCount) ?? 0
         guard years > 0 else { return annual }
         return annual * years
     }
@@ -2110,9 +2155,14 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
     /// Grant provider exceptions "När [medelsförvaltare] förvaltar: …", found
     /// by the fund manager organization's id. Stored only when there are any.
     var overheadRuleExceptions: [FunderOverheadRuleException]?
-    /// Fund manager setting "Förvaltarens fulla OH (%)", used when the fund
-    /// manager's salary calculator has no OH periods. Stored only when set.
+    /// Fund manager setting "OH som tas ut (%)" (round 10; earlier
+    /// "Förvaltarens fulla OH"). Copied into new records as the fund manager's
+    /// OH. Stored only when set.
     var managerOverheadPercent: Double?
+    /// Round 10, grant provider setting "Prioriterad förvaltare": the fund
+    /// manager organization (by id) chosen for new records to this funder.
+    /// nil = the default fund manager in Settings.
+    var preferredFundManagerID: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -2146,6 +2196,7 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
         case overheadRule
         case overheadRuleExceptions
         case managerOverheadPercent
+        case preferredFundManagerID
     }
 
     init(
@@ -2178,7 +2229,8 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
         legacyMaxOverheadPercent: Double? = nil,
         overheadRule: FunderOverheadRule? = nil,
         overheadRuleExceptions: [FunderOverheadRuleException]? = nil,
-        managerOverheadPercent: Double? = nil
+        managerOverheadPercent: Double? = nil,
+        preferredFundManagerID: String? = nil
     ) {
         self.id = id
         self.nameSv = nameSv
@@ -2210,6 +2262,7 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
         self.overheadRule = overheadRule
         self.overheadRuleExceptions = overheadRuleExceptions
         self.managerOverheadPercent = managerOverheadPercent
+        self.preferredFundManagerID = preferredFundManagerID
     }
 
     init(from decoder: Decoder) throws {
@@ -2250,7 +2303,8 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
             overheadRule: try container.decodeIfPresent(FunderOverheadRule.self, forKey: .overheadRule)
                 ?? FunderOverheadRule.migrated(fromLegacyMaxOverheadPercent: decodedLegacyMaxOverheadPercent),
             overheadRuleExceptions: (decodedExceptions?.isEmpty ?? true) ? nil : decodedExceptions,
-            managerOverheadPercent: try container.decodeIfPresent(Double.self, forKey: .managerOverheadPercent)
+            managerOverheadPercent: try container.decodeIfPresent(Double.self, forKey: .managerOverheadPercent),
+            preferredFundManagerID: (try container.decodeIfPresent(String.self, forKey: .preferredFundManagerID))?.trimmedOrNil
         )
     }
 
@@ -2292,6 +2346,7 @@ struct OrganizationRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord
             try container.encode(overheadRuleExceptions, forKey: .overheadRuleExceptions)
         }
         try container.encodeIfPresent(managerOverheadPercent, forKey: .managerOverheadPercent)
+        try container.encodeIfPresent(preferredFundManagerID?.trimmedOrNil, forKey: .preferredFundManagerID)
     }
 
     init(legacy: LocalizedOption) {
@@ -3442,6 +3497,9 @@ struct DataSourceMetadata: Codable, Hashable {
     /// Settings > Home organization. nil = not chosen yet (no home region);
     /// "" = none.
     var homeRegionOrganizationID: String? = nil
+    /// Round 10, Settings > Home organization: the fund manager (by id) chosen
+    /// for new records when the funder has no preferred fund manager.
+    var defaultFundManagerOrganizationID: String? = nil
     /// No longer used or shown (the "Main employer" setting had no effect and
     /// was removed). Kept so data saved by earlier versions still loads and
     /// keeps its value.
@@ -3670,6 +3728,7 @@ struct AppSettingsSnapshot: Codable, Hashable {
     var workflowDefaults: WorkflowDefaultSettings?
     var homeCountry: String? = nil
     var homeRegionOrganizationID: String? = nil
+    var defaultFundManagerOrganizationID: String? = nil
     var mainEmployerOrganizationID: String? = nil
     var calendarReminderSettings: CalendarReminderSettings? = nil
     var calendarCategoryBehaviors: [CalendarCategoryBehaviorSetting]? = nil
@@ -3841,6 +3900,7 @@ struct AppSettingsSnapshot: Codable, Hashable {
         )
         homeCountry = metadata.homeCountry
         homeRegionOrganizationID = metadata.homeRegionOrganizationID
+        defaultFundManagerOrganizationID = metadata.defaultFundManagerOrganizationID
         mainEmployerOrganizationID = metadata.mainEmployerOrganizationID
         calendarReminderSettings = metadata.calendarReminderSettings
         calendarCategoryBehaviors = metadata.calendarCategoryBehaviors
@@ -3901,6 +3961,7 @@ struct AppSettingsSnapshot: Codable, Hashable {
         updated.workflowDefaults = workflowDefaults
         updated.homeCountry = homeCountry
         updated.homeRegionOrganizationID = homeRegionOrganizationID
+        updated.defaultFundManagerOrganizationID = defaultFundManagerOrganizationID
         updated.mainEmployerOrganizationID = mainEmployerOrganizationID
         updated.calendarReminderSettings = calendarReminderSettings
         updated.calendarCategoryBehaviors = calendarCategoryBehaviors
@@ -4357,7 +4418,7 @@ enum ListFilterPersistenceKey: String, Codable, CaseIterable, Identifiable {
     func title(language: AppLanguage) -> String {
         switch self {
         case .applications:
-            return language.text("Applications", "Ansökningar")
+            return language.text("Calls and grants", "Utlysningar och anslag")
         case .teaching:
             return language.text("Teaching", "Undervisning")
         case .doctoralCandidates:
@@ -4708,9 +4769,23 @@ enum GrantParsing {
         ISO8601DateFormatter().string(from: Date())
     }
 
+    /// The largest number written in a free-text field ("2-3" gives 3,
+    /// "1,5" gives 1.5). Nil when there is none. Used for "Antal år", where
+    /// removing every non-digit used to turn "2-3" into 23.
+    static func largestNumber(in raw: String?) -> Double? {
+        guard let raw, let regex = try? NSRegularExpression(pattern: #"\d+(?:[.,]\d+)?"#) else { return nil }
+        let nsRaw = raw as NSString
+        return regex.matches(in: raw, range: NSRange(location: 0, length: nsRaw.length))
+            .compactMap { Double(nsRaw.substring(with: $0.range).replacingOccurrences(of: ",", with: ".")) }
+            .max()
+    }
+
     static func formatAmountInput(_ raw: String?) -> String? {
         guard let raw = raw?.trimmedOrNil else { return nil }
-        let digits = raw.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        // Amounts are whole kronor: öre after a decimal comma or point
+        // ("1 250 000,50") are dropped instead of being read as more digits.
+        let withoutDecimals = raw.replacingOccurrences(of: #"[.,]\d{1,2}\s*(kr|SEK)?\s*$"#, with: "", options: [.regularExpression, .caseInsensitive])
+        let digits = withoutDecimals.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         guard !digits.isEmpty else { return nil }
         var parts: [String] = []
         var current = digits

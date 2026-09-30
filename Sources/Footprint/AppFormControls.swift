@@ -821,6 +821,7 @@ struct ContentSectionTitleView: View {
 struct CollapsibleSectionHeader: View {
     let title: String
     @Binding var isExpanded: Bool
+    var titleRole: AppTypographyRole = .sectionTitle
     var showsDivider = false
     var trailingActionTitle: String? = nil
     var trailingAction: (() -> Void)? = nil
@@ -832,7 +833,7 @@ struct CollapsibleSectionHeader: View {
             } label: {
                 HStack(spacing: 8) {
                     Text(title)
-                        .appTypography(.sectionTitle)
+                        .appTypography(titleRole)
                         .foregroundStyle(AppPalette.appText)
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .font(.system(size: 12, weight: .semibold))

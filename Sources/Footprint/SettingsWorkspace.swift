@@ -81,6 +81,7 @@ struct SettingsWorkspaceView: View {
     @State private var reminderSettings: CalendarReminderSettings = .standard
     @State private var homeCountry: String = HomeOrganizationDefaults.homeCountry
     @State private var homeRegionOrganizationID: String = ""
+    @State private var defaultFundManagerOrganizationID: String = ""
     /// The values shown when the window opened; home organization settings
     /// are stored only when one of them is changed.
     @State private var loadedHomeOrganizationValues: [String] = []
@@ -258,7 +259,8 @@ struct SettingsWorkspaceView: View {
             reminderSettings = store.calendarReminderSettings
             homeCountry = store.homeCountryName
             homeRegionOrganizationID = store.homeRegionOrganizationID ?? ""
-            loadedHomeOrganizationValues = [homeCountry, homeRegionOrganizationID]
+            defaultFundManagerOrganizationID = store.defaultFundManagerOrganizationID ?? ""
+            loadedHomeOrganizationValues = [homeCountry, homeRegionOrganizationID, defaultFundManagerOrganizationID]
             listFilterRetentionPreferences = store.listFilterRetentionPreferenceSnapshot()
             dropdownTranslationsSv = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map {
                 ($0.key, store.dropdownTranslationText(for: $0, language: .swedish))
@@ -289,6 +291,7 @@ struct SettingsWorkspaceView: View {
         .onChange(of: reminderSettings) { _, _ in scheduleAutosave() }
         .onChange(of: homeCountry) { _, _ in scheduleAutosave() }
         .onChange(of: homeRegionOrganizationID) { _, _ in scheduleAutosave() }
+        .onChange(of: defaultFundManagerOrganizationID) { _, _ in scheduleAutosave() }
         .onChange(of: calendarTaskRemindersEnabled) { _, enabled in
             UserDefaults.standard.set(enabled, forKey: AppRuntime.calendarTaskRemindersEnabledDefaultsKey)
             NotificationCenter.default.post(name: .footprintCalendarTaskReminderPreferenceChanged, object: nil)
@@ -367,6 +370,16 @@ struct SettingsWorkspaceView: View {
         return [none] + organizations
     }
 
+    private var defaultFundManagerOptions: [(label: String, value: String)] {
+        let none = (label: settingsLanguage.text("None", "Ingen"), value: "")
+        let managers = store.fundManagerOrganizations
+            .filter { !$0.isArchived || $0.id == defaultFundManagerOrganizationID }
+            .map { organization -> (label: String, value: String) in
+                (organization.displayName(for: settingsLanguage), organization.id)
+            }
+        return [none] + managers
+    }
+
     @ViewBuilder
     private func homeOrganizationSection(language: AppLanguage) -> some View {
         settingsCard {
@@ -399,6 +412,17 @@ struct SettingsWorkspaceView: View {
                 SettingsEffectNote(language.text(
                     "Affects: calendar activities in a category marked Clinical time are linked to this organization when they take place in the home country or have no country. With None they are not linked to any organization.",
                     "Påverkar: kalenderaktiviteter i en kategori markerad som Klinisk tid kopplas till den här organisationen när de sker i hemlandet eller saknar land. Med Ingen kopplas de inte till någon organisation."
+                ))
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(language.text("Default fund manager", "Förvald medelsförvaltare"))
+                    .appTypography(.fieldLabel)
+                AppMenuSelectionField(selection: $defaultFundManagerOrganizationID, options: defaultFundManagerOptions)
+                    .frame(maxWidth: 360)
+                SettingsEffectNote(language.text(
+                    "Affects: the fund manager chosen for a record under Calls and grants when its funder has no preferred fund manager (set on the funder under Organizations). Records that already have a fund manager are not changed.",
+                    "Påverkar: vilken medelsförvaltare som väljs för en post under Utlysningar och anslag när finansiären inte har någon prioriterad förvaltare (ställs in på finansiären under Organisationer). Poster som redan har en förvaltare ändras inte."
                 ))
             }
 
@@ -4176,12 +4200,13 @@ struct SettingsWorkspaceView: View {
             loadedCalendarCategoryBehaviors = categoryBehaviors
         }
         store.autosaveCalendarReminderSettings(reminderSettings)
-        if [homeCountry, homeRegionOrganizationID] != loadedHomeOrganizationValues {
+        if [homeCountry, homeRegionOrganizationID, defaultFundManagerOrganizationID] != loadedHomeOrganizationValues {
             store.autosaveHomeOrganizationSettings(
                 homeCountry: homeCountry,
-                homeRegionOrganizationID: homeRegionOrganizationID
+                homeRegionOrganizationID: homeRegionOrganizationID,
+                defaultFundManagerOrganizationID: defaultFundManagerOrganizationID
             )
-            loadedHomeOrganizationValues = [homeCountry, homeRegionOrganizationID]
+            loadedHomeOrganizationValues = [homeCountry, homeRegionOrganizationID, defaultFundManagerOrganizationID]
         }
         store.autosaveCalendarCategoryColorPresets(calendarCategoryColorPresets)
         store.autosaveListFilterRetentionPreferences(listFilterRetentionPreferences)

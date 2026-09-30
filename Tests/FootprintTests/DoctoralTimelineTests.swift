@@ -113,6 +113,87 @@ final class DoctoralTimelineTests: XCTestCase {
         XCTAssertEqual(DoctoralTimelineLayout.axisYears([1995, 2025, 2033], maxSpan: 25), 2008...2033)
     }
 
+    func testScrollableAxisLeavesRoomToCentreOnToday() {
+        // Five visible years around mid-2026 need 2024…2028 at least.
+        XCTAssertEqual(
+            DoctoralTimelineLayout.scrollableAxisYears([2026], today: 2026.5, visibleYears: 5),
+            2024...2029
+        )
+        // Data further out widens the range; nothing to draw gives nil.
+        XCTAssertEqual(
+            DoctoralTimelineLayout.scrollableAxisYears([2020, 2033], today: 2026.5, visibleYears: 5),
+            2020...2033
+        )
+        XCTAssertNil(DoctoralTimelineLayout.scrollableAxisYears([], today: 2026.5))
+    }
+
+    // MARK: Supervision per semester
+
+    private func day(_ text: String) -> Date {
+        DateParsers.isoDay.date(from: text)!
+    }
+
+    func testSupervisionSemestersKeepRetendoConfirmation() {
+        let periods = [
+            DoctoralSupervisionPeriod(from: "2025-02-01", to: "2025-12-31", hoursPerSemester: "5", confirmedInRetendo: false),
+            DoctoralSupervisionPeriod(from: "2026-01-10", to: "2026-12-31", hoursPerSemester: "20", confirmedInRetendo: true),
+        ]
+        let blocks = doctoralSupervisionSemesterBlocks(periods: periods, referenceDate: day("2026-09-29"))
+        XCTAssertEqual(blocks.map(\.id), ["2025-1", "2025-2", "2026-1", "2026-2"])
+        XCTAssertEqual(blocks.map(\.hours), [5, 5, 20, 20])
+        // Ended and not confirmed: needs attention.
+        XCTAssertTrue(blocks[0].needsConfirmation)
+        XCTAssertTrue(blocks[1].needsConfirmation)
+        // Confirmed: fine. The running semester is never flagged.
+        XCTAssertTrue(blocks[2].isFullyConfirmed)
+        XCTAssertFalse(blocks[2].needsConfirmation)
+        XCTAssertFalse(blocks[3].needsConfirmation)
+    }
+
+    func testOverlappingPeriodsAddUpPerSemester() {
+        let periods = [
+            DoctoralSupervisionPeriod(from: "2025-01-01", to: "2025-06-30", hoursPerSemester: "10", confirmedInRetendo: true),
+            DoctoralSupervisionPeriod(from: "2025-03-01", to: "2025-06-30", hoursPerSemester: "4", confirmedInRetendo: false),
+        ]
+        let blocks = doctoralSupervisionSemesterBlocks(periods: periods, referenceDate: day("2026-09-29"))
+        XCTAssertEqual(blocks.count, 1)
+        XCTAssertEqual(blocks[0].hours, 14)
+        XCTAssertEqual(blocks[0].confirmedHours, 10)
+        XCTAssertTrue(blocks[0].needsConfirmation)
+    }
+
+    // MARK: Paper lines
+
+    func testPaperStartIsTheEarliestStoredDate() {
+        let paper = PublicationRecord(
+            id: "paper-1",
+            title: "Invented paper",
+            status: PublicationStatus.submitted.rawValue,
+            statusTimeline: [
+                PublicationStatusEntry(status: PublicationStatus.inPreparation.rawValue, date: "2024-03-01"),
+                PublicationStatusEntry(status: PublicationStatus.submitted.rawValue, date: "2025-01-15"),
+            ],
+            workflowStatusDate: "2024-05-01"
+        )
+        XCTAssertEqual(doctoralPaperStartDate(paper), day("2024-03-01"))
+        XCTAssertNil(doctoralPaperPublishedDate(paper))
+        XCTAssertNil(doctoralPaperStartDate(PublicationRecord(id: "paper-2", title: "No dates")))
+    }
+
+    func testPublishedPaperUsesItsPublishedDate() {
+        let paper = PublicationRecord(
+            id: "paper-3",
+            title: "Invented published paper",
+            status: PublicationStatus.published.rawValue,
+            epubDate: "2025-06-01",
+            year: "2025",
+            statusTimeline: [
+                PublicationStatusEntry(status: PublicationStatus.published.rawValue, date: "2025-05-20"),
+            ]
+        )
+        XCTAssertEqual(doctoralPaperPublishedDate(paper), day("2025-05-20"))
+    }
+
     // MARK: Milestone status
 
     func testStatusWordsAreWritten() {

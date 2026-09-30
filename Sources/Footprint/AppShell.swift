@@ -1361,8 +1361,8 @@ private enum WorkspaceSearchModel {
         )
         sectionItem(
             id: "applications",
-            title: language.text("Applications", "Ansökningar"),
-            subtitle: language.text("Grant applications", "Ansökningar"),
+            title: language.text("Calls and grants", "Utlysningar och anslag"),
+            subtitle: language.text("Calls, applications and grants", "Utlysningar, ansökningar och anslag"),
             symbol: "doc.text.fill",
             tab: .applications
         )
@@ -1408,8 +1408,8 @@ private enum WorkspaceSearchModel {
         }
         actionItem(
             id: "new-application",
-            title: language.text("New application", "Ny ansökan"),
-            subtitle: language.text("Create and open a new grant application", "Skapa och öppna en ny ansökan"),
+            title: language.text("New call", "Ny utlysning"),
+            subtitle: language.text("Create and open a new call record", "Skapa och öppna en ny post för en utlysning"),
             symbol: "plus.rectangle.on.rectangle",
             terms: [language.text("Create", "Skapa"), language.text("Grant", "Anslag")]
         ) {

@@ -245,6 +245,12 @@ extension GrantDataStore {
         resolvedHomeOrganizationID(stored: metadata.homeRegionOrganizationID)
     }
 
+    /// Round 10: "Förvald medelsförvaltare" in Settings, when that
+    /// organization exists.
+    var defaultFundManagerOrganizationID: String? {
+        resolvedHomeOrganizationID(stored: metadata.defaultFundManagerOrganizationID)
+    }
+
     func resolvedHomeOrganizationID(stored: String?) -> String? {
         guard let id = stored?.trimmedOrNil else { return nil }
         return organization(id: id) == nil ? nil : id
@@ -264,7 +270,8 @@ extension GrantDataStore {
     /// stored by an earlier version is left untouched in the data.
     func autosaveHomeOrganizationSettings(
         homeCountry: String,
-        homeRegionOrganizationID: String
+        homeRegionOrganizationID: String,
+        defaultFundManagerOrganizationID: String? = nil
     ) {
         var updated = editableMetadataSnapshot
         let canonicalCountry = GrantParsing.canonicalCountryName(homeCountry)
@@ -273,6 +280,10 @@ extension GrantDataStore {
             ? nil
             : canonicalCountry
         updated.homeRegionOrganizationID = homeRegionOrganizationID.trimmingCharacters(in: .whitespacesAndNewlines)
+        // nil = leave the default fund manager as it is; "" = none.
+        if let defaultFundManagerOrganizationID {
+            updated.defaultFundManagerOrganizationID = defaultFundManagerOrganizationID.trimmedOrNil
+        }
         guard updated != editableMetadataSnapshot else { return }
         persistMetadataSilently(
             updated,
