@@ -480,8 +480,10 @@ struct PublicationAuthorsView: View {
             )
         }
         .onDeleteCommand {
-            guard let selectedAuthorID else { return }
-            store.deletePublicationAuthor(id: selectedAuthorID)
+            guard let selectedAuthorID, let author = store.publicationAuthor(id: selectedAuthorID) else { return }
+            store.requestKeyboardDeletion(recordTitle: author.name, isLocked: false) {
+                store.deletePublicationAuthor(id: author.id)
+            }
         }
     }
 

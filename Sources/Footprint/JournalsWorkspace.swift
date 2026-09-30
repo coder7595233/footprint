@@ -593,8 +593,10 @@ struct PublicationJournalsView: View {
             journalDetailPane(language: language)
         }
         .onDeleteCommand {
-            guard let selectedJournalID else { return }
-            store.deletePublicationJournal(id: selectedJournalID)
+            guard let selectedJournalID, let journal = store.publicationJournal(id: selectedJournalID) else { return }
+            store.requestKeyboardDeletion(recordTitle: journal.name, isLocked: false) {
+                store.deletePublicationJournal(id: journal.id)
+            }
         }
     }
 

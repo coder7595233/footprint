@@ -87,7 +87,7 @@ final class ReviewCertificateMigrationTests: XCTestCase {
     }
 
     @MainActor
-    func testDeleteRemovesManagedFileAndArchiveKeepsPDF() throws {
+    func testDeleteKeepsManagedFileAndArchiveKeepsPDF() throws {
         var review = CVReviewEntry(
             id: "review-cert-delete",
             date: "2026-02-01",
@@ -101,7 +101,8 @@ final class ReviewCertificateMigrationTests: XCTestCase {
 
         store.deleteCVReviewEntry(id: review.id)
 
-        XCTAssertFalse(FileManager.default.fileExists(atPath: managedURL.path))
+        // Round 11: the file stays so Undo can bring the review back with it.
+        XCTAssertTrue(FileManager.default.fileExists(atPath: managedURL.path))
         let archived = try store.loadArchivedRecords()
         let envelope = try XCTUnwrap(archived.first(where: { $0.kind == "cv_review_entry" }))
         let archivedReview = try JSONDecoder().decode(CVReviewEntry.self, from: envelope.payload)

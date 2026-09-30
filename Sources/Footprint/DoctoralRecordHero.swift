@@ -41,7 +41,7 @@ struct DoctoralRecordHeroView: View {
     private static let todayAnchorID = "doctoral-timeline-today"
     private static let paperDiamondBlock: CGFloat = 16
     private static let edgeMargin: CGFloat = 32
-    private static let milestoneNodeSize: CGFloat = 18
+    nonisolated private static let milestoneNodeSize: CGFloat = 18
     private static let activityDotSize: CGFloat = 12
     private static let activityGroupSize: CGFloat = 24
     /// Activities closer than this (in points) share one marker with a count.

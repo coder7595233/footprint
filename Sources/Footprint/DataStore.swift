@@ -861,6 +861,12 @@ final class GrantDataStore: ObservableObject {
     private var pendingEmptyCVReviewEntryIDs: Set<String> = []
     private var pendingEmptyCVOtherPublicationIDs: Set<String> = []
     private var pendingDeletionAction: (() -> Void)?
+    /// Round 11: archive entries written by the undoable change now running,
+    /// so Undo can take them out of the archive again. nil outside a change.
+    private var archiveEnvelopeIDsAddedInCurrentChange: [String]?
+    /// Round 11: the removal the Delete key's question was answered yes to,
+    /// run right after the question has closed.
+    private var confirmedKeyboardDeletion: (() -> Void)?
     var backgroundActivityCount = 0
 
     struct PersistenceSet: OptionSet {
@@ -4087,16 +4093,19 @@ final class GrantDataStore: ObservableObject {
         return projectByID[id] ?? projects.first(where: { $0.id == id })
     }
 
+    // Round 11: a row without a working id is linked by name only when
+    // exactly one record has that name. With two of the same name it stays
+    // unlinked (its text is kept) instead of being tied to one by chance.
     private func resolvedOrganization(id: String?, name: String?) -> OrganizationRecord? {
-        organization(id: id) ?? organization(matchingName: name)
+        organization(id: id) ?? uniqueOrganization(matchingName: name)
     }
 
     private func resolvedManager(id: String?, name: String?) -> ManagerOption? {
-        manager(id: id) ?? manager(matchingName: name)
+        manager(id: id) ?? uniqueManager(matchingName: name)
     }
 
     private func resolvedProject(id: String?, name: String?) -> ProjectRecord? {
-        project(id: id) ?? project(named: name)
+        project(id: id) ?? uniqueProject(named: name)
     }
 
     private func applicationRelationNameDidChange(
@@ -4135,7 +4144,7 @@ final class GrantDataStore: ObservableObject {
             if resolved.projectType?.trimmedOrNil == nil {
                 Optional<ProjectRecord>.none
             } else {
-                project(named: resolved.projectType)
+                uniqueProject(named: resolved.projectType)
                     ?? resolvedProject(id: resolved.projectID, name: resolved.projectType)
             }
         } else {
@@ -14423,7 +14432,6 @@ final class GrantDataStore: ObservableObject {
         ) {
             guard let organization = organizations.first(where: { $0.id == id }) else { return }
             let canonicalName = organization.nameSv
-            let hasAmbiguousLegacyName = organizations.lazy.filter { $0.nameSv == canonicalName }.prefix(2).count > 1
             try archiveDeletion(
                 kind: "organization",
                 title: organization.nameSv,
@@ -14432,58 +14440,54 @@ final class GrantDataStore: ObservableObject {
             )
             organizations.removeAll { $0.id == id }
             managers = derivedManagers(from: organizations)
-            for appIndex in applications.indices where applications[appIndex].organizationID == id ||
-                (!hasAmbiguousLegacyName && applications[appIndex].organizationID == nil && applications[appIndex].organization == canonicalName) {
+            // Round 11 (user decision 2026-09-30): records that pointed to
+            // the organization lose the link but keep the written name, so a
+            // funder, fund manager or institution never turns blank. Rows
+            // without a link keep their text as it is.
+            for appIndex in applications.indices where applications[appIndex].organizationID == id {
                 applications[appIndex].organizationID = nil
-                applications[appIndex].organization = ""
+                if applications[appIndex].organization.trimmedOrNil == nil {
+                    applications[appIndex].organization = canonicalName
+                }
             }
-            for appIndex in applications.indices where applications[appIndex].applicationManagerID == id ||
-                (!hasAmbiguousLegacyName && applications[appIndex].applicationManagerID == nil && applications[appIndex].applicationManager == canonicalName) {
+            for appIndex in applications.indices where applications[appIndex].applicationManagerID == id {
                 applications[appIndex].applicationManagerID = nil
-                applications[appIndex].applicationManager = nil
+                if applications[appIndex].applicationManager?.trimmedOrNil == nil {
+                    applications[appIndex].applicationManager = canonicalName
+                }
             }
-            for courseIndex in teachingCourses.indices where teachingCourses[courseIndex].institutionID == id ||
-                (!hasAmbiguousLegacyName && teachingCourses[courseIndex].institutionID == nil && teachingCourses[courseIndex].institution == canonicalName) {
+            for courseIndex in teachingCourses.indices where teachingCourses[courseIndex].institutionID == id {
                 teachingCourses[courseIndex].institutionID = nil
-                teachingCourses[courseIndex].institution = ""
+                if teachingCourses[courseIndex].institution.trimmedOrNil == nil {
+                    teachingCourses[courseIndex].institution = canonicalName
+                }
             }
-            for componentIndex in teachingComponents.indices where teachingComponents[componentIndex].institutionID == id ||
-                (!hasAmbiguousLegacyName && teachingComponents[componentIndex].institutionID == nil && teachingComponents[componentIndex].institution == canonicalName) {
+            for componentIndex in teachingComponents.indices where teachingComponents[componentIndex].institutionID == id {
                 teachingComponents[componentIndex].institutionID = nil
-                teachingComponents[componentIndex].institution = ""
+                if teachingComponents[componentIndex].institution.trimmedOrNil == nil {
+                    teachingComponents[componentIndex].institution = canonicalName
+                }
             }
             // "Alla kopplingar via id": rows that point to the organization
-            // lose the link (their text stays); rows without a link are
-            // matched by name as before.
+            // lose the link; their text stays (round 11: also rows without
+            // a link keep their text).
             for authorIndex in publicationAuthors.indices {
                 for affiliationIndex in publicationAuthors[authorIndex].affiliations.indices {
                     if publicationAuthors[authorIndex].affiliations[affiliationIndex].organizationID == id {
                         publicationAuthors[authorIndex].affiliations[affiliationIndex].organizationID = nil
                         publicationAuthors[authorIndex].affiliations[affiliationIndex].unitID = nil
-                    } else if !hasAmbiguousLegacyName,
-                              publicationAuthors[authorIndex].affiliations[affiliationIndex].organizationID == nil,
-                              publicationAuthors[authorIndex].affiliations[affiliationIndex].organization == canonicalName {
-                        publicationAuthors[authorIndex].affiliations[affiliationIndex].organization = ""
                     }
                 }
                 for employmentIndex in publicationAuthors[authorIndex].employments.indices {
                     if publicationAuthors[authorIndex].employments[employmentIndex].organizationID == id {
                         publicationAuthors[authorIndex].employments[employmentIndex].organizationID = nil
                         publicationAuthors[authorIndex].employments[employmentIndex].unitID = nil
-                    } else if !hasAmbiguousLegacyName,
-                              publicationAuthors[authorIndex].employments[employmentIndex].organizationID == nil,
-                              publicationAuthors[authorIndex].employments[employmentIndex].organization == canonicalName {
-                        publicationAuthors[authorIndex].employments[employmentIndex].organization = ""
                     }
                 }
                 for educationIndex in publicationAuthors[authorIndex].educationEntries.indices {
                     if publicationAuthors[authorIndex].educationEntries[educationIndex].organizationID == id {
                         publicationAuthors[authorIndex].educationEntries[educationIndex].organizationID = nil
                         publicationAuthors[authorIndex].educationEntries[educationIndex].unitID = nil
-                    } else if !hasAmbiguousLegacyName,
-                              publicationAuthors[authorIndex].educationEntries[educationIndex].organizationID == nil,
-                              publicationAuthors[authorIndex].educationEntries[educationIndex].organization == canonicalName {
-                        publicationAuthors[authorIndex].educationEntries[educationIndex].organization = ""
                     }
                 }
                 publicationAuthors[authorIndex].normalize()
@@ -15571,6 +15575,10 @@ final class GrantDataStore: ObservableObject {
         }
     }
 
+    /// Removes doctoral candidates created from teaching rows that hold no
+    /// doctoral data of their own. Round 11 (user decision 2026-09-30):
+    /// nothing calls this automatically any more; candidates are only
+    /// removed when the user deletes them.
     func removeAutoMigratedTeachingOnlyDoctoralCandidatesIfNeeded() {
         let removableIDs = doctoralCandidates.compactMap { candidate -> String? in
             guard !candidate.sourceAssignmentIDs.isEmpty else { return nil }
@@ -15948,9 +15956,8 @@ final class GrantDataStore: ObservableObject {
         performLaunchMaintenanceStep("teaching-assignment-kinds") {
             ensureTeachingAssignmentKindsStored()
         }
-        performLaunchMaintenanceStep("teaching-only-doctoral-cleanup") {
-            removeAutoMigratedTeachingOnlyDoctoralCandidatesIfNeeded()
-        }
+        // Round 11 (user decision 2026-09-30): doctoral candidates are never
+        // removed automatically, at launch or anywhere else.
 
         try? Self.writeCurrentDeferredLaunchMaintenanceMarker()
         appendPerformanceDiagnostic(
@@ -16676,7 +16683,8 @@ final class GrantDataStore: ObservableObject {
             }
             pendingEmptyCVConferenceContributionIDs.remove(id)
             cvConferenceContributions.removeAll { $0.id == id }
-            try Self.removeManagedCVConferenceContributionPDFIfPresent(forContributionID: id)
+            // Round 11: the PDF stays on disk so Undo and the archive can
+            // bring the record back with its file.
         }
     }
 
@@ -16698,7 +16706,8 @@ final class GrantDataStore: ObservableObject {
             }
             pendingEmptyCVMediaAppearanceIDs.remove(id)
             cvMediaAppearances.removeAll { $0.id == id }
-            try Self.removeManagedCVMediaAppearancePDFIfPresent(forMediaAppearanceID: id)
+            // Round 11: the PDF stays on disk so Undo and the archive can
+            // bring the record back with its file.
         }
     }
 
@@ -16732,7 +16741,8 @@ final class GrantDataStore: ObservableObject {
             }
             pendingEmptyCVReviewEntryIDs.remove(id)
             cvReviewEntries.removeAll { $0.id == id }
-            try Self.removeManagedCVReviewCertificatePDFIfPresent(forReviewEntryID: id)
+            // Round 11: the certificate stays on disk so Undo can bring the
+            // record back with its file (the archive keeps its own copy).
         }
     }
 
@@ -17323,7 +17333,8 @@ final class GrantDataStore: ObservableObject {
     func mergeDuplicateRecords(
         groupKind: DuplicateIssue.GroupKind,
         canonicalRecordID: String,
-        duplicateRecordIDs: [String]
+        duplicateRecordIDs: [String],
+        lockedRecordsConfirmed: Bool = false
     ) -> Bool {
         guard let canonicalID = canonicalRecordID.trimmedOrNil else { return false }
         let duplicateIDs = Array(
@@ -17334,6 +17345,36 @@ final class GrantDataStore: ObservableObject {
             )
         ) as? [String] ?? []
         guard !duplicateIDs.isEmpty else { return false }
+
+        // Round 11: a merge rewrites names in the records that point to the
+        // duplicate. Locked records among them are listed and the merge
+        // waits for an explicit yes.
+        if !lockedRecordsConfirmed {
+            let locked = lockedRecordsRewrittenByMerge(groupKind: groupKind, duplicateIDs: Set(duplicateIDs))
+            if !locked.isEmpty {
+                // After the merge sheet has closed, so the question can show.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                    guard let self else { return }
+                    self.requestImpactConfirmation(
+                        title: self.language.text("Merge and change locked records?", "Slå ihop och ändra låsta poster?"),
+                        message: self.language.text(
+                            "These locked records point to the duplicate. Their link and written name will change to the record you keep.",
+                            "De här låsta posterna pekar på dubbletten. Deras koppling och skrivna namn ändras till posten du behåller."
+                        ),
+                        details: locked,
+                        confirmTitle: self.language.text("Merge anyway", "Slå ihop ändå")
+                    ) { [weak self] in
+                        _ = self?.mergeDuplicateRecords(
+                            groupKind: groupKind,
+                            canonicalRecordID: canonicalID,
+                            duplicateRecordIDs: duplicateIDs,
+                            lockedRecordsConfirmed: true
+                        )
+                    }
+                }
+                return true
+            }
+        }
 
         let actionName = language.text("Merge duplicates", "Slå ihop dubletter")
         let previousSnapshot = currentSnapshot()
@@ -17384,6 +17425,66 @@ final class GrantDataStore: ObservableObject {
             )
             return false
         }
+    }
+
+    /// Round 11: the locked records whose link or written name a merge of
+    /// these duplicates would change, as lines for the confirmation.
+    func lockedRecordsRewrittenByMerge(groupKind: DuplicateIssue.GroupKind, duplicateIDs: Set<String>) -> [String] {
+        let grant = language.text("Grant call or grant", "Utlysning eller anslag")
+        let publication = language.text("Publication", "Publikation")
+        let project = language.text("Project", "Projekt")
+        let doctoral = language.text("Doctoral candidate", "Doktorand")
+        var lines: [String] = []
+        switch groupKind {
+        case .funders, .managers:
+            for application in applications where application.isEditingLocked
+                && (duplicateIDs.contains(application.organizationID ?? "") || duplicateIDs.contains(application.applicationManagerID ?? "")) {
+                lines.append("\(grant): \(application.displayTitle)")
+            }
+            for candidate in doctoralCandidates where candidate.isEditingLocked && duplicateIDs.contains(candidate.institutionID ?? "") {
+                lines.append("\(doctoral): \(candidate.candidateName)")
+            }
+        case .projects:
+            for application in applications where application.isEditingLocked && duplicateIDs.contains(application.projectID ?? "") {
+                lines.append("\(grant): \(application.displayTitle)")
+            }
+            for record in publicationRecords where record.isEditingLocked && duplicateIDs.contains(record.projectID ?? "") {
+                lines.append("\(publication): \(record.title)")
+            }
+            for candidate in doctoralCandidates where candidate.isEditingLocked && duplicateIDs.contains(candidate.linkedProjectID ?? "") {
+                lines.append("\(doctoral): \(candidate.candidateName)")
+            }
+        case .researchers:
+            let variantKeys = Set(publicationAuthors
+                .filter { duplicateIDs.contains($0.id) }
+                .flatMap { self.authorNameVariants(for: $0) }
+                .map { self.normalizedPersonLookupName($0) })
+            func named(_ name: String) -> Bool { variantKeys.contains(self.normalizedPersonLookupName(name)) }
+            for record in publicationRecords where record.isEditingLocked
+                && (record.authorIDs.contains(where: duplicateIDs.contains) || record.authorNames.contains(where: named)) {
+                lines.append("\(publication): \(record.title)")
+            }
+            for application in applications where application.isEditingLocked
+                && (application.coApplicantAuthorIDs.contains(where: duplicateIDs.contains) || application.coApplicants.contains(where: named)) {
+                lines.append("\(grant): \(application.displayTitle)")
+            }
+            for item in projects where item.isEditingLocked
+                && (item.collaboratorAuthorIDs.contains(where: duplicateIDs.contains) || item.collaboratorNames.contains(where: named)) {
+                lines.append("\(project): \(item.nameSv.nonEmpty ?? item.nameEn)")
+            }
+            for candidate in doctoralCandidates where candidate.isEditingLocked
+                && (duplicateIDs.contains(candidate.candidateAuthorID ?? "") || named(candidate.candidateName)
+                    || candidate.supervisors.contains(where: { duplicateIDs.contains($0.authorID ?? "") || named($0.name) })) {
+                lines.append("\(doctoral): \(candidate.candidateName)")
+            }
+        case .journals:
+            for record in publicationRecords where record.isEditingLocked && duplicateIDs.contains(record.journalID ?? "") {
+                lines.append("\(publication): \(record.title)")
+            }
+        case .publications:
+            break
+        }
+        return lines
     }
 
     private func performDuplicateMerge(
@@ -17493,8 +17594,29 @@ final class GrantDataStore: ObservableObject {
         }
         let relatedStates = try archivedRelatedStatesForOrganizationDeletion()
 
+        // Round 11: the duplicate's congresses move to the organization that
+        // is kept (first, so contributions, travel and tasks linked to them
+        // keep their congress), and so do its contact persons.
+        var kept = canonical
+        if let canonicalIndex = organizations.firstIndex(where: { $0.id == canonicalID }) {
+            var keptCongressIDs = Set(organizations[canonicalIndex].congresses.map(\.id))
+            var keptContactIDs = Set(organizations[canonicalIndex].employerContacts.map(\.id))
+            for duplicate in duplicates {
+                for congress in duplicate.congresses where !keptCongressIDs.contains(congress.id) {
+                    organizations[canonicalIndex].congresses.append(congress)
+                    keptCongressIDs.insert(congress.id)
+                }
+                for contact in duplicate.employerContacts where !keptContactIDs.contains(contact.id) {
+                    organizations[canonicalIndex].employerContacts.append(contact)
+                    keptContactIDs.insert(contact.id)
+                }
+            }
+            kept = organizations[canonicalIndex]
+        }
+
         for duplicate in duplicates {
-            replaceOrganizationReferences(from: duplicate, to: canonical)
+            replaceOrganizationReferences(from: duplicate, to: kept)
+            replaceOrganizationSettingReferences(from: duplicate.id, to: canonicalID)
             migrateRememberedSelectionID(from: duplicate.id, to: canonical.id, destinations: [.organizations])
         }
 
@@ -17604,6 +17726,42 @@ final class GrantDataStore: ObservableObject {
         }
         for reviewIndex in cvReviewEntries.indices where cvReviewEntries[reviewIndex].authorID == duplicateID {
             cvReviewEntries[reviewIndex].authorID = canonical.id
+        }
+        // Round 11: links the merge used to leave pointing at the removed
+        // person (students, conference contributors, congress participants
+        // and the user's own person).
+        for assignmentIndex in teachingAssignments.indices where teachingAssignments[assignmentIndex].studentAuthorID == duplicateID {
+            teachingAssignments[assignmentIndex].studentAuthorID = canonical.id
+        }
+        for contributionIndex in cvConferenceContributions.indices {
+            if cvConferenceContributions[contributionIndex].contributorAuthorIDs.contains(duplicateID) {
+                cvConferenceContributions[contributionIndex].contributorAuthorIDs = uniquedNonEmptyStrings(
+                    cvConferenceContributions[contributionIndex].contributorAuthorIDs.map { $0 == duplicateID ? canonical.id : $0 }
+                )
+            }
+            if cvConferenceContributions[contributionIndex].presentedByAuthorID == duplicateID {
+                cvConferenceContributions[contributionIndex].presentedByAuthorID = canonical.id
+            }
+        }
+        for organizationIndex in organizations.indices {
+            for congressIndex in organizations[organizationIndex].congresses.indices {
+                let congress = organizations[organizationIndex].congresses[congressIndex]
+                if congress.participantAuthorIDs.contains(duplicateID) {
+                    organizations[organizationIndex].congresses[congressIndex].participantAuthorIDs = uniquedNonEmptyStrings(
+                        congress.participantAuthorIDs.map { $0 == duplicateID ? canonical.id : $0 }
+                    )
+                }
+                if congress.participantNames.contains(where: { oldVariants.contains($0) }) {
+                    organizations[organizationIndex].congresses[congressIndex].participantNames = uniquedNonEmptyStrings(
+                        congress.participantNames.map { oldVariants.contains($0) ? canonical.name : $0 }
+                    )
+                }
+            }
+        }
+        if metadata.currentUserAuthorID == duplicateID {
+            var updatedMetadata = editableMetadataSnapshot
+            updatedMetadata.currentUserAuthorID = canonical.id
+            metadata = updatedMetadata
         }
         replacePersonAuthorIDLinks(from: duplicateID, to: canonical.id)
     }
@@ -17923,8 +18081,86 @@ final class GrantDataStore: ObservableObject {
         }
     }
 
+    /// Round 11: other organizations' settings that name the duplicate (a
+    /// funder's "Prioriterad förvaltare" and its OH exceptions per fund
+    /// manager) name the organization that is kept.
+    private func replaceOrganizationSettingReferences(from duplicateID: String, to canonicalID: String) {
+        for index in organizations.indices {
+            if organizations[index].preferredFundManagerID == duplicateID {
+                organizations[index].preferredFundManagerID = canonicalID
+            }
+            if let exceptions = organizations[index].overheadRuleExceptions,
+               exceptions.contains(where: { $0.managerOrganizationID == duplicateID }) {
+                // One exception per fund manager: one already set for the
+                // kept organization wins over the duplicate's.
+                let own = exceptions.filter { $0.managerOrganizationID != duplicateID }
+                let hasOwn = own.contains { $0.managerOrganizationID == canonicalID }
+                let moved = hasOwn ? [] : exceptions
+                    .filter { $0.managerOrganizationID == duplicateID }
+                    .prefix(1)
+                    .map { exception -> FunderOverheadRuleException in
+                        var exception = exception
+                        exception.managerOrganizationID = canonicalID
+                        return exception
+                    }
+                organizations[index].overheadRuleExceptions = own + moved
+            }
+        }
+    }
+
+    /// Round 11: a central task's links to the duplicate (and to congresses
+    /// under it) point to the record that is kept.
+    private func replaceCentralTaskLinks(
+        in metadata: inout DataSourceMetadata,
+        kind: TaskLinkKind,
+        from duplicateID: String,
+        to canonicalID: String,
+        includingOwner: Bool = false
+    ) {
+        guard var tasks = metadata.taskItems else { return }
+        for taskIndex in tasks.indices {
+            var links = tasks[taskIndex].links
+            var changed = false
+            for linkIndex in links.indices {
+                if links[linkIndex].kind == kind, links[linkIndex].targetID == duplicateID {
+                    links[linkIndex].targetID = canonicalID
+                    changed = true
+                }
+                if includingOwner, links[linkIndex].ownerID == duplicateID {
+                    links[linkIndex].ownerID = canonicalID
+                    changed = true
+                }
+            }
+            guard changed else { continue }
+            var seen = Set<String>()
+            tasks[taskIndex].links = links.filter { seen.insert($0.id).inserted }
+        }
+        metadata.taskItems = tasks
+    }
+
     private func replaceMetadataOrganizationReferences(from duplicateID: String, to canonicalID: String) {
         var updatedMetadata = editableMetadataSnapshot
+        // Round 11: travel and stays linked to the duplicate's congresses,
+        // central tasks and the remembered selection follow as well.
+        if var travel = updatedMetadata.calendarTravelRecords {
+            for index in travel.indices where travel[index].congressOrganizationID == duplicateID {
+                travel[index].congressOrganizationID = canonicalID
+            }
+            updatedMetadata.calendarTravelRecords = travel
+        }
+        if var stays = updatedMetadata.calendarAccommodationRecords {
+            for index in stays.indices where stays[index].congressOrganizationID == duplicateID {
+                stays[index].congressOrganizationID = canonicalID
+            }
+            updatedMetadata.calendarAccommodationRecords = stays
+        }
+        replaceCentralTaskLinks(in: &updatedMetadata, kind: .organization, from: duplicateID, to: canonicalID, includingOwner: true)
+        if updatedMetadata.lastSelectedOrganizationID == duplicateID {
+            updatedMetadata.lastSelectedOrganizationID = canonicalID
+        }
+        if updatedMetadata.lastSelectedManagerID == duplicateID {
+            updatedMetadata.lastSelectedManagerID = canonicalID
+        }
         if var meetings = updatedMetadata.calendarMeetingRecords {
             for meetingIndex in meetings.indices {
                 meetings[meetingIndex].organizationIDs = uniquedNonEmptyStrings(meetings[meetingIndex].organizationIDs.map {
@@ -17942,6 +18178,7 @@ final class GrantDataStore: ObservableObject {
 
     private func replaceMetadataProjectReferences(from duplicateID: String, to canonicalID: String) {
         var updatedMetadata = editableMetadataSnapshot
+        replaceCentralTaskLinks(in: &updatedMetadata, kind: .project, from: duplicateID, to: canonicalID)
         if var tasks = updatedMetadata.teachingWorkspaceTasks {
             replaceTaskProjectReferences(&tasks, from: duplicateID, to: canonicalID)
             updatedMetadata.teachingWorkspaceTasks = tasks
@@ -17964,6 +18201,7 @@ final class GrantDataStore: ObservableObject {
 
     private func replaceMetadataPublicationReferences(from duplicateID: String, to canonicalID: String) {
         var updatedMetadata = editableMetadataSnapshot
+        replaceCentralTaskLinks(in: &updatedMetadata, kind: .publication, from: duplicateID, to: canonicalID)
         if var tasks = updatedMetadata.teachingWorkspaceTasks {
             replaceTaskPublicationReferences(&tasks, from: duplicateID, to: canonicalID)
             updatedMetadata.teachingWorkspaceTasks = tasks
@@ -19070,6 +19308,7 @@ final class GrantDataStore: ObservableObject {
             case project
             case congress
             case doctoralCandidate
+            case application
         }
 
         let kind: Kind
@@ -19159,9 +19398,22 @@ final class GrantDataStore: ObservableObject {
             }
         }
 
+        // Round 11: grant records are rewritten too (their applicants), so a
+        // locked one is listed before anything changes.
+        for application in applications where application.coApplicants.contains(where: matches) {
+            references.append(AuthorNameVariantReference(
+                kind: .application,
+                recordID: application.id,
+                title: application.displayTitle,
+                isProtected: application.isEditingLocked,
+                protectionLabel: protectionLabel(isPublished: false, isLocked: application.isEditingLocked)
+            ))
+        }
+
         for candidate in doctoralCandidates
-        where matches(candidate.candidateName)
-            && (candidate.candidateAuthorID == nil || candidate.candidateAuthorID == authorID) {
+        where (matches(candidate.candidateName)
+            && (candidate.candidateAuthorID == nil || candidate.candidateAuthorID == authorID))
+            || candidate.supervisors.contains(where: { matches($0.name) && ($0.authorID == nil || $0.authorID == authorID) }) {
             references.append(AuthorNameVariantReference(
                 kind: .doctoralCandidate,
                 recordID: candidate.id,
@@ -19328,6 +19580,8 @@ final class GrantDataStore: ObservableObject {
             return language.text("Congress", "Kongress")
         case .doctoralCandidate:
             return language.text("Doctoral candidate", "Doktorand")
+        case .application:
+            return language.text("Grant call or grant", "Utlysning eller anslag")
         }
     }
 
@@ -19788,7 +20042,8 @@ final class GrantDataStore: ObservableObject {
                 )
             }
             publicationRecords.removeAll { $0.id == id }
-            try Self.removeManagedPublicationPDFIfPresent(forPublicationID: id)
+            // Round 11: the PDF stays on disk so Undo and the archive can
+            // bring the record back with its file.
         }
     }
 
@@ -20181,6 +20436,7 @@ final class GrantDataStore: ObservableObject {
         didChange = runRound7OneTimeDataMigrations() || didChange
         didChange = runRound8OneTimeDataMigrations() || didChange
         didChange = runRound10OneTimeDataMigrations() || didChange
+        didChange = runRound11OneTimeDataMigrations() || didChange
         didChange = normalizeConferenceContributionsForRound1() || didChange
         didChange = clearPlaceholderProjectNames() || didChange
         didChange = ensureManagedPublicationPDFAttachmentsStored() || didChange
@@ -20759,7 +21015,6 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func refreshApplicationsState() {
-        applyApprovedOrganizationTranslationFixes()
         for index in applications.indices {
             applications[index].refreshDerivedValues()
             applications[index] = synchronizedApplicationRelations(applications[index])
@@ -20779,7 +21034,6 @@ final class GrantDataStore: ObservableObject {
         appendPerformanceDiagnostic(
             "dirty-graph entity=application id=\(updated.id) optionLists=\(plan.refreshOptionLists ? "yes" : "no") crossrefs=\(plan.refreshPublicationIndexes ? "yes" : "no") projectCache=\(plan.markProjectViewCacheDirty ? "yes" : "no")"
         )
-        applyApprovedOrganizationTranslationFixes()
         applications[index].refreshDerivedValues()
         applications[index] = synchronizedApplicationRelations(applications[index])
         sortApplications()
@@ -20869,7 +21123,6 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func refreshOrganizationsState() {
-        applyApprovedOrganizationTranslationFixes()
         for index in applications.indices {
             applications[index].refreshDerivedValues()
             applications[index] = synchronizedApplicationRelations(applications[index])
@@ -20905,20 +21158,6 @@ final class GrantDataStore: ObservableObject {
 
         applicationIDsByOrganizationName = organizationApplicationIDs
         applicationIDsByManagerName = managerApplicationIDs
-    }
-
-    private func applyApprovedOrganizationTranslationFixes() {
-        let approvedNames: [String: String] = [
-            "Stipendium": "Scholarship",
-            "Novo Nordisk foundation": "Novo Nordisk Foundation",
-        ]
-
-        for index in organizations.indices {
-            let swedishName = organizations[index].nameSv
-            if let approvedEnglish = approvedNames[swedishName] {
-                organizations[index].nameEn = approvedEnglish
-            }
-        }
     }
 
     /// Fills a missing English term from the Swedish one ("Termin 6" becomes
@@ -21433,6 +21672,12 @@ final class GrantDataStore: ObservableObject {
         let previous = currentSnapshot()
         let affectedSet = persistenceSet(for: scope)
         let previousStates = try? persistedBaselineDocumentStates(for: affectedSet)
+        let outerArchiveEnvelopeIDs = archiveEnvelopeIDsAddedInCurrentChange
+        archiveEnvelopeIDsAddedInCurrentChange = []
+        defer {
+            let addedHere = archiveEnvelopeIDsAddedInCurrentChange ?? []
+            archiveEnvelopeIDsAddedInCurrentChange = outerArchiveEnvelopeIDs.map { $0 + addedHere }
+        }
         do {
             try change()
             refreshState(for: scope)
@@ -21445,7 +21690,19 @@ final class GrantDataStore: ObservableObject {
                 return true
             }
             try persist(affectedSet, preEncodedStates: currentStates)
-            registerUndo(snapshot: previous, actionName: actionName)
+            let archivedHere = Set(archiveEnvelopeIDsAddedInCurrentChange ?? [])
+            if outerArchiveEnvelopeIDs == nil, !archivedHere.isEmpty,
+               let archivedNow = try? loadArchivedRecords() {
+                // Undo brings the record back and takes it out of the
+                // archive again; Redo puts it back in both.
+                registerArchiveUndo(
+                    snapshot: previous,
+                    archivedRecords: archivedNow.filter { !archivedHere.contains($0.id) },
+                    actionName: actionName
+                )
+            } else {
+                registerUndo(snapshot: previous, actionName: actionName)
+            }
             appendRecentRecordRevision(actionName: actionName)
             notice = StoreNotice(message: successMessage, tone: .success)
             loadError = nil
@@ -21453,6 +21710,12 @@ final class GrantDataStore: ObservableObject {
             return true
         } catch {
             restoreSnapshotWithoutUndo(previous)
+            // The change did not happen, so neither did its archive entries.
+            let archivedHere = Set(archiveEnvelopeIDsAddedInCurrentChange ?? [])
+            if !archivedHere.isEmpty, let archivedNow = try? loadArchivedRecords() {
+                try? saveArchivedRecords(archivedNow.filter { !archivedHere.contains($0.id) })
+                archiveEnvelopeIDsAddedInCurrentChange = []
+            }
             persistenceStatus.isSaving = false
             loadError = error.localizedDescription
             notice = StoreNotice(message: failureMessage, tone: .error)
@@ -21735,6 +21998,41 @@ final class GrantDataStore: ObservableObject {
     func cancelDeletionImpactWarning() {
         pendingDeletionAction = nil
         deletionImpactWarning = nil
+    }
+
+    /// Round 11 (user decision 2026-09-30): the Delete key never removes a
+    /// record straight away. It asks first, and a locked record is left
+    /// alone. `delete` is the same removal as the record's own delete
+    /// button, so a record linked elsewhere still gets that warning too.
+    func requestKeyboardDeletion(recordTitle: String, isLocked: Bool, delete: @escaping () -> Void) {
+        guard !isLocked else {
+            notice = StoreNotice(
+                message: language.text(
+                    "The record is locked and was not deleted. Unlock it first.",
+                    "Posten är låst och togs inte bort. Lås upp den först."
+                ),
+                tone: .info
+            )
+            return
+        }
+        let title = recordTitle.trimmedOrNil ?? language.text("the selected record", "den valda posten")
+        requestImpactConfirmation(
+            title: language.text("Delete \u{201C}\(title)\u{201D}?", "Ta bort \u{201D}\(title)\u{201D}?"),
+            message: language.text(
+                "You can undo with Cmd+Z.",
+                "Du kan ångra med Cmd+Z."
+            ),
+            details: [],
+            confirmTitle: language.text("Delete", "Ta bort")
+        ) { [weak self] in
+            // After this dialog has closed, so a warning about links can open.
+            self?.confirmedKeyboardDeletion = delete
+            DispatchQueue.main.async { [weak self] in
+                let action = self?.confirmedKeyboardDeletion
+                self?.confirmedKeyboardDeletion = nil
+                action?()
+            }
+        }
     }
 
     /// Presents the app-wide impact confirmation dialog with a custom
@@ -23882,10 +24180,11 @@ final class GrantDataStore: ObservableObject {
         let archivedPayload = try encoder.encode(payload)
 
         var archivedRecords = try loadArchivedRecords()
+        let envelopeID = UUID().uuidString
 
         archivedRecords.insert(
             ArchivedRecordEnvelope(
-                id: UUID().uuidString,
+                id: envelopeID,
                 kind: kind,
                 title: title,
                 deletedAt: GrantParsing.timestampNow(),
@@ -23898,6 +24197,7 @@ final class GrantDataStore: ObservableObject {
         )
 
         try saveArchivedRecords(archivedRecords)
+        archiveEnvelopeIDsAddedInCurrentChange?.append(envelopeID)
     }
 
     private func mergedPersistedDocumentStates(_ groups: [[PersistedDocumentState]]) -> [PersistedDocumentState] {
@@ -28744,6 +29044,14 @@ extension GrantDataStore {
             let current = courses[index].courseCode.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let rename = renamed.first(where: { $0.current == current }) else { continue }
             guard !courses[index].courseCodes.contains(where: { $0.code == rename.previous }) else { continue }
+            // Round 11: only a course without its own code history gets one
+            // (nothing, or just the current code without dates). A list the
+            // user has edited is never replaced; this runs at every start.
+            guard courses[index].courseCodes.allSatisfy({
+                $0.code.trimmingCharacters(in: .whitespacesAndNewlines) == rename.current
+                    && $0.validFrom.trimmedOrNil == nil
+                    && $0.validTo.trimmedOrNil == nil
+            }) else { continue }
             courses[index].courseCodes = [
                 TeachingCourseCodeEntry(code: rename.previous, validTo: "2025-12-31"),
                 TeachingCourseCodeEntry(code: rename.current, validFrom: "2026-01-01")
@@ -29308,7 +29616,7 @@ extension GrantDataStore {
         var filled = 0
         for index in updated.indices where updated[index].roles.contains(.fundManager) {
             guard updated[index].managerOverheadPercent == nil,
-                  let percent = updated[index].salaryCalculator?.overheadPercent(on: date) else { continue }
+                  let percent = updated[index].employerSalaryCalculator?.overheadPercent(on: date) else { continue }
             updated[index].managerOverheadPercent = min(100, max(0, percent))
             filled += 1
         }
@@ -29349,6 +29657,51 @@ extension GrantDataStore {
         guard filled > 0, updated.count == applications.count else { return false }
         applications = updated
         appendStartupDiagnostic("migration:recordOverheadDefaults filled=\(filled)")
+        return true
+    }
+}
+
+// MARK: - Round 11: data safety
+// Lives in this file because organizations and applications have private setters.
+
+extension GrantDataStore {
+    /// Round 11: the one-time data changes, run once per database and then
+    /// recorded in the migration log. Called from `migrateRecordsIfNeeded()`.
+    /// Returns true when anything changed.
+    @discardableResult
+    func runRound11OneTimeDataMigrations() -> Bool {
+        runRound7MigrationOnce(
+            key: "round11-hidden-salary-calculators",
+            details: "Salary calculators on organizations not marked as employer are removed. They were never shown, and their numbers leaked into OH suggestions. Employers keep theirs."
+        ) {
+            removeHiddenSalaryCalculatorsForRound11()
+        }
+    }
+
+    /// Round 11, one-time (user decision 2026-09-30): a salary calculator is
+    /// only shown for an organization marked as employer. Calculators left on
+    /// other organizations are removed. The organization chosen as the
+    /// application salary calculator in Settings keeps its calculator. No
+    /// organization is chosen by name. Running it again changes nothing.
+    @discardableResult
+    func removeHiddenSalaryCalculatorsForRound11() -> Bool {
+        var updated = organizations
+        var removed = 0
+        for index in updated.indices {
+            let organization = updated[index]
+            guard organization.salaryCalculator != nil,
+                  !organization.roles.contains(.employer),
+                  !organization.usesAsApplicationSalaryCalculator else { continue }
+            updated[index].salaryCalculator = nil
+            removed += 1
+        }
+        // A migration must never lose a record.
+        guard removed > 0, updated.count == organizations.count else { return false }
+        organizations = updated
+        managers = derivedManagers(from: organizations)
+        refreshOrganizationLookupCaches()
+        rebuildOrganizationRowSnapshots()
+        appendStartupDiagnostic("migration:hiddenSalaryCalculators removed=\(removed)")
         return true
     }
 }

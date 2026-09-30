@@ -292,7 +292,9 @@ struct ApplicationsView: View {
         .onDeleteCommand {
             guard let selectedApplicationID,
                   let selected = store.application(selectionID: selectedApplicationID) else { return }
-            store.deleteApplication(id: selected.id)
+            store.requestKeyboardDeletion(recordTitle: selected.displayTitle, isLocked: selected.isEditingLocked) {
+                store.deleteApplication(id: selected.id)
+            }
         }
         .onEscapeKey(isEnabled: grantPipelineExpanded, perform: collapseGrantPipeline)
     }

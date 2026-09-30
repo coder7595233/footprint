@@ -297,7 +297,9 @@ struct ProjectsWorkspaceView: View {
         }
         .onDeleteCommand {
             guard let selectedProjectID, let project = store.projects.first(where: { $0.id == selectedProjectID }) else { return }
-            store.deleteProject(id: project.id)
+            store.requestKeyboardDeletion(recordTitle: project.nameSv, isLocked: project.isEditingLocked) {
+                store.deleteProject(id: project.id)
+            }
         }
     }
 

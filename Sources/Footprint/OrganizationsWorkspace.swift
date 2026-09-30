@@ -293,7 +293,9 @@ struct OrganizationsDirectoryView: View {
         }
         .onDeleteCommand {
             guard let selectedOrganizationID, let organization = store.organizations.first(where: { $0.id == selectedOrganizationID }) else { return }
-            store.deleteOrganization(id: organization.id)
+            store.requestKeyboardDeletion(recordTitle: organization.nameSv, isLocked: false) {
+                store.deleteOrganization(id: organization.id)
+            }
         }
     }
 

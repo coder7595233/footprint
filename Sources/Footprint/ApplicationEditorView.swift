@@ -772,6 +772,10 @@ struct ApplicationEditorView: View {
                             }
                         }
 
+                        if !showsApplicationSpecificSections {
+                            hiddenApplicationDetailsNote(language: language)
+                        }
+
                         if showsGrantedFollowUpPanel {
                             DetailGroup(title: language.text("Grant", "Anslag"), showsSurface: false) {
                                 VStack(alignment: .leading, spacing: 10) {
@@ -2436,6 +2440,27 @@ struct ApplicationEditorView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+        }
+    }
+
+    /// "Ej sökt" hides the application part; this says what is kept there.
+    @ViewBuilder
+    private func hiddenApplicationDetailsNote(language: AppLanguage) -> some View {
+        let otherApplicants = draft.coApplicants.count > (store.isCurrentUserFirstApplicant(draft) ? 1 : 0)
+        let titles = draft.hiddenApplicationDetailTitles(hasOtherApplicants: otherApplicants, language: language)
+        if !titles.isEmpty {
+            Label {
+                Text(language.text(
+                    "Hidden details from the application part: \(titles.joined(separator: ", ")). They are kept and show again if you change the status.",
+                    "Dolda uppgifter från ansökningsdelen: \(titles.joined(separator: ", ")). De finns kvar och visas igen om du ändrar statusen."
+                ))
+                .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "eye.slash")
+            }
+            .appTypography(.secondary)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
