@@ -1362,7 +1362,7 @@ struct PublicationsWorkspaceView: View {
         let distributionCache = publicationMetricDistributionCache
 
         DispatchQueue.global(qos: .userInitiated).async {
-            var journalsByKey = Dictionary(uniqueKeysWithValues: journals.map {
+            var journalsByKey = Dictionary(firstWinsKeysWithValues: journals.map {
                 (Self.normalizedJournalLookupKey($0.name), $0)
             })
             // "Alla kopplingar via id": journals are also found by id.

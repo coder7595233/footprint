@@ -292,7 +292,7 @@ func publicationEffectiveStatusEntry(from rows: [PublicationSubmissionEditorRow]
 }
 
 private func orderedSubmissionRows(_ rows: [PublicationSubmissionEditorRow]) -> [PublicationSubmissionEditorRow] {
-    let originalIndices = Dictionary(uniqueKeysWithValues: rows.enumerated().map { ($1.id, $0) })
+    let originalIndices = Dictionary(firstWinsKeysWithValues: rows.enumerated().map { ($1.id, $0) })
     return rows.sorted { lhs, rhs in
         let leftGroup = submissionRowSortGroup(lhs)
         let rightGroup = submissionRowSortGroup(rhs)

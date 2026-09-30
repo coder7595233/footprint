@@ -916,7 +916,7 @@ struct ApplicationEditorView: View {
             ApplicationDocumentPanelContent(store: store, applicationID: draft.id)
         }
         .flushPendingAutosaveOnTextEnd(requestImmediateAutosave)
-        .onChange(of: application) { _, newValue in
+        .onChange(of: application) { oldValue, newValue in
             if newValue.id != draft.id {
                 autosaveTask?.cancel()
                 persistDraftIfNeeded()
@@ -934,7 +934,12 @@ struct ApplicationEditorView: View {
                 autosaveTask?.cancel()
                 return
             }
-            if hasChanges {
+            // Round 13: the record changed elsewhere (Undo, another view).
+            // Keep the editor's copy only when it holds edits of its own;
+            // otherwise take the new version, so leaving the record never
+            // writes the older copy back over it. (Before, `hasChanges`
+            // compared with the new version and was always true here.)
+            if pendingDraft != oldValue {
                 return
             }
             autosaveTask?.cancel()

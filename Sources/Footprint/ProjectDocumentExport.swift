@@ -691,8 +691,10 @@ extension GrantDataStore {
             [language.text("Applications", "Ansökningar"), "\(applications.count)"],
             [language.text("Granted applications", "Beviljade ansökningar"), "\(grantedApplications.count)"],
         ]
-        if grantedSEK > 0 {
-            rows.append([language.text("Granted amount (SEK)", "Beviljat belopp (SEK)"), projectDocumentSEKText(grantedSEK, language: language)])
+        let unconvertedGranted = unconvertedAmountText(for: grantedApplications.map { ($0, $0.grantedAmountValue) })
+        if grantedSEK > 0 || !unconvertedGranted.isEmpty {
+            let suffix = unconvertedGranted.isEmpty ? "" : " (\(unconvertedGranted))"
+            rows.append([language.text("Granted amount (SEK)", "Beviljat belopp (SEK)"), projectDocumentSEKText(grantedSEK, language: language) + suffix])
         }
         rows.append(contentsOf: [
             [language.text("Publications", "Publikationer"), "\(publications.count)"],

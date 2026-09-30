@@ -932,4 +932,74 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round11-hidden-salary-calculators" })
         XCTAssertFalse(reloaded.runRound11OneTimeDataMigrations(), "running the step again changes nothing")
     }
+
+    /// Round 13: amounts are read in more ways ("1,5 M", "250 tkr"). Counts
+    /// how many stored amount texts the new reading gives a different value
+    /// than the old one, how many foreign amounts lack an exchange rate, and
+    /// that loading and saving keeps every record. Only counts are printed.
+    @MainActor
+    func testSnapshotRound13AmountReadingAndCurrency() throws {
+        let databaseURL = storageDirectory.appendingPathComponent("footprint.sqlite")
+        let rawStore = try SQLiteDocumentStore(url: databaseURL, createIfMissing: false)
+        let storedApplications = try XCTUnwrap(rawStore.load([GrantApplication].self, named: "applications"))
+
+        func oldReading(_ raw: String?) -> String? {
+            guard let raw = raw?.trimmedOrNil else { return nil }
+            let withoutDecimals = raw.replacingOccurrences(of: #"[.,]\d{1,2}\s*(kr|SEK)?\s*$"#, with: "", options: [.regularExpression, .caseInsensitive])
+            let digits = withoutDecimals.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+            guard !digits.isEmpty else { return nil }
+            var parts: [String] = []
+            var current = digits
+            while current.count > 3 {
+                parts.insert(String(current.suffix(3)), at: 0)
+                current.removeLast(3)
+            }
+            parts.insert(current, at: 0)
+            return parts.joined(separator: " ")
+        }
+        var amountTexts = 0
+        var sameValue = 0
+        var differentValue = 0
+        for application in storedApplications {
+            for raw in [application.approximateAmount, application.appliedAmount, application.grantedAmount] {
+                guard raw?.trimmedOrNil != nil else { continue }
+                amountTexts += 1
+                let old = GrantParsing.numericValue(from: oldReading(raw))
+                let new = GrantParsing.numericValue(from: GrantParsing.formatAmountInput(raw))
+                if old == new { sameValue += 1 } else { differentValue += 1 }
+            }
+        }
+        print("SNAPSHOT: R13 Beloppstexter: \(amountTexts), samma värde: \(sameValue), annat värde: \(differentValue)")
+
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let foreign = store.applications.filter { $0.currencyCode != "SEK" }
+        let unconverted = foreign.filter {
+            store.isGrantAmountUnconverted(for: $0, amount: $0.grantedAmountValue ?? $0.appliedAmountValue)
+        }
+        let foreignWithSalaryEstimate = foreign.filter { $0.approximateAmountValue != nil }
+        print("SNAPSHOT: R13 Ansökningar i utländsk valuta: \(foreign.count), utan växelkurs: \(unconverted.count)")
+        print("SNAPSHOT: R13 Ansökningar i utländsk valuta med lönekalkylbelopp i kronor: \(foreignWithSalaryEstimate.count)")
+        print("SNAPSHOT: R13 Dolda varningar: \(store.hiddenDataQualityWarningTotalCount)")
+
+        let countsBefore = Self.recordCounts(store)
+        let amountsBefore = Dictionary(
+            store.applications.map { ($0.id, [$0.approximateAmountValue, $0.appliedAmountValue, $0.grantedAmountValue]) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: R13 \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+        let changedAmounts = reloaded.applications.filter {
+            amountsBefore[$0.id] != [$0.approximateAmountValue, $0.appliedAmountValue, $0.grantedAmountValue]
+        }.count
+        print("SNAPSHOT: R13 Ansökningar vars belopp ändrades vid sparning: \(changedAmounts)")
+        XCTAssertEqual(changedAmounts, 0, "saving does not change any amount")
+    }
 }

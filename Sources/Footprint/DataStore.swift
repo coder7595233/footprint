@@ -1460,7 +1460,7 @@ final class GrantDataStore: ObservableObject {
     ) -> [OrganizationRecord] {
         guard let storedCongresses, !storedCongresses.isEmpty else { return organizations }
         var updatedOrganizations = organizations
-        var indexesByID = Dictionary(uniqueKeysWithValues: updatedOrganizations.enumerated().map { ($0.element.id, $0.offset) })
+        var indexesByID = Dictionary(firstWinsKeysWithValues: updatedOrganizations.enumerated().map { ($0.element.id, $0.offset) })
         let congressesByOrganizationID = Dictionary(grouping: storedCongresses) { $0.organizationID }
 
         for (organizationID, storedRecords) in congressesByOrganizationID {
@@ -2366,7 +2366,7 @@ final class GrantDataStore: ObservableObject {
 
     private func pruneDiagnosticThrottleState(keepingMostRecent limit: Int) {
         let sorted = recentPerformanceDiagnosticStateByKey.sorted { $0.value.lastTimestamp > $1.value.lastTimestamp }
-        recentPerformanceDiagnosticStateByKey = Dictionary(uniqueKeysWithValues: sorted.prefix(limit).map { ($0.key, $0.value) })
+        recentPerformanceDiagnosticStateByKey = Dictionary(firstWinsKeysWithValues: sorted.prefix(limit).map { ($0.key, $0.value) })
     }
 
     /// Privacy filtering, timestamp formatting and file I/O all run on the
@@ -3062,7 +3062,7 @@ final class GrantDataStore: ObservableObject {
     }
 
     var calendarCategoryColorPresets: [CalendarCategoryColorPreset] {
-        let overrides = Dictionary(uniqueKeysWithValues: Self.normalizedCalendarCategoryColorPresets(metadata.calendarCategoryColorPresets ?? [])
+        let overrides = Dictionary(firstWinsKeysWithValues: Self.normalizedCalendarCategoryColorPresets(metadata.calendarCategoryColorPresets ?? [])
             .filter { Self.isEditableCalendarCategoryColorPresetID($0.id) }
             .map { ($0.id, $0) })
 
@@ -3095,7 +3095,7 @@ final class GrantDataStore: ObservableObject {
     }
 
     func calendarMeetingCategoryColorSetting(named name: String) -> CalendarCategoryColorSetting? {
-        let settingsByID = Dictionary(uniqueKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })
+        let settingsByID = Dictionary(firstWinsKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })
         let lookupID = CalendarCategoryColorSetting.meetingColorID(for: name)
         if let exact = settingsByID[lookupID] {
             return exact
@@ -3192,7 +3192,7 @@ final class GrantDataStore: ObservableObject {
     ) -> String? {
         guard let setting else { return nil }
         if let colorSourceID = setting.colorSourceID?.trimmedOrNil,
-           let source = Dictionary(uniqueKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[colorSourceID] {
+           let source = Dictionary(firstWinsKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[colorSourceID] {
             return source.resolvedHexColor(usesDarkAppearance: usesDarkAppearance)
         }
         return setting.resolvedHexColor(usesDarkAppearance: usesDarkAppearance)
@@ -3200,7 +3200,7 @@ final class GrantDataStore: ObservableObject {
 
     func calendarFixedCategoryColorSetting(_ category: CalendarFixedCategory) -> CalendarCategoryColorSetting? {
         let lookupID = CalendarCategoryColorSetting.fixedColorID(for: category)
-        return Dictionary(uniqueKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[lookupID]
+        return Dictionary(firstWinsKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[lookupID]
     }
 
     func calendarFixedCategoryColorHex(_ category: CalendarFixedCategory, usesDarkAppearance: Bool = false) -> String? {
@@ -3209,7 +3209,7 @@ final class GrantDataStore: ObservableObject {
 
     func calendarActivityColorSetting(_ role: CalendarActivityColorRole) -> CalendarCategoryColorSetting? {
         let lookupID = CalendarCategoryColorSetting.activityColorID(for: role)
-        return Dictionary(uniqueKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[lookupID]
+        return Dictionary(firstWinsKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[lookupID]
     }
 
     func calendarActivityColorHex(_ role: CalendarActivityColorRole, usesDarkAppearance: Bool = false) -> String? {
@@ -3220,7 +3220,7 @@ final class GrantDataStore: ObservableObject {
     }
 
     func calendarNewActivityCategoryDefaultColorSetting() -> CalendarCategoryColorSetting? {
-        Dictionary(uniqueKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[CalendarCategoryColorSetting.newActivityCategoryDefaultColorID]
+        Dictionary(firstWinsKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })[CalendarCategoryColorSetting.newActivityCategoryDefaultColorID]
     }
 
     func calendarNewActivityCategoryDefaultColorHex(usesDarkAppearance: Bool = false) -> String? {
@@ -3229,7 +3229,7 @@ final class GrantDataStore: ObservableObject {
 
     func calendarDayHighlightColorSetting(_ kind: CalendarDayHighlightKind) -> CalendarDayHighlightColorSetting? {
         let lookupID = CalendarDayHighlightColorSetting.id(for: kind)
-        return Dictionary(uniqueKeysWithValues: calendarDayHighlightColorSettings.map { ($0.id, $0) })[lookupID]
+        return Dictionary(firstWinsKeysWithValues: calendarDayHighlightColorSettings.map { ($0.id, $0) })[lookupID]
     }
 
     func calendarDayHighlightTextHex(_ kind: CalendarDayHighlightKind, usesDarkAppearance: Bool = false) -> String? {
@@ -3350,7 +3350,7 @@ final class GrantDataStore: ObservableObject {
                     ?? defaultCalendarFixedCategoryColorHex(for: category, usesDarkAppearance: true)
             )
         }
-        let settingsByID = Dictionary(uniqueKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })
+        let settingsByID = Dictionary(firstWinsKeysWithValues: calendarCategoryColorSettings.map { ($0.id, $0) })
         settings.append(contentsOf: CalendarActivityColorRole.allCases.map { role in
             let id = CalendarCategoryColorSetting.activityColorID(for: role)
             let setting = settingsByID[id]
@@ -3457,8 +3457,8 @@ final class GrantDataStore: ObservableObject {
         _ settings: [CalendarCategoryColorSetting],
         fallback: [CalendarCategoryColorSetting]
     ) -> [CalendarCategoryColorSetting] {
-        let fallbackByID = Dictionary(uniqueKeysWithValues: normalizedCalendarCategoryColorSettings(fallback).map { ($0.id, $0) })
-        let overridesByID = Dictionary(uniqueKeysWithValues: normalizedCalendarCategoryColorSettings(settings).map { ($0.id, $0) })
+        let fallbackByID = Dictionary(firstWinsKeysWithValues: normalizedCalendarCategoryColorSettings(fallback).map { ($0.id, $0) })
+        let overridesByID = Dictionary(firstWinsKeysWithValues: normalizedCalendarCategoryColorSettings(settings).map { ($0.id, $0) })
 
         return normalizedCalendarCategoryColorSettings(
             calendarFixedCategoryPresetSettingIDs.compactMap { id in
@@ -3509,7 +3509,7 @@ final class GrantDataStore: ObservableObject {
         stored: [AppSemanticColorPreset],
         useDarkAppearance: Bool
     ) -> [AppSemanticColorPreset] {
-        let overrides = Dictionary(uniqueKeysWithValues: normalizedAppSemanticColorPresets(stored, fallbackName: "Standard")
+        let overrides = Dictionary(firstWinsKeysWithValues: normalizedAppSemanticColorPresets(stored, fallbackName: "Standard")
             .filter { isEditableAppSemanticColorPresetID($0.id) }
             .map { ($0.id, $0) })
 
@@ -4275,7 +4275,7 @@ final class GrantDataStore: ObservableObject {
                 projectApplications.lazy.filter { self.isCurrentUserFirstApplicant($0) }.map(\.id)
             )
             let effectiveFullySpentDates = Dictionary(
-                uniqueKeysWithValues: projectApplications.compactMap { application -> (String, Date)? in
+                firstWinsKeysWithValues: projectApplications.compactMap { application -> (String, Date)? in
                     guard isEffectivelyFullySpent(application),
                           !application.isFullySpent,
                           let lastDispositionDate = application.lastDispositionDate else { return nil }
@@ -4283,7 +4283,7 @@ final class GrantDataStore: ObservableObject {
                 }
             )
             let effectiveRemainingAmounts = Dictionary(
-                uniqueKeysWithValues: projectApplications.compactMap { application -> (String, Double)? in
+                firstWinsKeysWithValues: projectApplications.compactMap { application -> (String, Double)? in
                     guard let remaining = effectiveRemainingGrantedAmountValue(for: application) else { return nil }
                     return (application.id, remaining)
                 }
@@ -5608,7 +5608,7 @@ final class GrantDataStore: ObservableObject {
 
     func salaryCoverageExportRows(language targetLanguage: AppLanguage? = nil) -> [SalaryCoverageExportRow] {
         let exportLanguage = targetLanguage ?? language
-        let sourcesByID = Dictionary(uniqueKeysWithValues: salarySources.map { ($0.id, $0) })
+        let sourcesByID = Dictionary(firstWinsKeysWithValues: salarySources.map { ($0.id, $0) })
         return salaryCoveragePeriods
             .sorted {
                 let lhsFrom = DateParsers.isoDay.date(from: salaryNormalizedDateInput($0.from)) ?? .distantFuture
@@ -17444,6 +17444,49 @@ final class GrantDataStore: ObservableObject {
         return true
     }
 
+    /// Number of hidden data quality warnings of every kind (missing
+    /// fields, duplicates, integrity, translations, names, activities).
+    var hiddenDataQualityWarningTotalCount: Int {
+        hiddenDataQualityWarningKeySet.count
+    }
+
+    /// Shows every hidden warning again in one step, including those hidden
+    /// in older versions where one hidden warning covered a whole record.
+    /// Can be undone with Ångra.
+    @discardableResult
+    func showAllHiddenDataQualityWarnings() -> Bool {
+        let previous = editableMetadataSnapshot
+        let count = Self.combinedHiddenDataQualityWarningKeys(
+            hidden: previous.hiddenDataQualityWarningKeys,
+            ignored: previous.ignoredDuplicateWarningKeys
+        ).count
+        guard count > 0 else { return false }
+        var updated = previous
+        updated.hiddenDataQualityWarningKeys = nil
+        updated.ignoredDuplicateWarningKeys = nil
+        let sanitizedUpdated = Self.sanitizedMetadata(updated)
+        loadError = nil
+        persistMetadataSilently(
+            sanitizedUpdated,
+            undoActionName: language.text("Show all hidden warnings", "Visa alla dolda varningar")
+        )
+        guard (pendingMetadataSnapshot ?? metadata).hiddenDataQualityWarningKeys == nil else {
+            notice = StoreNotice(
+                message: language.text("Could not show the hidden warnings.", "Kunde inte visa de dolda varningarna."),
+                tone: .error
+            )
+            return false
+        }
+        notice = StoreNotice(
+            message: language.text(
+                "Showing \(count) hidden warnings again.",
+                "Visar \(count) dolda varningar igen."
+            ),
+            tone: .success
+        )
+        return true
+    }
+
     private static func normalizedDuplicateWarningRecordIDs(_ recordIDs: [String]) -> [String] {
         Set(recordIDs.compactMap(\.trimmedOrNil)).sorted()
     }
@@ -17507,6 +17550,9 @@ final class GrantDataStore: ObservableObject {
         }
 
         let actionName = language.text("Merge duplicates", "Slå ihop dubletter")
+        // Round 13: the merge saves everything, metadata included, so a
+        // queued metadata write is taken in first (see performUndoableChange).
+        promotePendingMetadataSnapshotIfNeeded()
         let previousSnapshot = currentSnapshot()
         let previousArchivedRecords: [ArchivedRecordEnvelope]
         do {
@@ -21002,8 +21048,8 @@ final class GrantDataStore: ObservableObject {
             return record
         }
         .filter { !$0.isEmpty }
-        var travelIndexByID = Dictionary(uniqueKeysWithValues: travelRecords.enumerated().map { ($0.element.id, $0.offset) })
-        var accommodationIndexByID = Dictionary(uniqueKeysWithValues: accommodationRecords.enumerated().map { ($0.element.id, $0.offset) })
+        var travelIndexByID = Dictionary(firstWinsKeysWithValues: travelRecords.enumerated().map { ($0.element.id, $0.offset) })
+        var accommodationIndexByID = Dictionary(firstWinsKeysWithValues: accommodationRecords.enumerated().map { ($0.element.id, $0.offset) })
 
         for organization in sourceOrganizations {
             for congress in persistedOrganizationCongresses(from: organization.congresses) {
@@ -21825,8 +21871,15 @@ final class GrantDataStore: ObservableObject {
                 startedAt: startedAt
             )
         }
-        let previous = currentSnapshot()
         let affectedSet = persistenceSet(for: scope)
+        // Round 13: a queued metadata write (calendar, tasks, settings) is
+        // taken into this change when the change saves metadata; otherwise
+        // the change would save the older metadata and its own metadata
+        // edits (for example re-pointed travel after a merge) would be lost.
+        if affectedSet.contains(.metadata) {
+            promotePendingMetadataSnapshotIfNeeded()
+        }
+        let previous = currentSnapshot()
         let previousStates = try? persistedBaselineDocumentStates(for: affectedSet)
         let outerArchiveEnvelopeIDs = archiveEnvelopeIDsAddedInCurrentChange
         archiveEnvelopeIDsAddedInCurrentChange = []
@@ -23903,9 +23956,13 @@ final class GrantDataStore: ObservableObject {
     ) {
         let hasActiveWrites = deferredPersistenceGroup.wait(timeout: .now()) != .success
         for state in states {
-            persistedDocumentCache[state.storageKey] = state.data
             deferredPersistenceRetryCountByKey[state.storageKey] = nil
+            // Round 13: only a write that is still the newest for its document
+            // updates the cache. If a newer version was written in between
+            // (for example by an undoable change), the cache keeps that one;
+            // otherwise a later Undo to these bytes would look already saved.
             if inFlightDeferredPersistedStatesByKey[state.storageKey]?.data == state.data {
+                persistedDocumentCache[state.storageKey] = state.data
                 inFlightDeferredPersistedStatesByKey[state.storageKey] = nil
             }
         }
@@ -24200,6 +24257,9 @@ final class GrantDataStore: ObservableObject {
         try DocumentPersistenceWorker.write(documents, databaseURL: Self.databaseURL)
         for state in states {
             persistedDocumentCache[state.storageKey] = state.data
+            // Round 13: a background write of an older version that reports
+            // back later must not put its bytes back in the cache.
+            inFlightDeferredPersistedStatesByKey[state.storageKey] = nil
         }
         if Self.verifyPersistenceWrites {
             try DocumentPersistenceWorker.verify(documents, databaseURL: Self.databaseURL)
@@ -24317,7 +24377,7 @@ final class GrantDataStore: ObservableObject {
 
     func rebuildPersistedDocumentCacheForAllCoreData() throws {
         persistedDocumentCache = Dictionary(
-            uniqueKeysWithValues: try encodedPersistenceDocuments(for: .allCoreData).map { ($0.storageKey, $0.data) }
+            firstWinsKeysWithValues: try encodedPersistenceDocuments(for: .allCoreData).map { ($0.storageKey, $0.data) }
         )
     }
 
@@ -24824,7 +24884,7 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func mergeLocalizedOptions(existing: [ProjectRecord], canonicalNames: Set<String>) -> [ProjectRecord] {
-        let existingByName = Dictionary(uniqueKeysWithValues: existing.map { ($0.nameSv, $0) })
+        let existingByName = Dictionary(firstWinsKeysWithValues: existing.map { ($0.nameSv, $0) })
         let merged = Set(existing.map(\.nameSv)).union(canonicalNames)
         return merged
             .compactMap { name in
@@ -24835,7 +24895,7 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func mergeManagerOptions(existing: [ManagerOption], canonicalNames: Set<String>) -> [ManagerOption] {
-        let existingByName = Dictionary(uniqueKeysWithValues: existing.map { ($0.nameSv, $0) })
+        let existingByName = Dictionary(firstWinsKeysWithValues: existing.map { ($0.nameSv, $0) })
         let merged = Set(existing.map(\.nameSv)).union(canonicalNames)
         return merged
             .compactMap { name in
@@ -27051,7 +27111,7 @@ final class GrantDataStore: ObservableObject {
                 let projectApplications = groupedApplications[projectName] ?? []
                 let projectPublications = groupedPublications[projectName] ?? []
                 let project = projectLookup[projectName]
-                let applicationTitlesByID = Dictionary(uniqueKeysWithValues: projectApplications.map { application in
+                let applicationTitlesByID = Dictionary(firstWinsKeysWithValues: projectApplications.map { application in
                     (
                         application.id,
                         displayTitle(for: application, organizationLabels: organizationLabels, language: language)
@@ -27295,7 +27355,7 @@ final class GrantDataStore: ObservableObject {
         for applications: [GrantApplication]
     ) -> [String: Date] {
         Dictionary(
-            uniqueKeysWithValues: applications.compactMap { application -> (String, Date)? in
+            firstWinsKeysWithValues: applications.compactMap { application -> (String, Date)? in
                 guard isEffectivelyFullySpent(application),
                       !application.isFullySpent,
                       let lastDispositionDate = application.lastDispositionDate else { return nil }
@@ -27308,7 +27368,7 @@ final class GrantDataStore: ObservableObject {
         for applications: [GrantApplication]
     ) -> [String: Double] {
         Dictionary(
-            uniqueKeysWithValues: applications.compactMap { application -> (String, Double)? in
+            firstWinsKeysWithValues: applications.compactMap { application -> (String, Double)? in
                 guard let remaining = effectiveRemainingGrantedAmountValue(for: application) else { return nil }
                 return (application.id, remaining)
             }

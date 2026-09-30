@@ -53,7 +53,7 @@ extension GrantDataStore {
     }
 
     func listFilterRetentionPreferenceSnapshot() -> [String: Bool] {
-        Dictionary(uniqueKeysWithValues: ListFilterPersistenceKey.allCases.map {
+        Dictionary(firstWinsKeysWithValues: ListFilterPersistenceKey.allCases.map {
             ($0.rawValue, shouldRetainListFilters(for: $0))
         })
     }
@@ -334,7 +334,7 @@ extension GrantDataStore {
     }
 
     func autosaveCalendarCategoryColorPresets(_ presets: [CalendarCategoryColorPreset]) {
-        let builtInPresets = Dictionary(uniqueKeysWithValues: Self.standardCalendarCategoryColorPresets().map { ($0.id, $0) })
+        let builtInPresets = Dictionary(firstWinsKeysWithValues: Self.standardCalendarCategoryColorPresets().map { ($0.id, $0) })
         let normalized = Self.normalizedCalendarCategoryColorPresets(presets).compactMap { preset -> CalendarCategoryColorPreset? in
             guard Self.isEditableCalendarCategoryColorPresetID(preset.id),
                   let builtInPreset = builtInPresets[preset.id] else {
@@ -378,8 +378,8 @@ extension GrantDataStore {
     }
 
     func autosaveAppSemanticColorPresets(light: [AppSemanticColorPreset], dark: [AppSemanticColorPreset]) {
-        let builtInLight = Dictionary(uniqueKeysWithValues: Self.standardAppSemanticColorPresets(useDarkAppearance: false).map { ($0.id, $0) })
-        let builtInDark = Dictionary(uniqueKeysWithValues: Self.standardAppSemanticColorPresets(useDarkAppearance: true).map { ($0.id, $0) })
+        let builtInLight = Dictionary(firstWinsKeysWithValues: Self.standardAppSemanticColorPresets(useDarkAppearance: false).map { ($0.id, $0) })
+        let builtInDark = Dictionary(firstWinsKeysWithValues: Self.standardAppSemanticColorPresets(useDarkAppearance: true).map { ($0.id, $0) })
         let normalizedLight = Self.normalizedAppSemanticColorPresets(light, fallbackName: "Standard").compactMap { preset -> AppSemanticColorPreset? in
             guard Self.isEditableAppSemanticColorPresetID(preset.id),
                   let builtInPreset = builtInLight[preset.id],

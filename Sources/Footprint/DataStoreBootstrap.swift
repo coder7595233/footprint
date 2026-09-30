@@ -455,7 +455,7 @@ extension GrantDataStore {
         let bundledJournals = Self.bundledPublicationJournals()
         guard !bundledJournals.isEmpty, !publicationJournals.isEmpty else { return 0 }
 
-        let bundledByID = Dictionary(uniqueKeysWithValues: bundledJournals.map { ($0.id, $0) })
+        let bundledByID = Dictionary(firstWinsKeysWithValues: bundledJournals.map { ($0.id, $0) })
         var bundledByISSN: [String: PublicationJournal] = [:]
         var bundledByName: [String: PublicationJournal] = [:]
 

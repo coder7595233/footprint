@@ -139,11 +139,14 @@ extension GrantDataStore {
         }
 
         func awardedAmount(_ source: [GrantApplication]) -> String {
-            annualReportCurrencyText(source.filter(\.isGranted).map(annualReportGrantAmount).reduce(0, +), language: language)
+            let granted = source.filter(\.isGranted)
+            return annualReportCurrencyText(granted.map(annualReportGrantAmount).reduce(0, +), language: language)
+                + annualReportUnconvertedSuffix(granted)
         }
 
         func representedAmount(_ source: [GrantApplication]) -> String {
             annualReportCurrencyText(source.map(annualReportGrantAmount).reduce(0, +), language: language)
+                + annualReportUnconvertedSuffix(source)
         }
 
         let section = CVExportSection(
@@ -316,14 +319,18 @@ extension GrantDataStore {
                 return $0.displayTitle.localizedStandardCompare($1.displayTitle) == .orderedAscending
             }
             .map { application in
-                let amount = annualReportGrantAmount(application)
+                let originalAmount = annualReportGrantOriginalAmount(application)
+                let amountText = isGrantAmountUnconverted(for: application, amount: originalAmount)
+                    ? CurrencyFormatter.format(originalAmount, code: application.currencyCode)
+                        + " (" + language.text("not converted", "ej omräknat") + ")"
+                    : annualReportSEKAmountText(annualReportGrantAmount(application), language: language)
                 return (
                     row: [
                         annualReportGrantStatusText(annualReportGrantStatus(application), language: language),
                         annualReportDisplayDate(annualReportGrantDetailDate(application), language: language),
                         funderName(for: application).nonEmpty ?? "–",
                         application.localizedGrantName(language: language).nonEmpty ?? application.grantName.nonEmpty ?? application.displayTitle,
-                        annualReportSEKAmountText(amount, language: language),
+                        amountText,
                     ],
                     sourceID: "application-\(application.id)"
                 )
@@ -417,7 +424,7 @@ extension GrantDataStore {
     }
 
     private func annualReportTeachingDetailSection(year: Int, language: AppLanguage) -> CVExportSection {
-        let contextsByID = Dictionary(uniqueKeysWithValues: teachingCourses.map { ($0.id, $0) })
+        let contextsByID = Dictionary(firstWinsKeysWithValues: teachingCourses.map { ($0.id, $0) })
         let doctoralSourceAssignmentIDs = Set(doctoralCandidates.flatMap(\.sourceAssignmentIDs))
         var sortedRows: [(sortDate: String, row: [String], sourceID: String)] = []
 
@@ -777,7 +784,7 @@ extension GrantDataStore {
     }
 
     private func annualReportTeachingHours(year: Int) -> AnnualReportTeachingHours {
-        let contextsByID = Dictionary(uniqueKeysWithValues: teachingCourses.map { ($0.id, $0) })
+        let contextsByID = Dictionary(firstWinsKeysWithValues: teachingCourses.map { ($0.id, $0) })
         let doctoralSourceAssignmentIDs = Set(doctoralCandidates.flatMap(\.sourceAssignmentIDs))
         var result = AnnualReportTeachingHours()
 
@@ -905,14 +912,21 @@ extension GrantDataStore {
         }
     }
 
-    private func annualReportGrantAmount(_ application: GrantApplication) -> Double {
-        let amount: Double
+    /// The amount in the application's own currency.
+    private func annualReportGrantOriginalAmount(_ application: GrantApplication) -> Double {
         if application.isGranted {
-            amount = application.grantedAmountValue ?? application.appliedAmountValue ?? application.preferredBudgetAmountValue ?? 0
-        } else {
-            amount = application.appliedAmountValue ?? application.preferredBudgetAmountValue ?? 0
+            return application.grantedAmountValue ?? application.appliedAmountValue ?? application.preferredBudgetAmountValue ?? 0
         }
-        return approximateSEKValue(amount, for: application) ?? amount
+        return application.appliedAmountValue ?? application.preferredBudgetAmountValue ?? 0
+    }
+
+    /// The amount in SEK; 0 when a foreign amount has no exchange rate.
+    private func annualReportGrantAmount(_ application: GrantApplication) -> Double {
+        grantStatisticsAmountInSEK(for: application, amount: annualReportGrantOriginalAmount(application))
+    }
+
+    private func annualReportUnconvertedSuffix(_ source: [GrantApplication]) -> String {
+        unconvertedAmountSuffix(for: source.map { ($0, Optional(annualReportGrantOriginalAmount($0))) })
     }
 
     private func annualReportYearValue(_ raw: String?) -> Int? {

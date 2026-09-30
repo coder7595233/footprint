@@ -7296,7 +7296,7 @@ struct CalendarWorkspaceView: View {
         width: CGFloat,
         fontSize: CGFloat
     ) -> [CalendarVerticalMarker] {
-        let positionsByDay = Dictionary(uniqueKeysWithValues: positions.map { (DateParsers.isoDay.string(from: $0.date), $0) })
+        let positionsByDay = Dictionary(firstWinsKeysWithValues: positions.map { (DateParsers.isoDay.string(from: $0.date), $0) })
         var markers: [CalendarVerticalMarker] = []
         var currentID: String?
         var currentLabel: String = ""

@@ -3430,10 +3430,10 @@ private struct TeachingAssignmentKindsPopover: View {
     }
 
     private func persist() {
-        var swedish = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
+        var swedish = Dictionary(firstWinsKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
             (definition.key, store.dropdownTranslationText(for: definition, language: .swedish))
         })
-        var english = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
+        var english = Dictionary(firstWinsKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
             (definition.key, store.dropdownTranslationText(for: definition, language: .english))
         })
 
@@ -3530,10 +3530,10 @@ private struct TeachingReportCategoriesPopover: View {
     }
 
     private func persist() {
-        var swedish = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
+        var swedish = Dictionary(firstWinsKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
             (definition.key, store.dropdownTranslationText(for: definition, language: .swedish))
         })
-        var english = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
+        var english = Dictionary(firstWinsKeysWithValues: editableDropdownTranslationDefinitions.map { definition in
             (definition.key, store.dropdownTranslationText(for: definition, language: .english))
         })
 

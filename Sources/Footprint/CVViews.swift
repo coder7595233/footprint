@@ -3545,7 +3545,7 @@ private struct CVMediaAppearanceDetailView: View {
         options: [(id: String, label: String)],
         input: Binding<String>
     ) -> some View {
-        let labelsByID = Dictionary(uniqueKeysWithValues: options.map { ($0.id, $0.label) })
+        let labelsByID = Dictionary(firstWinsKeysWithValues: options.map { ($0.id, $0.label) })
         let selectedIDs = draft[keyPath: keyPath]
         let selectedOptions = selectedIDs
             .map { (id: $0, label: labelsByID[$0] ?? $0) }
@@ -3628,7 +3628,7 @@ private struct CVMediaAppearanceDetailView: View {
     @ViewBuilder
     private var mediaResearcherAssociationField: some View {
         let options = store.publicationAuthors.map { (id: $0.id, label: $0.displayName) }
-        let labelsByID = Dictionary(uniqueKeysWithValues: options.map { ($0.id, $0.label) })
+        let labelsByID = Dictionary(firstWinsKeysWithValues: options.map { ($0.id, $0.label) })
         let selectedIDs = draft.authorIDs
         let selectedLabels = selectedIDs.map { labelsByID[$0] ?? $0 }
         let availableOptions = options

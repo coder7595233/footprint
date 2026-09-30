@@ -75,21 +75,35 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
-## Omgång 12 – pågår
+## Omgång 13 – pågår
 
 | Nr | Område | Ändring | Status |
 |---|---|---|---|
-| F71 | Årsrapport | Som standard tas bara anslag med där du är huvudsökande (beslut 2026-09-30). Valet "Anslag: Mina / Mina + medsökande" tar med medsökandeanslagen; då visas kolumnen och tabellen för medsökande som förut. CV:t hade redan samma val. Alla artiklar tas med som förut. | Pågår |
-| F72 | CV, årsrapport | Konferensbidrag tas med bara när de är inskickade (inskickningsdatum, inget beslut än) eller accepterade/presenterade (beslut 2026-09-30). Planerade och avslagna tas inte med. | Pågår |
-| F73 | CV | Publicerade research letters står med bland originalartiklarna (de föll bort ur det egna CV:t). Granskningsuppdrag står i datumordning, nyast först. Anslagens belopp står i anslagets egen valuta (alla belopp stod som SEK). | Pågår |
-| F74 | Publikationslistor (AMA) | Accepterade artiklar kommer med i listan, under "Artiklar accepterade eller under granskning" (de föll bort). Status, "citeringar" och "Norska listan" skrivs på exportens språk (de stod på engelska även i svenska exporter). | Pågår |
-| F75 | Impact factor | Ett värde för publiceringsåret går före det senaste årets värde, även när det finns i en annan rad eller lista för tidskriften. | Pågår |
-| F76 | Statistikexport (Excel) | Anslagsarket räknar dina anslag som huvudsökande, inte alla anslag i appen. Publikationsarket räknar dina publikationer och alla citeringar under året till dem (förut bara citeringar till artiklar från samma år). | Pågår |
-| F77 | Doktorander, handledning | Handledningstimmar räknas på ett sätt överallt (beslut 2026-09-30): i proportion till dagarna per termin, där en hel vårtermin (jan–jun) eller hösttermin (jul–dec) ger hela terminens timmar. Gäller "Summa hittills", tidslinjen, doktorandstatistiken, statistiken och årsrapporten (förut räknades en hel termin för varje termin perioden berörde). En kort period över sommaren räknas nu i båda terminerna. | Pågår |
-| F78 | Doktorander, Retendo | Handledning som inte är bekräftad i Retendo markeras alltid röd (beslut 2026-09-30), också pågående och kommande terminer: på tidslinjen, med en röd kant på perioden och i doktorandlistan. En period utan timmar syns också. | Pågår |
-| F79 | Påminnelser | En påminnelse om ett anslag skickas en gång (den kom två gånger när appen uppdaterades efter att den visats) och försvinner inte vid två snabba uppdateringar. | Pågår |
-| F80 | Projektuppgifter | Uppgifter som väntar på "Publikation tillagd", "Publikation publicerad" eller "Medlen tar slut" får dagens datum när det händer (de startade aldrig). Projektuppgifter som följer ett beviljat anslag sparas nu också när anslaget sparas med knappen. | Pågår |
-| F81 | Data | En varning om saknade uppgifter som döljs från och med nu visas igen om ett nytt fält saknas på samma post. Varningar som redan är dolda förblir dolda. | Pågår |
+| F82 | Projekt | När man byter från ett projekt till ett annat medan en ändring väntar på att sparas, skrivs inte längre det nya projektets anteckning, webbadress och medarbetare in i det gamla. | Pågår |
+| F83 | Ångra | Ångra fungerar också direkt efter en automatisk sparning (appen kunde tro att den gamla versionen redan var sparad och tappa ångra-steget). | Pågår |
+| F84 | Inställningar och dolda varningar | Ändringar i inställningar som ännu inte hunnit sparas följer med när man slår ihop dubbletter eller gör andra ändringar, i stället för att skrivas över. | Pågår |
+| F85 | Ansökningar, organisationer | Om samma post ändras någon annanstans (ångra, sammanslagning, namnbyte) medan den är öppen, visas det nya. Förut kunde nästa automatiska sparning skriva tillbaka de gamla värdena. Det du själv skrivit men inte sparat skrivs aldrig över. | Pågår |
+| F86 | Stabilitet | Två tidskrifter (eller andra poster) med samma namn eller id kan inte längre få appen att krascha; den första används. | Pågår |
+| F87 | Valuta | Belopp i utländsk valuta utan växelkurs räknas som 0 i summorna och står separat som "ej omräknat" (beslut 2026-09-30). Förut räknades de som kronor. Gäller projektets och organisationens summor, årsrapporten, projektexporten och doktorandens anslag, som nu också räknas om till kronor. | Pågår |
+| F88 | Valuta | Lönekalkylens belopp (alltid i kronor) används inte längre som budget för en ansökan i annan valuta, där det räknades om som om det vore euro eller dollar. | Pågår |
+| F89 | Belopp | Inklistrade belopp som "1,5 M", "1,5 milj", "2 mkr", "250 tkr", "40,000 EUR" och "1.250.000" tolkas rätt (förut blev "1,5 M" 1 kr och "40,000 EUR" kunde bli fel). | Pågår |
+| F90 | Data | Knappen "Visa alla dolda" i Data-vyn visar alla dolda varningar igen på en gång, även de som dolts i äldre versioner. Den frågar först och kan ångras. Reglaget "Dolda" visar antalet, och varje dold rad har knappen "Visa igen". | Pågår |
+
+## Omgång 12 – klar 2026-09-30 (#7)
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F71 | Årsrapport | Som standard tas bara anslag med där du är huvudsökande (beslut 2026-09-30). Valet "Anslag: Mina / Mina + medsökande" tar med medsökandeanslagen; då visas kolumnen och tabellen för medsökande som förut. CV:t hade redan samma val. Alla artiklar tas med som förut. | Klar |
+| F72 | CV, årsrapport | Konferensbidrag tas med bara när de är inskickade (inskickningsdatum, inget beslut än) eller accepterade/presenterade (beslut 2026-09-30). Planerade och avslagna tas inte med. | Klar |
+| F73 | CV | Publicerade research letters står med bland originalartiklarna (de föll bort ur det egna CV:t). Granskningsuppdrag står i datumordning, nyast först. Anslagens belopp står i anslagets egen valuta (alla belopp stod som SEK). | Klar |
+| F74 | Publikationslistor (AMA) | Accepterade artiklar kommer med i listan, under "Artiklar accepterade eller under granskning" (de föll bort). Status, "citeringar" och "Norska listan" skrivs på exportens språk (de stod på engelska även i svenska exporter). | Klar |
+| F75 | Impact factor | Ett värde för publiceringsåret går före det senaste årets värde, även när det finns i en annan rad eller lista för tidskriften. | Klar |
+| F76 | Statistikexport (Excel) | Anslagsarket räknar dina anslag som huvudsökande, inte alla anslag i appen. Publikationsarket räknar dina publikationer och alla citeringar under året till dem (förut bara citeringar till artiklar från samma år). | Klar |
+| F77 | Doktorander, handledning | Handledningstimmar räknas på ett sätt överallt (beslut 2026-09-30): i proportion till dagarna per termin, där en hel vårtermin (jan–jun) eller hösttermin (jul–dec) ger hela terminens timmar. Gäller "Summa hittills", tidslinjen, doktorandstatistiken, statistiken och årsrapporten (förut räknades en hel termin för varje termin perioden berörde). En kort period över sommaren räknas nu i båda terminerna. | Klar |
+| F78 | Doktorander, Retendo | Handledning som inte är bekräftad i Retendo markeras alltid röd (beslut 2026-09-30), också pågående och kommande terminer: på tidslinjen, med en röd kant på perioden och i doktorandlistan. En period utan timmar syns också. | Klar |
+| F79 | Påminnelser | En påminnelse om ett anslag skickas en gång (den kom två gånger när appen uppdaterades efter att den visats) och försvinner inte vid två snabba uppdateringar. | Klar |
+| F80 | Projektuppgifter | Uppgifter som väntar på "Publikation tillagd", "Publikation publicerad" eller "Medlen tar slut" får dagens datum när det händer (de startade aldrig). Projektuppgifter som följer ett beviljat anslag sparas nu också när anslaget sparas med knappen. | Klar |
+| F81 | Data | En varning om saknade uppgifter som döljs från och med nu visas igen om ett nytt fält saknas på samma post. Varningar som redan är dolda förblir dolda. | Klar |
 
 ## Omgång 11 – klar 2026-09-30 (#6)
 

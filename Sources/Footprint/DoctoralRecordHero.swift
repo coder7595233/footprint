@@ -239,7 +239,10 @@ struct DoctoralRecordHeroView: View {
     private var grantRow: some View {
         let applications = grantApplications
         let granted = applications.filter { $0.derivedResult == "Beviljat" }
-        let grantedTotal = granted.compactMap(\.grantedAmountValue).reduce(0, +)
+        let grantedTotal = granted.reduce(0) { total, application in
+            total + store.grantStatisticsAmountInSEK(for: application, amount: application.grantedAmountValue)
+        }
+        let unconverted = store.unconvertedAmountText(for: granted.map { ($0, $0.grantedAmountValue) })
         return HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(language.text("Grants", "Anslag"))
                 .font(appFont(.secondary).weight(.semibold))
@@ -259,6 +262,11 @@ struct DoctoralRecordHeroView: View {
                 ))
                 .appTypography(.secondary)
                 .foregroundStyle(.secondary)
+                if !unconverted.isEmpty {
+                    Text(unconverted)
+                        .appTypography(.secondary)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .fixedSize()

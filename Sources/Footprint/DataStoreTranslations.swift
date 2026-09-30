@@ -297,8 +297,8 @@ extension GrantDataStore {
                   field: .title, sv: other.titleSv, en: other.titleEn, flagIdentical: false)
         }
 
-        let kindOrder = Dictionary(uniqueKeysWithValues: TranslationIssue.Kind.allCases.enumerated().map { ($0.element, $0.offset) })
-        let fieldOrder = Dictionary(uniqueKeysWithValues: TranslationIssue.Field.allCases.enumerated().map { ($0.element, $0.offset) })
+        let kindOrder = Dictionary(firstWinsKeysWithValues: TranslationIssue.Kind.allCases.enumerated().map { ($0.element, $0.offset) })
+        let fieldOrder = Dictionary(firstWinsKeysWithValues: TranslationIssue.Field.allCases.enumerated().map { ($0.element, $0.offset) })
         return issues.sorted { lhs, rhs in
             if lhs.kind != rhs.kind {
                 return (kindOrder[lhs.kind] ?? 0) < (kindOrder[rhs.kind] ?? 0)
