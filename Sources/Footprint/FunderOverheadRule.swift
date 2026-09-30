@@ -198,7 +198,7 @@ struct GrantOverheadPlan: Equatable {
     static func resolved(funder: OrganizationRecord?, manager: OrganizationRecord?) -> GrantOverheadPlan {
         GrantOverheadPlan(
             rule: funder?.resolvedOverheadRule(forManagerOrganizationID: manager?.id) ?? FunderOverheadRule(),
-            managerOverheadPeriods: manager?.salaryCalculator?.overheadPeriods ?? [],
+            managerOverheadPeriods: manager?.employerSalaryCalculator?.overheadPeriods ?? [],
             managerOverheadPercent: manager?.managerOverheadPercent
         )
     }
@@ -344,10 +344,18 @@ extension ManagerSalaryCalculator {
 }
 
 extension OrganizationRecord {
+    /// The salary calculator, but only for an organization marked as
+    /// employer: that is the only place the app shows it. A calculator left
+    /// on any other organization is never used (round 11).
+    var employerSalaryCalculator: ManagerSalaryCalculator? {
+        roles.contains(.employer) ? salaryCalculator : nil
+    }
+
     /// "OH som tas ut (%)" as a default for new records: the fund manager's
-    /// own setting, otherwise the salary calculator's OH for `date`.
+    /// own setting, otherwise the OH for `date` in its salary calculator as
+    /// employer.
     func managerOverheadDefaultPercent(on date: Date = Date()) -> Double? {
-        managerOverheadPercent ?? salaryCalculator?.overheadPercent(on: date)
+        managerOverheadPercent ?? employerSalaryCalculator?.overheadPercent(on: date)
     }
 }
 

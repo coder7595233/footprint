@@ -185,7 +185,6 @@ struct DoctoralCandidatesWorkspaceView: View {
             }
         }
         .onAppear {
-            store.removeAutoMigratedTeachingOnlyDoctoralCandidatesIfNeeded()
             resetDoctoralYearBoundsIfNeeded()
             if let route = store.route, route.destination == workspaceDestination {
                 setSelectedCandidateID(route.recordID)

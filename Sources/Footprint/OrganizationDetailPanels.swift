@@ -1199,7 +1199,7 @@ struct OrganizationManagerOverheadField: View {
     let language: AppLanguage
 
     private var hasCalculatorOverheadPeriods: Bool {
-        (store.organization(id: organizationID)?.salaryCalculator?.overheadPeriods ?? []).contains { period in
+        (store.organization(id: organizationID)?.employerSalaryCalculator?.overheadPeriods ?? []).contains { period in
             GrantParsing.numericValue(from: period.value) != nil
                 && DateParsers.isoDay.date(from: period.from) != nil
                 && DateParsers.isoDay.date(from: period.to) != nil

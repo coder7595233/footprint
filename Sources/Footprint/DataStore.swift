@@ -15571,6 +15571,10 @@ final class GrantDataStore: ObservableObject {
         }
     }
 
+    /// Removes doctoral candidates created from teaching rows that hold no
+    /// doctoral data of their own. Round 11 (user decision 2026-09-30):
+    /// nothing calls this automatically any more; candidates are only
+    /// removed when the user deletes them.
     func removeAutoMigratedTeachingOnlyDoctoralCandidatesIfNeeded() {
         let removableIDs = doctoralCandidates.compactMap { candidate -> String? in
             guard !candidate.sourceAssignmentIDs.isEmpty else { return nil }
@@ -15948,9 +15952,8 @@ final class GrantDataStore: ObservableObject {
         performLaunchMaintenanceStep("teaching-assignment-kinds") {
             ensureTeachingAssignmentKindsStored()
         }
-        performLaunchMaintenanceStep("teaching-only-doctoral-cleanup") {
-            removeAutoMigratedTeachingOnlyDoctoralCandidatesIfNeeded()
-        }
+        // Round 11 (user decision 2026-09-30): doctoral candidates are never
+        // removed automatically, at launch or anywhere else.
 
         try? Self.writeCurrentDeferredLaunchMaintenanceMarker()
         appendPerformanceDiagnostic(
@@ -20181,6 +20184,7 @@ final class GrantDataStore: ObservableObject {
         didChange = runRound7OneTimeDataMigrations() || didChange
         didChange = runRound8OneTimeDataMigrations() || didChange
         didChange = runRound10OneTimeDataMigrations() || didChange
+        didChange = runRound11OneTimeDataMigrations() || didChange
         didChange = normalizeConferenceContributionsForRound1() || didChange
         didChange = clearPlaceholderProjectNames() || didChange
         didChange = ensureManagedPublicationPDFAttachmentsStored() || didChange
@@ -21735,6 +21739,36 @@ final class GrantDataStore: ObservableObject {
     func cancelDeletionImpactWarning() {
         pendingDeletionAction = nil
         deletionImpactWarning = nil
+    }
+
+    /// Round 11 (user decision 2026-09-30): the Delete key never removes a
+    /// record straight away. It asks first, and a locked record is left
+    /// alone. `delete` is the same removal as the record's own delete
+    /// button, so a record linked elsewhere still gets that warning too.
+    func requestKeyboardDeletion(recordTitle: String, isLocked: Bool, delete: @escaping () -> Void) {
+        guard !isLocked else {
+            notice = StoreNotice(
+                message: language.text(
+                    "The record is locked and was not deleted. Unlock it first.",
+                    "Posten är låst och togs inte bort. Lås upp den först."
+                ),
+                tone: .info
+            )
+            return
+        }
+        let title = recordTitle.trimmedOrNil ?? language.text("the selected record", "den valda posten")
+        requestImpactConfirmation(
+            title: language.text("Delete \u{201C}\(title)\u{201D}?", "Ta bort \u{201D}\(title)\u{201D}?"),
+            message: language.text(
+                "You can undo with Cmd+Z.",
+                "Du kan ångra med Cmd+Z."
+            ),
+            details: [],
+            confirmTitle: language.text("Delete", "Ta bort")
+        ) {
+            // After this dialog has closed, so a warning about links can open.
+            DispatchQueue.main.async(execute: delete)
+        }
     }
 
     /// Presents the app-wide impact confirmation dialog with a custom
@@ -29308,7 +29342,7 @@ extension GrantDataStore {
         var filled = 0
         for index in updated.indices where updated[index].roles.contains(.fundManager) {
             guard updated[index].managerOverheadPercent == nil,
-                  let percent = updated[index].salaryCalculator?.overheadPercent(on: date) else { continue }
+                  let percent = updated[index].employerSalaryCalculator?.overheadPercent(on: date) else { continue }
             updated[index].managerOverheadPercent = min(100, max(0, percent))
             filled += 1
         }
@@ -29349,6 +29383,51 @@ extension GrantDataStore {
         guard filled > 0, updated.count == applications.count else { return false }
         applications = updated
         appendStartupDiagnostic("migration:recordOverheadDefaults filled=\(filled)")
+        return true
+    }
+}
+
+// MARK: - Round 11: data safety
+// Lives in this file because organizations and applications have private setters.
+
+extension GrantDataStore {
+    /// Round 11: the one-time data changes, run once per database and then
+    /// recorded in the migration log. Called from `migrateRecordsIfNeeded()`.
+    /// Returns true when anything changed.
+    @discardableResult
+    func runRound11OneTimeDataMigrations() -> Bool {
+        runRound7MigrationOnce(
+            key: "round11-hidden-salary-calculators",
+            details: "Salary calculators on organizations not marked as employer are removed. They were never shown, and their numbers leaked into OH suggestions. Employers keep theirs."
+        ) {
+            removeHiddenSalaryCalculatorsForRound11()
+        }
+    }
+
+    /// Round 11, one-time (user decision 2026-09-30): a salary calculator is
+    /// only shown for an organization marked as employer. Calculators left on
+    /// other organizations are removed. The organization chosen as the
+    /// application salary calculator in Settings keeps its calculator. No
+    /// organization is chosen by name. Running it again changes nothing.
+    @discardableResult
+    func removeHiddenSalaryCalculatorsForRound11() -> Bool {
+        var updated = organizations
+        var removed = 0
+        for index in updated.indices {
+            let organization = updated[index]
+            guard organization.salaryCalculator != nil,
+                  !organization.roles.contains(.employer),
+                  !organization.usesAsApplicationSalaryCalculator else { continue }
+            updated[index].salaryCalculator = nil
+            removed += 1
+        }
+        // A migration must never lose a record.
+        guard removed > 0, updated.count == organizations.count else { return false }
+        organizations = updated
+        managers = derivedManagers(from: organizations)
+        refreshOrganizationLookupCaches()
+        rebuildOrganizationRowSnapshots()
+        appendStartupDiagnostic("migration:hiddenSalaryCalculators removed=\(removed)")
         return true
     }
 }

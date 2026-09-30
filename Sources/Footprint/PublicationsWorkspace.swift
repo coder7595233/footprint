@@ -531,8 +531,10 @@ struct PublicationsWorkspaceView: View {
             }
         }
         .onDeleteCommand {
-            guard let selectedPublicationID else { return }
-            store.deletePublication(id: selectedPublicationID)
+            guard let selectedPublicationID, let publication = store.publication(id: selectedPublicationID) else { return }
+            store.requestKeyboardDeletion(recordTitle: publication.title, isLocked: publication.isEditingLocked) {
+                store.deletePublication(id: publication.id)
+            }
         }
         .onEscapeKey(isEnabled: publicationPipelineExpanded, perform: collapsePublicationPipeline)
     }
