@@ -20059,20 +20059,28 @@ final class GrantDataStore: ObservableObject {
             return
         }
 
+        // Round 12: project tasks waiting for this publication follow in the
+        // same step (and are saved with it).
+        let eventProjects: [ProjectRecord]? = {
+            guard let index = publicationRecords.firstIndex(where: { $0.id == updated.id }) else { return nil }
+            let previous = publicationRecords[index]
+            var candidate = updated
+            candidate.normalize()
+            return projectsByApplyingPublicationEventTasks(projects, publication: candidate, previousPublication: previous)
+        }()
         performUndoableChange(
             actionName: language.text("Edit publication", "Redigera publikation"),
             successMessage: language.text("Saved publication changes.", "Sparade ändringar i publikationen."),
             failureMessage: language.text("Could not save publication changes.", "Kunde inte spara ändringar i publikationen."),
-            scope: .publicationRecords
+            scope: eventProjects == nil ? .publicationRecords : .all
         ) {
             guard let index = publicationRecords.firstIndex(where: { $0.id == updated.id }) else { return }
             let previous = publicationRecords[index]
             let normalized = try normalizedPublicationForPersistence(updated, previous: previous)
             publicationRecords[index] = normalized
-            if let updatedProjects = projectsByApplyingPublicationEventTasks(projects, publication: normalized, previousPublication: previous) {
-                projects = updatedProjects
+            if let eventProjects {
+                projects = eventProjects
                 refreshProjectIndexesAndCaches()
-                try persistScope(.projects)
             }
         }
     }
