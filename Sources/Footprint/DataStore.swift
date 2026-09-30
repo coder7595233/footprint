@@ -5258,7 +5258,8 @@ final class GrantDataStore: ObservableObject {
         let authorEntries = amaAuthorEntries(for: publication)
         let visibleAuthorIndices = amaVisibleAuthorIndices(for: authorEntries, options: options)
         let authorText = amaAuthorList(from: authorEntries, visibleAuthorIndices: visibleAuthorIndices, options: options)
-        let titleText = publication.title.nonEmpty ?? language.text("Untitled", "Utan titel")
+        let exportLanguage = options.exportLanguage ?? language
+        let titleText = publication.title.nonEmpty ?? exportLanguage.text("Untitled", "Utan titel")
         let journal = linkedJournal(of: publication)
         let journalText: String = {
             switch options.journalNameMode {
@@ -5325,16 +5326,18 @@ final class GrantDataStore: ObservableObject {
             )
         }
 
+        // Round 12: the status in the export's language; an accepted article
+        // says so in the citation itself.
         let statusPhrase: String
         switch status {
         case .submitted:
-            statusPhrase = "In review"
+            statusPhrase = exportLanguage.text("In review", "Under granskning")
         case .planned, .inPreparation:
-            statusPhrase = "In preparation"
+            statusPhrase = exportLanguage.text("In preparation", "Under arbete")
         case .accepted:
-            statusPhrase = ""
+            statusPhrase = exportLanguage.text("Accepted for publication", "Accepterad för publicering")
         case .rejected:
-            statusPhrase = "Rejected"
+            statusPhrase = exportLanguage.text("Rejected", "Refuserad")
         case .published:
             statusPhrase = ""
         }
@@ -5359,10 +5362,7 @@ final class GrantDataStore: ObservableObject {
             tailSegments.append("(\(metrics))")
         }
         let tail = tailSegments.joined(separator: ". ")
-        let trailingStatusNote: String? = status == .accepted ? "(Accepted for publication)." : nil
-        let finalNote: String = [note.nonEmpty, trailingStatusNote]
-            .compactMap { $0 }
-            .joined(separator: " ")
+        let finalNote: String = note
         let citation = PublicationCitationFormatting.terminated(
             PublicationCitationFormatting.joinedSegments([authorText, titleText, journalText, tail])
         )
@@ -8312,11 +8312,12 @@ final class GrantDataStore: ObservableObject {
         underlineDoctoralMainSupervisor: Bool,
         underlineDoctoralCoSupervisor: Bool
     ) -> CVExportDocument {
-        let effectivePublicationOptions = publicationExportOptions(
+        var effectivePublicationOptions = publicationExportOptions(
             from: publicationOptions,
             underlineDoctoralMainSupervisor: underlineDoctoralMainSupervisor,
             underlineDoctoralCoSupervisor: underlineDoctoralCoSupervisor
         )
+        effectivePublicationOptions.exportLanguage = exportLanguage
         let currentAuthor = currentUserAuthor()
         let userPublications = currentUserPublications(sortOrder: effectivePublicationOptions.sortOrder)
         let name = currentAuthor?.name.nonEmpty ?? cvText(exportLanguage, english: "Curriculum vitae", swedish: "CV")
@@ -8324,8 +8325,11 @@ final class GrantDataStore: ObservableObject {
         let manuscriptsInWriting = userPublications.filter { PublicationStatus.fromStored($0.statusLabel) == .inPreparation }
         let submittedManuscripts = userPublications.filter { PublicationStatus.fromStored($0.statusLabel) == .submitted }
         let acceptedManuscripts = userPublications.filter { PublicationStatus.fromStored($0.statusLabel) == .accepted }
+        // Round 12: research letters are listed with the original articles
+        // (as in the AMA publication list); they fell out of the CV before.
         let publishedOriginals = userPublications.filter {
-            isPeerReviewedPublishedPublication($0) && publicationTypeBucket(for: $0) == "original"
+            isPeerReviewedPublishedPublication($0)
+                && (publicationTypeBucket(for: $0) == "original" || normalizedPublicationType(for: $0) == "research letter")
         }
         let publishedReviews = userPublications.filter {
             isPeerReviewedPublishedPublication($0) && publicationTypeBucket(for: $0) == "review"
@@ -8358,7 +8362,7 @@ final class GrantDataStore: ObservableObject {
             )
         }
         let conferenceItems = cvNumberedLinkedItems(
-            cvConferenceContributions.filter { !$0.isRejected }.map { contribution in
+            cvConferenceContributions.filter(\.isCVReportable).map { contribution in
                 CVLinkedTextItem(
                     text: cvOwnConferenceLine(for: contribution, language: exportLanguage),
                     sourceID: "conference-\(contribution.id)"
@@ -8524,11 +8528,12 @@ final class GrantDataStore: ObservableObject {
         underlineDoctoralMainSupervisor: Bool,
         underlineDoctoralCoSupervisor: Bool
     ) -> CVExportDocument {
-        let effectivePublicationOptions = publicationExportOptions(
+        var effectivePublicationOptions = publicationExportOptions(
             from: publicationOptions,
             underlineDoctoralMainSupervisor: underlineDoctoralMainSupervisor,
             underlineDoctoralCoSupervisor: underlineDoctoralCoSupervisor
         )
+        effectivePublicationOptions.exportLanguage = exportLanguage
         let currentAuthor = currentUserAuthor()
         let userPublications = currentUserPublications(sortOrder: effectivePublicationOptions.sortOrder)
         let peerReviewedPublications = numberedAMAItems(userPublications.filter(isPeerReviewedPublishedPublication).map { amaCitationItem(for: $0, options: effectivePublicationOptions) })
@@ -8582,7 +8587,7 @@ final class GrantDataStore: ObservableObject {
                 sourceID: "application-\(application.id)"
             )
         }
-        let conferenceItems = cvConferenceContributions.filter { !$0.isRejected }.map { contribution in
+        let conferenceItems = cvConferenceContributions.filter(\.isCVReportable).map { contribution in
             CVLinkedTextItem(
                 text: cvLiUConferenceLine(for: contribution, language: exportLanguage),
                 sourceID: "conference-\(contribution.id)"
@@ -9340,8 +9345,23 @@ final class GrantDataStore: ObservableObject {
             .joined(separator: "\t")
     }
 
+    /// Round 12: the amount with the grant's own currency ("50 000 EUR");
+    /// every amount used to be labelled SEK.
+    private func cvGrantAmountText(_ application: GrantApplication) -> String? {
+        preferredGrantAmountText(application).nonEmpty.map { "\($0) \(application.currencyCode)" }
+    }
+
+    /// Round 12: review assignments newest first (they came in stored order).
+    private func cvReviewEntriesForExport() -> [CVReviewEntry] {
+        cvReviewEntries.sorted { lhs, rhs in
+            let left = lhs.date.trimmingCharacters(in: .whitespacesAndNewlines)
+            let right = rhs.date.trimmingCharacters(in: .whitespacesAndNewlines)
+            return left == right ? lhs.id < rhs.id : left > right
+        }
+    }
+
     private func cvOwnReviewLinkedItems(language: AppLanguage) -> [CVLinkedTextItem] {
-        cvReviewEntries.map { review in
+        cvReviewEntriesForExport().map { review in
             CVLinkedTextItem(
                 text: cvOwnReviewLine(for: review, language: language),
                 sourceID: "review-\(review.id)"
@@ -9354,7 +9374,7 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func cvLiUReviewLinkedItems(language: AppLanguage) -> [CVLinkedTextItem] {
-        cvReviewEntries.map { review in
+        cvReviewEntriesForExport().map { review in
             CVLinkedTextItem(
                 text: cvLiUReviewLine(for: review, language: language),
                 sourceID: "review-\(review.id)"
@@ -9400,7 +9420,7 @@ final class GrantDataStore: ObservableObject {
         let year = yearString(from: application.grantedOn ?? application.appliedOn ?? "")
         let funder = organizationLabel(for: application, language: language).nonEmpty
         let caseNumber = application.appliedCaseNumber.nonEmpty.map { "(\($0))" }
-        let amount = preferredGrantAmountText(application).nonEmpty.map { "\($0) SEK" } ?? nil
+        let amount = cvGrantAmountText(application)
         let label = funder
         let details = [[label, caseNumber].compactMap { $0 }.joined(separator: " "), amount]
             .compactMap { $0?.nonEmpty }
@@ -9414,7 +9434,7 @@ final class GrantDataStore: ObservableObject {
         let year = yearString(from: application.grantedOn ?? application.appliedOn ?? "")
         let funder = organizationLabel(for: application, language: language).nonEmpty
         let caseNumber = application.appliedCaseNumber.nonEmpty.map { "(\($0))" }
-        let amount = preferredGrantAmountText(application).nonEmpty.map { "\($0) SEK" } ?? nil
+        let amount = cvGrantAmountText(application)
         let label = funder
         return [year.nonEmpty, [label, caseNumber].compactMap { $0 }.joined(separator: " "), amount]
             .compactMap { $0?.nonEmpty }
@@ -12659,6 +12679,8 @@ final class GrantDataStore: ObservableObject {
         options: PublicationExportOptions = PublicationExportOptions(),
         includedSections: Set<PublicationExportSectionKey> = Set(PublicationExportSectionKey.allCases)
     ) -> [PublicationAMASection] {
+        var options = options
+        options.exportLanguage = exportLanguage
         let orderedPeerReviewed = publicationRecords
             .filter(\.isPeerReviewed)
             .sorted { lhs, rhs in
@@ -12688,9 +12710,11 @@ final class GrantDataStore: ObservableObject {
             (.publishedNonPeerReviewedPublications, "Other publications, non-peer-reviewed", "Övriga publikationer, ej expertgranskade", orderedNonPeerReviewed, { publication in
                 PublicationStatus.fromStored(publication.statusLabel) == .published
             }),
-            (.articlesInReview, "Articles in review", "Artiklar under granskning", orderedPeerReviewed, { publication in
+            // Round 12: accepted articles belong here too (they fell out of
+            // every group before).
+            (.articlesInReview, "Articles accepted or in review", "Artiklar accepterade eller under granskning", orderedPeerReviewed, { publication in
                 let status = PublicationStatus.fromStored(publication.statusLabel)
-                return status.isSubmittedFamily
+                return status.isSubmittedFamily || status == .accepted
             }),
             (.articlesInWriting, "Articles in writing", "Artiklar under arbete", orderedPeerReviewed, { publication in
                 let status = PublicationStatus.fromStored(publication.statusLabel)
@@ -12862,11 +12886,12 @@ final class GrantDataStore: ObservableObject {
         if options.includeQuartile, let quartile = quartileMetric?.quartile.nonEmpty {
             parts.append(quartile)
         }
+        let exportLanguage = options.exportLanguage ?? language
         if options.includeNorwegianList, let norwegian = norwegianMetric?.value.nonEmpty {
-            parts.append("Norwegian list \(norwegian)")
+            parts.append(exportLanguage.text("Norwegian list \(norwegian)", "Norska listan \(norwegian)"))
         }
         if options.includeCitations {
-            parts.append("\(publication.citationsValue) citations")
+            parts.append(exportLanguage.text("\(publication.citationsValue) citations", "\(publication.citationsValue) citeringar"))
         }
         guard !parts.isEmpty else { return nil }
         return parts.joined(separator: ", ")
