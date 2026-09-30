@@ -180,4 +180,27 @@ final class Round11DataSafetyTests: XCTestCase {
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         XCTAssertEqual(deleted, ["a-open"])
     }
+
+    // MARK: Undo after delete also takes the record out of the archive
+
+    @MainActor
+    func testUndoAfterDeleteTakesTheRecordOutOfTheArchive() throws {
+        let record = GrantApplication(id: "a-undo", rowNumber: 1, organization: "Stiftelsen Exempel", grantName: "Projektbidrag")
+        let store = makeStore(organizations: [], applications: [record])
+        XCTAssertTrue(try store.loadArchivedRecords().isEmpty)
+
+        store.deleteApplication(id: record.id)
+        XCTAssertNil(store.applications.first { $0.id == record.id })
+        XCTAssertEqual(try store.loadArchivedRecords().filter { $0.kind == "application" }.count, 1)
+
+        XCTAssertTrue(store.undoManager.canUndo)
+        store.undoManager.undo()
+        XCTAssertNotNil(store.applications.first { $0.id == record.id }, "Undo brings the record back")
+        XCTAssertTrue(try store.loadArchivedRecords().isEmpty, "and it is no longer also in the archive")
+
+        XCTAssertTrue(store.undoManager.canRedo)
+        store.undoManager.redo()
+        XCTAssertNil(store.applications.first { $0.id == record.id })
+        XCTAssertEqual(try store.loadArchivedRecords().filter { $0.kind == "application" }.count, 1, "Redo archives it again")
+    }
 }

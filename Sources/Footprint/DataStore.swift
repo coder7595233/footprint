@@ -861,6 +861,9 @@ final class GrantDataStore: ObservableObject {
     private var pendingEmptyCVReviewEntryIDs: Set<String> = []
     private var pendingEmptyCVOtherPublicationIDs: Set<String> = []
     private var pendingDeletionAction: (() -> Void)?
+    /// Round 11: archive entries written by the undoable change now running,
+    /// so Undo can take them out of the archive again. nil outside a change.
+    private var archiveEnvelopeIDsAddedInCurrentChange: [String]?
     var backgroundActivityCount = 0
 
     struct PersistenceSet: OptionSet {
@@ -16679,7 +16682,8 @@ final class GrantDataStore: ObservableObject {
             }
             pendingEmptyCVConferenceContributionIDs.remove(id)
             cvConferenceContributions.removeAll { $0.id == id }
-            try Self.removeManagedCVConferenceContributionPDFIfPresent(forContributionID: id)
+            // Round 11: the PDF stays on disk so Undo and the archive can
+            // bring the record back with its file.
         }
     }
 
@@ -16701,7 +16705,8 @@ final class GrantDataStore: ObservableObject {
             }
             pendingEmptyCVMediaAppearanceIDs.remove(id)
             cvMediaAppearances.removeAll { $0.id == id }
-            try Self.removeManagedCVMediaAppearancePDFIfPresent(forMediaAppearanceID: id)
+            // Round 11: the PDF stays on disk so Undo and the archive can
+            // bring the record back with its file.
         }
     }
 
@@ -16735,7 +16740,8 @@ final class GrantDataStore: ObservableObject {
             }
             pendingEmptyCVReviewEntryIDs.remove(id)
             cvReviewEntries.removeAll { $0.id == id }
-            try Self.removeManagedCVReviewCertificatePDFIfPresent(forReviewEntryID: id)
+            // Round 11: the certificate stays on disk so Undo can bring the
+            // record back with its file (the archive keeps its own copy).
         }
     }
 
@@ -19791,7 +19797,8 @@ final class GrantDataStore: ObservableObject {
                 )
             }
             publicationRecords.removeAll { $0.id == id }
-            try Self.removeManagedPublicationPDFIfPresent(forPublicationID: id)
+            // Round 11: the PDF stays on disk so Undo and the archive can
+            // bring the record back with its file.
         }
     }
 
@@ -21437,6 +21444,12 @@ final class GrantDataStore: ObservableObject {
         let previous = currentSnapshot()
         let affectedSet = persistenceSet(for: scope)
         let previousStates = try? persistedBaselineDocumentStates(for: affectedSet)
+        let outerArchiveEnvelopeIDs = archiveEnvelopeIDsAddedInCurrentChange
+        archiveEnvelopeIDsAddedInCurrentChange = []
+        defer {
+            let addedHere = archiveEnvelopeIDsAddedInCurrentChange ?? []
+            archiveEnvelopeIDsAddedInCurrentChange = outerArchiveEnvelopeIDs.map { $0 + addedHere }
+        }
         do {
             try change()
             refreshState(for: scope)
@@ -21449,7 +21462,19 @@ final class GrantDataStore: ObservableObject {
                 return true
             }
             try persist(affectedSet, preEncodedStates: currentStates)
-            registerUndo(snapshot: previous, actionName: actionName)
+            let archivedHere = Set(archiveEnvelopeIDsAddedInCurrentChange ?? [])
+            if outerArchiveEnvelopeIDs == nil, !archivedHere.isEmpty,
+               let archivedNow = try? loadArchivedRecords() {
+                // Undo brings the record back and takes it out of the
+                // archive again; Redo puts it back in both.
+                registerArchiveUndo(
+                    snapshot: previous,
+                    archivedRecords: archivedNow.filter { !archivedHere.contains($0.id) },
+                    actionName: actionName
+                )
+            } else {
+                registerUndo(snapshot: previous, actionName: actionName)
+            }
             appendRecentRecordRevision(actionName: actionName)
             notice = StoreNotice(message: successMessage, tone: .success)
             loadError = nil
@@ -21457,6 +21482,12 @@ final class GrantDataStore: ObservableObject {
             return true
         } catch {
             restoreSnapshotWithoutUndo(previous)
+            // The change did not happen, so neither did its archive entries.
+            let archivedHere = Set(archiveEnvelopeIDsAddedInCurrentChange ?? [])
+            if !archivedHere.isEmpty, let archivedNow = try? loadArchivedRecords() {
+                try? saveArchivedRecords(archivedNow.filter { !archivedHere.contains($0.id) })
+                archiveEnvelopeIDsAddedInCurrentChange = []
+            }
             persistenceStatus.isSaving = false
             loadError = error.localizedDescription
             notice = StoreNotice(message: failureMessage, tone: .error)
@@ -23916,10 +23947,11 @@ final class GrantDataStore: ObservableObject {
         let archivedPayload = try encoder.encode(payload)
 
         var archivedRecords = try loadArchivedRecords()
+        let envelopeID = UUID().uuidString
 
         archivedRecords.insert(
             ArchivedRecordEnvelope(
-                id: UUID().uuidString,
+                id: envelopeID,
                 kind: kind,
                 title: title,
                 deletedAt: GrantParsing.timestampNow(),
@@ -23932,6 +23964,7 @@ final class GrantDataStore: ObservableObject {
         )
 
         try saveArchivedRecords(archivedRecords)
+        archiveEnvelopeIDsAddedInCurrentChange?.append(envelopeID)
     }
 
     private func mergedPersistedDocumentStates(_ groups: [[PersistedDocumentState]]) -> [PersistedDocumentState] {
