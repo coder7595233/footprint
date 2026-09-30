@@ -94,7 +94,13 @@ final class Round12ExportsAndSupervisionTests: XCTestCase {
 
         var published = paper
         published.status = PublicationStatus.published.rawValue
+        XCTAssertEqual(store.projects.map(\.id), ["proj-1"])
+        XCTAssertEqual(store.projects.first?.projectTasks.map(\.reminder), [.publicationPublished])
+        XCTAssertEqual(store.publicationRecords.first?.projectID, "proj-1", "linked before saving")
         store.savePublication(published)
+        XCTAssertNil(store.loadError)
+        XCTAssertEqual(store.publicationRecords.first?.projectID, "proj-1", "still linked after saving")
+        XCTAssertEqual(PublicationStatus.fromStored(store.publicationRecords.first?.statusLabel ?? ""), .published)
 
         let today = DateParsers.isoDay.string(from: Calendar.current.startOfDay(for: Date()))
         XCTAssertEqual(store.projects.first?.projectTasks.first?.deadline, today)
