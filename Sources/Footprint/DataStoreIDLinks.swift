@@ -52,7 +52,8 @@ extension GrantDataStore {
         if let id = id?.trimmedOrNil, let linked = organization(id: id) {
             return linked
         }
-        return organization(matchingName: name)
+        // Round 11: by name only when exactly one organization has it.
+        return uniqueOrganization(matchingName: name)
     }
 
     /// The one organization whose Swedish or English name is this text
@@ -70,6 +71,32 @@ extension GrantDataStore {
         return matches.count == 1 ? matches.first : nil
     }
 
+    /// Round 11: the one fund manager with this name; nil when none or
+    /// several match, so a shared name never links a row to the wrong one.
+    func uniqueManager(matchingName name: String?) -> ManagerOption? {
+        guard let trimmed = name?.trimmedOrNil else { return nil }
+        let key = Self.normalizedIDLinkName(trimmed)
+        let matches = managers.filter { manager in
+            [manager.nameSv, manager.nameEn].contains { candidate in
+                !candidate.isEmpty && Self.normalizedIDLinkName(candidate) == key
+            }
+        }
+        return matches.count == 1 ? matches.first : nil
+    }
+
+    /// Round 11: the one project with this name; nil when none or several
+    /// match.
+    func uniqueProject(named name: String?) -> ProjectRecord? {
+        guard let trimmed = name?.trimmedOrNil else { return nil }
+        let key = Self.normalizedIDLinkName(trimmed)
+        let matches = projects.filter { project in
+            [project.nameSv, project.nameEn].contains { candidate in
+                !candidate.isEmpty && Self.normalizedIDLinkName(candidate) == key
+            }
+        }
+        return matches.count == 1 ? matches.first : nil
+    }
+
     /// The grant provider of an application.
     func linkedFunder(of application: GrantApplication) -> OrganizationRecord? {
         linkedOrganization(id: application.organizationID, name: application.organization)
@@ -80,7 +107,8 @@ extension GrantDataStore {
         if let id = application.applicationManagerID?.trimmedOrNil, let linked = manager(id: id) {
             return linked
         }
-        return manager(matchingName: application.applicationManager)
+        // Round 11: by name only when exactly one fund manager has it.
+        return uniqueManager(matchingName: application.applicationManager)
     }
 
     /// The institution of a course or programme.

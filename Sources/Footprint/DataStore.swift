@@ -4090,16 +4090,19 @@ final class GrantDataStore: ObservableObject {
         return projectByID[id] ?? projects.first(where: { $0.id == id })
     }
 
+    // Round 11: a row without a working id is linked by name only when
+    // exactly one record has that name. With two of the same name it stays
+    // unlinked (its text is kept) instead of being tied to one by chance.
     private func resolvedOrganization(id: String?, name: String?) -> OrganizationRecord? {
-        organization(id: id) ?? organization(matchingName: name)
+        organization(id: id) ?? uniqueOrganization(matchingName: name)
     }
 
     private func resolvedManager(id: String?, name: String?) -> ManagerOption? {
-        manager(id: id) ?? manager(matchingName: name)
+        manager(id: id) ?? uniqueManager(matchingName: name)
     }
 
     private func resolvedProject(id: String?, name: String?) -> ProjectRecord? {
-        project(id: id) ?? project(named: name)
+        project(id: id) ?? uniqueProject(named: name)
     }
 
     private func applicationRelationNameDidChange(
@@ -4138,7 +4141,7 @@ final class GrantDataStore: ObservableObject {
             if resolved.projectType?.trimmedOrNil == nil {
                 Optional<ProjectRecord>.none
             } else {
-                project(named: resolved.projectType)
+                uniqueProject(named: resolved.projectType)
                     ?? resolvedProject(id: resolved.projectID, name: resolved.projectType)
             }
         } else {

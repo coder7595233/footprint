@@ -248,4 +248,22 @@ final class Round11DataSafetyTests: XCTestCase {
         XCTAssertEqual(store.teachingCourses.first { $0.id == "course-new" }?.courseCodes.count, 2, "a course without history still gets it")
         XCTAssertTrue(store.migrateTeachingCatalogForRound2c().isEmpty, "the next start changes nothing")
     }
+
+    // MARK: A shared name never links a row by chance
+
+    @MainActor
+    func testRowWithoutIDIsLinkedByNameOnlyWhenTheNameIsUnique() {
+        let first = OrganizationRecord(id: "org-a", nameSv: "Fonden", nameEn: "The Fund", roles: [.grantProvider])
+        let second = OrganizationRecord(id: "org-b", nameSv: "Fonden", nameEn: "Another Fund", roles: [.grantProvider])
+        let unique = OrganizationRecord(id: "org-c", nameSv: "Stiftelsen Exempel", nameEn: "Example Foundation", roles: [.grantProvider])
+        let store = makeStore(organizations: [first, second, unique])
+
+        let shared = GrantApplication(id: "a1", rowNumber: 1, organization: "Fonden", grantName: "Bidrag")
+        XCTAssertNil(store.linkedFunder(of: shared), "two organizations share the name, so none is picked")
+        let named = GrantApplication(id: "a2", rowNumber: 2, organization: "stiftelsen exempel", grantName: "Bidrag")
+        XCTAssertEqual(store.linkedFunder(of: named)?.id, "org-c", "a unique name still links")
+        var byID = shared
+        byID.organizationID = "org-b"
+        XCTAssertEqual(store.linkedFunder(of: byID)?.id, "org-b", "the id always decides")
+    }
 }
