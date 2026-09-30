@@ -17114,6 +17114,21 @@ final class GrantDataStore: ObservableObject {
         ].joined(separator: "|")
     }
 
+    /// Round 12: the key a missing-field warning is hidden under from now on.
+    /// It includes how many fields are missing, so a new problem on the same
+    /// record (one more missing field) shows again instead of staying hidden.
+    /// Warnings hidden earlier (the key above) stay hidden as before.
+    func dataQualityWarningPreciseKey(for issue: MissingFieldIssue) -> String {
+        [
+            "data-quality-warning:v2",
+            "missing",
+            issue.entityKind.rawValue,
+            Self.duplicateWarningKeyComponent(issue.recordID),
+            Self.duplicateWarningKeyComponent(issue.id),
+            "\(issue.missingFields.count)",
+        ].joined(separator: "|")
+    }
+
     func dataQualityWarningKey(for issue: DuplicateIssue) -> String? {
         duplicateWarningSuppressionKey(
             groupKind: issue.groupKind,
@@ -17133,7 +17148,8 @@ final class GrantDataStore: ObservableObject {
     }
 
     func isDataQualityWarningHidden(_ issue: MissingFieldIssue) -> Bool {
-        isDataQualityWarningHidden(key: dataQualityWarningKey(for: issue))
+        isDataQualityWarningHidden(key: dataQualityWarningPreciseKey(for: issue))
+            || isDataQualityWarningHidden(key: dataQualityWarningKey(for: issue))
     }
 
     func isDataQualityWarningHidden(_ issue: DuplicateIssue) -> Bool {
@@ -17147,7 +17163,7 @@ final class GrantDataStore: ObservableObject {
 
     @discardableResult
     func hideDataQualityWarning(_ issue: MissingFieldIssue) -> Bool {
-        hideDataQualityWarning(key: dataQualityWarningKey(for: issue))
+        hideDataQualityWarning(key: dataQualityWarningPreciseKey(for: issue))
     }
 
     @discardableResult
@@ -17163,7 +17179,9 @@ final class GrantDataStore: ObservableObject {
 
     @discardableResult
     func showDataQualityWarning(_ issue: MissingFieldIssue) -> Bool {
-        showDataQualityWarning(key: dataQualityWarningKey(for: issue))
+        let shownPrecise = showDataQualityWarning(key: dataQualityWarningPreciseKey(for: issue))
+        let shownEarlier = showDataQualityWarning(key: dataQualityWarningKey(for: issue))
+        return shownPrecise || shownEarlier
     }
 
     @discardableResult
