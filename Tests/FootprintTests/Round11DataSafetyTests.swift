@@ -203,4 +203,49 @@ final class Round11DataSafetyTests: XCTestCase {
         XCTAssertNil(store.applications.first { $0.id == record.id })
         XCTAssertEqual(try store.loadArchivedRecords().filter { $0.kind == "application" }.count, 1, "Redo archives it again")
     }
+
+    // MARK: Deleting an organization keeps the written names
+
+    @MainActor
+    func testDeletingAnOrganizationKeepsFunderAndManagerNames() {
+        let funder = OrganizationRecord(id: "org-funder", nameSv: "Stiftelsen Exempel", nameEn: "Example Foundation", roles: [.grantProvider])
+        var linked = GrantApplication(id: "a-linked", rowNumber: 1, organizationID: "org-funder", organization: "", grantName: "Projektbidrag")
+        linked.applicationManagerID = "org-funder"
+        let textOnly = GrantApplication(id: "a-text", rowNumber: 2, organization: "Stiftelsen Exempel", grantName: "Resebidrag")
+        let store = makeStore(organizations: [funder], applications: [linked, textOnly])
+
+        store.deleteOrganization(id: "org-funder")
+        store.confirmDeletionImpactWarning()
+
+        XCTAssertFalse(store.organizations.contains { $0.id == "org-funder" })
+        let afterLinked = store.applications.first { $0.id == "a-linked" }
+        XCTAssertNil(afterLinked?.organizationID, "the link is gone")
+        XCTAssertEqual(afterLinked?.organization, "Stiftelsen Exempel", "the funder's name is written in instead of left blank")
+        XCTAssertNil(afterLinked?.applicationManagerID)
+        XCTAssertEqual(afterLinked?.applicationManager, "Stiftelsen Exempel")
+        XCTAssertEqual(store.applications.first { $0.id == "a-text" }?.organization, "Stiftelsen Exempel", "a row without a link keeps its text")
+    }
+
+    // MARK: Course codes edited by hand are never reset
+
+    @MainActor
+    func testEditedCourseCodeHistoryIsNotResetAtStart() {
+        // The code list as the user left it: the earlier code removed by hand.
+        let edited = TeachingCourse(
+            id: "course-edited",
+            nameSv: "Exempelkurs",
+            courseCode: "8LA100",
+            courseCodes: [TeachingCourseCodeEntry(code: "8LA100", validFrom: "2024-01-01")]
+        )
+        let untouched = TeachingCourse(id: "course-new", nameSv: "Annan kurs", courseCode: "8LA110")
+        let store = GrantDataStore(metadata: .bundledDefault, teachingCourses: [edited, untouched])
+
+        store.migrateTeachingCatalogForRound2c()
+
+        let afterEdited = store.teachingCourses.first { $0.id == "course-edited" }
+        XCTAssertEqual(afterEdited?.courseCodes.map(\.code), ["8LA100"], "a list edited by hand stays as it is")
+        XCTAssertEqual(afterEdited?.courseCodes.first?.validFrom, "2024-01-01")
+        XCTAssertEqual(store.teachingCourses.first { $0.id == "course-new" }?.courseCodes.count, 2, "a course without history still gets it")
+        XCTAssertTrue(store.migrateTeachingCatalogForRound2c().isEmpty, "the next start changes nothing")
+    }
 }

@@ -14426,7 +14426,6 @@ final class GrantDataStore: ObservableObject {
         ) {
             guard let organization = organizations.first(where: { $0.id == id }) else { return }
             let canonicalName = organization.nameSv
-            let hasAmbiguousLegacyName = organizations.lazy.filter { $0.nameSv == canonicalName }.prefix(2).count > 1
             try archiveDeletion(
                 kind: "organization",
                 title: organization.nameSv,
@@ -14435,58 +14434,54 @@ final class GrantDataStore: ObservableObject {
             )
             organizations.removeAll { $0.id == id }
             managers = derivedManagers(from: organizations)
-            for appIndex in applications.indices where applications[appIndex].organizationID == id ||
-                (!hasAmbiguousLegacyName && applications[appIndex].organizationID == nil && applications[appIndex].organization == canonicalName) {
+            // Round 11 (user decision 2026-09-30): records that pointed to
+            // the organization lose the link but keep the written name, so a
+            // funder, fund manager or institution never turns blank. Rows
+            // without a link keep their text as it is.
+            for appIndex in applications.indices where applications[appIndex].organizationID == id {
                 applications[appIndex].organizationID = nil
-                applications[appIndex].organization = ""
+                if applications[appIndex].organization.trimmedOrNil == nil {
+                    applications[appIndex].organization = canonicalName
+                }
             }
-            for appIndex in applications.indices where applications[appIndex].applicationManagerID == id ||
-                (!hasAmbiguousLegacyName && applications[appIndex].applicationManagerID == nil && applications[appIndex].applicationManager == canonicalName) {
+            for appIndex in applications.indices where applications[appIndex].applicationManagerID == id {
                 applications[appIndex].applicationManagerID = nil
-                applications[appIndex].applicationManager = nil
+                if applications[appIndex].applicationManager?.trimmedOrNil == nil {
+                    applications[appIndex].applicationManager = canonicalName
+                }
             }
-            for courseIndex in teachingCourses.indices where teachingCourses[courseIndex].institutionID == id ||
-                (!hasAmbiguousLegacyName && teachingCourses[courseIndex].institutionID == nil && teachingCourses[courseIndex].institution == canonicalName) {
+            for courseIndex in teachingCourses.indices where teachingCourses[courseIndex].institutionID == id {
                 teachingCourses[courseIndex].institutionID = nil
-                teachingCourses[courseIndex].institution = ""
+                if teachingCourses[courseIndex].institution.trimmedOrNil == nil {
+                    teachingCourses[courseIndex].institution = canonicalName
+                }
             }
-            for componentIndex in teachingComponents.indices where teachingComponents[componentIndex].institutionID == id ||
-                (!hasAmbiguousLegacyName && teachingComponents[componentIndex].institutionID == nil && teachingComponents[componentIndex].institution == canonicalName) {
+            for componentIndex in teachingComponents.indices where teachingComponents[componentIndex].institutionID == id {
                 teachingComponents[componentIndex].institutionID = nil
-                teachingComponents[componentIndex].institution = ""
+                if teachingComponents[componentIndex].institution.trimmedOrNil == nil {
+                    teachingComponents[componentIndex].institution = canonicalName
+                }
             }
             // "Alla kopplingar via id": rows that point to the organization
-            // lose the link (their text stays); rows without a link are
-            // matched by name as before.
+            // lose the link; their text stays (round 11: also rows without
+            // a link keep their text).
             for authorIndex in publicationAuthors.indices {
                 for affiliationIndex in publicationAuthors[authorIndex].affiliations.indices {
                     if publicationAuthors[authorIndex].affiliations[affiliationIndex].organizationID == id {
                         publicationAuthors[authorIndex].affiliations[affiliationIndex].organizationID = nil
                         publicationAuthors[authorIndex].affiliations[affiliationIndex].unitID = nil
-                    } else if !hasAmbiguousLegacyName,
-                              publicationAuthors[authorIndex].affiliations[affiliationIndex].organizationID == nil,
-                              publicationAuthors[authorIndex].affiliations[affiliationIndex].organization == canonicalName {
-                        publicationAuthors[authorIndex].affiliations[affiliationIndex].organization = ""
                     }
                 }
                 for employmentIndex in publicationAuthors[authorIndex].employments.indices {
                     if publicationAuthors[authorIndex].employments[employmentIndex].organizationID == id {
                         publicationAuthors[authorIndex].employments[employmentIndex].organizationID = nil
                         publicationAuthors[authorIndex].employments[employmentIndex].unitID = nil
-                    } else if !hasAmbiguousLegacyName,
-                              publicationAuthors[authorIndex].employments[employmentIndex].organizationID == nil,
-                              publicationAuthors[authorIndex].employments[employmentIndex].organization == canonicalName {
-                        publicationAuthors[authorIndex].employments[employmentIndex].organization = ""
                     }
                 }
                 for educationIndex in publicationAuthors[authorIndex].educationEntries.indices {
                     if publicationAuthors[authorIndex].educationEntries[educationIndex].organizationID == id {
                         publicationAuthors[authorIndex].educationEntries[educationIndex].organizationID = nil
                         publicationAuthors[authorIndex].educationEntries[educationIndex].unitID = nil
-                    } else if !hasAmbiguousLegacyName,
-                              publicationAuthors[authorIndex].educationEntries[educationIndex].organizationID == nil,
-                              publicationAuthors[authorIndex].educationEntries[educationIndex].organization == canonicalName {
-                        publicationAuthors[authorIndex].educationEntries[educationIndex].organization = ""
                     }
                 }
                 publicationAuthors[authorIndex].normalize()
@@ -20770,7 +20765,6 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func refreshApplicationsState() {
-        applyApprovedOrganizationTranslationFixes()
         for index in applications.indices {
             applications[index].refreshDerivedValues()
             applications[index] = synchronizedApplicationRelations(applications[index])
@@ -20790,7 +20784,6 @@ final class GrantDataStore: ObservableObject {
         appendPerformanceDiagnostic(
             "dirty-graph entity=application id=\(updated.id) optionLists=\(plan.refreshOptionLists ? "yes" : "no") crossrefs=\(plan.refreshPublicationIndexes ? "yes" : "no") projectCache=\(plan.markProjectViewCacheDirty ? "yes" : "no")"
         )
-        applyApprovedOrganizationTranslationFixes()
         applications[index].refreshDerivedValues()
         applications[index] = synchronizedApplicationRelations(applications[index])
         sortApplications()
@@ -20880,7 +20873,6 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func refreshOrganizationsState() {
-        applyApprovedOrganizationTranslationFixes()
         for index in applications.indices {
             applications[index].refreshDerivedValues()
             applications[index] = synchronizedApplicationRelations(applications[index])
@@ -20916,20 +20908,6 @@ final class GrantDataStore: ObservableObject {
 
         applicationIDsByOrganizationName = organizationApplicationIDs
         applicationIDsByManagerName = managerApplicationIDs
-    }
-
-    private func applyApprovedOrganizationTranslationFixes() {
-        let approvedNames: [String: String] = [
-            "Stipendium": "Scholarship",
-            "Novo Nordisk foundation": "Novo Nordisk Foundation",
-        ]
-
-        for index in organizations.indices {
-            let swedishName = organizations[index].nameSv
-            if let approvedEnglish = approvedNames[swedishName] {
-                organizations[index].nameEn = approvedEnglish
-            }
-        }
     }
 
     /// Fills a missing English term from the Swedish one ("Termin 6" becomes
@@ -28811,6 +28789,14 @@ extension GrantDataStore {
             let current = courses[index].courseCode.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let rename = renamed.first(where: { $0.current == current }) else { continue }
             guard !courses[index].courseCodes.contains(where: { $0.code == rename.previous }) else { continue }
+            // Round 11: only a course without its own code history gets one
+            // (nothing, or just the current code without dates). A list the
+            // user has edited is never replaced; this runs at every start.
+            guard courses[index].courseCodes.allSatisfy({
+                $0.code.trimmingCharacters(in: .whitespacesAndNewlines) == rename.current
+                    && $0.validFrom.trimmedOrNil == nil
+                    && $0.validTo.trimmedOrNil == nil
+            }) else { continue }
             courses[index].courseCodes = [
                 TeachingCourseCodeEntry(code: rename.previous, validTo: "2025-12-31"),
                 TeachingCourseCodeEntry(code: rename.current, validFrom: "2026-01-01")
