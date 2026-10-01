@@ -37,6 +37,13 @@ final class Round17ColoursTests: XCTestCase {
         return (red << 16) | (green << 8) | blue
     }
 
+    /// Brightness 0–1. The status fills come from the colours chosen in
+    /// Settings, so the tests compare brightness instead of exact values.
+    private func brightness(_ color: NSColor) -> CGFloat {
+        guard let srgb = color.usingColorSpace(.sRGB) else { return 0 }
+        return 0.2126 * srgb.redComponent + 0.7152 * srgb.greenComponent + 0.0722 * srgb.blueComponent
+    }
+
     // MARK: Withdrawn is never declined
 
     func testWithdrawnIsItsOwnOutcomeGroup() {
@@ -142,8 +149,16 @@ final class Round17ColoursTests: XCTestCase {
             AppStatusTones.application(resultLabel: "Beviljat", isFullySpent: true, awaitsAppliedAnswer: false, isBeforeOpening: false),
             .done
         )
-        XCTAssertEqual(hex(AppPalette.statusFillPaleNSColor(.done, dark: false)), 0xDCEBD3)
-        XCTAssertEqual(hex(AppPalette.statusFillPaleNSColor(.done, dark: true)), 0x0D3F3B)
+        XCTAssertGreaterThan(
+            brightness(AppPalette.statusFillPaleNSColor(.done, dark: false)),
+            brightness(AppPalette.statusFillNSColor(.done, dark: false)),
+            "light mode: the spent green is lighter"
+        )
+        XCTAssertLessThan(
+            brightness(AppPalette.statusFillPaleNSColor(.done, dark: true)),
+            brightness(AppPalette.statusFillNSColor(.done, dark: true)),
+            "dark mode: the spent green is darker"
+        )
         XCTAssertNotEqual(
             hex(AppPalette.statusFillPaleNSColor(.done, dark: false)),
             hex(AppPalette.statusFillNSColor(.done, dark: false)),
@@ -196,8 +211,18 @@ final class Round17ColoursTests: XCTestCase {
                 XCTAssertNotEqual(hex(edge), hex(AppPalette.statusFillNSColor(tone, dark: dark)), "\(tone) edge differs from the fill")
             }
         }
-        XCTAssertEqual(hex(AppPalette.statusEdgeNSColor(.pending, dark: false)), 0xD6BF55)
-        XCTAssertEqual(hex(AppPalette.statusEdgeNSColor(.pending, dark: true)), 0xB8892C)
+        for tone in [AppStatusTone.done, .pending, .negative] {
+            XCTAssertLessThan(
+                brightness(AppPalette.statusEdgeNSColor(tone, dark: false)),
+                brightness(AppPalette.statusFillNSColor(tone, dark: false)),
+                "\(tone): light-mode edge is a little darker than the circle"
+            )
+            XCTAssertGreaterThan(
+                brightness(AppPalette.statusEdgeNSColor(tone, dark: true)),
+                brightness(AppPalette.statusFillNSColor(tone, dark: true)),
+                "\(tone): dark-mode edge is a little lighter than the circle"
+            )
+        }
         XCTAssertEqual(hex(AppPalette.statusMarkNSColor(.done, dark: false)), 0x5FA35A)
         XCTAssertEqual(hex(AppPalette.lateMarkNSColor(dark: false)), 0xE8551F)
         XCTAssertEqual(hex(AppPalette.lateTextNSColor(dark: true)), 0xFF9C63)
