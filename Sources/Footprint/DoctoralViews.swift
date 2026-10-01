@@ -209,18 +209,33 @@ struct DoctoralCandidatesWorkspaceView: View {
 
                     doctoralFilteredListBanner(language: language)
 
-                    doctoralList(language: language)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    if doctoralFiltersHideEveryone {
+                        // Round 17: candidates exist but the filters hide
+                        // them all.
+                        doctoralFilterEmptyState(language: language, isCompact: true)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    } else {
+                        doctoralList(language: language)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    }
 
-                    ListCountFootnote(
-                        displayedCount: displayCandidates.count,
-                        totalCount: store.doctoralCandidates.count,
-                        language: language
-                    )
+                    // Round 17: the banner already gives the count while a
+                    // filter is on.
+                    if !hasActiveDoctoralFilters {
+                        ListCountFootnote(
+                            displayedCount: displayCandidates.count,
+                            totalCount: store.doctoralCandidates.count,
+                            language: language
+                        )
+                    }
                 }
             }
         } detail: {
-            if let selectedCandidate {
+            if doctoralFiltersHideEveryone {
+                doctoralFilterEmptyState(language: language, isCompact: false)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppPalette.detailPanelSurface)
+            } else if let selectedCandidate {
                 DoctoralCandidateDetailView(
                     store: store,
                     candidate: selectedCandidate
@@ -243,18 +258,32 @@ struct DoctoralCandidatesWorkspaceView: View {
             }
         }
         .onAppear {
+            // Round 17: with "keep filters" off in Settings, filters saved by
+            // an earlier run are cleared the first time the list is shown.
+            if ListFilterLaunchPolicy.shouldClearSavedFilters(
+                for: .doctoralCandidates,
+                retainsFilters: store.shouldRetainListFilters(for: .doctoralCandidates)
+            ) {
+                clearAllDoctoralFilters()
+            }
             resetDoctoralYearBoundsIfNeeded()
             if let route = store.route, route.destination == workspaceDestination {
                 revealCandidateForDirectNavigation(route.recordID)
                 setSelectedCandidateID(route.recordID)
                 store.consumeRoute()
-            } else if selectedCandidateID == nil {
-                let firstCandidate = displayCandidates.first
-                    ?? store.doctoralCandidates.first
-                setSelectedCandidateID(
-                    store.lastSelectedRecordID(for: workspaceDestination)
-                        ?? firstCandidate?.id
+            } else {
+                // Round 17: the remembered candidate may be hidden by a saved
+                // filter; then the first visible row is selected instead.
+                let remembered = selectedCandidateID
+                    ?? store.lastSelectedRecordID(for: workspaceDestination)
+                    ?? displayCandidates.first?.id
+                let next = ListSelectionPolicy.selectionAfterFilterChange(
+                    selected: remembered,
+                    visibleIDs: displayCandidates.map(\.id)
                 )
+                if next != selectedCandidateID {
+                    setSelectedCandidateID(next)
+                }
             }
         }
         .onChange(of: newRecordTrigger) { _, _ in
@@ -285,9 +314,12 @@ struct DoctoralCandidatesWorkspaceView: View {
                 if let selectedCandidateID, ids.contains(selectedCandidateID) {
                     return
                 }
+                // Round 17: never a candidate the filters hide.
                 setSelectedCandidateID(
-                    store.lastSelectedRecordID(for: workspaceDestination)
-                        ?? ids.first
+                    ListSelectionPolicy.selectionAfterFilterChange(
+                        selected: store.lastSelectedRecordID(for: workspaceDestination) ?? ids.first,
+                        visibleIDs: displayCandidates.map(\.id)
+                    )
                 )
             }
         }
@@ -338,34 +370,47 @@ struct DoctoralCandidatesWorkspaceView: View {
                     )
                 }
 
-                AppFilterRow(
-                    showsClearButton: showsMainSupervisorCandidates || showsCoSupervisorCandidates || showsOnlyActiveCandidates,
-                    clearAction: {
-                        showsMainSupervisorCandidates = false
-                        showsCoSupervisorCandidates = false
-                        showsOnlyActiveCandidates = false
+                // Round 17: the role chips are "any of" (OR); "Ej disputerade"
+                // narrows further (AND), so it has its own row and caption.
+                VStack(alignment: .leading, spacing: 4) {
+                    AppMetadataLabel(text: doctoralRoleCaption(language: language), style: .micro)
+                    AppFilterRow(
+                        showsClearButton: showsMainSupervisorCandidates || showsCoSupervisorCandidates,
+                        clearAction: {
+                            showsMainSupervisorCandidates = false
+                            showsCoSupervisorCandidates = false
+                        }
+                    ) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                AppFilterChip(
+                                    label: language.text("Main supervisor", "Huvudhandledare"),
+                                    isSelected: showsMainSupervisorCandidates
+                                ) {
+                                    showsMainSupervisorCandidates.toggle()
+                                }
+                                AppFilterChip(
+                                    label: language.text("Co-supervisor", "Bihandledare"),
+                                    isSelected: showsCoSupervisorCandidates
+                                ) {
+                                    showsCoSupervisorCandidates.toggle()
+                                }
+                            }
+                        }
                     }
-                ) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            AppFilterChip(
-                                label: language.text("Main supervisor", "Huvudhandledare"),
-                                isSelected: showsMainSupervisorCandidates
-                            ) {
-                                showsMainSupervisorCandidates.toggle()
-                            }
-                            AppFilterChip(
-                                label: language.text("Co-supervisor", "Bihandledare"),
-                                isSelected: showsCoSupervisorCandidates
-                            ) {
-                                showsCoSupervisorCandidates.toggle()
-                            }
-                            AppFilterChip(
-                                label: language.text("Active", "Aktiva"),
-                                isSelected: showsOnlyActiveCandidates
-                            ) {
-                                showsOnlyActiveCandidates.toggle()
-                            }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    AppMetadataLabel(text: doctoralShowOnlyCaption(language: language), style: .micro)
+                    AppFilterRow(
+                        showsClearButton: showsOnlyActiveCandidates,
+                        clearAction: { showsOnlyActiveCandidates = false }
+                    ) {
+                        AppFilterChip(
+                            label: doctoralNotYetDefendedLabel(language: language),
+                            isSelected: showsOnlyActiveCandidates
+                        ) {
+                            showsOnlyActiveCandidates.toggle()
                         }
                     }
                 }
@@ -395,11 +440,39 @@ struct DoctoralCandidatesWorkspaceView: View {
                     }
                 }
 
-                AppFilterClearAllRow(isVisible: hasActiveDoctoralFilters) {
-                    clearAllDoctoralFilters()
-                }
+                // Round 17: "clear all" is the banner's "Rensa filter".
             }
         }
+    }
+
+    private func doctoralRoleCaption(language: AppLanguage) -> String {
+        language.text("My role (any of)", "Min roll (någon av)")
+    }
+
+    private func doctoralShowOnlyCaption(language: AppLanguage) -> String {
+        language.text("Show only", "Visa bara")
+    }
+
+    /// Round 17: "Aktiva" said too little; the filter keeps candidates who
+    /// have not defended (or ended) yet.
+    private func doctoralNotYetDefendedLabel(language: AppLanguage) -> String {
+        language.text("Not yet defended", "Ej disputerade")
+    }
+
+    /// Candidates exist, but the filters hide every one of them.
+    private var doctoralFiltersHideEveryone: Bool {
+        hasActiveDoctoralFilters && !store.doctoralCandidates.isEmpty && displayCandidates.isEmpty
+    }
+
+    private func doctoralFilterEmptyState(language: AppLanguage, isCompact: Bool) -> some View {
+        AppWorkspaceEmptyStateView(
+            title: language.text("No doctoral candidates match the filters", "Inga doktorander matchar filtren"),
+            subtitle: ListFilterLabels.hiddenByFilters(count: store.doctoralCandidates.count, language: language),
+            kind: .doctoralCandidates,
+            actionTitle: language.text("Clear filters", "Rensa filter"),
+            action: clearAllDoctoralFilters,
+            isCompact: isCompact
+        )
     }
 
     private func doctoralYearSlider(
@@ -556,18 +629,19 @@ struct DoctoralCandidatesWorkspaceView: View {
         if let search = ListFilterLabels.search(searchText, language: language) {
             parts.append(search)
         }
-        var chips: [String] = []
+        // Round 17: role (any of) and "show only" are two separate parts.
+        var roles: [String] = []
         if showsMainSupervisorCandidates {
-            chips.append(language.text("Main supervisor", "Huvudhandledare"))
+            roles.append(language.text("Main supervisor", "Huvudhandledare"))
         }
         if showsCoSupervisorCandidates {
-            chips.append(language.text("Co-supervisor", "Bihandledare"))
+            roles.append(language.text("Co-supervisor", "Bihandledare"))
+        }
+        if let roleText = ListFilterLabels.chips(roles) {
+            parts.append("\(language.text("My role", "Min roll")): \(roleText)")
         }
         if showsOnlyActiveCandidates {
-            chips.append(language.text("Active", "Aktiva"))
-        }
-        if let chipText = ListFilterLabels.chips(chips) {
-            parts.append(chipText)
+            parts.append("\(doctoralShowOnlyCaption(language: language)): \(doctoralNotYetDefendedLabel(language: language))")
         }
         if admissionYearRange.isNarrowed {
             parts.append(ListFilterLabels.yearRange(
@@ -582,6 +656,17 @@ struct DoctoralCandidatesWorkspaceView: View {
                 lower: minimumDissertationYearValue,
                 upper: maximumDissertationYearValue
             ))
+        }
+        // Round 17: candidates hidden only because the narrowed range has no
+        // year to compare with.
+        if admissionYearRange.isNarrowed || dissertationYearRange.isNarrowed {
+            let yearless = store.doctoralCandidates.filter { candidate in
+                (admissionYearRange.isNarrowed && doctoralYearValue(candidate.admissionDate) == nil)
+                    || (dissertationYearRange.isNarrowed && doctoralYearValue(candidate.effectiveDisputationDate) == nil)
+            }.count
+            if let hidden = ListFilterLabels.yearlessHidden(count: yearless, language: language) {
+                parts.append(hidden)
+            }
         }
         return parts
     }
@@ -771,6 +856,8 @@ struct DoctoralCandidatesWorkspaceView: View {
 
     private func clearDoctoralFiltersForDeactivationIfNeeded() {
         guard !store.shouldRetainListFilters(for: .doctoralCandidates) else { return }
+        guard hasActiveDoctoralFilters else { return }
+        RestoredListFilters.forget(workspace: "DoctoralCandidates")
         searchText = ""
         showsMainSupervisorCandidates = false
         showsCoSupervisorCandidates = false

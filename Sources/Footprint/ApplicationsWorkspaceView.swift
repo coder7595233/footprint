@@ -89,12 +89,15 @@ struct ApplicationsView: View {
     /// value left from an old version could only change the order unseen.
     @State private var prioritizesActiveApplications = false
     @WorkspaceFilterState("Applications.Filter.FutureOnly") private var showsOnlyFutureApplications = false
-    @WorkspaceFilterState("Applications.Filter.MinimumYear") private var minimumYearValue: Double = 0
-    @WorkspaceFilterState("Applications.Filter.MaximumYear") private var maximumYearValue: Double = 0
+    // Round 17: the year range is stored as real years, so a saved range that
+    // covers every year is no filter; its "kept from last time" mark is
+    // decided against the data (see ensureFilterRangesInitialized).
+    @WorkspaceFilterState("Applications.Filter.MinimumYear", tracksRestored: false) private var minimumYearValue: Double = 0
+    @WorkspaceFilterState("Applications.Filter.MaximumYear", tracksRestored: false) private var maximumYearValue: Double = 0
     /// Round 16: the year range covers all years and grows with new ones
     /// until the user narrows it (see ListYearRangeFilter).
-    @WorkspaceFilterState("Applications.Filter.FollowsRange") private var yearFilterFollowsLatestYear = true
-    @WorkspaceFilterState("Applications.Filter.FollowsRangeStart") private var yearFilterFollowsEarliestYear = true
+    @WorkspaceFilterState("Applications.Filter.FollowsRange", tracksRestored: false) private var yearFilterFollowsLatestYear = true
+    @WorkspaceFilterState("Applications.Filter.FollowsRangeStart", tracksRestored: false) private var yearFilterFollowsEarliestYear = true
     @WorkspaceFilterState("Applications.Filter.MinimumAmount") private var minimumAmountValue: Double = 0
     @WorkspaceFilterState("Applications.Filter.MaximumAmount") private var maximumAmountValue: Double = 20_000_000
     @State private var sortHistory = ListSortPersistence.load(
@@ -131,6 +134,9 @@ struct ApplicationsView: View {
     /// would hide it; handled as soon as its row exists.
     @State private var pendingRevealApplicationID: String?
     @State private var hasAppliedLaunchFilterPolicy = false
+    /// Round 17: applications whose status is none of the six fixed ones
+    /// ("Övriga" chip), counted when the rows change.
+    @State private var otherStatusApplicationCount = 0
 
     init(
         store: GrantDataStore,
@@ -254,9 +260,11 @@ struct ApplicationsView: View {
         }
     }
 
-    /// The years present, or nil while there are no rows yet.
+    /// The years present, or nil while there are no rows yet. Round 17:
+    /// applications without a year do not count (they used to be placed in
+    /// the current year).
     private var availableYearBounds: ClosedRange<Double>? {
-        ListYearRangeFilter.bounds(forYears: applicationRows.map(\.applicationYear))
+        ListYearRangeFilter.bounds(forYears: applicationRows.compactMap(\.applicationYear))
     }
 
     /// The slider's bounds (the current year while there are no rows).
@@ -299,7 +307,8 @@ struct ApplicationsView: View {
     private var nonSearchMatchingApplications: [ApplicationRowSnapshot] {
         let projectFilter = applicationProjectFilterForSelection
         let yearRange = yearRangeFilter
-        let checksYear = yearRange.isNarrowed(within: availableYearBounds)
+        let bounds = availableYearBounds
+        let checksYear = yearRange.isNarrowed(within: bounds)
         return applicationRows.filter { application in
             let matchesCurrentUserRole = applicationMatchesCurrentUserFirstApplicantFilter(
                 application,
@@ -309,8 +318,9 @@ struct ApplicationsView: View {
             let matchesFuture = matchesFutureApplicationFilter(application)
             let matchesProject = projectFilter.matches(projectID: application.projectID, projectName: application.projectName)
             // A range that is not narrowed shows every year, also one that
-            // arrived after the range was last fitted.
-            let matchesYear = !checksYear || yearRange.contains(year: application.applicationYear)
+            // arrived after the range was last fitted. Round 17: no year is
+            // shown only while the whole range is selected.
+            let matchesYear = !checksYear || yearRange.matches(year: application.applicationYear, within: bounds)
             let matchesSum = matchesAmountFilter(application)
             return matchesCurrentUserRole
                 && matchesStatus
@@ -737,7 +747,7 @@ struct ApplicationsView: View {
         if !applicationProjectFilterForSelection.matches(projectID: row.projectID, projectName: row.projectName) {
             selectedProjectFilters.removeAll()
         }
-        if yearFilterIsNarrowed && !yearRangeFilter.contains(year: row.applicationYear) {
+        if yearFilterIsNarrowed && !yearRangeFilter.matches(year: row.applicationYear, within: availableYearBounds) {
             resetYearRange()
         }
         if !matchesAmountFilter(row) {
@@ -797,8 +807,8 @@ struct ApplicationsView: View {
     /// Short descriptions of the active filters for the filtered-list banner.
     private func activeApplicationFilterDescriptions(language: AppLanguage) -> [String] {
         var descriptions: [String] = []
-        if let search = searchText.nonEmpty {
-            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            descriptions.append(search)
         }
         if applicationRoleFilter != .all {
             descriptions.append(applicationRoleFilter == .currentUserFirst
@@ -810,7 +820,7 @@ struct ApplicationsView: View {
         }
         if !selectedStatusFilters.isEmpty {
             descriptions.append(
-                ApplicationStatusCanonical.all
+                (ApplicationStatusCanonical.all + [ApplicationStatusCanonical.otherFilterKey])
                     .filter { selectedStatusFilters.contains($0) }
                     .map { applicationStatusFilterLabel($0, language: language) }
                     .joined(separator: ", ")
@@ -824,6 +834,13 @@ struct ApplicationsView: View {
         }
         if yearFilterIsNarrowed {
             descriptions.append(yearRangeLabel(language: language))
+            let yearless = YearlessRecordRule.hiddenCount(
+                years: applicationRows.map(\.applicationYear),
+                rangeIsNarrowed: true
+            )
+            if let hidden = ListFilterLabels.yearlessHidden(count: yearless, language: language) {
+                descriptions.append(hidden)
+            }
         }
         if amountFilterIsActive {
             descriptions.append(sumRangeLabel(language: language))
@@ -866,7 +883,7 @@ struct ApplicationsView: View {
                     AppFilterChip(label: language.text("All", "Alla"), isSelected: applicationQuickViewIsActive(.all)) {
                         applyQuickApplicationView(.all)
                     }
-                    AppFilterChip(label: language.text("Active", "Aktiva"), isSelected: applicationQuickViewIsActive(.active)) {
+                    AppFilterChip(label: language.text("Ongoing", "Pågående"), isSelected: applicationQuickViewIsActive(.active)) {
                         applyQuickApplicationView(.active)
                     }
                     AppFilterChip(label: language.text("Find new", "Hitta nya"), isSelected: applicationQuickViewIsActive(.findNew)) {
@@ -1002,12 +1019,9 @@ struct ApplicationsView: View {
         collapseGrantPipeline()
     }
 
+    /// Round 17: a status outside the six fixed ones belongs to "Övriga".
     private func matchesStatusFilter(_ result: String?) -> Bool {
-        if selectedStatusFilters.isEmpty {
-            return true
-        }
-        let normalized = normalizedStatus(result)
-        return selectedStatusFilters.contains(normalized)
+        ApplicationStatusCanonical.matchesFilter(selected: selectedStatusFilters, raw: result)
     }
 
     private func matchesFutureApplicationFilter(_ application: ApplicationRowSnapshot) -> Bool {
@@ -1065,6 +1079,7 @@ struct ApplicationsView: View {
 
     /// Back to all years, following new ones again.
     private func resetYearRange() {
+        RestoredListFilters.markChanged(key: Self.yearRangeRestoredKey)
         if let bounds = availableYearBounds {
             applyYearRange(.full(bounds))
         } else {
@@ -1096,6 +1111,7 @@ struct ApplicationsView: View {
             get: { minimumYearValue },
             set: { newValue in
                 // Round 16: a knob on the outermost year follows new years.
+                RestoredListFilters.markChanged(key: Self.yearRangeRestoredKey)
                 applyYearRange(.userEdited(lower: min(newValue, maximumYearValue), upper: maximumYearValue, within: yearBounds))
             }
         )
@@ -1105,6 +1121,7 @@ struct ApplicationsView: View {
         Binding(
             get: { maximumYearValue },
             set: { newValue in
+                RestoredListFilters.markChanged(key: Self.yearRangeRestoredKey)
                 applyYearRange(.userEdited(lower: minimumYearValue, upper: max(newValue, minimumYearValue), within: yearBounds))
             }
         )
@@ -1136,14 +1153,16 @@ struct ApplicationsView: View {
         guard bounds != nil else { return }
         let resolved = yearRangeFilter.resolved(within: bounds)
         applyYearRange(resolved)
-        if !resolved.isNarrowed(within: bounds) {
-            // A range covering every year is no filter, so it must not make
-            // the list say "kept from last time".
-            for key in ["MinimumYear", "MaximumYear", "FollowsRange", "FollowsRangeStart"] {
-                RestoredListFilters.markChanged(key: "Applications.Filter.\(key)")
-            }
-        }
+        // Round 17: the first time the rows are here in this run, a saved
+        // range that still hides years counts as "kept from last time"; one
+        // that covers every year is no filter at all.
+        RestoredListFilters.evaluateAtLaunch(
+            key: Self.yearRangeRestoredKey,
+            isRestored: resolved.isNarrowed(within: bounds)
+        )
     }
+
+    private static let yearRangeRestoredKey = "Applications.Filter.YearRange"
 
     /// Round 16: one status mapping for chips, row colours and ordering, so
     /// older words ("Beviljad", "Avslagen") count as granted and declined.
@@ -1238,7 +1257,7 @@ struct ApplicationsView: View {
                 HStack(spacing: 8) {
                     if let search = searchText.nonEmpty {
                         AppActiveFilterChip(
-                            title: language.text("Search: \(search)", "Sökning: \(search)"),
+                            title: ListFilterLabels.search(search, language: language) ?? search,
                             systemImage: "magnifyingglass",
                             clearAction: { searchText = "" }
                         )
@@ -1314,6 +1333,16 @@ struct ApplicationsView: View {
             ForEach(ApplicationStatusCanonical.all, id: \.self) { status in
                 applicationStatusFilterBox(status, language: language)
             }
+            // Round 17: every other status, shown only when there is one
+            // (or while the chip is still on).
+            if otherStatusApplicationCount > 0 || selectedStatusFilters.contains(ApplicationStatusCanonical.otherFilterKey) {
+                AppFilterChip(
+                    label: "\(applicationStatusFilterLabel(ApplicationStatusCanonical.otherFilterKey, language: language)) (\(otherStatusApplicationCount))",
+                    isSelected: selectedStatusFilters.contains(ApplicationStatusCanonical.otherFilterKey)
+                ) {
+                    toggleStatusFilter(ApplicationStatusCanonical.otherFilterKey)
+                }
+            }
         }
     }
 
@@ -1334,6 +1363,9 @@ struct ApplicationsView: View {
     }
 
     private func applicationStatusFilterLabel(_ status: String, language: AppLanguage) -> String {
+        if status == ApplicationStatusCanonical.otherFilterKey {
+            return language.text("Other", "Övriga")
+        }
         // Filter chips act as group headings, so they use the plural wording.
         if let outcome = ApplicationOutcome(storedValue: status) {
             return outcome.heading(language)
@@ -1622,6 +1654,7 @@ struct ApplicationsView: View {
 
     private func refreshApplicationRows() {
         applicationRows = store.applicationRowSnapshots()
+        otherStatusApplicationCount = ApplicationStatusCanonical.otherCount(in: applicationRows.map(\.resultLabel))
         applicationRowsAppliedGeneration &+= 1
         nonSearchFilteredRowsCache.removeAll(keepingCapacity: true)
         filteredRowsCache.removeAll(keepingCapacity: true)

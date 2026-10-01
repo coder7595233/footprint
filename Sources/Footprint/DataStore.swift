@@ -25721,7 +25721,7 @@ final class GrantDataStore: ObservableObject {
                 isToApplyStatus: application.isToApplyStatus,
                 isBeforeOpening: isBeforeOpening,
                 isCurrentUserFirstApplicant: currentUserIsFirstApplicant,
-                applicationYear: Int(application.statsYear) ?? Calendar.current.component(.year, from: Date()),
+                applicationYear: Int(application.statsYear),
                 budgetAmount: grantStatisticsAmountInSEK(for: application, amount: application.preferredBudgetAmountValue),
                 sortOrganization: organizationLabel,
                 sortGrantName: grantNameLabel,
@@ -25812,7 +25812,18 @@ final class GrantDataStore: ObservableObject {
                 missingEmail: author.primaryAffiliation?.email.trimmedOrNil == nil,
                 missingPrimaryOrganization: author.primaryAffiliation?.organization.trimmedOrNil == nil,
                 missingPrimaryCountry: author.primaryAffiliation?.country.trimmedOrNil == nil,
-                missingTitle: author.title.trimmedOrNil == nil
+                missingTitle: author.title.trimmedOrNil == nil,
+                affiliationOrganizationKeys: author.affiliations
+                    .compactMap { affiliation -> String? in
+                        // Round 17: the organization filter's key is the
+                        // linked organization's id, else the written name.
+                        let linkedID = affiliation.organizationID.flatMap { organization(id: $0)?.id }
+                        return ResearcherOrganizationFilterKeys.key(
+                            organizationID: linkedID,
+                            writtenName: affiliation.localizedOrganization(language: targetLanguage)
+                        )
+                    }
+                    .uniqued()
             )
         }
 

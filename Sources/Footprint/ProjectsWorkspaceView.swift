@@ -339,7 +339,7 @@ struct ProjectsWorkspaceView: View {
                 // Round 16: projects exist but the filters hide them all.
                 AppWorkspaceEmptyStateView(
                     title: language.text("No records match the filters", "Inga poster matchar filtren"),
-                    subtitle: language.text("Try a broader search or clear the filters.", "Prova en bredare sökning eller rensa filtren."),
+                    subtitle: ListFilterLabels.hiddenByFilters(count: store.projects.count, language: language),
                     kind: .projects,
                     actionTitle: language.text("Clear filters", "Rensa filter"),
                     action: clearAllProjectFilters
@@ -619,8 +619,8 @@ struct ProjectsWorkspaceView: View {
 
     private func activeProjectFilterDescriptions(language: AppLanguage) -> [String] {
         var descriptions: [String] = []
-        if let search = searchText.nonEmpty {
-            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            descriptions.append(search)
         }
         if let researcher = projectResearcherFilter.nonEmpty {
             descriptions.append(language.text("Researcher \(researcher)", "Forskare \(researcher)"))

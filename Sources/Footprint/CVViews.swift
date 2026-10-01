@@ -317,15 +317,16 @@ struct DisseminationWorkspaceView: View {
 
     private var mediaRows: [CVListRow] {
         let authorNamesByID = Dictionary(firstWinsKeysWithValues: store.publicationAuthors.map { ($0.id, $0.name) })
+        // Round 17: one lookup table instead of a search through every
+        // project for each row.
+        let projectNamesByID = Dictionary(firstWinsKeysWithValues: store.projects.map { ($0.id, $0.displayName(for: language)) })
         return store.cvMediaAppearances.map {
             let title = cvMediaListTitle($0, language: language)
             let authorNames = ([$0.authorID].compactMap { $0 } + $0.authorIDs)
                 .compactMap { authorNamesByID[$0] }
                 .joined(separator: " ")
             let categoryLabel = language.text("Media appearance", "Medverkan i media")
-            let projectLabel = $0.projectIDs.compactMap { projectID in
-                store.projects.first(where: { $0.id == projectID })?.displayName(for: language)
-            }.joined(separator: ", ")
+            let projectLabel = $0.projectIDs.compactMap { projectNamesByID[$0] }.joined(separator: ", ")
             return CVListRow(
                 id: cvToken(for: .mediaAppearance, id: $0.id),
                 kind: .mediaAppearance,
@@ -388,6 +389,13 @@ struct DisseminationWorkspaceView: View {
         mediaRows + otherPublicationRows
     }
 
+    /// Round 17: the ids of all rows, in list order, without building the
+    /// rows (read on every redraw).
+    private var allRowIDs: [String] {
+        store.cvMediaAppearances.map { cvToken(for: .mediaAppearance, id: $0.id) }
+            + store.cvOtherPublications.filter { !$0.isDoctoralThesis }.map { cvToken(for: .otherPublication, id: $0.id) }
+    }
+
     private var filteredRows: [CVListRow] {
         let searchQuery = SearchFilterQuery(raw: searchText)
         return allRows
@@ -403,11 +411,14 @@ struct DisseminationWorkspaceView: View {
         searchText.nonEmpty != nil
     }
 
+    /// Round 17: only a row the search shows can be selected, also at
+    /// launch (a remembered item hidden by a saved search is not shown).
     private func selectableDisseminationID(preferred: String?) -> String? {
-        guard let preferred, allRows.contains(where: { $0.id == preferred }) else {
-            return firstAvailableSelection
-        }
-        return preferred
+        let visibleIDs = filteredRows.map(\.id)
+        return ListSelectionPolicy.selectionAfterFilterChange(
+            selected: preferred ?? visibleIDs.first,
+            visibleIDs: visibleIDs
+        )
     }
 
     private func shouldHandleDisseminationRoute(_ route: AppRoute) -> Bool {
@@ -427,12 +438,21 @@ struct DisseminationWorkspaceView: View {
                 .frame(minWidth: 640, maxWidth: .infinity, maxHeight: .infinity)
         }
         .onAppear {
+            // Round 17: with "keep filters" off in Settings, a search saved
+            // by an earlier run is cleared the first time the list is shown.
+            if ListFilterLaunchPolicy.shouldClearSavedFilters(
+                for: .dissemination,
+                retainsFilters: store.shouldRetainListFilters(for: .dissemination)
+            ) {
+                searchText = ""
+                RestoredListFilters.forget(workspace: "Dissemination")
+            }
             if let route = store.route, shouldHandleDisseminationRoute(route) {
                 revealDisseminationRowForDirectNavigation(route.recordID)
                 setSelectedItemID(selectableDisseminationID(preferred: route.recordID))
                 store.consumeRoute()
-            } else if selectedItemID == nil {
-                setSelectedItemID(selectableDisseminationID(preferred: store.lastSelectedRecordID(for: .cv)))
+            } else {
+                setSelectedItemID(selectableDisseminationID(preferred: selectedItemID ?? store.lastSelectedRecordID(for: .cv)))
             }
         }
         .onChange(of: store.route) { _, route in
@@ -467,7 +487,7 @@ struct DisseminationWorkspaceView: View {
             guard isActive else { return }
             createMediaAppearanceRevealingIt()
         }
-        .onChange(of: allRows.map(\.id)) { _, allIDs in
+        .onChange(of: allRowIDs) { _, allIDs in
             guard let selectedItemID else {
                 setSelectedItemID(firstAvailableSelection)
                 return
@@ -483,7 +503,10 @@ struct DisseminationWorkspaceView: View {
     }
 
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // Round 17: built once per redraw (banner, list and empty state).
+        let visibleRows = filteredRows
+        let totalCount = allRowIDs.count
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(language.text("Media", "Media"))
                     .appTypography(.pageTitle)
@@ -504,31 +527,47 @@ struct DisseminationWorkspaceView: View {
                             text: $searchText
                         )
                     }
-
-                    AppFilterClearAllRow(isVisible: hasActiveDisseminationFilters) {
-                        searchText = ""
-                    }
+                    // Round 17: "clear all" is the banner's "Rensa filter".
                 }
             }
 
             if hasActiveDisseminationFilters {
                 AppFilteredListBanner(
-                    displayedCount: filteredRows.count,
-                    totalCount: allRows.count,
+                    displayedCount: visibleRows.count,
+                    totalCount: totalCount,
                     activeFilters: [ListFilterLabels.search(searchText, language: language)].compactMap { $0 },
                     restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Dissemination.Filter"),
                     language: language,
-                    clearAction: {
-                        searchText = ""
-                        RestoredListFilters.forget(workspace: "Dissemination")
-                    }
+                    clearAction: clearAllDisseminationFilters
                 )
             }
 
-            disseminationList(rows: filteredRows)
+            if visibleRows.isEmpty && hasActiveDisseminationFilters && totalCount > 0 {
+                disseminationFilterEmptyState(hiddenCount: totalCount, isCompact: true)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            } else {
+                disseminationList(rows: visibleRows)
+            }
         }
         .padding(14)
         .background(AppPalette.sidebarPanelSurface)
+    }
+
+    private func clearAllDisseminationFilters() {
+        searchText = ""
+        RestoredListFilters.forget(workspace: "Dissemination")
+    }
+
+    /// Round 17: items exist but the search hides them all.
+    private func disseminationFilterEmptyState(hiddenCount: Int, isCompact: Bool) -> some View {
+        AppWorkspaceEmptyStateView(
+            title: language.text("No records match the filters", "Inga poster matchar filtren"),
+            subtitle: ListFilterLabels.hiddenByFilters(count: hiddenCount, language: language),
+            kind: .dissemination,
+            actionTitle: language.text("Clear filters", "Rensa filter"),
+            action: clearAllDisseminationFilters,
+            isCompact: isCompact
+        )
     }
 
     /// Direct navigation to an item the search hides clears the search (the
@@ -775,6 +814,8 @@ struct DisseminationWorkspaceView: View {
                     )
                     .performanceScopeProbe(store: store, scope: "dissemination-detail", identifier: item.id)
             }
+        } else if hasActiveDisseminationFilters, !allRowIDs.isEmpty, filteredRows.isEmpty {
+            disseminationFilterEmptyState(hiddenCount: allRowIDs.count, isCompact: false)
         } else {
             AppWorkspaceEmptyStateView(
                 title: language.text("No dissemination items yet", "Inga spridningsposter ännu"),
@@ -976,7 +1017,27 @@ struct ExpertAssignmentsWorkspaceView: View {
             || !selectedExpertCategoryFilters.isEmpty
     }
 
+    /// Assignments exist, but the filters hide every one of them.
+    private func expertFiltersHideEverything(visibleRows: [CVListRow]) -> Bool {
+        hasActiveExpertAssignmentFilters && visibleRows.isEmpty && !store.cvReviewEntries.isEmpty
+    }
+
+    /// Round 17: the same empty state as the other lists.
+    private func expertFilterEmptyState(isCompact: Bool) -> some View {
+        AppWorkspaceEmptyStateView(
+            title: language.text("No expert assignments match the filters", "Inga sakkunniguppdrag matchar filtren"),
+            subtitle: ListFilterLabels.hiddenByFilters(count: store.cvReviewEntries.count, language: language),
+            kind: .expertAssignments,
+            actionTitle: language.text("Clear filters", "Rensa filter"),
+            action: clearAllExpertAssignmentFilters,
+            isCompact: isCompact
+        )
+    }
+
     var body: some View {
+        // Round 17: filtered and sorted once per redraw, not once per use.
+        let visibleRows = rows
+        let filtersHideEverything = expertFiltersHideEverything(visibleRows: visibleRows)
         PersistentSplitView(layout: .expertAssignments) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
@@ -1002,16 +1063,13 @@ struct ExpertAssignmentsWorkspaceView: View {
                         }
 
                         expertFilterRows(language: language)
-
-                        AppFilterClearAllRow(isVisible: hasActiveExpertAssignmentFilters) {
-                            clearAllExpertAssignmentFilters()
-                        }
+                        // Round 17: "clear all" is the banner's "Rensa filter".
                     }
                 }
 
                 if hasActiveExpertAssignmentFilters {
                     AppFilteredListBanner(
-                        displayedCount: rows.count,
+                        displayedCount: visibleRows.count,
                         totalCount: store.cvReviewEntries.count,
                         activeFilters: activeExpertFilterDescriptions,
                         restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "ExpertAssignments.Filter"),
@@ -1020,9 +1078,18 @@ struct ExpertAssignmentsWorkspaceView: View {
                     )
                 }
 
-                expertList(rows: rows)
+                if filtersHideEverything {
+                    expertFilterEmptyState(isCompact: true)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                } else {
+                    expertList(rows: visibleRows)
+                }
 
-                ListCountFootnote(displayedCount: rows.count, totalCount: store.cvReviewEntries.count, language: language)
+                // Round 17: the banner already gives the count while a
+                // filter is on.
+                if !hasActiveExpertAssignmentFilters {
+                    ListCountFootnote(displayedCount: visibleRows.count, totalCount: store.cvReviewEntries.count, language: language)
+                }
             }
             .padding(14)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -1054,6 +1121,8 @@ struct ExpertAssignmentsWorkspaceView: View {
                                 self.pendingSelectionStartedAt = nil
                             }
                         )
+                } else if filtersHideEverything {
+                    expertFilterEmptyState(isCompact: false)
                 } else {
                     AppWorkspaceEmptyStateView(
                         title: language.text("No expert assignments yet", "Inga sakkunniguppdrag ännu"),
@@ -1065,14 +1134,21 @@ struct ExpertAssignmentsWorkspaceView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .onAppear {
+            clearSavedExpertFiltersAtLaunchIfNeeded()
             if let route = store.route,
                isExpertAssignmentRoute(route),
                route.recordID.hasPrefix("\(CVItemKind.review.rawValue):") {
                 revealExpertAssignmentRow(route.recordID)
                 setSelectedItemID(route.recordID)
                 store.consumeRoute()
-            } else if selectedItemID == nil {
-                setSelectedItemID(store.lastSelectedRecordID(for: .expertAssignments) ?? rows.first?.id)
+            } else {
+                // Round 17: a remembered assignment that a saved filter hides
+                // is replaced by the first visible row.
+                let visibleIDs = rows.map(\.id)
+                setSelectedItemID(ListSelectionPolicy.selectionAfterFilterChange(
+                    selected: selectedItemID ?? store.lastSelectedRecordID(for: .expertAssignments) ?? visibleIDs.first,
+                    visibleIDs: visibleIDs
+                ))
             }
         }
         .onChange(of: store.route) { _, route in
@@ -1342,6 +1418,16 @@ struct ExpertAssignmentsWorkspaceView: View {
         searchText = ""
         selectedExpertStatusFilters.removeAll()
         selectedExpertCategoryFilters.removeAll()
+    }
+
+    /// Round 17: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared the first time the list is shown.
+    private func clearSavedExpertFiltersAtLaunchIfNeeded() {
+        guard ListFilterLaunchPolicy.shouldClearSavedFilters(
+            for: .expertAssignments,
+            retainsFilters: store.shouldRetainListFilters(for: .expertAssignments)
+        ) else { return }
+        clearAllExpertAssignmentFilters()
     }
 
     private func cvListHeader(_ title: String, width: CGFloat?, sortColumn: CVListSortColumn) -> some View {
