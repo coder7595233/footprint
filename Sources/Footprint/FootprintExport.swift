@@ -1,7 +1,7 @@
 import Foundation
 
 /// Writes a readable copy of Footprint's data to a folder the user chooses
-/// in Settings > Storage (for example a Google Drive or OneDrive folder):
+/// in Settings > Data & backups (for example a Google Drive or OneDrive folder):
 ///
 ///   data/          one JSON document per area and _manifest.json
 ///   attachments/   copies of the app's attachments (PDFs etc.), one subfolder per kind

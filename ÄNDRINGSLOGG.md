@@ -87,7 +87,7 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 | F97 | Kalender, inställningar | En kalender- eller inställningsändring som väntar på att sparas försvinner inte om en annan sparning misslyckas. | Pågår |
 | F98 | Statistik | Beloppsgrupperna använder beloppet i kronor (ett anslag på 200 000 euro hamnade i gruppen under 250 000). Undervisningstimmar räknar terminen då perioden slutar, och en period utan slutdatum som inte börjat än räknas inte. | Pågår |
 | F99 | Ansökningar | En gammal post sparad som Beviljat, Avslag eller Tillbakadragen utan beslutsdatum blev "Väntar svar" och förlorade beviljat belopp vid nästa sparning. Nu behåller den sitt utfall; beslutsdatum blir förväntat beslutsdatum, ansökningsdatum eller stängningsdag, markerat som osäkert. | Pågår |
-| F100 | Inställningar, export | Kopian av all data till en mapp (förut Google Drive) är avstängd från början (beslut 2026-10-01). I Inställningar > Lagring slår du på den och väljer en valfri mapp, till exempel i Google Drive eller OneDrive. | Pågår |
+| F100 | Inställningar, export | Kopian av all data till en mapp (förut Google Drive) är avstängd från början (beslut 2026-10-01). I Inställningar > Data och backuper slår du på den och väljer en valfri mapp, till exempel i Google Drive eller OneDrive. | Pågår |
 
 ## Omgång 13 – klar 2026-10-01 (#8)
 
