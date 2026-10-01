@@ -22,7 +22,12 @@ enum AttachmentActionError: LocalizedError, Equatable {
 /// stored name (no folders, so it cannot be written outside the temporary
 /// folder), safe characters only, and always ending in ".pdf".
 func safeTemporaryPDFFilename(_ stored: String?, fallback: String) -> String {
-    let lastPart = stored.flatMap { URL(fileURLWithPath: $0).lastPathComponent.trimmedOrNil } ?? fallback
+    // Split on "/" directly: URL(fileURLWithPath:) turns ".." into the
+    // current folder's name.
+    let lastPart = stored
+        .flatMap { $0.split(separator: "/").last.map(String.init)?.trimmedOrNil }
+        .flatMap { $0 == "." || $0 == ".." ? nil : $0 }
+        ?? fallback
     let stem = (lastPart as NSString).deletingPathExtension
     let allowed = stem.unicodeScalars.map { scalar -> String in
         CharacterSet.alphanumerics.contains(scalar) || " -_.".unicodeScalars.contains(scalar) ? String(scalar) : "_"

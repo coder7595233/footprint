@@ -4732,7 +4732,8 @@ final class StabilityTests: XCTestCase {
         let store = GrantDataStore(publicationRecords: [publication])
 
         let sourceURL = isolatedStorageDirectory.appendingPathComponent("source.pdf")
-        let sourceData = Data("managed-pdf".utf8)
+        // Round 14: only a real PDF (starting with %PDF-) is copied in.
+        let sourceData = Data("%PDF-1.4 managed-pdf".utf8)
         try sourceData.write(to: sourceURL)
 
         var updated = publication
