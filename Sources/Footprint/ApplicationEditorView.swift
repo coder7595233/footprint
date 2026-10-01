@@ -2237,7 +2237,13 @@ struct ApplicationEditorView: View {
     }
 
     private func approximateAmountBreakdownView(language: AppLanguage) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        // Wraps onto more lines: with many years one row pushed the whole
+        // editor (and its timeline) wider than the window.
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 148, maximum: 200), spacing: 12, alignment: .topLeading)],
+            alignment: .leading,
+            spacing: 10
+        ) {
             ForEach(approximateAmountMetrics(language: language)) { metric in
                 VStack(alignment: .leading, spacing: AppRuntime.usesRenewedChrome ? 8 : 6) {
                     Text(metric.label)
@@ -2249,15 +2255,11 @@ struct ApplicationEditorView: View {
                         ReadOnlyValue(text: metric.value)
                     }
                 }
-                .frame(
-                    minWidth: metric.emphasized ? 164 : 136,
-                    idealWidth: metric.emphasized ? 180 : 148,
-                    maxWidth: metric.emphasized ? 200 : 164,
-                    alignment: .leading
-                )
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minWidth: 148, maxWidth: .infinity, alignment: .leading)
+        .layoutPriority(1)
     }
 
     private struct OverheadRuleSummaryLine {
