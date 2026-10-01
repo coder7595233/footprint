@@ -14,6 +14,10 @@ final class Round13StabilityTests: XCTestCase {
         setenv("FOOTPRINT_STORAGE_DIRECTORY", storageDirectory.path, 1)
     }
 
+    private func day(_ text: String) -> Date {
+        DateParsers.isoDay.date(from: text)!
+    }
+
     override func tearDown() {
         unsetenv("FOOTPRINT_STORAGE_DIRECTORY")
         if let storageDirectory {
@@ -124,5 +128,63 @@ final class Round13StabilityTests: XCTestCase {
         XCTAssertFalse(store.isDataQualityWarningHidden(first))
         XCTAssertFalse(store.isDataQualityWarningHidden(second))
         XCTAssertFalse(store.showAllHiddenDataQualityWarnings(), "nothing left to show")
+    }
+
+    // MARK: Closed calls that still say "Att söka"
+
+    private func closedCall(id: String = "call-1") -> GrantApplication {
+        GrantApplication(
+            id: id, rowNumber: 1, organization: "Invented Foundation", grantName: "Invented call",
+            opensOn: "2026-08-01", closesOn: "2026-09-15"
+        )
+    }
+
+    func testClosedCallWithoutAnswerAwaitsAnAnswer() {
+        let call = closedCall()
+        XCTAssertFalse(call.awaitsAppliedAnswer(today: day("2026-09-15")), "closing day itself is still open")
+        XCTAssertTrue(call.awaitsAppliedAnswer(today: day("2026-09-16")))
+
+        var applied = call
+        applied.appliedOn = "2026-09-10"
+        XCTAssertFalse(applied.awaitsAppliedAnswer(today: day("2026-10-01")))
+
+        var notApplied = call
+        notApplied.notAppliedOn = "2026-09-10"
+        notApplied.result = "Ej sökt"
+        XCTAssertFalse(notApplied.awaitsAppliedAnswer(today: day("2026-10-01")))
+    }
+
+    @MainActor
+    func testAnsweringAppliedSetsTheClosingDayAsUncertainAppliedDate() {
+        let store = GrantDataStore(applications: [closedCall()], skipInitialMigration: true)
+        XCTAssertEqual(store.applicationsAwaitingAppliedAnswer(today: day("2026-10-01")).map(\.id), ["call-1"])
+        store.askAppliedQuestion(applicationID: "call-1")
+        XCTAssertEqual(store.pendingAppliedQuestionApplicationID, "call-1")
+
+        XCTAssertTrue(store.answerAppliedQuestion(applicationID: "call-1", applied: true, today: day("2026-10-01")))
+        XCTAssertNil(store.pendingAppliedQuestionApplicationID)
+        let saved = store.applications.first { $0.id == "call-1" }
+        XCTAssertEqual(saved?.appliedOn, "2026-09-15")
+        XCTAssertEqual(saved?.appliedOnUncertain, true)
+        XCTAssertEqual(saved?.resultLabel, "Väntar svar")
+        XCTAssertTrue(store.applicationsAwaitingAppliedAnswer(today: day("2026-10-01")).isEmpty)
+    }
+
+    @MainActor
+    func testAnsweringNotAppliedMarksTheCallEjSokt() {
+        let store = GrantDataStore(applications: [closedCall()], skipInitialMigration: true)
+        XCTAssertTrue(store.answerAppliedQuestion(applicationID: "call-1", applied: false, today: day("2026-10-01")))
+        let saved = store.applications.first { $0.id == "call-1" }
+        XCTAssertEqual(saved?.notAppliedOn, "2026-09-15")
+        XCTAssertEqual(saved?.resultLabel, "Ej sökt")
+        XCTAssertFalse(store.answerAppliedQuestion(applicationID: "call-1", applied: true, today: day("2026-10-01")), "already answered")
+    }
+
+    func testClosedUnansweredCallGetsANotificationTheDayAfterClosing() {
+        let schedules = GrantReminderCoordinator.reminderSchedule(
+            for: closedCall(), settings: .standard, calendar: Calendar.current
+        )
+        let question = schedules.first { $0.kind == .closedUnanswered }
+        XCTAssertEqual(question.map { DateParsers.isoDay.string(from: $0.fireDate) }, "2026-09-16")
     }
 }

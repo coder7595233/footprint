@@ -88,6 +88,7 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 | F88 | Valuta | Lönekalkylens belopp (alltid i kronor) används inte längre som budget för en ansökan i annan valuta, där det räknades om som om det vore euro eller dollar. | Pågår |
 | F89 | Belopp | Inklistrade belopp som "1,5 M", "1,5 milj", "2 mkr", "250 tkr", "40,000 EUR" och "1.250.000" tolkas rätt (förut blev "1,5 M" 1 kr och "40,000 EUR" kunde bli fel). | Pågår |
 | F90 | Data | Knappen "Visa alla dolda" i Data-vyn visar alla dolda varningar igen på en gång, även de som dolts i äldre versioner. Den frågar först och kan ångras. Reglaget "Dolda" visar antalet, och varje dold rad har knappen "Visa igen". | Pågår |
+| F91 | Ansökningar, kalender | En utlysning som har stängt men fortfarande står som "Att söka" försvann med filtret "Hitta nya/Framtida anslag" och ur anslagsflödet. Nu ligger den kvar: i listan står "Svara" i kolumnen Stänger, i anslagsflödet "Stängd – sökt?". I kalendern ligger "Sökt eller inte sökt?" på dagens datum varje dag tills du svarat; klick ger frågan med knapparna Sökt, Ej sökt, Öppna ansökan och Senare. Sökt sätter ansökningsdatum till stängningsdagen (markerat osäkert), Ej sökt sätter Ej sökt-datum till stängningsdagen. Dagen efter stängning kommer också en notis som öppnar samma fråga. Kan ångras. | Pågår |
 
 ## Omgång 12 – klar 2026-09-30 (#7)
 

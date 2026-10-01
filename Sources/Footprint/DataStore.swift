@@ -732,6 +732,9 @@ final class GrantDataStore: ObservableObject {
     @Published var deletionImpactWarning: DeletionImpactWarning?
     @Published var clipboardPreview: ClipboardPreviewPayload?
     @Published var route: AppRoute?
+    /// The application whose "Sökt eller inte sökt?" question is shown
+    /// (from the calendar or a notification). Nil when no question is open.
+    @Published var pendingAppliedQuestionApplicationID: String?
     @Published var pendingCongressRoute: AppRoute?
     @Published var pendingCongressRouteToken: UUID?
     @Published var pendingCalendarOpenRequest: CalendarOpenRequest?
@@ -25564,6 +25567,7 @@ final class GrantDataStore: ObservableObject {
         let language = language
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
+        let passedUnansweredText = language.text("Answer", "Svara")
         let snapshots = applications.map { application -> ApplicationRowSnapshot in
             let organizationLabel = organizationLabel(for: application, language: language)
             let grantNameLabel = localizedGrantName(for: application, language: language)
@@ -25600,7 +25604,10 @@ final class GrantDataStore: ObservableObject {
                 if let closesOn = application.closesOn,
                    let date = DateParsers.isoDay.date(from: closesOn) {
                     let closeDay = calendar.startOfDay(for: date)
-                    guard closeDay >= today else { return "" }
+                    guard closeDay >= today else {
+                        // Passed but still "Att söka": the answer is missing.
+                        return application.isToApplyStatus ? passedUnansweredText : ""
+                    }
                     let days = calendar.dateComponents([.day], from: today, to: closeDay).day ?? 0
                     let base = String(days)
                     guard application.closesOnUncertain else { return base }

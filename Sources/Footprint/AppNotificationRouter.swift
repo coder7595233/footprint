@@ -40,6 +40,9 @@ final class AppNotificationRouter: NSObject, UNUserNotificationCenterDelegate, @
                 } else {
                     store.revealCalendarWorkspace()
                 }
+            } else if kind == GrantReminderCoordinator.closedUnansweredNotificationKind, let applicationID {
+                store.route = AppRoute(recordID: applicationID, destination: .applications)
+                store.askAppliedQuestion(applicationID: applicationID)
             } else {
                 if let applicationID {
                     store.route = AppRoute(recordID: applicationID, destination: .applications)

@@ -52,11 +52,12 @@ final class GrantRemindersAndAmountGroupsTests: XCTestCase {
     func testApplicationStillToApplyForGetsOpeningAndClosingReminders() {
         XCTAssertEqual(Self.toApply.resultLabel, "Att söka")
         let schedules = Self.schedule(Self.toApply)
-        XCTAssertEqual(schedules.map(\.kind), [.opens, .closingSoon])
-        XCTAssertEqual(schedules.map(Self.day), ["2027-03-01", "2027-03-25"])
+        XCTAssertEqual(schedules.map(\.kind), [.opens, .closingSoon, .closedUnanswered])
+        XCTAssertEqual(schedules.map(Self.day), ["2027-03-01", "2027-03-25", "2027-04-02"])
         XCTAssertEqual(schedules.map(\.id), [
             "grant-open-to-apply-2027-03-01",
             "grant-close-soon-to-apply-2027-04-01",
+            "grant-closed-unanswered-to-apply-2027-04-01",
         ])
         for schedule in schedules {
             XCTAssertEqual(Calendar.current.component(.hour, from: schedule.fireDate), 9)
@@ -67,7 +68,7 @@ final class GrantRemindersAndAmountGroupsTests: XCTestCase {
         settings.grantClosingLeadDays = 14
         settings.grantReminderTime = "07:30"
         let custom = Self.schedule(Self.toApply, settings: settings)
-        XCTAssertEqual(custom.map(Self.day), ["2027-03-01", "2027-03-18"])
+        XCTAssertEqual(custom.map(Self.day), ["2027-03-01", "2027-03-18", "2027-04-02"])
         XCTAssertEqual(Calendar.current.component(.hour, from: custom[1].fireDate), 7)
         XCTAssertEqual(Calendar.current.component(.minute, from: custom[1].fireDate), 30)
     }
@@ -76,7 +77,7 @@ final class GrantRemindersAndAmountGroupsTests: XCTestCase {
         // The same ids every time: a refresh replaces the waiting
         // notifications instead of adding copies.
         XCTAssertEqual(Self.schedule(Self.toApply), Self.schedule(Self.toApply))
-        XCTAssertEqual(Set(Self.schedule(Self.toApply).map(\.id)).count, 2)
+        XCTAssertEqual(Set(Self.schedule(Self.toApply).map(\.id)).count, 3)
     }
 
     func testDeclinedWithdrawnAndNotAppliedGetNoReminders() {

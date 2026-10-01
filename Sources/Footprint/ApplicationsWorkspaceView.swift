@@ -776,6 +776,10 @@ struct ApplicationsView: View {
     private func matchesFutureApplicationFilter(_ application: ApplicationRowSnapshot) -> Bool {
         guard showsOnlyFutureApplications else { return true }
         guard let closeDate = application.closeDate else { return false }
+        // A call still marked "Att söka" after its closing date is kept: it
+        // has not been answered yet ("Sökt" or "Ej sökt") and must not drop
+        // out of sight.
+        if application.isToApplyStatus { return true }
         let calendar = Calendar.current
         return calendar.startOfDay(for: closeDate) >= calendar.startOfDay(for: Date())
     }
@@ -1993,6 +1997,22 @@ private struct GrantPipelineCurtainPanel: View {
                 subtitle: [organization, project].compactMap { $0 }.joined(separator: " · "),
                 amountText: grantPipelineAmountText(for: application, lane: .toApply),
                 badgeText: grantPipelineCloseBadge(for: application.closeDate),
+                badgeDate: application.closeDate,
+                lane: .toApply,
+                sortDate: application.closeDate,
+                isLeadApplicant: store.isCurrentUserFirstApplicant(application)
+            )
+        }
+
+        // Closed but still "Att söka": stays under "Att söka" until it is
+        // answered, instead of dropping out of every lane.
+        if application.awaitsAppliedAnswer() {
+            return GrantPipelineCurtainEntry(
+                applicationID: application.id,
+                title: title,
+                subtitle: [organization, project].compactMap { $0 }.joined(separator: " · "),
+                amountText: grantPipelineAmountText(for: application, lane: .toApply),
+                badgeText: language.text("Closed – applied?", "Stängd – sökt?"),
                 badgeDate: application.closeDate,
                 lane: .toApply,
                 sortDate: application.closeDate,
