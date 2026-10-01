@@ -717,6 +717,11 @@ final class GrantDataStore: ObservableObject {
     private var undoStateInternPool: [Data: Data] = [:]
     private var undoStateInternOrder: [Data] = []
     private var publicationAuthorPresentedNameMissCache: Set<String> = []
+    /// The researchers the name lookups were last built from. Rebuilding
+    /// them (and emptying the miss cache) when no researcher changed made
+    /// every co-applicant edit rescan all researchers for every unmatched
+    /// name: about ten seconds.
+    private var publicationAuthorLookupCacheSource: [PublicationAuthor]?
     // Deferred states whose background write has started but whose main-queue
     // completion (which updates persistedDocumentCache) has not run yet.
     private var inFlightDeferredPersistedStatesByKey: [String: PersistedDocumentState] = [:]
@@ -25465,6 +25470,11 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func rebuildPublicationAuthorLookupCaches() {
+        if let source = publicationAuthorLookupCacheSource, source == publicationAuthors {
+            cachedUnlinkedPersonNames = nil
+            return
+        }
+        publicationAuthorLookupCacheSource = publicationAuthors
         publicationAuthorByID = publicationAuthors.reduce(into: [:]) { $0[$1.id] = $1 }
         publicationAuthorByName = publicationAuthors.reduce(into: [:]) { $0[$1.name] = $1 }
         publicationAuthorByPresentedName = publicationAuthors.reduce(into: [:]) { partialResult, author in

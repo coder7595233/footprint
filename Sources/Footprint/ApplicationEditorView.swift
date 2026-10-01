@@ -2953,7 +2953,8 @@ private struct ApplicationTimelineStepper: View {
                     segmentView(index: index, centers: centers)
                 }
 
-                if let markerX = todayMarkerX(centers: centers) {
+                if let markerX = todayMarkerX(centers: centers),
+                   markerX <= (lastVisibleCenter(centers: centers) ?? .greatestFiniteMagnitude) {
                     Path { path in
                         path.move(to: CGPoint(x: markerX, y: 0))
                         path.addLine(to: CGPoint(x: markerX, y: markerCenterY * 2))
@@ -2982,6 +2983,13 @@ private struct ApplicationTimelineStepper: View {
 
     @ViewBuilder
     private func segmentView(index: Int, centers: [CGFloat]) -> some View {
+        if segmentIsVisible(index: index) {
+            visibleSegmentView(index: index, centers: centers)
+        }
+    }
+
+    @ViewBuilder
+    private func visibleSegmentView(index: Int, centers: [CGFloat]) -> some View {
         let startX = centers[index]
         let endX = centers[index + 1]
         let base = segmentBaseStyle(index: index)
@@ -3034,18 +3042,35 @@ private struct ApplicationTimelineStepper: View {
             .position(x: startX + (width / 2), y: markerCenterY)
     }
 
-    /// Locked records hide "Beslut väntas"; its place is kept so the other
-    /// circles sit where they do in the open editor.
+    /// Locked records hide "Beslut väntas" and every step that no longer
+    /// applies (the dispositions after a declined application). Their places
+    /// are kept, so the other circles sit where they do in the open editor.
     private func isStepHidden(_ step: ApplicationTimelineStep) -> Bool {
-        application.isEditingLocked && step == .decisionExpected
+        application.isEditingLocked && (step == .decisionExpected || isStepDeemphasized(step))
     }
 
-    /// A hidden step takes the colour of the step after it, so the line runs
-    /// straight past the empty place.
+    private func nextVisibleStepIndex(from index: Int) -> Int? {
+        guard index < allSteps.count else { return nil }
+        return (index..<allSteps.count).first { !isStepHidden(allSteps[$0]) }
+    }
+
+    /// A hidden step takes the colour of the next visible step, so the line
+    /// runs straight past the empty place.
     private func colorSourceStep(at index: Int) -> ApplicationTimelineStep {
-        let step = allSteps[index]
-        guard isStepHidden(step), index + 1 < allSteps.count else { return step }
-        return allSteps[index + 1]
+        allSteps[nextVisibleStepIndex(from: index) ?? index]
+    }
+
+    /// No line after the last visible step.
+    private func segmentIsVisible(index: Int) -> Bool {
+        nextVisibleStepIndex(from: index + 1) != nil
+    }
+
+    /// The centre of the last visible circle; the today line is not drawn
+    /// in the hidden part after it.
+    private func lastVisibleCenter(centers: [CGFloat]) -> CGFloat? {
+        guard let index = allSteps.indices.last(where: { !isStepHidden(allSteps[$0]) }),
+              centers.indices.contains(index) else { return nil }
+        return centers[index]
     }
 
     private func segmentBaseStyle(index: Int) -> (leadingColor: Color, trailingColor: Color, dashed: Bool) {
