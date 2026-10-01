@@ -726,6 +726,10 @@ final class GrantDataStore: ObservableObject {
     @Published private(set) var publicationAuthorOptionNames: [String] = []
     @Published private(set) var publicationJournalOptionNames: [String] = []
     @Published var loadError: String?
+    /// The error the background autosave itself last reported. A successful
+    /// autosave clears only that one; it used to clear every error, so a
+    /// failed backup or calendar save was hidden by the next autosave.
+    private var lastAutosaveErrorMessage: String?
     @Published var notice: StoreNotice?
     /// F25: a startup report shown once as a dialog (the footer notice is hidden by default).
     @Published var startupReport: String?
@@ -23226,6 +23230,13 @@ final class GrantDataStore: ObservableObject {
             || lowercased.contains("kalender")
     }
 
+    private func clearAutosaveError() {
+        if let message = lastAutosaveErrorMessage, loadError == message {
+            loadError = nil
+        }
+        lastAutosaveErrorMessage = nil
+    }
+
     private func enqueueAutosavePersistence(
         _ affectedSet: PersistenceSet,
         actionName: String,
@@ -23236,7 +23247,7 @@ final class GrantDataStore: ObservableObject {
         let scopeLabel = persistenceScopeLabel(for: affectedSet)
         guard currentStates != previousStates else {
             appendPerformanceDiagnostic("autosave-noop scope=\(scopeLabel) reason=unchanged-states")
-            loadError = nil
+            clearAutosaveError()
             return
         }
         registerAutosaveUndo(
@@ -23245,7 +23256,7 @@ final class GrantDataStore: ObservableObject {
             currentStates: currentStates
         )
         queueDeferredPersistence(currentStates, scopeLabel: scopeLabel)
-        loadError = nil
+        clearAutosaveError()
         scheduleSaveValidation()
     }
 
@@ -23343,8 +23354,12 @@ final class GrantDataStore: ObservableObject {
         migrateRecordsIfNeeded()
 
         do {
-            try persist(.allCoreData, includeBackup: false)
+            // The archive is written first. If it fails, nothing has been
+            // saved yet and the rollback below matches the disk. The other
+            // way round, a failed archive write left the database with the
+            // undone state while the screen showed the old one.
             try saveArchivedRecords(archivedRecords)
+            try persist(.allCoreData, includeBackup: false)
             enqueuePeriodicBackupSnapshotIfNeeded(now: Date())
             registerArchiveUndo(snapshot: current, archivedRecords: currentArchived, actionName: actionName, revealTarget: revealTarget)
             notice = StoreNotice(message: undoRedoNoticeMessage(actionName: actionName), tone: .info)
@@ -24002,7 +24017,7 @@ final class GrantDataStore: ObservableObject {
         }
         persistenceStatus.isSaving = !pendingDeferredPersistedStatesByKey.isEmpty || hasActiveWrites
         persistenceStatus.lastSavedAt = Date()
-        loadError = nil
+        clearAutosaveError()
         invalidateStorageStructureDiagnosticsAfterWrite()
         exportToFootprintExportAfterWrite(states.map { (key: $0.storageKey, data: $0.data) })
         appendPerformanceDiagnostic(
@@ -24046,6 +24061,7 @@ final class GrantDataStore: ObservableObject {
         }
         persistenceStatus.isSaving = !pendingDeferredPersistedStatesByKey.isEmpty || hasActiveWrites
         loadError = error.localizedDescription
+        lastAutosaveErrorMessage = error.localizedDescription
         appendPerformanceDiagnostic(
             String(
                 format: "persist-deferred-failed scope=%@ write_ms=%.2f total_ms=%.2f",

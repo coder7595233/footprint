@@ -75,19 +75,31 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
-## Omgång 14 – pågår
+## Omgång 15 – pågår
 
 | Nr | Område | Ändring | Status |
 |---|---|---|---|
-| F92 | Bilagor, säkerhet | En sökväg till en bilaga som kommer från databasen (till exempel en importerad) kan inte längre peka utanför appens lagringsmapp, utom till en PDF-fil. Bara riktiga PDF-filer kopieras in i appen och öppnas; en app, ett skript eller en webbsida öppnas aldrig. Tillfälliga kopior av PDF:er får ett säkert filnamn. | Pågår |
-| F93 | Projektuppgifter, kongresser | Uppgiften "Nya medel" läggs inte tillbaka vid varje start eller Ångra när du har tagit bort den. Du läggs inte tillbaka som deltagare på en kongress du tagit bort dig från, när appen startar eller när du sparar samma resa eller boende igen. | Pågår |
-| F94 | Data, översättningar | Låsta projekt och medieframträdanden visas inte i listan med översättningar att rätta och kan inte ändras därifrån. | Pågår |
-| F95 | Redigerare | Text du just skrivit försvinner inte när samma post ändras någon annanstans (projekt, publikationer, media, granskningar). En halvifylld ny affiliering hos en forskare töms inte. Etikansökningar, clinicaltrials-registreringar och datainsamlingar följer sin rad, så att det du skriver inte hamnar på raden under. Kurs- och undervisningsredigerarna fastnar inte som "osparade". | Pågår |
-| F96 | Publikationer | Att bara klicka på en publikation ändrar inte längre dess korresponderande författare eller CRediT-roller. | Pågår |
-| F97 | Kalender, inställningar | En kalender- eller inställningsändring som väntar på att sparas försvinner inte om en annan sparning misslyckas. | Pågår |
-| F98 | Statistik | Beloppsgrupperna använder beloppet i kronor (ett anslag på 200 000 euro hamnade i gruppen under 250 000). Undervisningstimmar räknar terminen då perioden slutar, och en period utan slutdatum som inte börjat än räknas inte. | Pågår |
-| F99 | Ansökningar | En gammal post sparad som Beviljat, Avslag eller Tillbakadragen utan beslutsdatum blev "Väntar svar" och förlorade beviljat belopp vid nästa sparning. Nu behåller den sitt utfall; beslutsdatum blir förväntat beslutsdatum, ansökningsdatum eller stängningsdag, markerat som osäkert. | Pågår |
-| F100 | Inställningar, export | Kopian av all data till en mapp (förut Google Drive) är avstängd från början (beslut 2026-10-01). I Inställningar > Data och backuper slår du på den och väljer en valfri mapp, till exempel i Google Drive eller OneDrive. | Pågår |
+| F101 | Export, säkerhet | I bilagelistan (bilagor.csv) visas ett fält som börjar med =, +, - eller @ som text i Excel och körs inte som formel. | Pågår |
+| F102 | E-post, säkerhet | E-postlänkar till kontakter och forskare kräver en vanlig adress. Text som "namn@x.se?bcc=..." gav dolda mottagare eller ifylld text i utkastet. | Pågår |
+| F103 | Påminnelser | Anslagspåminnelser kommer på inställd tid även de dagar sommartid börjar eller slutar (de kom en timme fel). "Disponeringstiden har passerat" kommer dagen efter sista dispositionsdagen. Kalenderns påminnelselista sparas innan påminnelserna läggs till, så att två snabba uppdateringar inte lämnar kvar påminnelser för borttagna uppgifter. | Pågår |
+| F104 | Växelkurser | Kurser från tio dagar före det första datumet sparas, så att kurshistoriken inte laddas ner vid varje sparning när det datumet är en helgdag. Bara ett normalt svar från ECB läses in. | Pågår |
+| F105 | Projekt | Utfallskortet räknar inte "Ej sökt" i totalen, så att andelarna går ihop. | Pågår |
+| F106 | Felmeddelanden | En lyckad automatisk sparning tar bara bort sitt eget felmeddelande, inte till exempel ett om en misslyckad säkerhetskopia. | Pågår |
+| F107 | Stabilitet | Ett mycket långt tal (till exempel ett inklistrat kontonummer) räknas inte som belopp och kan inte få appen att krascha. Fönstren som gör PDF av CV och export kör inga skript och öppnar inga andra sidor. Vid Ångra och vid återställning från arkivet sparas arkivet först, så att skärm och databas inte kan visa olika saker om arkivet inte går att spara. | Pågår |
+
+## Omgång 14 – klar 2026-10-01 (#9)
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F92 | Bilagor, säkerhet | En sökväg till en bilaga som kommer från databasen (till exempel en importerad) kan inte längre peka utanför appens lagringsmapp, utom till en PDF-fil. Bara riktiga PDF-filer kopieras in i appen och öppnas; en app, ett skript eller en webbsida öppnas aldrig. Tillfälliga kopior av PDF:er får ett säkert filnamn. | Klar |
+| F93 | Projektuppgifter, kongresser | Uppgiften "Nya medel" läggs inte tillbaka vid varje start eller Ångra när du har tagit bort den. Du läggs inte tillbaka som deltagare på en kongress du tagit bort dig från, när appen startar eller när du sparar samma resa eller boende igen. | Klar |
+| F94 | Data, översättningar | Låsta projekt och medieframträdanden visas inte i listan med översättningar att rätta och kan inte ändras därifrån. | Klar |
+| F95 | Redigerare | Text du just skrivit försvinner inte när samma post ändras någon annanstans (projekt, publikationer, media, granskningar). En halvifylld ny affiliering hos en forskare töms inte. Etikansökningar, clinicaltrials-registreringar och datainsamlingar följer sin rad, så att det du skriver inte hamnar på raden under. Kurs- och undervisningsredigerarna fastnar inte som "osparade". | Klar |
+| F96 | Publikationer | Att bara klicka på en publikation ändrar inte längre dess korresponderande författare eller CRediT-roller. | Klar |
+| F97 | Kalender, inställningar | En kalender- eller inställningsändring som väntar på att sparas försvinner inte om en annan sparning misslyckas. | Klar |
+| F98 | Statistik | Beloppsgrupperna använder beloppet i kronor (ett anslag på 200 000 euro hamnade i gruppen under 250 000). Undervisningstimmar räknar terminen då perioden slutar, och en period utan slutdatum som inte börjat än räknas inte. | Klar |
+| F99 | Ansökningar | En gammal post sparad som Beviljat, Avslag eller Tillbakadragen utan beslutsdatum blev "Väntar svar" och förlorade beviljat belopp vid nästa sparning. Nu behåller den sitt utfall; beslutsdatum blir förväntat beslutsdatum, ansökningsdatum eller stängningsdag, markerat som osäkert. | Klar |
+| F100 | Inställningar, export | Kopian av all data till en mapp (förut Google Drive) är avstängd från början (beslut 2026-10-01). I Inställningar > Data och backuper slår du på den och väljer en valfri mapp, till exempel i Google Drive eller OneDrive. | Klar |
 
 ## Omgång 13 – klar 2026-10-01 (#8)
 

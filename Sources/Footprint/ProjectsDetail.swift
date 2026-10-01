@@ -2097,7 +2097,9 @@ private struct GrantOutcomeDistributionSnapshot {
         amountValue: ((GrantApplication, Double?) -> Double)? = nil,
         remainingAmount: ((GrantApplication) -> Double?)? = nil
     ) -> GrantOutcomeDistributionSnapshot {
-        let relevant = applications.filter { !$0.isToApplyStatus }
+        // "Ej sökt" has no segment here; counting its applied amount in the
+        // total made the shares add up to less than 100 %.
+        let relevant = applications.filter { !$0.isToApplyStatus && !$0.isNotAppliedStatus }
         let rejected = relevant.filter {
             let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
             return status == "Avslag" || status == "Tillbakadragen"

@@ -15,7 +15,9 @@ func safeExternalURL(_ url: URL?) -> URL? {
         let recipient = String(url.absoluteString.dropFirst("mailto:".count))
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let decodedRecipient = recipient.removingPercentEncoding ?? recipient
+        // No "?": a query part can add hidden recipients (bcc) or a body.
         guard !recipient.isEmpty,
+              !decodedRecipient.contains("?"),
               !decodedRecipient.unicodeScalars.contains(where: {
                   CharacterSet.whitespacesAndNewlines.contains($0)
                       || CharacterSet.controlCharacters.contains($0)

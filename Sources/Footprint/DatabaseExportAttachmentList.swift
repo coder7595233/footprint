@@ -186,7 +186,14 @@ extension GrantDataStore {
         return "\u{FEFF}" + lines.joined(separator: "\n") + "\n"
     }
 
-    nonisolated private static func csvField(_ value: String) -> String {
+    nonisolated static func csvField(_ value: String) -> String {
+        // A field starting with = + - @ (or tab / carriage return) is run as
+        // a formula when Excel opens the file. A leading apostrophe makes
+        // Excel show it as plain text.
+        var value = value
+        if let first = value.first, "=+-@\t\r".contains(first) {
+            value = "'" + value
+        }
         let needsQuotes = value.contains(";")
             || value.contains("\"")
             || value.contains("\n")

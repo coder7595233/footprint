@@ -757,20 +757,15 @@ final class CalendarTaskReminderCoordinator: NSObject, @unchecked Sendable {
         let scheduledIDs = Set(futurePlans.map(\.id))
 
         center.removePendingNotificationRequests(withIdentifiers: Array(oldScheduledIDs.union(scheduledIDs)))
-        UserDefaults.standard.removeObject(forKey: scheduledDefaultsKey)
-        let group = DispatchGroup()
-        let successfulIDs = LockedNotificationIdentifierSet()
+        // The list of scheduled reminders is written at once, before they
+        // are added. It used to be cleared here and written only when every
+        // add had finished, so a second refresh in between found an empty
+        // list and could not remove reminders for deleted or moved tasks.
+        // An id that failed to schedule is harmless in the list: removing a
+        // reminder that does not exist does nothing.
+        UserDefaults.standard.set(Array(scheduledIDs), forKey: scheduledDefaultsKey)
         for plan in futurePlans {
-            group.enter()
-            scheduleNotification(for: plan) { error in
-                if error == nil {
-                    successfulIDs.insert(plan.id)
-                }
-                group.leave()
-            }
-        }
-        group.notify(queue: .main) {
-            UserDefaults.standard.set(Array(successfulIDs.values), forKey: self.scheduledDefaultsKey)
+            scheduleNotification(for: plan) { _ in }
         }
     }
 

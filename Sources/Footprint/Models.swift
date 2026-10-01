@@ -4797,7 +4797,13 @@ enum GrantParsing {
             return nil
         }
 
-        return Double(cleaned.replacingOccurrences(of: ",", with: "."))
+        // A pasted account or reference number (20 digits or more) is not an
+        // amount; turning it into a whole number made the app crash.
+        guard let value = Double(cleaned.replacingOccurrences(of: ",", with: ".")),
+              value.isFinite, abs(value) < 1e15 else {
+            return nil
+        }
+        return value
     }
 
     static func timestampNow() -> String {

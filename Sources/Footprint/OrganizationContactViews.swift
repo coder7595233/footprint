@@ -82,13 +82,7 @@ struct OrganizationContactPersonsSection: View {
 
     private func contactMailURL(for contactID: String) -> URL? {
         guard let index = contactIndex(for: contactID) else { return nil }
-        let rawEmail = contacts[index].email.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !rawEmail.isEmpty else { return nil }
-        let compactEmail = rawEmail.replacingOccurrences(of: " ", with: "")
-        guard let encoded = compactEmail.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return nil
-        }
-        return URL(string: "mailto:\(encoded)")
+        return singleRecipientMailtoURL(contacts[index].email)
     }
 
     private func removeContact(contactID: String) {

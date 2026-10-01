@@ -288,7 +288,10 @@ final class GrantReminderCoordinator: NSObject, @unchecked Sendable {
                let monthsBefore = calendar.date(byAdding: .month, value: -leadMonths, to: lastDispositionDate) {
                 add(.dispositionEndingSoon, idPrefix: "grant-disposition-soon", anchor: lastDispositionDate, fireDay: monthsBefore)
             }
-            add(.dispositionEnded, idPrefix: "grant-disposition-ended", anchor: lastDispositionDate, fireDay: lastDispositionDate)
+            // The day after the last disposition day: the money can still
+            // be used on the last day itself.
+            let dayAfterLast = calendar.date(byAdding: .day, value: 1, to: lastDispositionDate) ?? lastDispositionDate
+            add(.dispositionEnded, idPrefix: "grant-disposition-ended", anchor: lastDispositionDate, fireDay: dayAfterLast)
         }
 
         if application.isGranted,
@@ -328,7 +331,11 @@ final class GrantReminderCoordinator: NSObject, @unchecked Sendable {
     static func reminderDate(on date: Date, settings: CalendarReminderSettings, calendar: Calendar) -> Date {
         let startOfDay = calendar.startOfDay(for: date)
         let time = settings.grantReminderHourMinute
-        return calendar.date(byAdding: .minute, value: time.hour * 60 + time.minute, to: startOfDay) ?? startOfDay
+        // Clock time, not minutes after midnight: on the days summer time
+        // starts or ends, adding minutes gave 10:00 or 08:00 instead of 09:00.
+        return calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: startOfDay)
+            ?? calendar.date(byAdding: .minute, value: time.hour * 60 + time.minute, to: startOfDay)
+            ?? startOfDay
     }
 
     static func closingSoonTitle(days: Int, language: AppLanguage) -> String {
