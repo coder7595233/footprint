@@ -1050,11 +1050,13 @@ struct PublicationJournalsView: View {
                         Slider(
                             value: Binding(
                                 get: { minimumJIFValue },
-                                set: { minimumJIFValue = min($0, maximumJIFValue) }
+                                // Rounded to one decimal here: a slider "step" of 0.1
+                                // drew hundreds of tick marks as a grey dotted bar.
+                                set: { minimumJIFValue = min(($0 * 10).rounded() / 10, maximumJIFValue) }
                             ),
-                            in: 0...maximumJIFValue,
-                            step: 0.1
+                            in: 0...maximumJIFValue
                         )
+                        .tint(AppPalette.actionSave)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(1)
