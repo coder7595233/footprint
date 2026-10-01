@@ -1140,7 +1140,7 @@ private struct PublicationAuthorDetailHostView: View {
             AppWorkspaceEmptyStateView(
                 title: language.text("No researchers found", "Inga forskare hittades"),
                 subtitle: language.text("Add or search for a researcher.", "Lägg till eller sök fram en forskare."),
-                kind: .publications,
+                kind: .researchers,
                 fillsBackground: true
             )
         }
@@ -1230,7 +1230,8 @@ private struct PublicationAuthorLinkedAbstractRow: Identifiable, Equatable {
 }
 
 private func authorLinkedAbstractStatusFill(for contribution: CVConferenceContribution) -> Color? {
-    contribution.isRejected ? AppPalette.shadeRed : nil
+    // Round 16: the shared conference contribution tones.
+    AppPalette.statusRowFill(AppStatusTones.conferenceContribution(AppConferenceContributionBadgeStatus(contribution: contribution)))
 }
 
 private func authorLinkedAbstractStatusHelp(
@@ -3210,7 +3211,7 @@ private struct PublicationAuthorEditorView: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(AppPalette.chartRed)
+                    .foregroundStyle(AppPalette.statusText(.warning))
                 VStack(alignment: .leading, spacing: 4) {
                     Text(language.text("Possible existing researcher", "Möjlig befintlig forskare"))
                         .appTypography(.tableHeader)
@@ -3494,14 +3495,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func projectBadgeColor(for status: ProjectLifecycleStatus) -> Color {
-        switch status {
-        case .planned:
-            return AppPalette.vividYellow
-        case .ongoing:
-            return AppPalette.vividGreen
-        case .completed:
-            return AppPalette.chartRed
-        }
+        AppPalette.statusCapsuleFill(AppStatusTones.project(status: status, hasProgress: false))
     }
 
     private func applicationsPanel(language: AppLanguage) -> some View {
@@ -3599,19 +3593,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func applicationStatusColor(for application: GrantApplication) -> Color {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return store.isEffectivelyFullySpent(application)
-                ? AppPalette.vividGreen.opacity(0.72)
-                : AppPalette.vividGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.vividRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.vividYellow
-        }
-        return dynamicColor(light: NSColor(calibratedRed: 0.95, green: 0.95, blue: 0.95, alpha: 1), dark: NSColor(calibratedRed: 0.24, green: 0.24, blue: 0.24, alpha: 1))
+        AppPalette.statusCapsuleFill(store.applicationStatusTone(application))
     }
 
     private func dispositionStatus(for application: GrantApplication) -> String {
@@ -3632,11 +3614,8 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func dispositionStatusColor(for application: GrantApplication) -> Color {
-        guard let deadline = application.lastDispositionDate ?? application.receivedUsageTo.flatMap({ DateParsers.isoDay.date(from: $0) }) else {
-            return .secondary
-        }
-        let months = Calendar.current.dateComponents([.month], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: deadline)).month ?? 0
-        return months < 12 ? AppPalette.chartRed : AppPalette.dispositionPositiveText
+        // Round 16: shared disposition thresholds, readable text colours.
+        AppPalette.dispositionDeadlineText(application.dispositionDeadlineDate)
     }
 
     private func persist(completePendingSelection: Bool = false) {
@@ -4385,7 +4364,7 @@ private struct AuthorLinkedProjectsPanel: View, Equatable {
                             store.openRoute(for: project.project)
                         }) {
                             AppLinkedStatusRow(
-                                fill: projectStatusShadeColor(for: project.project.projectStatus),
+                                fill: projectStatusShadeColor(for: project.project),
                                 help: project.project.projectStatus.displayName(language: language)
                             ) {
                                 Text(project.label)
@@ -4404,15 +4383,9 @@ private struct AuthorLinkedProjectsPanel: View, Equatable {
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
-    private func projectStatusShadeColor(for status: ProjectLifecycleStatus) -> Color {
-        switch status {
-        case .planned:
-            return AppPalette.shadeYellow
-        case .ongoing:
-            return AppPalette.shadeGreen
-        case .completed:
-            return AppPalette.shadeRed
-        }
+    private func projectStatusShadeColor(for project: ProjectRecord) -> Color? {
+        // Round 16: the shared project rule (completed grey).
+        AppPalette.statusRowFill(store.projectStatusTone(project))
     }
 }
 
@@ -4453,7 +4426,7 @@ private struct AuthorProjectRelationInspectorPanel: View, Equatable {
                             systemImage: relation.countsAsResearchProject ? "checkmark.circle.fill" : "info.circle"
                         )
                         .appTypography(.tableHeader)
-                        .foregroundStyle(relation.countsAsResearchProject ? AppPalette.vividGreen : .secondary)
+                        .foregroundStyle(relation.countsAsResearchProject ? AppPalette.statusText(.done) : .secondary)
                         .labelStyle(.titleAndIcon)
                         .lineLimit(1)
                     }
@@ -4507,17 +4480,7 @@ private struct AuthorLinkedApplicationsPanel: View, Equatable {
     }
 
     private func applicationStatusShadeColor(for application: GrantApplication) -> Color? {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return AppPalette.shadeGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.shadeRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.shadeYellow
-        }
-        return nil
+        AppPalette.statusRowFill(store.applicationStatusTone(application))
     }
 
     private func applicationAmountText(for application: GrantApplication) -> String {
@@ -4570,15 +4533,8 @@ private struct AuthorLinkedPublicationsPanel: View, Equatable {
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
-    private func publicationStatusShadeColor(for status: PublicationStatus) -> Color {
-        switch status {
-        case .published, .accepted:
-            return AppPalette.shadeGreen
-        case .submitted, .planned, .inPreparation:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        }
+    private func publicationStatusShadeColor(for status: PublicationStatus) -> Color? {
+        AppPalette.statusRowFill(AppStatusTones.publication(status))
     }
 }
 
@@ -4695,16 +4651,9 @@ private struct AuthorLinkedDoctoralCandidatesPanel: View, Equatable {
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
-    private func doctoralStatusShadeColor(for candidate: DoctoralCandidateRecord) -> Color {
-        if doctoralMilestoneOutcome(candidate.plannedDisputationOutcomeRaw) == .endedBefore ||
-            doctoralMilestoneOutcome(candidate.halftimeOutcomeRaw) == .endedBefore {
-            return AppPalette.shadeRed
-        }
-        if doctoralMilestoneOutcome(candidate.plannedDisputationOutcomeRaw) == .completed ||
-            doctoralDateIsPastOrToday(candidate.disputationDate) {
-            return AppPalette.shadeGreen
-        }
-        return AppPalette.shadeYellow
+    private func doctoralStatusShadeColor(for candidate: DoctoralCandidateRecord) -> Color? {
+        // Round 16: the shared doctoral phases (ended early grey).
+        AppPalette.statusRowFill(AppStatusTones.doctoral(AppStatusTones.doctoralPhase(candidate)))
     }
 
     private func doctoralStatusText(for candidate: DoctoralCandidateRecord) -> String {

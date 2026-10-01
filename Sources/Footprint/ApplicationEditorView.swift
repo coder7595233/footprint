@@ -2441,7 +2441,7 @@ struct ApplicationEditorView: View {
                 if let explanation = cofundingExplanation(language: language) {
                     Text(explanation)
                         .appTypography(.secondary)
-                        .foregroundStyle(draft.cofundingDecision == nil ? AppPalette.vividRed : Color.secondary)
+                        .foregroundStyle(draft.cofundingDecision == nil ? AppPalette.statusText(.warning) : Color.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -2953,7 +2953,7 @@ private struct ApplicationTimelineStepper: View {
                         path.move(to: CGPoint(x: markerX, y: 0))
                         path.addLine(to: CGPoint(x: markerX, y: markerCenterY * 2))
                     }
-                    .stroke(Color.red, lineWidth: 3)
+                    .stroke(AppPalette.todayMarker, lineWidth: 3)
                 }
 
                 ForEach(Array(allSteps.enumerated()), id: \.element) { index, step in
@@ -3307,7 +3307,7 @@ private struct ApplicationTimelineStepper: View {
 
         if isStepCompleted(step) {
             let color = completedColor(for: step)
-            return (color.solid, color.shade, "checkmark", color.solid, 2.2)
+            return (color.solid, color.shade, "checkmark", AppPalette.statusOnFill, 2.2)
         }
 
         if stepHasDefinedDate(step) {
@@ -3318,17 +3318,22 @@ private struct ApplicationTimelineStepper: View {
     }
 
     private func completedColor(for step: ApplicationTimelineStep) -> (shade: Color, solid: Color) {
-        switch step {
-        case .decision, .decisionExpected, .firstDisposition, .lastDisposition:
-            if isRejectedOutcome && step == .decision {
-                return (AppPalette.shadeRed, AppPalette.vividRed)
-            }
-            if decisionChoice == .granted {
-                return (AppPalette.shadeGreen, AppPalette.vividGreen)
-            }
-            return (AppPalette.shadeBlue, AppPalette.vividBlue)
-        case .opens, .applied, .closes:
-            return (AppPalette.shadeBlue, AppPalette.vividBlue)
+        // Round 16: status tones instead of blue. Steps before a decision are
+        // "in progress" (yellow); the decision is green, red or grey.
+        let tone = completedTone(for: step)
+        return (AppPalette.statusFill(tone), AppPalette.statusText(tone))
+    }
+
+    private func completedTone(for step: ApplicationTimelineStep) -> AppStatusTone {
+        switch decisionChoice {
+        case .granted:
+            return .done
+        case .denied:
+            return step == .decision ? .negative : .inactive
+        case .withdrawn:
+            return .inactive
+        case nil:
+            return .pending
         }
     }
 
@@ -3380,19 +3385,10 @@ private struct ApplicationTimelineStepper: View {
     }
 
     private func segmentProgressColor(index: Int) -> Color {
-        if let choice = decisionChoice {
-            switch choice {
-            case .granted:
-                if index >= ApplicationTimelineStep.decision.index {
-                    return AppPalette.vividGreen
-                }
-            case .denied, .withdrawn:
-                if index >= ApplicationTimelineStep.decision.index {
-                    return AppPalette.vividRed
-                }
-            }
+        if decisionChoice != nil, index >= ApplicationTimelineStep.decision.index {
+            return AppPalette.statusText(completedTone(for: .decision))
         }
-        return AppPalette.vividBlue
+        return AppPalette.statusText(decisionChoice == nil ? .pending : completedTone(for: .applied))
     }
 
     private func anchorDate(for step: ApplicationTimelineStep) -> Date? {
@@ -3763,9 +3759,8 @@ struct AppTimelineDateEditor: View {
     }
 
     private func countdownTone(for days: Int) -> BadgeTone {
-        if days <= 7 { return .negative }
-        if days <= 30 { return .pending }
-        return .outline
+        // Round 16: the shared deadline thresholds.
+        BadgeTone(AppStatusTones.closingDeadline(daysRemaining: days))
     }
 }
 
@@ -3776,16 +3771,18 @@ private enum ApplicationGrantStatisticsOutcome: String, CaseIterable, Identifiab
 
     var id: String { rawValue }
 
-    var tint: Color {
+    var tone: AppStatusTone {
         switch self {
-        case .granted:
-            return AppPalette.shadeGreen
-        case .rejected:
-            return AppPalette.vividRed
-        case .waiting:
-            return AppPalette.shadeYellow
+        case .granted: return .done
+        case .rejected: return .negative
+        case .waiting: return .pending
         }
     }
+
+    var tint: Color { AppPalette.statusFill(tone) }
+
+    /// For text on the ordinary background.
+    var textTint: Color { AppPalette.statusText(tone) }
 
     func title(language: AppLanguage) -> String {
         switch self {
@@ -4067,7 +4064,7 @@ private struct ApplicationGrantStatisticsApplicationRow: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(row.outcome.title(language: language))
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(row.outcome.tint)
+                    .foregroundStyle(row.outcome.textTint)
                     .lineLimit(1)
                 Text(row.amountText)
                     .font(.system(size: 12, weight: .medium))

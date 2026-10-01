@@ -72,34 +72,24 @@ private enum CongressWorkspaceStatusTone: String, Hashable, Sendable {
         }
     }
 
-    var fill: Color {
+    /// Round 16: the shared status tones (a passed congress is grey:
+    /// nothing to do now).
+    var statusTone: AppStatusTone {
         switch self {
-        case .attending:
-            return AppPalette.shadeGreen
-        case .abstractOnly:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        case .missed:
-            return AppPalette.shadeRed
-        case .neutral:
-            return AppPalette.fieldSurface
+        case .attending: return .done
+        case .abstractOnly: return .pending
+        case .rejected: return .negative
+        case .missed: return .inactive
+        case .neutral: return .none
         }
     }
 
+    var fill: Color {
+        statusTone.hasFill ? AppPalette.statusFill(statusTone) : AppPalette.fieldSurface
+    }
+
     var stroke: Color {
-        switch self {
-        case .attending:
-            return AppPalette.vividGreen
-        case .abstractOnly:
-            return AppPalette.vividYellow
-        case .rejected:
-            return AppPalette.vividRed
-        case .missed:
-            return AppPalette.vividRed
-        case .neutral:
-            return AppPalette.border
-        }
+        statusTone.hasFill ? AppPalette.statusText(statusTone).opacity(0.45) : AppPalette.border
     }
 }
 
@@ -2867,7 +2857,7 @@ private struct CongressDetailPane: View {
                             if uncertain.wrappedValue {
                                 Text("?")
                                     .font(.system(size: 12, weight: .bold))
-                                    .foregroundStyle(AppPalette.vividOrange)
+                                    .foregroundStyle(AppPalette.statusText(.warning))
                                     .padding(.horizontal, 5)
                                     .padding(.vertical, 2)
                                     .background(Capsule(style: .continuous).fill(AppPalette.cardSurface))

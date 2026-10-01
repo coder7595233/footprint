@@ -590,7 +590,7 @@ struct DisseminationWorkspaceView: View {
     }
 
     private func disseminationDateShadeFill(for row: CVListRow) -> Color {
-        row.dateLabel.trimmedOrNil == nil ? AppPalette.shadeYellow : AppPalette.shadeGreen
+        AppPalette.statusFill(row.dateLabel.trimmedOrNil == nil ? .pending : .done)
     }
 
     private func disseminationListHeader(_ title: String, width: CGFloat? = nil, column: CVListSortColumn) -> some View {
@@ -705,7 +705,7 @@ struct DisseminationWorkspaceView: View {
                 AppWorkspaceEmptyStateView(
                     title: language.text("No dissemination item selected", "Ingen spridningspost vald"),
                     subtitle: language.text("Select a media appearance or other publication.", "Välj medverkan i media eller en övrig publikation."),
-                    kind: .cv
+                    kind: .dissemination
                 )
             case .otherPublication(let item):
                 CVOtherPublicationDetailView(store: store, item: item)
@@ -720,7 +720,7 @@ struct DisseminationWorkspaceView: View {
             AppWorkspaceEmptyStateView(
                 title: language.text("No dissemination items yet", "Inga spridningsposter ännu"),
                 subtitle: language.text("Create a media appearance or other publication.", "Skapa medverkan i media eller en övrig publikation."),
-                kind: .cv
+                kind: .dissemination
             )
         }
     }
@@ -937,7 +937,7 @@ struct ExpertAssignmentsWorkspaceView: View {
                     AppWorkspaceEmptyStateView(
                         title: language.text("No expert assignments yet", "Inga sakkunniguppdrag ännu"),
                         subtitle: language.text("Create or select an expert assignment.", "Skapa eller välj ett sakkunniguppdrag."),
-                        kind: .cv
+                        kind: .expertAssignments
                     )
                 }
             }
@@ -1154,16 +1154,12 @@ struct ExpertAssignmentsWorkspaceView: View {
     }
 
     private func reviewWorkflowStatusColors(_ status: CVReviewWorkflowStatus?) -> (fill: Color, stroke: Color) {
-        switch status {
-        case .completed:
-            return (AppPalette.vividGreen, AppPalette.vividGreen.opacity(0.84))
-        case .accepted:
-            return (AppPalette.vividYellow, AppPalette.vividYellow.opacity(0.86))
-        case .overdue:
-            return (AppPalette.vividRed, AppPalette.vividRed.opacity(0.86))
-        case nil:
-            return (.white, AppPalette.border.opacity(0.95))
+        // Round 16: the shared expert assignment tones (overdue orange).
+        let tone = AppStatusTones.review(status)
+        guard tone.hasFill else {
+            return (.clear, AppPalette.border.opacity(0.95))
         }
+        return (AppPalette.statusFill(tone), AppPalette.statusText(tone).opacity(0.45))
     }
 
     @ViewBuilder
@@ -1226,16 +1222,7 @@ struct ExpertAssignmentsWorkspaceView: View {
     }
 
     private func reviewWorkflowStatusShadeFill(_ status: CVReviewWorkflowStatus?) -> Color? {
-        switch status {
-        case .completed:
-            return AppPalette.shadeGreen
-        case .accepted:
-            return AppPalette.shadeYellow
-        case .overdue:
-            return AppPalette.shadeRed
-        case nil:
-            return nil
-        }
+        AppPalette.statusRowFill(AppStatusTones.review(status))
     }
 
     private func setSelectedItemID(_ newValue: String?) {
@@ -2871,7 +2858,7 @@ private struct ConferenceSubmissionTimelineStepper: View {
             if completed && !deemphasized {
                 Image(systemName: "checkmark")
                     .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(strokeColor)
+                    .foregroundStyle(submissionStepTone(for: step) == nil ? strokeColor : AppPalette.statusOnFill)
             }
         }
         .frame(width: circleSize, height: circleSize)
@@ -3070,32 +3057,26 @@ private struct ConferenceSubmissionTimelineStepper: View {
         }
     }
 
-    private func completedFillColor(for step: ConferenceSubmissionStep) -> Color {
+    /// Round 16: status tones instead of blue. Steps before the decision are
+    /// "in progress" (yellow); the decision takes the contribution's tone
+    /// (accepted yellow, presented green, rejected red). nil = grey.
+    private func submissionStepTone(for step: ConferenceSubmissionStep) -> AppStatusTone? {
+        let overall = AppStatusTones.conferenceContribution(AppConferenceContributionBadgeStatus(contribution: contribution))
         switch step {
         case .decision:
-            if contribution.submissionOutcome == .declined {
-                return AppPalette.shadeRed
-            }
-            return contribution.submissionOutcome == nil ? inactiveGray : AppPalette.shadeGreen
-        case .decisionExpected:
-            return contribution.submissionOutcome != nil ? AppPalette.shadeGreen : AppPalette.shadeBlue
-        case .applied, .closes:
-            return AppPalette.shadeBlue
+            return contribution.submissionOutcome == nil ? nil : overall
+        case .decisionExpected, .applied, .closes:
+            if contribution.submissionOutcome == .declined { return .inactive }
+            return contribution.submissionOutcome == nil ? .pending : overall
         }
     }
 
+    private func completedFillColor(for step: ConferenceSubmissionStep) -> Color {
+        submissionStepTone(for: step).map(AppPalette.statusFill) ?? inactiveGray
+    }
+
     private func completedStrokeColor(for step: ConferenceSubmissionStep) -> Color {
-        switch step {
-        case .decision:
-            if contribution.submissionOutcome == .declined {
-                return AppPalette.vividRed
-            }
-            return contribution.submissionOutcome == nil ? inactiveGray : AppPalette.vividGreen
-        case .decisionExpected:
-            return contribution.submissionOutcome != nil ? AppPalette.vividGreen : AppPalette.vividBlue
-        case .applied, .closes:
-            return AppPalette.vividBlue
-        }
+        submissionStepTone(for: step).map(AppPalette.statusText) ?? inactiveGray
     }
 
     private func isStepCompleted(_ step: ConferenceSubmissionStep) -> Bool {
@@ -4091,7 +4072,7 @@ private struct CVReviewWorkflowTimeline: View {
                 isDeemphasized: isStepDeemphasized(step),
                 completedColor: stepColor(step),
                 completedStrokeColor: stepIconColor(step),
-                completedIconColor: stepIconColor(step)
+                completedIconColor: AppPalette.statusOnFill
             )
         }
     }
@@ -4138,37 +4119,36 @@ private struct CVReviewWorkflowTimeline: View {
         }
     }
 
-    private func stepColor(_ step: CVReviewWorkflowStep) -> Color {
+    // Round 16: the shared expert assignment tones (accepted yellow,
+    // overdue orange, completed green); no blue.
+    private func stepTone(_ step: CVReviewWorkflowStep) -> AppStatusTone {
         switch step {
         case .accepted:
-            return AppPalette.shadeBlue
+            return .pending
         case .deadline:
-            return deadlineIsOverdue ? AppPalette.shadeRed : AppPalette.shadeYellow
+            return deadlineIsOverdue ? .warning : .pending
         case .completed:
-            return AppPalette.shadeGreen
+            return .done
         }
+    }
+
+    private func stepColor(_ step: CVReviewWorkflowStep) -> Color {
+        AppPalette.statusFill(stepTone(step))
     }
 
     private func stepIconColor(_ step: CVReviewWorkflowStep) -> Color {
-        switch step {
-        case .accepted:
-            return AppPalette.vividBlue
-        case .deadline:
-            return deadlineIsOverdue ? AppPalette.vividRed : AppPalette.vividYellow
-        case .completed:
-            return AppPalette.vividGreen
-        }
+        AppPalette.statusText(stepTone(step))
     }
 
     private func segmentProgressColor(index: Int) -> Color {
-        guard visibleSteps.indices.contains(index) else { return AppPalette.vividYellow }
+        guard visibleSteps.indices.contains(index) else { return AppPalette.statusText(.pending) }
         if stepHasDefinedDate(.completed) {
-            return AppPalette.vividGreen
+            return AppPalette.statusText(.done)
         }
         if deadlineIsOverdue {
-            return AppPalette.vividRed
+            return AppPalette.statusText(.warning)
         }
-        return AppPalette.vividYellow
+        return AppPalette.statusText(.pending)
     }
 
     private func stepIsActive(_ step: CVReviewWorkflowStep) -> Bool {

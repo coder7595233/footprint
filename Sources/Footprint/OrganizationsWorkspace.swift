@@ -1853,10 +1853,10 @@ private struct LocalizedOptionDetailView: View {
                                         .font(.system(size: 12, weight: .semibold))
                                         .padding(.horizontal, 7)
                                         .padding(.vertical, 3)
-                                        .background(AppPalette.shadeGreen, in: Capsule(style: .continuous))
+                                        .background(AppPalette.statusFill(.done), in: Capsule(style: .continuous))
                                         .overlay(
                                             Capsule(style: .continuous)
-                                                .stroke(AppPalette.vividGreen.opacity(0.75), lineWidth: 1)
+                                                .stroke(AppPalette.statusText(.done).opacity(0.45), lineWidth: 1)
                                         )
                                 }
                             }
@@ -2512,7 +2512,7 @@ private struct LocalizedOptionDetailView: View {
                     "Ett giltigt födelsedatum krävs innan åldersberoende löne- och semesterkostnader kan beräknas."
                 ))
                 .appTypography(.body)
-                .foregroundStyle(AppPalette.vividRed)
+                .foregroundStyle(AppPalette.statusText(.negative))
                 .accessibilityLabel(language.text(
                     "Salary calculation unavailable: date of birth is missing or invalid.",
                     "Lönekalkylen är inte tillgänglig: födelsedatum saknas eller är ogiltigt."

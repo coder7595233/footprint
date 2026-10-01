@@ -256,6 +256,7 @@ struct ContentView: View {
             )
             .modifier(StartupReportAlertModifier(store: store, language: language))
             .modifier(AppliedQuestionAlertModifier(store: store, language: language))
+            .modifier(ProjectOngoingQuestionAlertModifier(store: store, language: language))
     }
 
     private func rootContent(language: AppLanguage) -> some View {
@@ -1276,14 +1277,14 @@ private enum WorkspaceSearchModel {
             id: "calendar",
             title: language.text("Calendar", "Kalender"),
             subtitle: language.text("Compact event list by month", "Kompakt händelselista per månad"),
-            symbol: "calendar",
+            symbol: AppTab.calendar.symbolName,
             tab: .calendar
         )
         sectionItem(
             id: "congresses",
             title: language.text("Congresses", "Kongresser"),
             subtitle: language.text("Congress list and planning map", "Kongresslista och planeringskarta"),
-            symbol: "mappin.and.ellipse",
+            symbol: AppTab.congresses.symbolName,
             tab: .congresses,
             extraTerms: [
                 language.text("Map", "Karta"),
@@ -1294,14 +1295,14 @@ private enum WorkspaceSearchModel {
             id: "projects",
             title: language.text("Projects", "Projekt"),
             subtitle: language.text("Projects and timelines", "Projekt och tidslinjer"),
-            symbol: "folder.fill",
+            symbol: AppTab.projects.symbolName,
             tab: .projects
         )
         sectionItem(
             id: "researchers",
             title: language.text("Researchers", "Forskare"),
             subtitle: language.text("People and affiliations", "Forskare och affilieringar"),
-            symbol: "person.2.fill",
+            symbol: AppTab.coauthors.symbolName,
             tab: .coauthors,
             extraTerms: [language.text("People", "Personer")]
         )
@@ -1309,21 +1310,21 @@ private enum WorkspaceSearchModel {
             id: "organizations",
             title: language.text("Organizations", "Organisationer"),
             subtitle: language.text("Funders, employers and fund managers", "Anslagsgivare, arbetsgivare och medelsförvaltare"),
-            symbol: "building.columns.fill",
+            symbol: AppTab.organizations.symbolName,
             tab: .organizations
         )
         sectionItem(
             id: "cv",
             title: "CV",
             subtitle: language.text("Preview and export CVs and publication lists", "Förhandsvisa och exportera CV och publikationslistor"),
-            symbol: "doc.richtext.fill",
+            symbol: AppTab.cv.symbolName,
             tab: .cv
         )
         sectionItem(
             id: "data-quality",
             title: language.text("Data quality", "Datakvalitet"),
             subtitle: language.text("Review and correct data by category", "Granska och korrigera data per kategori"),
-            symbol: "checkmark.shield.fill",
+            symbol: AppTab.dataQuality.symbolName,
             tab: .dataQuality,
             extraTerms: [
                 language.text("Data maintenance", "Datavård"),
@@ -1336,56 +1337,56 @@ private enum WorkspaceSearchModel {
             id: "expert-assignments",
             title: language.text("Expert assignments", "Sakkunniguppdrag"),
             subtitle: language.text("Reviews and expert work", "Reviews och sakkunnigarbete"),
-            symbol: "checklist.unchecked",
+            symbol: AppTab.expertAssignments.symbolName,
             tab: .expertAssignments
         )
         sectionItem(
             id: "teaching",
             title: language.text("Teaching", "Undervisning"),
             subtitle: language.text("Courses and teaching assignments", "Kurser och undervisningsuppdrag"),
-            symbol: "graduationcap.fill",
+            symbol: AppTab.teaching.symbolName,
             tab: .teaching
         )
         sectionItem(
             id: "doctoral-candidates",
             title: language.text("Doctoral candidates", "Doktorander"),
             subtitle: language.text("Supervision, milestones and timeline", "Handledning, milstolpar och tidslinje"),
-            symbol: "person.fill",
+            symbol: AppTab.doctoralCandidates.symbolName,
             tab: .doctoralCandidates
         )
         sectionItem(
             id: "salary",
             title: language.text("Salary planning", "Löneplanering"),
             subtitle: language.text("Salary plan", "Löneplan"),
-            symbol: "chart.bar.xaxis",
+            symbol: AppTab.salary.symbolName,
             tab: .salary
         )
         sectionItem(
             id: "applications",
             title: language.text("Calls and grants", "Utlysningar och anslag"),
             subtitle: language.text("Calls, applications and grants", "Utlysningar, ansökningar och anslag"),
-            symbol: "doc.text.fill",
+            symbol: AppTab.applications.symbolName,
             tab: .applications
         )
         sectionItem(
             id: "journals",
             title: language.text("Journals", "Tidskrifter"),
             subtitle: language.text("Journal records", "Tidskrifter"),
-            symbol: "books.vertical.fill",
+            symbol: AppTab.journals.symbolName,
             tab: .journals
         )
         sectionItem(
             id: "publications",
             title: language.text("Publications", "Publikationer"),
             subtitle: language.text("Publication records", "Publikationer"),
-            symbol: "text.book.closed.fill",
+            symbol: AppTab.publications.symbolName,
             tab: .publications
         )
         sectionItem(
             id: "statistics",
             title: language.text("Statistics", "Statistik"),
             subtitle: language.text("Overview and metrics", "Översikt och statistik"),
-            symbol: "chart.pie.fill",
+            symbol: AppTab.statistics.symbolName,
             tab: .statistics
         )
 
@@ -1881,9 +1882,9 @@ private struct CommandPaletteOverlay: View {
     private func iconTint(for kind: CommandPaletteItem.Kind) -> Color {
         switch kind {
         case .action:
-            return AppPalette.chartGreen
+            return AppPalette.linkAction
         case .section:
-            return AppPalette.chartBlue
+            return .secondary
         case .record:
             return .primary
         }
@@ -2144,27 +2145,27 @@ private struct WorkspaceNavigationBar: View {
 
     private var primaryNavigationItems: [CleanShellItem] {
         [
-            .init(title: language.text("Calendar", "Kalender"), symbolName: "calendar", tab: .calendar, shortcut: nil),
-            .init(title: language.text("Organizations", "Organisationer"), symbolName: "building.columns.fill", tab: .organizations, shortcut: "2"),
-            .init(title: language.text("Salary planning", "Löneplanering"), symbolName: "chart.bar.xaxis", tab: .salary, shortcut: "0"),
-            .init(title: language.text("Teaching", "Undervisning"), symbolName: "graduationcap.fill", tab: .teaching, shortcut: "5"),
-            .init(title: language.text("Doctoral candidates", "Doktorander"), symbolName: "person.fill", tab: .doctoralCandidates, shortcut: nil),
-            .init(title: language.text("Researchers", "Forskare"), symbolName: "person.2.fill", tab: .coauthors, shortcut: "3", topPadding: 29),
-            .init(title: language.text("Journals", "Tidskrifter"), symbolName: "books.vertical.fill", tab: .journals, shortcut: "4"),
-            .init(title: language.text("Projects", "Projekt"), symbolName: "folder.fill", tab: .projects, shortcut: "6"),
-            .init(title: language.text("Grants", "Anslag"), symbolName: "doc.text.fill", tab: .applications, shortcut: "7"),
-            .init(title: language.text("Publications", "Publikationer"), symbolName: "text.book.closed.fill", tab: .publications, shortcut: "8"),
-            .init(title: language.text("Congresses", "Kongresser"), symbolName: "mappin.and.ellipse", tab: .congresses, shortcut: nil),
-            .init(title: language.text("Expert assignments", "Sakkunniguppdrag"), symbolName: "checklist.unchecked", tab: .expertAssignments, shortcut: nil),
-            .init(title: language.text("Media", "Media"), symbolName: "play.rectangle.fill", tab: .dissemination, shortcut: nil),
+            .init(title: language.text("Calendar", "Kalender"), symbolName: AppTab.calendar.symbolName, tab: .calendar, shortcut: nil),
+            .init(title: language.text("Organizations", "Organisationer"), symbolName: AppTab.organizations.symbolName, tab: .organizations, shortcut: "2"),
+            .init(title: language.text("Salary planning", "Löneplanering"), symbolName: AppTab.salary.symbolName, tab: .salary, shortcut: "0"),
+            .init(title: language.text("Teaching", "Undervisning"), symbolName: AppTab.teaching.symbolName, tab: .teaching, shortcut: "5"),
+            .init(title: language.text("Doctoral candidates", "Doktorander"), symbolName: AppTab.doctoralCandidates.symbolName, tab: .doctoralCandidates, shortcut: nil),
+            .init(title: language.text("Researchers", "Forskare"), symbolName: AppTab.coauthors.symbolName, tab: .coauthors, shortcut: "3", topPadding: 29),
+            .init(title: language.text("Journals", "Tidskrifter"), symbolName: AppTab.journals.symbolName, tab: .journals, shortcut: "4"),
+            .init(title: language.text("Projects", "Projekt"), symbolName: AppTab.projects.symbolName, tab: .projects, shortcut: "6"),
+            .init(title: language.text("Grants", "Anslag"), symbolName: AppTab.applications.symbolName, tab: .applications, shortcut: "7"),
+            .init(title: language.text("Publications", "Publikationer"), symbolName: AppTab.publications.symbolName, tab: .publications, shortcut: "8"),
+            .init(title: language.text("Congresses", "Kongresser"), symbolName: AppTab.congresses.symbolName, tab: .congresses, shortcut: nil),
+            .init(title: language.text("Expert assignments", "Sakkunniguppdrag"), symbolName: AppTab.expertAssignments.symbolName, tab: .expertAssignments, shortcut: nil),
+            .init(title: language.text("Media", "Media"), symbolName: AppTab.dissemination.symbolName, tab: .dissemination, shortcut: nil),
         ]
     }
 
     private var bottomNavigationItems: [CleanShellItem] {
         [
-            .init(title: "CV", symbolName: "doc.richtext.fill", tab: .cv, shortcut: nil),
-            .init(title: language.text("Statistics", "Statistik"), symbolName: "chart.pie.fill", tab: .statistics, shortcut: nil),
-            .init(title: language.text("Data quality", "Datakvalitet"), symbolName: "checkmark.shield.fill", tab: .dataQuality, shortcut: nil),
+            .init(title: "CV", symbolName: AppTab.cv.symbolName, tab: .cv, shortcut: nil),
+            .init(title: language.text("Statistics", "Statistik"), symbolName: AppTab.statistics.symbolName, tab: .statistics, shortcut: nil),
+            .init(title: language.text("Data quality", "Datakvalitet"), symbolName: AppTab.dataQuality.symbolName, tab: .dataQuality, shortcut: nil),
         ]
     }
 

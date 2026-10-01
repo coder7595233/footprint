@@ -2435,6 +2435,10 @@ struct ProjectRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord {
     var suppressedSeedProjectTaskComments: [String]
     var isArchived: Bool
     var isEditingLocked: Bool
+    /// Round 16: events (granted funds, data collection start, ethics dates)
+    /// for which "Ska projektet ändras till Pågående?" was answered "Inte
+    /// nu". Optional so older files load unchanged; nil = none.
+    var dismissedOngoingPromptKeys: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -2458,6 +2462,7 @@ struct ProjectRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord {
         case suppressedSeedProjectTaskComments
         case isArchived
         case isEditingLocked
+        case dismissedOngoingPromptKeys
     }
 
     init(
@@ -2481,7 +2486,8 @@ struct ProjectRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord {
         projectTasks: [ProjectTaskItem] = [],
         suppressedSeedProjectTaskComments: [String] = [],
         isArchived: Bool = false,
-        isEditingLocked: Bool = false
+        isEditingLocked: Bool = false,
+        dismissedOngoingPromptKeys: [String]? = nil
     ) {
         self.id = id
         self.nameSv = nameSv
@@ -2504,6 +2510,7 @@ struct ProjectRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord {
         self.suppressedSeedProjectTaskComments = suppressedSeedProjectTaskComments
         self.isArchived = self.projectStatus == .completed
         self.isEditingLocked = isEditingLocked
+        self.dismissedOngoingPromptKeys = dismissedOngoingPromptKeys?.isEmpty == true ? nil : dismissedOngoingPromptKeys
     }
 
     init(from decoder: Decoder) throws {
@@ -2530,7 +2537,8 @@ struct ProjectRecord: Codable, Hashable, Identifiable, LocalizedNamedRecord {
             projectTasks: try container.decodeIfPresent([ProjectTaskItem].self, forKey: .projectTasks) ?? [],
             suppressedSeedProjectTaskComments: try container.decodeIfPresent([String].self, forKey: .suppressedSeedProjectTaskComments) ?? [],
             isArchived: try container.decodeIfPresent(Bool.self, forKey: .isArchived) ?? false,
-            isEditingLocked: try container.decodeIfPresent(Bool.self, forKey: .isEditingLocked) ?? false
+            isEditingLocked: try container.decodeIfPresent(Bool.self, forKey: .isEditingLocked) ?? false,
+            dismissedOngoingPromptKeys: try container.decodeIfPresent([String].self, forKey: .dismissedOngoingPromptKeys)
         )
     }
 

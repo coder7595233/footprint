@@ -3774,13 +3774,13 @@ private func publicationSurfaceTextField(
 
     private func submissionStatusMarkerStatus(for row: PublicationSubmissionEditorRow) -> (color: Color, help: String)? {
         if row.hasAcceptedOrPublishedDate {
-            return (AppPalette.shadeGreen, language.text("Accepted", "Accepterad"))
+            return (AppPalette.statusFill(.done), language.text("Accepted", "Accepterad"))
         }
         if row.hasRejectedDate {
-            return (AppPalette.shadeRed, language.text("Rejected", "Refuserad"))
+            return (AppPalette.statusFill(.negative), language.text("Rejected", "Refuserad"))
         }
         if row.submittedDate?.trimmedOrNil != nil {
-            return (AppPalette.shadeYellow, language.text("Submitted", "Inskickad"))
+            return (AppPalette.statusFill(.pending), language.text("Submitted", "Inskickad"))
         }
         return nil
     }

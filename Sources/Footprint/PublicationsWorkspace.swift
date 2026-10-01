@@ -560,7 +560,7 @@ struct PublicationsWorkspaceView: View {
 
                     Image(systemName: publicationPipelineExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Color(red: 0.33, green: 0.33, blue: 0.36))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 0)
@@ -1336,20 +1336,18 @@ struct PublicationsWorkspaceView: View {
                 Color.clear
             }
         }
+        .overlay(alignment: .trailing) {
+            if row.publication?.isEditingLocked == true {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
+            }
+        }
     }
 
     private func publicationListStatusFill(for row: PublicationListRow) -> Color? {
         guard row.sourceKind == .publication else { return nil }
-        switch PublicationStatus.fromStored(row.statusLabel) {
-        case .published, .accepted:
-            return AppPalette.vividGreen
-        case .submitted:
-            return AppPalette.vividYellow
-        case .rejected:
-            return AppPalette.vividRed
-        case .planned, .inPreparation:
-            return nil
-        }
+        // Round 16: the shared publication tones (accepted waits = yellow).
+        return AppPalette.statusRowFill(AppStatusTones.publication(storedStatus: row.statusLabel))
     }
 
     private func rebuildPublicationRows() {
@@ -1531,8 +1529,8 @@ private struct PublicationPipelineCurtainPanel: View {
     @State private var measuredContentHeight: CGFloat = 0
 
     private var language: AppLanguage { store.language }
-    private var neutralStepColor: Color { Color(red: 0.33, green: 0.33, blue: 0.36) }
-    private var neutralStepLineColor: Color { Color(red: 0.58, green: 0.58, blue: 0.60) }
+    private var neutralStepColor: Color { Color.secondary }
+    private var neutralStepLineColor: Color { Color.secondary }
     private var effectiveMaxHeight: CGFloat { max(maxHeight, 0) }
     private var usesDarkAppearance: Bool { currentVisualModePreference()?.usesDarkAppearance == true }
     private var curtainChromeBackground: LinearGradient {
@@ -1860,13 +1858,14 @@ private struct PublicationPipelineCurtainPanel: View {
         }
 
         let days = max(Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: date), to: Calendar.current.startOfDay(for: Date())).day ?? 0, 0)
+        // Round 16: long waits need a follow-up (orange); never green.
         if days >= 90 {
-            return (AppPalette.semanticOnColor, AppPalette.vividRed)
+            return (AppPalette.statusOnFill, AppPalette.statusFill(.warning))
         }
         if days >= 30 {
-            return (AppPalette.semanticOnColor, AppPalette.vividYellow)
+            return (AppPalette.statusOnFill, AppPalette.statusFill(.pending))
         }
-        return (AppPalette.semanticOnColor, AppPalette.vividGreen)
+        return (Color.primary, AppPalette.subtleBorder.opacity(0.45))
     }
 }
 

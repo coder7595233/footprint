@@ -676,7 +676,7 @@ struct StatisticsView: View {
                         (language.text("Other teaching", "Övrig undervisning"), .yellow),
                     ],
                     futureDividerColumnIndex: teachingFutureDividerIndex,
-                    futureDividerColor: Color(red: 0.98, green: 0.08, blue: 0.08),
+                    futureDividerColor: AppPalette.todayMarker,
                     futureDividerWidth: 3,
                     onCellTap: { rowKey, columnIndex in
                         drilldownSelection = StatisticsDrilldownSelection(kind: .teachingHours, rowKey: rowKey, columnIndex: columnIndex)
@@ -2198,37 +2198,48 @@ private enum StatisticsTint: Equatable {
         self = Int(normalized, radix: 16).map(StatisticsTint.custom) ?? .blue
     }
 
-    // The five named tints are the app palette (deadline-proximity colors):
-    // green #B6D8A6, yellow #F1E08C, orange/red #F0926C, blue #A1D1E6, with
-    // the palette's shade variants as bottom colors.
+    // Round 16: the named tints are the shared status colours (green done,
+    // yellow pending, orange warning, red negative), so charts follow dark
+    // mode and the colours chosen in Settings. Blue is a category colour
+    // (Settings' neutral colour), not a status.
+    private var statusTone: AppStatusTone? {
+        switch self {
+        case .green: return .done
+        case .yellow: return .pending
+        case .orange: return .warning
+        case .red: return .negative
+        case .blue, .custom: return nil
+        }
+    }
+
     var bottomColor: Color {
+        if let tone = statusTone {
+            return Color(nsColor: NSColor(name: nil) { _ in
+                let dark = AppAppearanceRegistry.usesDarkPalette()
+                return AppPalette.statusFillNSColor(tone, dark: dark).withAlphaComponent(dark ? 0.34 : 0.55)
+            })
+        }
         let usesDarkPalette = AppAppearanceRegistry.usesDarkPalette()
         switch self {
-        case .green:
-            return usesDarkPalette ? Color(hex: 0xB6D8A6).opacity(0.34) : Color(hex: 0xADDDC6)
-        case .yellow:
-            return usesDarkPalette ? Color(hex: 0xF1E08C).opacity(0.34) : Color(hex: 0xFFEFBD)
-        case .orange, .red:
-            return usesDarkPalette ? Color(hex: 0xF0926C).opacity(0.34) : Color(hex: 0xF1BB93)
-        case .blue:
-            return usesDarkPalette ? Color(hex: 0xA1D1E6).opacity(0.34) : Color(hex: 0xB5DBED)
         case let .custom(hex):
             return Color(hex: hex).opacity(usesDarkPalette ? 0.34 : 0.24)
+        default:
+            return Color(nsColor: NSColor(name: nil) { _ in
+                let dark = AppAppearanceRegistry.usesDarkPalette()
+                return AppAppearanceRegistry.semanticColor(.neutral, shaded: true, useDarkPalette: dark).withAlphaComponent(dark ? 0.34 : 1)
+            })
         }
     }
 
     var topColor: Color {
+        if let tone = statusTone {
+            return AppPalette.statusFill(tone)
+        }
         switch self {
-        case .green:
-            return Color(hex: 0xB6D8A6)
-        case .yellow:
-            return Color(hex: 0xF1E08C)
-        case .orange, .red:
-            return Color(hex: 0xF0926C)
-        case .blue:
-            return Color(hex: 0xA1D1E6)
         case let .custom(hex):
             return Color(hex: hex).opacity(0.82)
+        default:
+            return AppPalette.vividBlue
         }
     }
 

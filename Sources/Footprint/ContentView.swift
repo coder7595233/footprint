@@ -92,25 +92,19 @@ enum DeadlineRingStyle {
     case remainingFunds
     case taskDeadline
 
-    func color(forDaysRemaining days: Int) -> Color {
+    /// Round 16: one set of deadline thresholds everywhere (see
+    /// `AppStatusTones.closingDeadline` / `dispositionDeadline`).
+    func tone(forDaysRemaining days: Int) -> AppStatusTone {
         switch self {
-        case .closingSoon:
-            if days < 30 { return AppPalette.deadlineWarningShort }
-            if days < 90 { return AppPalette.deadlineWarningLong }
-        case .applicationClosing:
-            if days < 7 { return AppPalette.deadlineWarningShort }
-            if days < 30 { return AppPalette.deadlineWarningLong }
-        case .repaymentDue:
-            if days < 30 { return AppPalette.deadlineWarningShort }
-            if days < 90 { return AppPalette.deadlineWarningLong }
-        case .remainingFunds:
-            if days < 90 { return AppPalette.deadlineWarningShort }
-            if days < 365 { return AppPalette.deadlineWarningLong }
-        case .taskDeadline:
-            if days <= 7 { return AppPalette.deadlineWarningShort }
-            if days <= 30 { return AppPalette.deadlineWarningLong }
+        case .closingSoon, .applicationClosing, .taskDeadline:
+            return AppStatusTones.closingDeadline(daysRemaining: days)
+        case .repaymentDue, .remainingFunds:
+            return AppStatusTones.dispositionDeadline(daysRemaining: days)
         }
-        return .clear
+    }
+
+    func color(forDaysRemaining days: Int) -> Color {
+        AppPalette.statusFill(tone(forDaysRemaining: days))
     }
 }
 
@@ -122,19 +116,46 @@ enum BadgeTone: Equatable {
     case negative
     case pending
     case outline
+    // Round 16: the remaining status tones.
+    case warning
+    case inactive
+    case notOpen
+
+    nonisolated init(_ tone: AppStatusTone) {
+        switch tone {
+        case .done: self = .positive
+        case .pending: self = .pending
+        case .warning: self = .warning
+        case .negative: self = .negative
+        case .inactive: self = .inactive
+        case .none: self = .outline
+        case .notOpen: self = .notOpen
+        }
+    }
+
+    /// Round 16: every badge colour comes from the shared status palette.
+    /// `positiveMuted` (old "spent" green) is now grey.
+    nonisolated var statusTone: AppStatusTone {
+        switch self {
+        case .positive: return .done
+        case .positiveMuted, .inactive: return .inactive
+        case .negative: return .negative
+        case .pending: return .pending
+        case .warning: return .warning
+        case .outline: return .none
+        case .notOpen: return .notOpen
+        }
+    }
 
     var colors: (foreground: Color, background: Color) {
-        switch self {
-        case .positive:
-            return (AppPalette.semanticOnColor, AppPalette.vividGreen)
-        case .positiveMuted:
-            return (AppPalette.semanticOnColor, AppPalette.vividGreen.opacity(0.82))
-        case .negative:
-            return (AppPalette.semanticOnColor, AppPalette.vividRed)
-        case .pending:
-            return (AppPalette.semanticOnColor, AppPalette.vividYellow)
-        case .outline:
+        let tone = statusTone
+        switch tone {
+        case .none:
             return (AppPalette.pillText, AppPalette.pillSurface)
+        case .notOpen:
+            return (AppPalette.statusText(.notOpen), AppPalette.pillSurface)
+        default:
+            return (AppPalette.statusOnFill, AppPalette.statusFill(tone))
         }
     }
 }
@@ -251,33 +272,21 @@ private extension GrantApplication {
 }
 
 func statusTone(for result: String?) -> BadgeTone {
-    guard let result = result?.trimmingCharacters(in: .whitespacesAndNewlines), !result.isEmpty else {
-        return .outline
-    }
-    if result.localizedCaseInsensitiveContains("Beviljat") {
-        return .positive
-    }
-    if result.localizedCaseInsensitiveContains("Avslag") || result == "Tillbakadragen" {
-        return .negative
-    }
-    if result == "Att söka" {
-        return .outline
-    }
-    return .pending
+    // Round 16: the shared application mapping (no dates known here).
+    BadgeTone(AppStatusTones.application(
+        resultLabel: result ?? "",
+        isFullySpent: false,
+        awaitsAppliedAnswer: false,
+        isBeforeOpening: false
+    ))
 }
 
 func applicationTone(for application: GrantApplication) -> BadgeTone {
-    if application.isFullySpent {
-        return .positiveMuted
-    }
-    return statusTone(for: application.resultLabel)
+    BadgeTone(AppStatusTones.application(application))
 }
 
 private func applicationTone(for application: ApplicationRowSnapshot) -> BadgeTone {
-    if application.isFullySpent {
-        return .positiveMuted
-    }
-    return statusTone(for: application.resultLabel)
+    BadgeTone(AppStatusTones.application(application))
 }
 
 private func summarizedCounts(for applications: [GrantApplication]) -> (submitted: Int, rejected: Int, waiting: Int, granted: Int, toApply: Int) {

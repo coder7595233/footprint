@@ -154,7 +154,7 @@ struct OrganizationTimelineView: View {
 
                         if let todayMarkerX {
                             Rectangle()
-                                .fill(Color(red: 0.98, green: 0.08, blue: 0.08))
+                                .fill(AppPalette.todayMarker)
                                 .frame(width: markerWidth, height: rowHeight)
                                 .offset(x: todayMarkerX - markerWidth / 2)
                         }
@@ -350,7 +350,7 @@ struct OrganizationTimelineView: View {
             let overlayWidth = max(overlayEndX - overlayStartX, 0)
 
             if overlayStartDate < visibleBarEnd, overlayWidth > 0 {
-                StripedTimelineOverlay(color: AppPalette.vividRed, lineWidth: 2, spacing: 8)
+                StripedTimelineOverlay(color: AppPalette.statusText(.inactive), lineWidth: 2, spacing: 8)
                     .frame(width: overlayWidth, height: barHeight)
                     .offset(x: overlayStartX)
                     .allowsHitTesting(false)
@@ -407,7 +407,8 @@ struct OrganizationTimelineView: View {
         case .rejected:
             return [AppPalette.statsCardDeclinedStart, AppPalette.statsCardDeclinedEnd]
         case .toApply:
-            return [AppPalette.secondaryCardSurface, AppPalette.shadeBlue]
+            // Round 16: no status yet = no colour (blue is not a status).
+            return [AppPalette.secondaryCardSurface, AppPalette.secondaryCardSurface]
         }
     }
 
@@ -445,7 +446,7 @@ struct OrganizationTimelineView: View {
         case .grantProviderGrant(.toApply), .fundManagerGrant(.toApply):
             return AppPalette.appText
         default:
-            return AppPalette.semanticOnColor
+            return AppPalette.statusOnFill
         }
     }
 
@@ -461,7 +462,7 @@ struct OrganizationTimelineView: View {
         case .congressAbstractDeadline:
             return AppPalette.shadeBlue
         case .congressLateAbstractDeadline:
-            return Color(red: 0.98, green: 0.08, blue: 0.08)
+            return AppPalette.statusText(.negative)
         }
     }
 

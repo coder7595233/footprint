@@ -151,7 +151,7 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
 
                         if let todayMarkerX {
                             Rectangle()
-                                .fill(Color(red: 0.98, green: 0.08, blue: 0.08))
+                                .fill(AppPalette.todayMarker)
                                 .frame(width: markerWidth, height: timelineBodyHeight)
                                 .offset(x: rowLabelWidth + todayMarkerX - markerWidth / 2)
                         }
@@ -228,7 +228,7 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
 
                 Text(text)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppPalette.semanticOnColor)
+                    .foregroundStyle(AppPalette.statusOnFill)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .frame(width: max(width - 16, 24), height: barHeight, alignment: .leading)
@@ -252,7 +252,7 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
             let overlayWidth = max(overlayEndX - overlayStartX, 0)
 
             if overlayStartDate < visibleBarEnd, overlayWidth > 0 {
-                StripedTimelineOverlay(color: AppPalette.vividRed, lineWidth: 2, spacing: 8)
+                StripedTimelineOverlay(color: AppPalette.statusText(.inactive), lineWidth: 2, spacing: 8)
                     .frame(width: overlayWidth, height: barHeight)
                     .offset(x: rowLabelWidth + overlayStartX, y: max((rowHeight - barHeight) / 2, 0))
                     .allowsHitTesting(false)

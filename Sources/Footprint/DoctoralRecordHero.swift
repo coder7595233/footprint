@@ -33,7 +33,7 @@ struct DoctoralRecordHeroView: View {
     @State private var activeActivityGroupID: String?
     @State private var plotWidth: CGFloat = 0
 
-    private static let todayMarkerColor = Color(red: 0.98, green: 0.08, blue: 0.08)
+    private static var todayMarkerColor: Color { AppPalette.todayMarker }
     private static let laneLabelWidth: CGFloat = 100
     private static let yearLabelHeight: CGFloat = 24
     /// Years visible at a time; the rest is reached by scrolling sideways.
@@ -720,7 +720,7 @@ struct DoctoralRecordHeroView: View {
                     .overlay(alignment: .leading) {
                         if block.needsConfirmation {
                             Rectangle()
-                                .fill(AppPalette.vividRed)
+                                .fill(AppPalette.statusFill(.warning))
                                 .frame(width: 3)
                         }
                     }
@@ -777,10 +777,12 @@ struct DoctoralRecordHeroView: View {
             ZStack {
                 if isDone || isEndedBefore {
                     Circle()
-                        .fill(isEndedBefore ? AppPalette.vividRed : AppPalette.vividGreen)
+                        // Round 16: ended early is grey, completed green; the
+                        // glyph uses the readable on-fill colour.
+                        .fill(AppPalette.statusFill(isEndedBefore ? .inactive : .done))
                     Image(systemName: isEndedBefore ? "xmark" : "checkmark")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppPalette.statusOnFill)
                 } else {
                     Circle()
                         .fill(AppPalette.detailPanelSurface)

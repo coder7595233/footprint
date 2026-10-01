@@ -163,6 +163,8 @@ struct ApplicationRowSnapshot: Identifiable, Equatable {
     let sortAppliedCaseNumber: String
     let sortMaximumAmount: Double
     let normalizedSearchBlob: String
+    /// Round 16: shows a small lock on locked rows.
+    var isEditingLocked: Bool = false
 }
 
 /// F13b: the grants list's "by project" filter. The menu lists projects by
@@ -225,6 +227,9 @@ struct ProjectRowSnapshot: Identifiable, Equatable {
     let hasDataCollection: Bool
     let hasActiveTasks: Bool
     let isLedByCurrentUser: Bool
+    /// Round 16: the shared project status tone and the lock flag.
+    var statusTone: AppStatusTone = .none
+    var isEditingLocked: Bool = false
 
     var isPlannedOwn: Bool { status == .planned && isLedByCurrentUser }
     var isActiveOwn: Bool { status == .ongoing && isLedByCurrentUser }

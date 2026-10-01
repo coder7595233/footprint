@@ -703,7 +703,7 @@ struct ApplicationsView: View {
 
                     Image(systemName: grantPipelineExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Color(red: 0.33, green: 0.33, blue: 0.36))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 0)
@@ -1305,29 +1305,14 @@ struct ApplicationsView: View {
     private func applicationListRowBackground(for row: ApplicationRowSnapshot) -> some View {
         AppListRowBackground(
             isSelected: row.selectionID == selectedApplicationID,
-            toneFill: applicationRowToneFillColor(for: row)
+            toneFill: applicationRowToneFillColor(for: row),
+            isLocked: row.isEditingLocked
         )
     }
 
     private func applicationRowToneFillColor(for row: ApplicationRowSnapshot) -> Color? {
-        if row.isFullySpent {
-            return AppPalette.shadeGreen
-        }
-
-        let result = normalizedStatus(row.resultLabel)
-        if result == "Ej sökt" {
-            return nil
-        }
-        if result == "Beviljat" {
-            return AppPalette.shadeGreen
-        }
-        if result.localizedCaseInsensitiveContains("Avslag") || result == "Tillbakadragen" {
-            return AppPalette.shadeRed
-        }
-        if result == "Att söka" {
-            return nil
-        }
-        return AppPalette.shadeYellow
+        // Round 16: the shared application status tones.
+        AppPalette.statusRowFill(AppStatusTones.application(row))
     }
 
     private func rowMatchesSelection(row: ApplicationRowSnapshot, selectionID: String) -> Bool {
@@ -1741,8 +1726,8 @@ private struct GrantPipelineCurtainPanel: View {
     @State private var measuredContentHeight: CGFloat = 0
 
     private var language: AppLanguage { store.language }
-    private var neutralStepColor: Color { Color(red: 0.33, green: 0.33, blue: 0.36) }
-    private var neutralStepLineColor: Color { Color(red: 0.58, green: 0.58, blue: 0.60) }
+    private var neutralStepColor: Color { Color.secondary }
+    private var neutralStepLineColor: Color { Color.secondary }
     private var effectiveMaxHeight: CGFloat { max(maxHeight, 0) }
     private var usesDarkAppearance: Bool { currentVisualModePreference()?.usesDarkAppearance == true }
     private var curtainChromeBackground: LinearGradient {
@@ -1961,8 +1946,8 @@ private struct GrantPipelineCurtainPanel: View {
                         AppToneBadge(
                             text: entry.badgeText,
                             size: .compact,
-                            foreground: grantPipelineBadgeStyle(for: entry.badgeDate).foreground,
-                            background: grantPipelineBadgeStyle(for: entry.badgeDate).background,
+                            foreground: grantPipelineBadgeStyle(for: entry).foreground,
+                            background: grantPipelineBadgeStyle(for: entry).background,
                             stroke: AppPalette.subtleBorder,
                             horizontalPadding: 8,
                             verticalPadding: 4
@@ -2186,18 +2171,27 @@ private struct GrantPipelineCurtainPanel: View {
             ?? application.receivedUsageTo.flatMap(DateParsers.isoDay.date(from:))
     }
 
-    private func grantPipelineBadgeStyle(for date: Date?) -> (foreground: Color, background: Color) {
-        guard let days = grantPipelineDaysUntil(date) else {
+    private func grantPipelineBadgeStyle(for entry: GrantPipelineCurtainEntry) -> (foreground: Color, background: Color) {
+        // Round 16: closing dates and last disposition dates use the shared
+        // deadline thresholds; a decision date is waiting for someone else.
+        let tone: AppStatusTone
+        if let date = entry.badgeDate {
+            switch entry.lane {
+            case .toApply:
+                let passed = Calendar.current.startOfDay(for: date) < Calendar.current.startOfDay(for: Date())
+                tone = passed ? .warning : AppStatusTones.closingDeadline(date)
+            case .pendingSoon, .pendingYear:
+                tone = .pending
+            case .grantedRemaining:
+                tone = AppStatusTones.dispositionDeadline(date)
+            }
+        } else {
+            tone = .none
+        }
+        guard tone.hasFill else {
             return (Color.primary, AppPalette.subtleBorder.opacity(0.45))
         }
-
-        if days < 30 {
-            return (AppPalette.semanticOnColor, AppPalette.vividRed)
-        }
-        if days < 90 {
-            return (AppPalette.semanticOnColor, AppPalette.vividYellow)
-        }
-        return (AppPalette.semanticOnColor, AppPalette.vividGreen)
+        return (AppPalette.statusOnFill, AppPalette.statusFill(tone))
     }
 }
 

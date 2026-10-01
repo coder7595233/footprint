@@ -124,16 +124,8 @@ struct AppReminderCountBadge: View {
     var help: String? = nil
 
     var body: some View {
-        Text(count > 99 ? "99+" : "\(count)")
-            .font(.system(size: 9, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
-            .lineLimit(1)
-            .frame(minWidth: 15, minHeight: 15)
-            .padding(.horizontal, count >= 10 ? 2 : 0)
-            // #D50000 clears WCAG AA for the 9 pt white label; the previous
-            // brighter red sat just below 4.5:1.
-            .background(Capsule().fill(Color(red: 0.84, green: 0.0, blue: 0.0)))
-            .overlay(Capsule().stroke(Color.white.opacity(0.92), lineWidth: 1))
+        // Round 16: the same red badge as every other count badge.
+        AppCountBadge(count: count, size: .small)
             .help(help ?? "")
             .accessibilityLabel(help ?? "\(count)")
     }
@@ -351,25 +343,42 @@ enum AppWorkspaceEmptyStateKind {
     case cv
     case teaching
     case congresses
+    case researchers
+    case journals
+    case expertAssignments
+    case dissemination
+    case doctoralCandidates
 
+    /// Round 16: the same symbol as the workspace in the navigation and the
+    /// command palette (`AppTab.symbolName`).
     var systemImage: String {
         switch self {
         case .generic:
             return "tray"
         case .applications:
-            return "doc.text"
+            return AppTab.applications.symbolName
         case .organizations:
-            return "building.2"
+            return AppTab.organizations.symbolName
         case .projects:
-            return "folder"
+            return AppTab.projects.symbolName
         case .publications:
-            return "books.vertical"
+            return AppTab.publications.symbolName
         case .cv:
-            return "doc.text"
+            return AppTab.cv.symbolName
         case .teaching:
-            return "graduationcap"
+            return AppTab.teaching.symbolName
         case .congresses:
-            return "mappin.and.ellipse"
+            return AppTab.congresses.symbolName
+        case .researchers:
+            return AppTab.coauthors.symbolName
+        case .journals:
+            return AppTab.journals.symbolName
+        case .expertAssignments:
+            return AppTab.expertAssignments.symbolName
+        case .dissemination:
+            return AppTab.dissemination.symbolName
+        case .doctoralCandidates:
+            return AppTab.doctoralCandidates.symbolName
         }
     }
 }
@@ -454,7 +463,7 @@ enum AppLinkDestinationKind {
     var systemImage: String {
         switch self {
         case .app:
-            return "arrow.up.right.square"
+            return "arrow.right.circle" // Round 16: in-app, not "open externally"
         case .web:
             return "link"
         case .pdf:
@@ -893,6 +902,8 @@ struct AppListRowBackground: View {
     let isSelected: Bool
     var toneFill: Color? = nil
     var cornerRadius: CGFloat = 8
+    /// Round 16: a small lock at the row's end for records locked for editing.
+    var isLocked = false
 
     var body: some View {
         Group {
@@ -904,6 +915,23 @@ struct AppListRowBackground: View {
                 Color.clear
             }
         }
+        .overlay(alignment: .trailing) {
+            if isLocked {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
+            }
+        }
+    }
+}
+
+/// Round 16: the lock shown on list rows of locked records (neutral, never
+/// the delete red).
+struct AppLockedRowGlyph: View {
+    var body: some View {
+        Image(systemName: "lock.fill")
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .accessibilityHidden(true)
     }
 }
 
@@ -1916,7 +1944,7 @@ struct AppInlineDataQualityPanel: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: containsCriticalIssue ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(containsCriticalIssue ? AppPalette.vividRed : AppPalette.vividOrange)
+                        .foregroundStyle(containsCriticalIssue ? AppPalette.statusText(.negative) : AppPalette.statusText(.warning))
                     Text(title)
                         .appTypography(.tableHeader)
                     Spacer()
@@ -1930,7 +1958,7 @@ struct AppInlineDataQualityPanel: View {
                 ForEach(issues.prefix(4)) { issue in
                     HStack(alignment: .top, spacing: 8) {
                         Circle()
-                            .fill(issue.severity == .critical ? AppPalette.vividRed : AppPalette.vividOrange)
+                            .fill(issue.severity == .critical ? AppPalette.statusText(.negative) : AppPalette.statusText(.warning))
                             .frame(width: 6, height: 6)
                             .padding(.top, 6)
                         VStack(alignment: .leading, spacing: 2) {
@@ -1956,11 +1984,11 @@ struct AppInlineDataQualityPanel: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(containsCriticalIssue ? AppPalette.shadeRed.opacity(0.16) : AppPalette.pillSurface.opacity(0.58))
+                    .fill(containsCriticalIssue ? AppPalette.statusFill(.negative).opacity(0.16) : AppPalette.pillSurface.opacity(0.58))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke((containsCriticalIssue ? AppPalette.vividRed : AppPalette.vividOrange).opacity(0.42), lineWidth: 1)
+                    .stroke((containsCriticalIssue ? AppPalette.statusText(.negative) : AppPalette.statusText(.warning)).opacity(0.42), lineWidth: 1)
             )
         }
     }
@@ -2473,63 +2501,68 @@ struct AppBadgeColors {
     let background: Color
     let stroke: Color
 
-    static let positiveSolid = AppBadgeColors(
-        foreground: AppPalette.semanticOnColor,
-        background: AppPalette.vividGreen,
-        stroke: AppPalette.vividGreen.opacity(0.78)
-    )
+    // Round 16: computed (not frozen at first use) so light/dark switches
+    // and Settings colours apply at once; status badges use the shared tones.
 
-    static let positiveMuted = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.shadeGreen,
-        stroke: AppPalette.vividGreen
-    )
-
-    static let negativeMuted = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.shadeRed,
-        stroke: AppPalette.vividRed
-    )
-
-    static let pendingSolid = AppBadgeColors(
-        foreground: AppPalette.semanticOnColor,
-        background: AppPalette.vividYellow,
-        stroke: AppPalette.vividYellow.opacity(0.82)
-    )
-
-    static let pendingMuted = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.shadeYellow,
-        stroke: AppPalette.vividYellow
-    )
-
-    static let neutralOutline = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.fieldSurface,
-        stroke: AppPalette.border
-    )
-
-    static let neutralCard = AppBadgeColors(
-        foreground: AppPalette.appText,
-        background: AppPalette.secondaryCardSurface,
-        stroke: AppPalette.border.opacity(0.55)
-    )
-
-    static let saveSolid = AppBadgeColors(
-        foreground: AppPalette.semanticOnColor,
-        background: AppPalette.actionSave.opacity(0.86),
-        stroke: AppPalette.border.opacity(0.55)
-    )
-
-    static func lifecycle(_ status: ProjectLifecycleStatus) -> AppBadgeColors {
-        switch status {
-        case .planned:
-            return AppBadgeColors(foreground: AppPalette.semanticOnColor, background: AppPalette.vividYellow, stroke: .clear)
-        case .ongoing:
-            return AppBadgeColors(foreground: AppPalette.semanticOnColor, background: AppPalette.vividGreen, stroke: .clear)
-        case .completed:
-            return AppBadgeColors(foreground: AppPalette.semanticOnColor, background: AppPalette.chartRed, stroke: .clear)
+    /// A badge in a status tone: on-fill text on the status fill; no-fill
+    /// tones get the neutral outline (paler text for calls not open yet).
+    static func status(_ tone: AppStatusTone) -> AppBadgeColors {
+        switch tone {
+        case .none:
+            return neutralOutline
+        case .notOpen:
+            return AppBadgeColors(
+                foreground: AppPalette.statusText(.notOpen),
+                background: AppPalette.fieldSurface,
+                stroke: AppPalette.border
+            )
+        default:
+            return AppBadgeColors(
+                foreground: AppPalette.statusOnFill,
+                background: AppPalette.statusFill(tone),
+                stroke: AppPalette.statusText(tone).opacity(0.35)
+            )
         }
+    }
+
+    static var positiveSolid: AppBadgeColors { status(.done) }
+
+    static var positiveMuted: AppBadgeColors { status(.done) }
+
+    static var negativeMuted: AppBadgeColors { status(.negative) }
+
+    static var pendingSolid: AppBadgeColors { status(.pending) }
+
+    static var pendingMuted: AppBadgeColors { status(.pending) }
+
+    static var neutralOutline: AppBadgeColors {
+        AppBadgeColors(
+            foreground: .primary,
+            background: AppPalette.fieldSurface,
+            stroke: AppPalette.border
+        )
+    }
+
+    static var neutralCard: AppBadgeColors {
+        AppBadgeColors(
+            foreground: AppPalette.appText,
+            background: AppPalette.secondaryCardSurface,
+            stroke: AppPalette.border.opacity(0.55)
+        )
+    }
+
+    static var saveSolid: AppBadgeColors {
+        AppBadgeColors(
+            foreground: AppPalette.semanticOnColor,
+            background: AppPalette.actionSave.opacity(0.86),
+            stroke: AppPalette.border.opacity(0.55)
+        )
+    }
+
+    /// Without the store the project's progress is unknown; prefer
+    /// `status(store.projectStatusTone(project))`.
+    static func lifecycle(_ status: ProjectLifecycleStatus) -> AppBadgeColors {
+        self.status(AppStatusTones.project(status: status, hasProgress: false))
     }
 }
 
@@ -2609,16 +2642,7 @@ enum AppConferenceContributionBadgeStatus {
     }
 
     var badgeColors: AppBadgeColors {
-        switch self {
-        case .presented, .accepted:
-            return .positiveMuted
-        case .rejected:
-            return .negativeMuted
-        case .submitted:
-            return .pendingMuted
-        case .planned:
-            return .neutralOutline
-        }
+        .status(AppStatusTones.conferenceContribution(self))
     }
 
     private static func congressHasPassed(_ contribution: CVConferenceContribution, referenceDate: Date) -> Bool {
@@ -2639,16 +2663,7 @@ enum AppConferenceContributionBadgeStatus {
 }
 
 func appPublicationStatusBadgeColors(for status: PublicationStatus) -> AppBadgeColors {
-    switch status {
-    case .published, .accepted:
-        return .positiveSolid
-    case .submitted:
-        return .pendingSolid
-    case .rejected:
-        return .negativeMuted
-    case .planned, .inPreparation:
-        return .pendingMuted
-    }
+    .status(AppStatusTones.publication(status))
 }
 
 enum PublicationStatusIndicatorStyle: Equatable {
@@ -2659,29 +2674,25 @@ enum PublicationStatusIndicatorStyle: Equatable {
 }
 
 func publicationStatusIndicatorStyle(for status: PublicationStatus) -> PublicationStatusIndicatorStyle {
-    switch status {
-    case .published, .accepted:
+    switch AppStatusTones.publication(status) {
+    case .done:
         return .positiveSolid
-    case .submitted:
+    case .pending:
         return .inProgressSolid
-    case .rejected:
+    case .negative:
         return .negativeSolid
-    case .planned, .inPreparation:
+    default:
         return .neutralOutline
     }
 }
 
 func appPublicationStatusIndicatorColors(for status: PublicationStatus) -> (fill: Color, stroke: Color) {
-    switch publicationStatusIndicatorStyle(for: status) {
-    case .positiveSolid:
-        return (AppPalette.vividGreen, AppPalette.vividGreen.opacity(0.84))
-    case .inProgressSolid:
-        return (AppPalette.vividYellow, AppPalette.vividYellow.opacity(0.86))
-    case .negativeSolid:
-        return (AppPalette.vividRed, AppPalette.vividRed.opacity(0.86))
-    case .neutralOutline:
-        return (.white, AppPalette.border.opacity(0.95))
+    // Round 16: no fill ("white") for statuses without a tone.
+    let tone = AppStatusTones.publication(status)
+    guard tone.hasFill else {
+        return (.clear, AppPalette.border.opacity(0.95))
     }
+    return (AppPalette.statusFill(tone), AppPalette.statusText(tone).opacity(0.45))
 }
 
 private struct AppDeleteButtonModifier: ViewModifier {

@@ -8465,7 +8465,9 @@ final class StabilityTests: XCTestCase {
     }
 
     func testCompactLinkIconsUseApprovedSymbols() {
-        XCTAssertEqual(AppLinkDestinationKind.app.systemImage, "arrow.up.right.square")
+        // Round 16: an in-app link is not the "open externally" symbol.
+        XCTAssertEqual(AppLinkDestinationKind.app.systemImage, "arrow.right.circle")
+        XCTAssertEqual(AppLinkDestinationKind.web.systemImage, "link")
         XCTAssertEqual(AppLinkDestinationKind.pdf.systemImage, "doc.richtext.fill")
     }
 
@@ -8577,7 +8579,9 @@ final class StabilityTests: XCTestCase {
         XCTAssertEqual(publicationStatusIndicatorStyle(for: .inPreparation), .neutralOutline)
         XCTAssertEqual(publicationStatusIndicatorStyle(for: .submitted), .inProgressSolid)
         XCTAssertEqual(publicationStatusIndicatorStyle(for: .rejected), .negativeSolid)
-        XCTAssertEqual(publicationStatusIndicatorStyle(for: .accepted), .positiveSolid)
+        // Round 16: accepted but not yet published is "waiting" (yellow).
+        XCTAssertEqual(publicationStatusIndicatorStyle(for: .accepted), .inProgressSolid)
+        XCTAssertEqual(publicationStatusIndicatorStyle(for: .published), .positiveSolid)
     }
 
     func testCalendarMeetingRecordNormalizesAndDeduplicatesParticipants() {

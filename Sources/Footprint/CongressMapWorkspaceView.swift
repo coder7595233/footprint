@@ -1424,7 +1424,7 @@ struct CongressMapWorkspaceView: View {
                             .fixedSize(horizontal: false, vertical: true)
                         if let url = normalizedWebLinkURL(row.link) {
                             Button { NSWorkspace.shared.open(url) } label: {
-                                Image(systemName: "safari")
+                                Image(systemName: "link")
                             }
                             .buttonStyle(.plain)
                             .foregroundStyle(accentColor)
