@@ -332,7 +332,7 @@ extension GrantDataStore {
         notice = StoreNotice(
             message: language.text(
                 "Automatic backup failed.",
-                "Automatisk backup misslyckades."
+                "Automatisk säkerhetskopiering misslyckades."
             ),
             tone: .error
         )

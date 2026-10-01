@@ -103,3 +103,133 @@ extension AppPalette {
     /// The "today" line in timelines and the calendar.
     static var todayMarker: Color { statusText(.negative) }
 }
+
+// MARK: - Round 17: edges, marks, pale fills and "late"
+
+/// The sRGB value of a colour as 0xRRGGBB, or nil when it cannot be converted.
+private func statusHexValue(_ color: NSColor) -> Int? {
+    guard let srgb = color.usingColorSpace(.sRGB) else { return nil }
+    let red = Int((srgb.redComponent * 255).rounded())
+    let green = Int((srgb.greenComponent * 255).rounded())
+    let blue = Int((srgb.blueComponent * 255).rounded())
+    return (red << 16) | (green << 8) | blue
+}
+
+/// Mixes a colour with black (light mode) or white (dark mode).
+private func statusShiftedNSColor(_ color: NSColor, towardWhite: Bool, amount: CGFloat) -> NSColor {
+    guard let srgb = color.usingColorSpace(.sRGB) else { return color }
+    func shift(_ value: CGFloat) -> CGFloat {
+        towardWhite ? value + (1 - value) * amount : value * (1 - amount)
+    }
+    return NSColor(
+        srgbRed: shift(srgb.redComponent),
+        green: shift(srgb.greenComponent),
+        blue: shift(srgb.blueComponent),
+        alpha: 1
+    )
+}
+
+extension AppPalette {
+    /// Circle borders and connecting lines in timelines: only slightly
+    /// darker (light mode) or lighter (dark mode) than the fill, so yellow
+    /// never turns brown. When the user changed a semantic colour in
+    /// Settings, the edge is derived from that fill instead of the fixed value.
+    static func statusEdge(_ tone: AppStatusTone) -> Color {
+        Color(nsColor: NSColor(name: nil) { _ in
+            statusEdgeNSColor(tone, dark: AppAppearanceRegistry.usesDarkPalette())
+        })
+    }
+
+    static func statusEdgeNSColor(_ tone: AppStatusTone, dark: Bool) -> NSColor {
+        // The built-in fill(s) of the tone and the edge drawn with them.
+        let builtInFills: [Int]
+        let builtInEdge: Int
+        switch tone {
+        case .done:
+            builtInFills = dark ? [0x115651] : [0xB6D8A6]
+            builtInEdge = dark ? 0x2C7D75 : 0x8DBF78
+        case .pending:
+            builtInFills = dark ? [0xA97119, 0x956212] : [0xF1E08C]
+            builtInEdge = dark ? 0xB8892C : 0xD6BF55
+        case .negative:
+            builtInFills = dark ? [0x97141D] : [0xF0926C]
+            builtInEdge = dark ? 0xB8343A : 0xDB7350
+        case .warning:
+            return statusHexNSColor(dark ? 0xD06A2C : 0xE59A4C)
+        case .inactive, .none, .notOpen:
+            return statusHexNSColor(dark ? 0x636A73 : 0xB9BEC3)
+        }
+        let fill = statusFillNSColor(tone, dark: dark)
+        if let value = statusHexValue(fill), builtInFills.contains(value) {
+            return statusHexNSColor(builtInEdge)
+        }
+        // A colour changed in Settings: ~12 % darker (light) or lighter (dark).
+        return statusShiftedNSColor(fill, towardWhite: dark, amount: 0.12)
+    }
+
+    /// Small marks (icons, dots, thin stripes): between the fill and the
+    /// text colour, so the hue stays clearly green, yellow, orange or red.
+    static func statusMark(_ tone: AppStatusTone) -> Color {
+        Color(nsColor: NSColor(name: nil) { _ in
+            statusMarkNSColor(tone, dark: AppAppearanceRegistry.usesDarkPalette())
+        })
+    }
+
+    static func statusMarkNSColor(_ tone: AppStatusTone, dark: Bool) -> NSColor {
+        switch tone {
+        case .done: return statusHexNSColor(dark ? 0x4FB39A : 0x5FA35A)
+        case .pending: return statusHexNSColor(dark ? 0xE0B13E : 0xD4AE1F)
+        case .warning: return statusHexNSColor(dark ? 0xF08A3A : 0xE5862B)
+        case .negative: return statusHexNSColor(dark ? 0xEE6A5F : 0xDE5A3F)
+        case .inactive, .none: return statusHexNSColor(dark ? 0x8B939A : 0x9AA0A6)
+        case .notOpen: return statusHexNSColor(dark ? 0x6E747A : 0xB9BEC3)
+        }
+    }
+
+    /// A paler version of a status fill, used for granted funds that are
+    /// fully spent (still green, but quieter than a grant with money left).
+    static func statusFillPale(_ tone: AppStatusTone) -> Color {
+        Color(nsColor: NSColor(name: nil) { _ in
+            statusFillPaleNSColor(tone, dark: AppAppearanceRegistry.usesDarkPalette())
+        })
+    }
+
+    static func statusFillPaleNSColor(_ tone: AppStatusTone, dark: Bool) -> NSColor {
+        if tone == .done {
+            let fill = statusFillNSColor(.done, dark: dark)
+            if let value = statusHexValue(fill), value == (dark ? 0x115651 : 0xB6D8A6) {
+                return statusHexNSColor(dark ? 0x0D3F3B : 0xDCEBD3)
+            }
+        }
+        guard tone.hasFill else { return .clear }
+        // Light: halfway to white. Dark: a quarter of the way to black.
+        let fill = statusFillNSColor(tone, dark: dark)
+        guard let srgb = fill.usingColorSpace(.sRGB) else { return fill }
+        func pale(_ value: CGFloat) -> CGFloat {
+            dark ? value * 0.75 : value + (1 - value) * 0.5
+        }
+        return NSColor(srgbRed: pale(srgb.redComponent), green: pale(srgb.greenComponent), blue: pale(srgb.blueComponent), alpha: 1)
+    }
+
+    /// Overdue tasks and reminders: a strong red-orange mark (dots, stripes).
+    static var lateMark: Color {
+        Color(nsColor: NSColor(name: nil) { _ in
+            lateMarkNSColor(dark: AppAppearanceRegistry.usesDarkPalette())
+        })
+    }
+
+    static func lateMarkNSColor(dark: Bool) -> NSColor {
+        statusHexNSColor(dark ? 0xF2703A : 0xE8551F)
+    }
+
+    /// Text for overdue tasks on the ordinary background.
+    static var lateText: Color {
+        Color(nsColor: NSColor(name: nil) { _ in
+            lateTextNSColor(dark: AppAppearanceRegistry.usesDarkPalette())
+        })
+    }
+
+    static func lateTextNSColor(dark: Bool) -> NSColor {
+        statusHexNSColor(dark ? 0xFF9C63 : 0xB8400F)
+    }
+}

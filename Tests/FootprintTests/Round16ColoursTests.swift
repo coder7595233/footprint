@@ -18,7 +18,9 @@ final class Round16ColoursTests: XCTestCase {
             AppStatusTones.application(resultLabel: label, isFullySpent: spent, awaitsAppliedAnswer: awaits, isBeforeOpening: beforeOpening)
         }
         XCTAssertEqual(tone("Beviljat"), .done)
-        XCTAssertEqual(tone("Beviljat", spent: true), .inactive, "spent funds are grey")
+        // Round 17: spent funds stay green (done); the fill is the paler
+        // green (AppPalette.applicationFill), no longer grey.
+        XCTAssertEqual(tone("Beviljat", spent: true), .done, "spent funds are a paler green")
         XCTAssertEqual(tone("Väntar svar"), .pending)
         XCTAssertEqual(tone("Att söka", awaits: true), .warning, "Stängd – sökt?")
         XCTAssertEqual(tone("Avslag"), .negative)
@@ -50,7 +52,8 @@ final class Round16ColoursTests: XCTestCase {
         granted.appliedOn = "2026-03-01"
         granted.grantedOn = "2026-06-01"
         XCTAssertEqual(AppStatusTones.application(granted, today: today), .done)
-        XCTAssertEqual(AppStatusTones.application(granted, isFullySpent: true, today: today), .inactive)
+        // Round 17: spent = still done (drawn paler).
+        XCTAssertEqual(AppStatusTones.application(granted, isFullySpent: true, today: today), .done)
 
         var denied = application()
         denied.appliedOn = "2026-03-01"
@@ -62,7 +65,8 @@ final class Round16ColoursTests: XCTestCase {
         XCTAssertEqual(statusTone(for: "Beviljat").statusTone, .done)
         XCTAssertEqual(statusTone(for: "Tillbakadragen").statusTone, .inactive, "withdrawn is grey, not red")
         XCTAssertEqual(statusTone(for: "Avslag").statusTone, .negative)
-        XCTAssertEqual(BadgeTone.positiveMuted.statusTone, .inactive)
+        // Round 17: positiveMuted (a spent grant) is done, drawn paler.
+        XCTAssertEqual(BadgeTone.positiveMuted.statusTone, .done)
         for tone in AppStatusTone.allCases {
             XCTAssertEqual(BadgeTone(tone).statusTone, tone)
         }

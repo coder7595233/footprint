@@ -1016,6 +1016,14 @@ struct AppCompactRowTitleText: View {
     }
 }
 
+/// Round 17: the one font for badge-like texts (short status words, counts in
+/// capsules, step numbers and markers such as the "?" on uncertain dates).
+/// Follows the secondary typography setting, always semibold, so badges
+/// look alike across the app.
+func appBadgeFont() -> Font {
+    appFont(.secondary).weight(.semibold)
+}
+
 struct AppBadgeText: View {
     enum Size {
         case compact
@@ -1037,7 +1045,7 @@ struct AppBadgeText: View {
 
     var body: some View {
         Text(text)
-            .font(appFont(.secondary).weight(.semibold))
+            .font(appBadgeFont())
             .foregroundStyle(foreground)
             .lineLimit(1)
             .minimumScaleFactor(0.82)
@@ -1177,17 +1185,19 @@ struct AppTimelineStepText: View {
 struct AppTimelineMarker: View {
     let isCompleted: Bool
     var iconName: String? = "checkmark"
-    var completedColor: Color = AppPalette.vividGreen
+    var completedColor: Color = AppPalette.statusFill(.done)
+    /// Round 17: the edge of a completed circle (nil = the done edge colour).
+    var completedStrokeColor: Color? = nil
     var pendingFill: Color = AppPalette.cardSurface
     var pendingStroke: Color = Color.primary.opacity(0.35)
-    var size: CGFloat = 28
+    var size: CGFloat = 32
 
     var body: some View {
         ZStack {
             Circle()
                 .fill(isCompleted ? completedColor : pendingFill)
             Circle()
-                .stroke(isCompleted ? completedColor : pendingStroke, lineWidth: isCompleted ? 1.8 : 2.5)
+                .stroke(isCompleted ? (completedStrokeColor ?? AppPalette.statusEdge(.done)) : pendingStroke, lineWidth: 1.6)
             if isCompleted, let iconName {
                 Image(systemName: iconName)
                     .font(.system(size: max(12, size * 0.39), weight: .bold))
@@ -1217,8 +1227,8 @@ struct AppTimelineNodeModel<ID: Hashable>: Identifiable {
         hasDefinedDate: Bool,
         isCompleted: Bool,
         isDeemphasized: Bool = false,
-        completedColor: Color = AppPalette.vividGreen,
-        completedStrokeColor: Color = AppPalette.vividGreen,
+        completedColor: Color = AppPalette.statusFill(.done),
+        completedStrokeColor: Color = AppPalette.statusEdge(.done),
         completedIconColor: Color = AppPalette.semanticOnColor,
         iconName: String? = "checkmark"
     ) {
@@ -1238,9 +1248,10 @@ struct AppTimelineNodeModel<ID: Hashable>: Identifiable {
 struct AppTimelineStrip<ID: Hashable, NodeContent: View>: View {
     let nodes: [AppTimelineNodeModel<ID>]
     var horizontalInset: CGFloat = 62
-    var markerSize: CGFloat = 24
-    var markerCenterY: CGFloat = 18
-    var height: CGFloat = 156
+    // Round 17: circles about 17 % larger (24 → 28) with thinner edges.
+    var markerSize: CGFloat = 28
+    var markerCenterY: CGFloat = 20
+    var height: CGFloat = 160
     var nodeSpacing: CGFloat = 9
     var showsTodayMarker: Bool = true
     var today: Date = Calendar.current.startOfDay(for: Date())
@@ -1333,13 +1344,13 @@ struct AppTimelineStrip<ID: Hashable, NodeContent: View>: View {
             }
             .stroke(
                 base.leadingColor,
-                style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [7, 5])
+                style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 5])
             )
         } else {
             timelineGradientLine(
                 startX: startX,
                 endX: endX,
-                lineWidth: 2.5,
+                lineWidth: 2,
                 colors: [base.leadingColor, base.trailingColor]
             )
         }
@@ -1348,7 +1359,7 @@ struct AppTimelineStrip<ID: Hashable, NodeContent: View>: View {
             timelineGradientLine(
                 startX: startX,
                 endX: endX,
-                lineWidth: 3,
+                lineWidth: 2.5,
                 colors: [base.leadingColor, base.trailingColor],
                 visibleFraction: fraction
             )
@@ -1417,10 +1428,10 @@ struct AppTimelineStrip<ID: Hashable, NodeContent: View>: View {
             Circle()
                 .fill(active ? node.completedColor : AppPalette.fieldSurface)
             Circle()
-                .stroke(active ? node.completedStrokeColor : pendingStroke, lineWidth: active ? 2.2 : 1.8)
+                .stroke(active ? node.completedStrokeColor : pendingStroke, lineWidth: active ? 1.6 : 1.5)
             if active, let iconName = node.iconName {
                 Image(systemName: iconName)
-                    .font(.system(size: 13, weight: .heavy))
+                    .font(.system(size: max(13, markerSize * 0.5), weight: .heavy))
                     .foregroundStyle(node.completedIconColor)
             }
         }

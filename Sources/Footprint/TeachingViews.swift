@@ -609,9 +609,13 @@ struct TeachingWorkspaceView: View {
         _minimumYearValue = State(initialValue: savedFilters.minimumYearValue)
         _maximumYearValue = State(initialValue: savedFilters.maximumYearValue)
         _yearRangeFollowsAvailable = State(initialValue: savedFilters.yearRangeFollowsAvailable)
-        if savedFilters.hasNarrowingFilters {
-            RestoredListFilters.markRestored(key: TeachingAssignmentFilterPersistence.restoredMarkerKey)
-        }
+        // Round 17: decided only the first time in a run; this view is
+        // rebuilt on data changes and tab switches, and a filter chosen since
+        // launch must not be called "kept from last time".
+        RestoredListFilters.evaluateAtLaunch(
+            key: TeachingAssignmentFilterPersistence.restoredMarkerKey,
+            isRestored: savedFilters.hasNarrowingFilters
+        )
         _selectedKindFilters = State(initialValue: Set(savedFilters.kindRawValues.compactMap(TeachingAssignmentKind.init(rawValue:))))
         _selectedStatusFilters = State(initialValue: Set(savedFilters.statusRawValues.compactMap(TeachingAssignmentStatusKind.init(rawValue:))))
         _selectedInstitutionBranches = State(initialValue: Set(savedFilters.institutionBranches))
@@ -1342,7 +1346,13 @@ struct TeachingWorkspaceView: View {
 
             teachingFilteredListBanner
 
-            teachingAssignmentList
+            if teachingFiltersHideEverything {
+                // Round 17: assignments exist but the filters hide them all.
+                teachingFilterEmptyState(isCompact: true)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            } else {
+                teachingAssignmentList
+            }
 
             HStack(spacing: 10) {
                 // The sum covers the visible rows only; say so while filtered.
@@ -1410,11 +1420,32 @@ struct TeachingWorkspaceView: View {
         }
     }
 
+    @ViewBuilder
     private var emptyState: some View {
+        if teachingFiltersHideEverything {
+            teachingFilterEmptyState(isCompact: false)
+        } else {
+            AppWorkspaceEmptyStateView(
+                title: language.text("No teaching post selected", "Ingen undervisningspost vald"),
+                subtitle: language.text("Select a branch and then a post.", "Välj först en gren och sedan en post."),
+                kind: .teaching
+            )
+        }
+    }
+
+    /// Assignments exist, but the filters hide every one of them.
+    private var teachingFiltersHideEverything: Bool {
+        hasActiveFilters && !assignmentRows.isEmpty && filteredAssignmentRows.isEmpty
+    }
+
+    private func teachingFilterEmptyState(isCompact: Bool) -> some View {
         AppWorkspaceEmptyStateView(
-            title: language.text("No teaching post selected", "Ingen undervisningspost vald"),
-            subtitle: language.text("Select a branch and then a post.", "Välj först en gren och sedan en post."),
-            kind: .teaching
+            title: language.text("No assignments match the filters", "Inga uppdrag matchar filtren"),
+            subtitle: ListFilterLabels.hiddenByFilters(count: assignmentRows.count, language: language),
+            kind: .teaching,
+            actionTitle: language.text("Clear filters", "Rensa filter"),
+            action: clearAllTeachingFilters,
+            isCompact: isCompact
         )
     }
 
@@ -1497,9 +1528,7 @@ struct TeachingWorkspaceView: View {
                     Spacer()
                 }
 
-                AppFilterClearAllRow(isVisible: hasActiveFilters) {
-                    clearAllTeachingFilters()
-                }
+                // Round 17: "clear all" is the banner's "Rensa filter".
             }
         }
     }
@@ -1961,6 +1990,12 @@ struct TeachingWorkspaceView: View {
                 lower: minimumYearValue,
                 upper: maximumYearValue
             ))
+            // Round 17: assignments without any year are hidden by a
+            // narrowed range; say how many.
+            let yearless = assignmentRows.filter { $0.yearValues.isEmpty }.count
+            if let hidden = ListFilterLabels.yearlessHidden(count: yearless, language: language) {
+                parts.append(hidden)
+            }
         }
         return parts
     }
@@ -1985,7 +2020,8 @@ struct TeachingWorkspaceView: View {
         case .ongoing:
             return language.text("Ongoing", "Pågående")
         case .completed:
-            return language.text("Completed", "Avslutat")
+            // Round 17: the same word for "done" as in the other lists.
+            return language.text("Done", "Klara")
         case .none:
             return language.text("No status", "Ingen status")
         }
@@ -2094,6 +2130,14 @@ struct TeachingWorkspaceView: View {
     }
 
     private func handleWorkspaceAppear() {
+        // Round 17: with "keep filters" off in Settings, filters saved by an
+        // earlier run are cleared the first time the list is shown.
+        if ListFilterLaunchPolicy.shouldClearSavedFilters(
+            for: .teaching,
+            retainsFilters: store.shouldRetainListFilters(for: .teaching)
+        ) {
+            clearAllTeachingFilters()
+        }
         guard isActive else {
             needsRowsRebuildWhenActive = true
             needsFilterRebuildWhenActive = true
@@ -3831,7 +3875,9 @@ private struct TeachingRolesCatalogPopover: View {
 
                     if !option.isEmpty {
                         AppInlineDeleteButton(
-                            title: language.text("Delete option", "Ta bort alternativ")
+                            title: language.text("Delete option", "Ta bort alternativ"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Delete option?", "Ta bort alternativet?")
                         ) {
                             guard options.indices.contains(index) else { return }
                             options.remove(at: index)

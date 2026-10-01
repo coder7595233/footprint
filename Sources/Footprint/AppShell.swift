@@ -1787,9 +1787,7 @@ private struct CommandPaletteOverlay: View {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 0) {
                             if results.isEmpty {
-                                Text(store.language.text("No matches", "Inga träffar"))
-                                    .appTypography(.body)
-                                    .foregroundStyle(.secondary)
+                                AppCompactEmptyListLabel(title: store.language.text("No matches", "Inga träffar"))
                                     .padding(18)
                             } else {
                                 ForEach(Array(results.enumerated()), id: \.element.id) { index, item in
@@ -2581,19 +2579,21 @@ private struct ClipboardPreviewOverlay: View {
     var body: some View {
         VStack {
             Text(text)
+                // Round 17: theme surface and text colours, so the preview
+                // also reads in dark mode.
                 .font(appFont(.panelTitle).weight(.medium))
-                .foregroundStyle(Color.black)
+                .foregroundStyle(AppPalette.appText)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: 560, alignment: .leading)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.92))
+                    RoundedRectangle(cornerRadius: AppPalette.largeCornerRadius, style: .continuous)
+                        .fill(AppPalette.cardSurface.opacity(0.96))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: AppPalette.largeCornerRadius, style: .continuous)
+                        .stroke(AppPalette.border, lineWidth: 1)
                 )
                 .shadow(color: Color.black.opacity(0.12), radius: 18, y: 10)
         }
@@ -2666,7 +2666,7 @@ private struct FooterStatusBar: View {
             parts.append(store.language.text("Saved", "Sparat") + " " + timeText(lastSavedAt))
         }
         if let lastBackupAt = store.persistenceStatus.lastBackupAt {
-            parts.append(store.language.text("Backup", "Backup") + " " + timeText(lastBackupAt))
+            parts.append(store.language.text("Backup", "Säkerhetskopia") + " " + timeText(lastBackupAt))
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }

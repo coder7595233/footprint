@@ -1833,6 +1833,8 @@ struct ApplicationEditorView: View {
             title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
+            cancelTitle: store.language.text("Cancel", "Avbryt"),
+            confirmationTitle: store.language.text("Delete row?", "Ta bort raden?"),
             action: action
         )
     }
@@ -2891,9 +2893,10 @@ private struct ApplicationTimelineStepper: View {
     let language: AppLanguage
 
     private let horizontalInset: CGFloat = 62
-    private let circleSize: CGFloat = 24
-    private let timelineHeight: CGFloat = 156
-    private let markerCenterY: CGFloat = 18
+    // Round 17: circles about 17 % larger (24 → 28) with thinner edges.
+    private let circleSize: CGFloat = 28
+    private let timelineHeight: CGFloat = 160
+    private let markerCenterY: CGFloat = 20
     private let inactiveGray = AppTimelineStrip<ApplicationTimelineStep, EmptyView>.inactiveGray
     private let futureGray = AppTimelineStrip<ApplicationTimelineStep, EmptyView>.futureGray
 
@@ -2988,13 +2991,13 @@ private struct ApplicationTimelineStepper: View {
             }
             .stroke(
                 base.leadingColor,
-                style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [7, 5])
+                style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 5])
             )
         } else {
             timelineGradientLine(
                 startX: startX,
                 endX: endX,
-                lineWidth: 2.5,
+                lineWidth: 2,
                 colors: [base.leadingColor, base.trailingColor]
             )
         }
@@ -3003,7 +3006,7 @@ private struct ApplicationTimelineStepper: View {
             timelineGradientLine(
                 startX: startX,
                 endX: endX,
-                lineWidth: 3,
+                lineWidth: 2.5,
                 colors: [base.leadingColor, base.trailingColor],
                 visibleFraction: fraction
             )
@@ -3047,7 +3050,7 @@ private struct ApplicationTimelineStepper: View {
 
     private func segmentEndpointColor(for step: ApplicationTimelineStep) -> Color {
         if isStepCompleted(step), !isStepDeemphasized(step), !(isRejectedOutcome && step.rawValue > ApplicationTimelineStep.decision.index) {
-            return completedColor(for: step).solid
+            return completedColor(for: step).edge
         }
         if stepHasDefinedDate(step), !isStepDeemphasized(step), !(isRejectedOutcome && step.rawValue > ApplicationTimelineStep.decision.index) {
             return futureGray
@@ -3081,7 +3084,7 @@ private struct ApplicationTimelineStepper: View {
 
             if let icon = style.icon {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(style.iconColor)
             }
         }
@@ -3291,7 +3294,7 @@ private struct ApplicationTimelineStepper: View {
                 AppPalette.fieldSurface,
                 nil,
                 .clear,
-                1.7
+                1.5
             )
         }
 
@@ -3301,27 +3304,28 @@ private struct ApplicationTimelineStepper: View {
                 AppPalette.fieldSurface,
                 nil,
                 .clear,
-                1.7
+                1.5
             )
         }
 
         if isStepCompleted(step) {
             let color = completedColor(for: step)
-            return (color.solid, color.shade, "checkmark", AppPalette.statusOnFill, 2.2)
+            return (color.edge, color.shade, "checkmark", AppPalette.statusOnFill, 1.6)
         }
 
         if stepHasDefinedDate(step) {
-            return (futureGray, AppPalette.fieldSurface, nil, .clear, 1.9)
+            return (futureGray, AppPalette.fieldSurface, nil, .clear, 1.6)
         }
 
-        return (inactiveGray, AppPalette.fieldSurface, nil, .clear, 1.7)
+        return (inactiveGray, AppPalette.fieldSurface, nil, .clear, 1.5)
     }
 
-    private func completedColor(for step: ApplicationTimelineStep) -> (shade: Color, solid: Color) {
+    private func completedColor(for step: ApplicationTimelineStep) -> (shade: Color, edge: Color) {
         // Round 16: status tones instead of blue. Steps before a decision are
         // "in progress" (yellow); the decision is green, red or grey.
+        // Round 17: the edge is only slightly darker than the fill.
         let tone = completedTone(for: step)
-        return (AppPalette.statusFill(tone), AppPalette.statusText(tone))
+        return (AppPalette.statusFill(tone), AppPalette.statusEdge(tone))
     }
 
     private func completedTone(for step: ApplicationTimelineStep) -> AppStatusTone {
@@ -3386,9 +3390,9 @@ private struct ApplicationTimelineStepper: View {
 
     private func segmentProgressColor(index: Int) -> Color {
         if decisionChoice != nil, index >= ApplicationTimelineStep.decision.index {
-            return AppPalette.statusText(completedTone(for: .decision))
+            return AppPalette.statusEdge(completedTone(for: .decision))
         }
-        return AppPalette.statusText(decisionChoice == nil ? .pending : completedTone(for: .applied))
+        return AppPalette.statusEdge(decisionChoice == nil ? .pending : completedTone(for: .applied))
     }
 
     private func anchorDate(for step: ApplicationTimelineStep) -> Date? {
@@ -3726,7 +3730,7 @@ struct AppTimelineDateEditor: View {
                 .calendarDateStatusOutline(
                     isUncertain: uncertain.wrappedValue,
                     isHiddenFromCalendar: isHiddenFromCalendar,
-                    uncertaintyColor: mutedColor ?? AppPalette.vividOrange
+                    uncertaintyColor: mutedColor ?? AppPalette.statusMark(.warning)
                 )
                 .contextMenu {
                     if text.wrappedValue.trimmedOrNil != nil {
@@ -3767,6 +3771,7 @@ struct AppTimelineDateEditor: View {
 private enum ApplicationGrantStatisticsOutcome: String, CaseIterable, Identifiable {
     case granted
     case rejected
+    case withdrawn
     case waiting
 
     var id: String { rawValue }
@@ -3775,6 +3780,8 @@ private enum ApplicationGrantStatisticsOutcome: String, CaseIterable, Identifiab
         switch self {
         case .granted: return .done
         case .rejected: return .negative
+        // Round 17: withdrawn is its own grey group, never "Avslag".
+        case .withdrawn: return .inactive
         case .waiting: return .pending
         }
     }
@@ -3790,6 +3797,8 @@ private enum ApplicationGrantStatisticsOutcome: String, CaseIterable, Identifiab
             return ApplicationOutcome.granted.heading(language)
         case .rejected:
             return ApplicationOutcome.declined.heading(language)
+        case .withdrawn:
+            return ApplicationOutcome.withdrawn.heading(language)
         case .waiting:
             return ApplicationOutcome.awaitingDecision.heading(language)
         }
@@ -3939,7 +3948,7 @@ private struct ApplicationGrantStatisticsView: View {
         switch applicationGrantStatisticsOutcome(for: row) {
         case .granted:
             amount = row.grantedAmountValue ?? row.appliedAmountValue ?? row.preferredBudgetAmountValue
-        case .rejected, .waiting:
+        case .rejected, .withdrawn, .waiting:
             amount = row.appliedAmountValue ?? row.preferredBudgetAmountValue
         case .none:
             amount = row.preferredBudgetAmountValue
@@ -4112,8 +4121,11 @@ private func applicationGrantStatisticsOutcome(for application: GrantApplication
     if status == "Väntar svar" {
         return .waiting
     }
-    if status == "Avslag" || status == "Tillbakadragen" {
+    if status == "Avslag" {
         return .rejected
+    }
+    if status == "Tillbakadragen" {
+        return .withdrawn
     }
     return nil
 }
@@ -4129,8 +4141,11 @@ private func applicationGrantStatisticsProjectSummaryText(
     let granted = rows.filter { $0.outcome == .granted }.count
     let rejected = rows.filter { $0.outcome == .rejected }.count
     let waiting = rows.filter { $0.outcome == .waiting }.count
-    return language.text(
+    let withdrawn = rows.filter { $0.outcome == .withdrawn }.count
+    let summary = language.text(
         "\(rows.count) applications: \(granted) accepted, \(rejected) rejected, \(waiting) pending",
         "\(rows.count) ansökningar: \(granted) beviljade, \(rejected) avslagna, \(waiting) väntar"
     )
+    guard withdrawn > 0 else { return summary }
+    return summary + language.text(", \(withdrawn) withdrawn", ", \(withdrawn) tillbakadragna")
 }

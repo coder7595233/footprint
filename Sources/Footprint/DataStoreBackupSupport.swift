@@ -474,7 +474,7 @@ extension GrantDataStore {
             ) + [""]
                 + backupHealthLines(
                     language: language,
-                    label: language.text("Latest backup", "Senaste backup"),
+                    label: language.text("Latest backup", "Senaste säkerhetskopia"),
                     report: latestReport
                 )
         )
@@ -519,7 +519,7 @@ extension GrantDataStore {
                 ) + [""]
                 + backupHealthLines(
                     language: language,
-                    label: language.text("Selected backup", "Vald backup"),
+                    label: language.text("Selected backup", "Vald säkerhetskopia"),
                     report: selectedReport
                 )
         )

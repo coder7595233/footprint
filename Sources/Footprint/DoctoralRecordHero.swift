@@ -41,9 +41,10 @@ struct DoctoralRecordHeroView: View {
     private static let todayAnchorID = "doctoral-timeline-today"
     private static let paperDiamondBlock: CGFloat = 16
     private static let edgeMargin: CGFloat = 32
-    nonisolated private static let milestoneNodeSize: CGFloat = 18
-    private static let activityDotSize: CGFloat = 12
-    private static let activityGroupSize: CGFloat = 24
+    // Round 17: timeline circles about 17 % larger (18 → 21, 12 → 14, 24 → 28).
+    nonisolated private static let milestoneNodeSize: CGFloat = 21
+    private static let activityDotSize: CGFloat = 14
+    private static let activityGroupSize: CGFloat = 28
     /// Activities closer than this (in points) share one marker with a count.
     private static let activityGroupWindow: Double = 2 * Double(activityGroupSize + 4)
 
@@ -780,8 +781,11 @@ struct DoctoralRecordHeroView: View {
                         // Round 16: ended early is grey, completed green; the
                         // glyph uses the readable on-fill colour.
                         .fill(AppPalette.statusFill(isEndedBefore ? .inactive : .done))
+                    // Round 17: a thin edge only slightly darker than the fill.
+                    Circle()
+                        .stroke(AppPalette.statusEdge(isEndedBefore ? .inactive : .done), lineWidth: 1.6)
                     Image(systemName: isEndedBefore ? "xmark" : "checkmark")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(AppPalette.statusOnFill)
                 } else {
                     Circle()
@@ -968,16 +972,20 @@ struct DoctoralRecordHeroView: View {
 
     @ViewBuilder
     private func activityMarkerView(_ marker: ActivityMarker) -> some View {
+        // Round 17: done activities are green (done), not blue; planned
+        // ones have no status yet and keep the blue outline.
         let blue = StatisticsEditorialStyle.paletteBlue
+        let doneFill = AppPalette.statusFill(.done)
+        let doneEdge = AppPalette.statusEdge(.done)
         if marker.isGroup {
             Button {
                 activeActivityGroupID = marker.id
             } label: {
                 ZStack {
                     Circle()
-                        .fill(marker.allDone ? blue : (marker.noneDone ? AppPalette.detailPanelSurface : blue.opacity(0.35)))
+                        .fill(marker.allDone ? doneFill : (marker.noneDone ? AppPalette.detailPanelSurface : doneFill.opacity(0.45)))
                     Circle()
-                        .stroke(blue, lineWidth: 1.4)
+                        .stroke(marker.noneDone ? blue : doneEdge, lineWidth: 1.6)
                     Text("\(marker.rows.count)")
                         .font(appFont(.secondary).weight(.semibold))
                         .monospacedDigit()
@@ -999,8 +1007,8 @@ struct DoctoralRecordHeroView: View {
                 store.openCalendarLinkedEvent(source: row.source)
             } label: {
                 Circle()
-                    .fill(marker.allDone ? blue : AppPalette.detailPanelSurface)
-                    .overlay(Circle().stroke(blue, lineWidth: 1.4))
+                    .fill(marker.allDone ? doneFill : AppPalette.detailPanelSurface)
+                    .overlay(Circle().stroke(marker.allDone ? doneEdge : blue, lineWidth: 1.6))
                     .frame(width: Self.activityDotSize, height: Self.activityDotSize)
                     .contentShape(Circle().scale(1.8))
             }

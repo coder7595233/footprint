@@ -43,7 +43,7 @@ extension View {
         isUncertain: Bool,
         isHiddenFromCalendar: Bool = false,
         cornerRadius: CGFloat = AppPalette.smallCornerRadius,
-        uncertaintyColor: Color = AppPalette.vividOrange
+        uncertaintyColor: Color = AppPalette.statusMark(.warning)
     ) -> some View {
         modifier(
             CalendarDateStatusOutlineModifier(

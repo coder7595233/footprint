@@ -2262,7 +2262,7 @@ struct PublicationEditorView: View {
 
                             if !sharedAuthorshipMarker(at: index).isEmpty {
                                 Text(sharedAuthorshipMarker(at: index))
-                                    .font(.system(size: 14, weight: .bold))
+                                    .font(appFont(.body).weight(.bold))
                                     .frame(width: sharedMarkerWidth, height: authorRowHeight, alignment: .center)
                             } else {
                                 Color.clear
@@ -2868,6 +2868,8 @@ struct PublicationEditorView: View {
             title: language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
+            cancelTitle: language.text("Cancel", "Avbryt"),
+            confirmationTitle: language.text("Delete row?", "Ta bort raden?"),
             action: action
         )
     }
@@ -3797,7 +3799,9 @@ private func publicationSurfaceTextField(
         AppIconDeleteButton(
             title: language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
-            width: 28
+            width: 28,
+            cancelTitle: language.text("Cancel", "Avbryt"),
+            confirmationTitle: language.text("Delete row?", "Ta bort raden?")
         ) {
             submissionRows.removeAll { $0.id == row.id }
             scheduleSubmissionRowsSync()
@@ -4205,7 +4209,7 @@ private struct PublicationCreditRolesSheet: View {
                 Button(language.text("Done", "Klar")) {
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent)
+                .appSaveButtonStyle()
             }
 
             Text(language.text("Choose contribution roles for each author. Use X, lead, equal, or sup. per role. Hover over a role header to see its definition.", "Välj bidragsroller för varje författare. Använd X, lead, equal eller sup. per roll. Hovra över en rollrubrik för att se definitionen."))

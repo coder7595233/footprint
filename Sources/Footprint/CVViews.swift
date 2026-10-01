@@ -19,6 +19,8 @@ private struct CVListRow: Identifiable {
     let reviewCategory: CVReviewCategory?
     /// Raw values of ExpertAssignmentStatusKey (expert-assignment chips).
     let reviewStatusKeys: Set<String>
+    /// Round 17: locked records show the same lock glyph as other lists.
+    let isLocked: Bool
 
     init(
         id: String,
@@ -35,7 +37,8 @@ private struct CVListRow: Identifiable {
         normalizedSearchBlob: String,
         reviewWorkflowStatus: CVReviewWorkflowStatus? = nil,
         reviewCategory: CVReviewCategory? = nil,
-        reviewStatusKeys: Set<String> = []
+        reviewStatusKeys: Set<String> = [],
+        isLocked: Bool = false
     ) {
         self.id = id
         self.kind = kind
@@ -52,6 +55,7 @@ private struct CVListRow: Identifiable {
         self.reviewWorkflowStatus = reviewWorkflowStatus
         self.reviewCategory = reviewCategory
         self.reviewStatusKeys = reviewStatusKeys
+        self.isLocked = isLocked
     }
 }
 
@@ -317,15 +321,16 @@ struct DisseminationWorkspaceView: View {
 
     private var mediaRows: [CVListRow] {
         let authorNamesByID = Dictionary(firstWinsKeysWithValues: store.publicationAuthors.map { ($0.id, $0.name) })
+        // Round 17: one lookup table instead of a search through every
+        // project for each row.
+        let projectNamesByID = Dictionary(firstWinsKeysWithValues: store.projects.map { ($0.id, $0.displayName(for: language)) })
         return store.cvMediaAppearances.map {
             let title = cvMediaListTitle($0, language: language)
             let authorNames = ([$0.authorID].compactMap { $0 } + $0.authorIDs)
                 .compactMap { authorNamesByID[$0] }
                 .joined(separator: " ")
             let categoryLabel = language.text("Media appearance", "Medverkan i media")
-            let projectLabel = $0.projectIDs.compactMap { projectID in
-                store.projects.first(where: { $0.id == projectID })?.displayName(for: language)
-            }.joined(separator: ", ")
+            let projectLabel = $0.projectIDs.compactMap { projectNamesByID[$0] }.joined(separator: ", ")
             return CVListRow(
                 id: cvToken(for: .mediaAppearance, id: $0.id),
                 kind: .mediaAppearance,
@@ -356,7 +361,8 @@ struct DisseminationWorkspaceView: View {
                         $0.comment,
                         authorNames,
                     ].joined(separator: " ")
-                )
+                ),
+                isLocked: $0.isEditingLocked
             )
         }
     }
@@ -388,6 +394,13 @@ struct DisseminationWorkspaceView: View {
         mediaRows + otherPublicationRows
     }
 
+    /// Round 17: the ids of all rows, in list order, without building the
+    /// rows (read on every redraw).
+    private var allRowIDs: [String] {
+        store.cvMediaAppearances.map { cvToken(for: .mediaAppearance, id: $0.id) }
+            + store.cvOtherPublications.filter { !$0.isDoctoralThesis }.map { cvToken(for: .otherPublication, id: $0.id) }
+    }
+
     private var filteredRows: [CVListRow] {
         let searchQuery = SearchFilterQuery(raw: searchText)
         return allRows
@@ -403,11 +416,14 @@ struct DisseminationWorkspaceView: View {
         searchText.nonEmpty != nil
     }
 
+    /// Round 17: only a row the search shows can be selected, also at
+    /// launch (a remembered item hidden by a saved search is not shown).
     private func selectableDisseminationID(preferred: String?) -> String? {
-        guard let preferred, allRows.contains(where: { $0.id == preferred }) else {
-            return firstAvailableSelection
-        }
-        return preferred
+        let visibleIDs = filteredRows.map(\.id)
+        return ListSelectionPolicy.selectionAfterFilterChange(
+            selected: preferred ?? visibleIDs.first,
+            visibleIDs: visibleIDs
+        )
     }
 
     private func shouldHandleDisseminationRoute(_ route: AppRoute) -> Bool {
@@ -427,12 +443,21 @@ struct DisseminationWorkspaceView: View {
                 .frame(minWidth: 640, maxWidth: .infinity, maxHeight: .infinity)
         }
         .onAppear {
+            // Round 17: with "keep filters" off in Settings, a search saved
+            // by an earlier run is cleared the first time the list is shown.
+            if ListFilterLaunchPolicy.shouldClearSavedFilters(
+                for: .dissemination,
+                retainsFilters: store.shouldRetainListFilters(for: .dissemination)
+            ) {
+                searchText = ""
+                RestoredListFilters.forget(workspace: "Dissemination")
+            }
             if let route = store.route, shouldHandleDisseminationRoute(route) {
                 revealDisseminationRowForDirectNavigation(route.recordID)
                 setSelectedItemID(selectableDisseminationID(preferred: route.recordID))
                 store.consumeRoute()
-            } else if selectedItemID == nil {
-                setSelectedItemID(selectableDisseminationID(preferred: store.lastSelectedRecordID(for: .cv)))
+            } else {
+                setSelectedItemID(selectableDisseminationID(preferred: selectedItemID ?? store.lastSelectedRecordID(for: .cv)))
             }
         }
         .onChange(of: store.route) { _, route in
@@ -467,7 +492,7 @@ struct DisseminationWorkspaceView: View {
             guard isActive else { return }
             createMediaAppearanceRevealingIt()
         }
-        .onChange(of: allRows.map(\.id)) { _, allIDs in
+        .onChange(of: allRowIDs) { _, allIDs in
             guard let selectedItemID else {
                 setSelectedItemID(firstAvailableSelection)
                 return
@@ -483,7 +508,10 @@ struct DisseminationWorkspaceView: View {
     }
 
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // Round 17: built once per redraw (banner, list and empty state).
+        let visibleRows = filteredRows
+        let totalCount = allRowIDs.count
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(language.text("Media", "Media"))
                     .appTypography(.pageTitle)
@@ -504,31 +532,47 @@ struct DisseminationWorkspaceView: View {
                             text: $searchText
                         )
                     }
-
-                    AppFilterClearAllRow(isVisible: hasActiveDisseminationFilters) {
-                        searchText = ""
-                    }
+                    // Round 17: "clear all" is the banner's "Rensa filter".
                 }
             }
 
             if hasActiveDisseminationFilters {
                 AppFilteredListBanner(
-                    displayedCount: filteredRows.count,
-                    totalCount: allRows.count,
+                    displayedCount: visibleRows.count,
+                    totalCount: totalCount,
                     activeFilters: [ListFilterLabels.search(searchText, language: language)].compactMap { $0 },
                     restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Dissemination.Filter"),
                     language: language,
-                    clearAction: {
-                        searchText = ""
-                        RestoredListFilters.forget(workspace: "Dissemination")
-                    }
+                    clearAction: clearAllDisseminationFilters
                 )
             }
 
-            disseminationList(rows: filteredRows)
+            if visibleRows.isEmpty && hasActiveDisseminationFilters && totalCount > 0 {
+                disseminationFilterEmptyState(hiddenCount: totalCount, isCompact: true)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            } else {
+                disseminationList(rows: visibleRows)
+            }
         }
         .padding(14)
         .background(AppPalette.sidebarPanelSurface)
+    }
+
+    private func clearAllDisseminationFilters() {
+        searchText = ""
+        RestoredListFilters.forget(workspace: "Dissemination")
+    }
+
+    /// Round 17: items exist but the search hides them all.
+    private func disseminationFilterEmptyState(hiddenCount: Int, isCompact: Bool) -> some View {
+        AppWorkspaceEmptyStateView(
+            title: language.text("No records match the filters", "Inga poster matchar filtren"),
+            subtitle: ListFilterLabels.hiddenByFilters(count: hiddenCount, language: language),
+            kind: .dissemination,
+            actionTitle: language.text("Clear filters", "Rensa filter"),
+            action: clearAllDisseminationFilters,
+            isCompact: isCompact
+        )
     }
 
     /// Direct navigation to an item the search hides clears the search (the
@@ -644,6 +688,12 @@ struct DisseminationWorkspaceView: View {
                 SelectedListRowBackground(indicatorFill: fill)
             } else {
                 StatusIndicatorListRowBackground(fill: fill)
+            }
+        }
+        .overlay(alignment: .trailing) {
+            if row.isLocked {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
             }
         }
     }
@@ -775,6 +825,8 @@ struct DisseminationWorkspaceView: View {
                     )
                     .performanceScopeProbe(store: store, scope: "dissemination-detail", identifier: item.id)
             }
+        } else if hasActiveDisseminationFilters, !allRowIDs.isEmpty, filteredRows.isEmpty {
+            disseminationFilterEmptyState(hiddenCount: allRowIDs.count, isCompact: false)
         } else {
             AppWorkspaceEmptyStateView(
                 title: language.text("No dissemination items yet", "Inga spridningsposter ännu"),
@@ -896,7 +948,8 @@ struct ExpertAssignmentsWorkspaceView: View {
                     ].joined(separator: " ")),
                     reviewWorkflowStatus: workflowStatus,
                     reviewCategory: category,
-                    reviewStatusKeys: Set(ExpertAssignmentStatusKey.keys(for: $0).map(\.rawValue))
+                    reviewStatusKeys: Set(ExpertAssignmentStatusKey.keys(for: $0).map(\.rawValue)),
+                    isLocked: $0.isEditingLocked
                 )
             }
     }
@@ -976,7 +1029,27 @@ struct ExpertAssignmentsWorkspaceView: View {
             || !selectedExpertCategoryFilters.isEmpty
     }
 
+    /// Assignments exist, but the filters hide every one of them.
+    private func expertFiltersHideEverything(visibleRows: [CVListRow]) -> Bool {
+        hasActiveExpertAssignmentFilters && visibleRows.isEmpty && !store.cvReviewEntries.isEmpty
+    }
+
+    /// Round 17: the same empty state as the other lists.
+    private func expertFilterEmptyState(isCompact: Bool) -> some View {
+        AppWorkspaceEmptyStateView(
+            title: language.text("No expert assignments match the filters", "Inga sakkunniguppdrag matchar filtren"),
+            subtitle: ListFilterLabels.hiddenByFilters(count: store.cvReviewEntries.count, language: language),
+            kind: .expertAssignments,
+            actionTitle: language.text("Clear filters", "Rensa filter"),
+            action: clearAllExpertAssignmentFilters,
+            isCompact: isCompact
+        )
+    }
+
     var body: some View {
+        // Round 17: filtered and sorted once per redraw, not once per use.
+        let visibleRows = rows
+        let filtersHideEverything = expertFiltersHideEverything(visibleRows: visibleRows)
         PersistentSplitView(layout: .expertAssignments) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
@@ -1002,16 +1075,13 @@ struct ExpertAssignmentsWorkspaceView: View {
                         }
 
                         expertFilterRows(language: language)
-
-                        AppFilterClearAllRow(isVisible: hasActiveExpertAssignmentFilters) {
-                            clearAllExpertAssignmentFilters()
-                        }
+                        // Round 17: "clear all" is the banner's "Rensa filter".
                     }
                 }
 
                 if hasActiveExpertAssignmentFilters {
                     AppFilteredListBanner(
-                        displayedCount: rows.count,
+                        displayedCount: visibleRows.count,
                         totalCount: store.cvReviewEntries.count,
                         activeFilters: activeExpertFilterDescriptions,
                         restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "ExpertAssignments.Filter"),
@@ -1020,9 +1090,18 @@ struct ExpertAssignmentsWorkspaceView: View {
                     )
                 }
 
-                expertList(rows: rows)
+                if filtersHideEverything {
+                    expertFilterEmptyState(isCompact: true)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                } else {
+                    expertList(rows: visibleRows)
+                }
 
-                ListCountFootnote(displayedCount: rows.count, totalCount: store.cvReviewEntries.count, language: language)
+                // Round 17: the banner already gives the count while a
+                // filter is on.
+                if !hasActiveExpertAssignmentFilters {
+                    ListCountFootnote(displayedCount: visibleRows.count, totalCount: store.cvReviewEntries.count, language: language)
+                }
             }
             .padding(14)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -1054,6 +1133,8 @@ struct ExpertAssignmentsWorkspaceView: View {
                                 self.pendingSelectionStartedAt = nil
                             }
                         )
+                } else if filtersHideEverything {
+                    expertFilterEmptyState(isCompact: false)
                 } else {
                     AppWorkspaceEmptyStateView(
                         title: language.text("No expert assignments yet", "Inga sakkunniguppdrag ännu"),
@@ -1065,14 +1146,21 @@ struct ExpertAssignmentsWorkspaceView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .onAppear {
+            clearSavedExpertFiltersAtLaunchIfNeeded()
             if let route = store.route,
                isExpertAssignmentRoute(route),
                route.recordID.hasPrefix("\(CVItemKind.review.rawValue):") {
                 revealExpertAssignmentRow(route.recordID)
                 setSelectedItemID(route.recordID)
                 store.consumeRoute()
-            } else if selectedItemID == nil {
-                setSelectedItemID(store.lastSelectedRecordID(for: .expertAssignments) ?? rows.first?.id)
+            } else {
+                // Round 17: a remembered assignment that a saved filter hides
+                // is replaced by the first visible row.
+                let visibleIDs = rows.map(\.id)
+                setSelectedItemID(ListSelectionPolicy.selectionAfterFilterChange(
+                    selected: selectedItemID ?? store.lastSelectedRecordID(for: .expertAssignments) ?? visibleIDs.first,
+                    visibleIDs: visibleIDs
+                ))
             }
         }
         .onChange(of: store.route) { _, route in
@@ -1324,6 +1412,12 @@ struct ExpertAssignmentsWorkspaceView: View {
                 Color.clear
             }
         }
+        .overlay(alignment: .trailing) {
+            if row.isLocked {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
+            }
+        }
     }
 
     private func reviewWorkflowStatusShadeFill(_ status: CVReviewWorkflowStatus?) -> Color? {
@@ -1342,6 +1436,16 @@ struct ExpertAssignmentsWorkspaceView: View {
         searchText = ""
         selectedExpertStatusFilters.removeAll()
         selectedExpertCategoryFilters.removeAll()
+    }
+
+    /// Round 17: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared the first time the list is shown.
+    private func clearSavedExpertFiltersAtLaunchIfNeeded() {
+        guard ListFilterLaunchPolicy.shouldClearSavedFilters(
+            for: .expertAssignments,
+            retainsFilters: store.shouldRetainListFilters(for: .expertAssignments)
+        ) else { return }
+        clearAllExpertAssignmentFilters()
     }
 
     private func cvListHeader(_ title: String, width: CGFloat?, sortColumn: CVListSortColumn) -> some View {
@@ -2000,9 +2104,7 @@ struct CVConferenceContributionDetailView: View {
                                         if isEditingLocked {
                                             lockedContributorsContent
                                         } else if draft.contributorNames.isEmpty {
-                                            Text(language.text("No contributors added yet", "Inga medverkande tillagda ännu"))
-                                                .appTypography(.secondary)
-                                                .foregroundStyle(.secondary)
+                                            AppCompactEmptyListLabel(title: language.text("No contributors added yet", "Inga medverkande tillagda ännu"))
                                         } else {
                                             editableContributorsContent
                                         }
@@ -2228,7 +2330,9 @@ struct CVConferenceContributionDetailView: View {
                 contributorLinkButton(for: name, width: contributorLinkColumnWidth)
                 AppInlineDeleteButton(
                     title: language.text("Delete contributor", "Ta bort medverkande"),
-                    width: contributorTrashColumnWidth
+                    width: contributorTrashColumnWidth,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Delete contributor?", "Ta bort medverkande?")
                 ) {
                     removeContributor(at: index)
                 }
@@ -2825,9 +2929,10 @@ private struct ConferenceSubmissionTimelineStepper: View {
     let onMutate: () -> Void
 
     private let horizontalInset: CGFloat = 62
-    private let circleSize: CGFloat = 24
-    private let timelineHeight: CGFloat = 156
-    private let markerCenterY: CGFloat = 18
+    // Round 17: circles about 17 % larger (24 → 28) with thinner edges.
+    private let circleSize: CGFloat = 28
+    private let timelineHeight: CGFloat = 160
+    private let markerCenterY: CGFloat = 20
     private let inactiveGray = AppTimelineStrip<ConferenceSubmissionStep, EmptyView>.inactiveGray
     private let futureGray = AppTimelineStrip<ConferenceSubmissionStep, EmptyView>.futureGray
 
@@ -2887,7 +2992,7 @@ private struct ConferenceSubmissionTimelineStepper: View {
             timelineGradientLine(
                 startX: startX,
                 endX: endX,
-                lineWidth: 2.5,
+                lineWidth: 2,
                 colors: [segmentEndpointColor(for: leftStep), segmentEndpointColor(for: rightStep)]
             )
         } else {
@@ -2897,7 +3002,7 @@ private struct ConferenceSubmissionTimelineStepper: View {
             }
             .stroke(
                 inactiveGray,
-                style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [7, 5])
+                style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 5])
             )
         }
     }
@@ -2961,11 +3066,11 @@ private struct ConferenceSubmissionTimelineStepper: View {
             Circle()
                 .fill(completed ? fillColor : AppPalette.fieldSurface)
             Circle()
-                .stroke(completed || deemphasized ? strokeColor : (stepHasDefinedDate(step) ? futureGray : inactiveGray), lineWidth: completed ? 2.2 : 1.8)
+                .stroke(completed || deemphasized ? strokeColor : (stepHasDefinedDate(step) ? futureGray : inactiveGray), lineWidth: completed ? 1.6 : 1.5)
 
             if completed && !deemphasized {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 13, weight: .heavy))
+                    .font(.system(size: 14, weight: .heavy))
                     .foregroundStyle(submissionStepTone(for: step) == nil ? strokeColor : AppPalette.statusOnFill)
             }
         }
@@ -3184,7 +3289,7 @@ private struct ConferenceSubmissionTimelineStepper: View {
     }
 
     private func completedStrokeColor(for step: ConferenceSubmissionStep) -> Color {
-        submissionStepTone(for: step).map(AppPalette.statusText) ?? inactiveGray
+        submissionStepTone(for: step).map(AppPalette.statusEdge) ?? inactiveGray
     }
 
     private func isStepCompleted(_ step: ConferenceSubmissionStep) -> Bool {
@@ -3428,7 +3533,9 @@ private struct CVMediaAppearanceDetailView: View {
                                             Text(languageName(item))
                                             Spacer()
                                             AppIconDeleteButton(
-                                                title: language.text("Delete language", "Ta bort språk")
+                                                title: language.text("Delete language", "Ta bort språk"),
+                                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                                confirmationTitle: language.text("Delete language?", "Ta bort språket?")
                                             ) {
                                                 guard draft.languages.indices.contains(index) else { return }
                                                 draft.languages.remove(at: index)
@@ -3793,7 +3900,9 @@ private struct CVMediaAppearanceDetailView: View {
 
                             AppInlineDeleteButton(
                                 title: language.text("Delete researcher", "Ta bort forskare"),
-                                width: 28
+                                width: 28,
+                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                confirmationTitle: language.text("Remove researcher from this item?", "Ta bort forskaren härifrån?")
                             ) {
                                 draft.authorIDs.removeAll { $0 == authorID }
                                 mediaAuthorEditingTextByID[authorID] = nil
@@ -4126,10 +4235,11 @@ private struct CVReviewWorkflowTimeline: View {
     let language: AppLanguage
 
     private let horizontalInset: CGFloat = 68
-    private let circleSize: CGFloat = 24
-    private var markerCenterY: CGFloat { isEditingLocked ? 14 : 18 }
+    // Round 17: circles about 17 % larger (24 → 28).
+    private let circleSize: CGFloat = 28
+    private var markerCenterY: CGFloat { isEditingLocked ? 16 : 20 }
     private var stepWidth: CGFloat { isEditingLocked ? 150 : 190 }
-    private var timelineHeight: CGFloat { isEditingLocked ? 72 : 128 }
+    private var timelineHeight: CGFloat { isEditingLocked ? 76 : 132 }
     private let inactiveGray = AppTimelineStrip<CVReviewWorkflowStep, EmptyView>.inactiveGray
 
     private var visibleSteps: [CVReviewWorkflowStep] {
@@ -4251,18 +4361,18 @@ private struct CVReviewWorkflowTimeline: View {
     }
 
     private func stepIconColor(_ step: CVReviewWorkflowStep) -> Color {
-        AppPalette.statusText(stepTone(step))
+        AppPalette.statusEdge(stepTone(step))
     }
 
     private func segmentProgressColor(index: Int) -> Color {
-        guard visibleSteps.indices.contains(index) else { return AppPalette.statusText(.pending) }
+        guard visibleSteps.indices.contains(index) else { return AppPalette.statusEdge(.pending) }
         if stepHasDefinedDate(.completed) {
-            return AppPalette.statusText(.done)
+            return AppPalette.statusEdge(.done)
         }
         if deadlineIsOverdue {
-            return AppPalette.statusText(.warning)
+            return AppPalette.statusEdge(.warning)
         }
-        return AppPalette.statusText(.pending)
+        return AppPalette.statusEdge(.pending)
     }
 
     private func stepIsActive(_ step: CVReviewWorkflowStep) -> Bool {

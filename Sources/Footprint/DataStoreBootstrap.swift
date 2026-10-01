@@ -135,7 +135,7 @@ extension GrantDataStore {
                             notice = StoreNotice(
                                 message: language.text(
                                     "Journal metric update was paused because the safety backup could not be created.",
-                                    "Uppdatering av tidskriftsmetrik pausades eftersom säkerhetsbackupen inte kunde skapas."
+                                    "Uppdatering av tidskriftsmetrik pausades eftersom säkerhetskopian inte kunde skapas."
                                 ),
                                 tone: .error
                             )
@@ -170,7 +170,7 @@ extension GrantDataStore {
                         notice = StoreNotice(
                             message: language.text(
                                 "Startup maintenance was paused because the safety backup could not be created.",
-                                "Startunderhåll pausades eftersom säkerhetsbackupen inte kunde skapas."
+                                "Startunderhåll pausades eftersom säkerhetskopian inte kunde skapas."
                             ),
                             tone: .error
                         )
@@ -243,7 +243,7 @@ extension GrantDataStore {
                     notice = StoreNotice(
                         message: language.text(
                             "Could not load SQLite data, and automatic backup recovery also failed.",
-                            "Kunde inte läsa SQLite-data, och automatisk återhämtning från backup misslyckades också."
+                            "Kunde inte läsa SQLite-data, och automatisk återhämtning från säkerhetskopia misslyckades också."
                         ),
                         tone: .error
                     )
@@ -308,12 +308,12 @@ extension GrantDataStore {
                         includeBackup: false
                     )
 
-                    loadError = "\(language.text("Recovered from a verified backup after load failure.", "Återhämtade en verifierad backup efter laddningsfel.")) \(originalError.localizedDescription)"
+                    loadError = "\(language.text("Recovered from a verified backup after load failure.", "Återhämtade en verifierad säkerhetskopia efter laddningsfel.")) \(originalError.localizedDescription)"
                     blocksSQLitePrimaryReads = false
                     notice = StoreNotice(
                         message: language.text(
                             "Recovered a verified backup automatically after a load failure.",
-                            "Återhämtade automatiskt en verifierad backup efter ett laddningsfel."
+                            "Återhämtade automatiskt en verifierad säkerhetskopia efter ett laddningsfel."
                         ),
                         tone: .info
                     )

@@ -113,7 +113,9 @@ private struct CentralTaskRowEditor: View {
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
         if deadlineDay < todayStart {
-            return AppPalette.statusFill(AppStatusTones.task(isCompleted: false, isOverdue: true))
+            // Round 17: overdue tasks use the strong "late" red-orange
+            // (the same as the calendar's overdue dots).
+            return AppPalette.lateMark
         }
         // Settings > Calendar: "due soon" this many days ahead (default 7).
         if let weekAhead = calendar.date(byAdding: .day, value: store.calendarReminderSettings.taskDueSoonDays, to: todayStart),
@@ -164,7 +166,12 @@ private struct CentralTaskRowEditor: View {
                 .padding(.top, 7)
 
                 if !isReadOnly {
-                    AppIconDeleteButton(title: language.text("Delete task", "Ta bort uppgift"), width: 18) {
+                    AppIconDeleteButton(
+                        title: language.text("Delete task", "Ta bort uppgift"),
+                        width: 18,
+                        cancelTitle: language.text("Cancel", "Avbryt"),
+                        confirmationTitle: language.text("Delete task?", "Ta bort uppgiften?")
+                    ) {
                         store.removeTaskItem(id: taskID)
                     }
                     .padding(.top, 7)

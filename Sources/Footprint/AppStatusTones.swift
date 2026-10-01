@@ -8,7 +8,9 @@ enum AppStatusTones {
 
     // MARK: Applications
 
-    /// Beviljat = done (grey once the funds are spent); Väntar svar = pending;
+    /// Beviljat = done (round 17: still done once the funds are spent; the
+    /// fill is then the paler green, see `AppPalette.applicationFill`);
+    /// Väntar svar = pending;
     /// "Stängd – sökt?" = warning; Avslag = negative; Tillbakadragen and
     /// Ej sökt = grey; Att söka = no fill (paler when the call is not open yet).
     static func application(
@@ -22,7 +24,7 @@ enum AppStatusTones {
             return .warning
         }
         if status.range(of: "Beviljat", options: .caseInsensitive) != nil {
-            return isFullySpent ? .inactive : .done
+            return .done
         }
         if status.range(of: "Avslag", options: .caseInsensitive) != nil {
             return .negative
@@ -62,6 +64,46 @@ enum AppStatusTones {
             awaitsAppliedAnswer: awaitsAnswer,
             isBeforeOpening: row.isBeforeOpening
         )
+    }
+
+    // MARK: Application outcome groups
+
+    /// Round 17: the outcome groups used by summaries and statistics.
+    /// Tillbakadragen is its own group (grey) and never counts as Avslag.
+    enum ApplicationOutcomeGroup: String, CaseIterable, Sendable {
+        case granted
+        case awaiting
+        case declined
+        case withdrawn
+        case other
+    }
+
+    static func applicationOutcomeGroup(resultLabel: String, isGranted: Bool) -> ApplicationOutcomeGroup {
+        if isGranted { return .granted }
+        switch resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) {
+        case "Väntar svar": return .awaiting
+        case "Avslag": return .declined
+        case "Tillbakadragen": return .withdrawn
+        default: return .other
+        }
+    }
+
+    static func isDeclined(resultLabel: String) -> Bool {
+        resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) == "Avslag"
+    }
+
+    static func isWithdrawn(resultLabel: String) -> Bool {
+        resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) == "Tillbakadragen"
+    }
+
+    // MARK: Journals
+
+    /// Round 17: the Norwegian list level of a journal: 2 = done (green),
+    /// 1 = pending (yellow), 0 = negative (red).
+    static func norwegianListLevel(_ level: Double) -> AppStatusTone {
+        if level >= 1.5 { return .done }
+        if level >= 0.5 { return .pending }
+        return .negative
     }
 
     // MARK: Publications
@@ -161,6 +203,51 @@ enum AppStatusTones {
         }
     }
 
+    // MARK: Congresses
+
+    /// Round 17: one congress rule for the list, the map and the detail
+    /// badge.
+    enum CongressStatus: String, CaseIterable, Sendable {
+        /// Registered/attending a congress that has not ended yet.
+        case attending
+        /// Attended a congress that has ended.
+        case attended
+        /// A linked contribution was rejected (and the user does not attend).
+        case rejected
+        /// Ended without the user attending.
+        case notAttending
+        /// A contribution/abstract is linked but attendance is not decided.
+        case contributionOnly
+        /// Planned, no decision yet.
+        case planned
+    }
+
+    static func congressStatus(
+        isAttending: Bool,
+        isPast: Bool,
+        hasContribution: Bool,
+        hasRejectedContribution: Bool
+    ) -> CongressStatus {
+        if isAttending { return isPast ? .attended : .attending }
+        if hasRejectedContribution { return .rejected }
+        if isPast { return .notAttending }
+        if hasContribution { return .contributionOnly }
+        return .planned
+    }
+
+    /// Attending (future) = pending; attended = done; not attending = grey;
+    /// planned without decision = no fill; a rejected contribution = negative.
+    static func congress(_ status: CongressStatus) -> AppStatusTone {
+        switch status {
+        case .attending: return .pending
+        case .attended: return .done
+        case .rejected: return .negative
+        case .notAttending: return .inactive
+        case .contributionOnly: return .pending
+        case .planned: return .none
+        }
+    }
+
     // MARK: Conference contributions
 
     static func conferenceContribution(_ status: AppConferenceContributionBadgeStatus) -> AppStatusTone {
@@ -233,6 +320,16 @@ enum AppStatusTones {
 }
 
 extension AppPalette {
+    /// Round 17: an application's fill; a fully spent grant is green but
+    /// paler than a grant with money left. Nil when the tone has no fill.
+    static func applicationFill(_ tone: AppStatusTone, isFullySpent: Bool) -> Color? {
+        guard tone.hasFill else { return nil }
+        if tone == .done && isFullySpent {
+            return statusFillPale(.done)
+        }
+        return statusFill(tone)
+    }
+
     /// A list row's status strip: nil when the tone has no fill.
     static func statusRowFill(_ tone: AppStatusTone) -> Color? {
         tone.hasFill ? statusFill(tone) : nil
@@ -276,6 +373,19 @@ extension GrantDataStore {
     /// The application's tone with the store's own "fully spent" rule.
     func applicationStatusTone(_ application: GrantApplication, today: Date = Date()) -> AppStatusTone {
         AppStatusTones.application(application, isFullySpent: isEffectivelyFullySpent(application), today: today)
+    }
+
+    /// Round 17: the row strip (nil without status); pale green when spent.
+    func applicationRowFill(_ application: GrantApplication, today: Date = Date()) -> Color? {
+        AppPalette.applicationFill(
+            applicationStatusTone(application, today: today),
+            isFullySpent: isEffectivelyFullySpent(application)
+        )
+    }
+
+    /// Round 17: the status capsule fill; the neutral pill without status.
+    func applicationCapsuleFill(_ application: GrantApplication, today: Date = Date()) -> Color {
+        applicationRowFill(application, today: today) ?? AppPalette.pillSurface
     }
 }
 

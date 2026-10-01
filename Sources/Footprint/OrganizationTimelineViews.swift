@@ -71,9 +71,7 @@ struct OrganizationTimelineView: View {
 
     var body: some View {
         if snapshot.isEmpty {
-            Text(language.text("No timed organization processes yet.", "Inga tidsatta organisationsprocesser än."))
-                .font(appFont(.secondary))
-                .foregroundStyle(.secondary)
+            AppCompactEmptyListLabel(title: language.text("No timed organization processes yet", "Inga tidsatta organisationsprocesser än"))
         } else {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: true) {
@@ -350,7 +348,14 @@ struct OrganizationTimelineView: View {
             let overlayWidth = max(overlayEndX - overlayStartX, 0)
 
             if overlayStartDate < visibleBarEnd, overlayWidth > 0 {
-                StripedTimelineOverlay(color: AppPalette.statusText(.inactive), lineWidth: 2, spacing: 8)
+                // Round 17: fully spent = the same green, only paler (as in
+                // the project timeline); no grey stripes.
+                Rectangle()
+                    .fill(AppPalette.statusFillPale(.done))
+                    .overlay(
+                        Rectangle()
+                            .stroke(AppPalette.statusEdge(.done), lineWidth: 1)
+                    )
                     .frame(width: overlayWidth, height: barHeight)
                     .offset(x: overlayStartX)
                     .allowsHitTesting(false)
@@ -406,6 +411,9 @@ struct OrganizationTimelineView: View {
             return [AppPalette.timelinePendingBarEnd, AppPalette.timelinePendingBarStart]
         case .rejected:
             return [AppPalette.statsCardDeclinedStart, AppPalette.statsCardDeclinedEnd]
+        case .withdrawn:
+            // Round 17: withdrawn is grey (inactive), not red.
+            return [AppPalette.statusFill(.inactive), AppPalette.statusFill(.inactive)]
         case .toApply:
             // Round 16: no status yet = no colour (blue is not a status).
             return [AppPalette.secondaryCardSurface, AppPalette.secondaryCardSurface]
@@ -425,7 +433,10 @@ struct OrganizationTimelineView: View {
             case .waiting:
                 return AppPalette.timelinePendingBarStroke
             case .rejected:
-                return AppPalette.statsCardDeclinedStart
+                // Round 17: the edge colour, not the fill.
+                return AppPalette.statusEdge(.negative)
+            case .withdrawn:
+                return AppPalette.statusEdge(.inactive)
             case .toApply:
                 return AppPalette.border
             }
@@ -462,7 +473,7 @@ struct OrganizationTimelineView: View {
         case .congressAbstractDeadline:
             return AppPalette.shadeBlue
         case .congressLateAbstractDeadline:
-            return AppPalette.statusText(.negative)
+            return AppPalette.statusEdge(.negative)
         }
     }
 
