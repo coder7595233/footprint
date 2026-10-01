@@ -1490,9 +1490,15 @@ struct StatisticsView: View {
             .filter { application in
                 (selectedYear == nil || application.statsYear == selectedYear) && grantMatchesRowKey(application, rowKey: selection.rowKey)
             }
+            // Organization first, then name. The old `a < b && c < d` was not a
+            // valid ordering and could shuffle rows between redraws.
             .sorted {
-                $0.organization.localizedStandardCompare($1.organization) == .orderedAscending &&
-                $0.grantName.localizedStandardCompare($1.grantName) == .orderedAscending
+                statisticsDrilldownOrganizationThenNameOrder(
+                    lhsOrganization: $0.organization,
+                    lhsName: $0.grantName,
+                    rhsOrganization: $1.organization,
+                    rhsName: $1.grantName
+                )
             }
 
         let totalAmount = matching

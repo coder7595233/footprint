@@ -17,6 +17,8 @@ private struct CVListRow: Identifiable {
     let normalizedSearchBlob: String
     let reviewWorkflowStatus: CVReviewWorkflowStatus?
     let reviewCategory: CVReviewCategory?
+    /// Raw values of ExpertAssignmentStatusKey (expert-assignment chips).
+    let reviewStatusKeys: Set<String>
 
     init(
         id: String,
@@ -32,7 +34,8 @@ private struct CVListRow: Identifiable {
         sortDate: String,
         normalizedSearchBlob: String,
         reviewWorkflowStatus: CVReviewWorkflowStatus? = nil,
-        reviewCategory: CVReviewCategory? = nil
+        reviewCategory: CVReviewCategory? = nil,
+        reviewStatusKeys: Set<String> = []
     ) {
         self.id = id
         self.kind = kind
@@ -48,6 +51,7 @@ private struct CVListRow: Identifiable {
         self.normalizedSearchBlob = normalizedSearchBlob
         self.reviewWorkflowStatus = reviewWorkflowStatus
         self.reviewCategory = reviewCategory
+        self.reviewStatusKeys = reviewStatusKeys
     }
 }
 
@@ -312,8 +316,12 @@ struct DisseminationWorkspaceView: View {
     }
 
     private var mediaRows: [CVListRow] {
-        store.cvMediaAppearances.map {
+        let authorNamesByID = Dictionary(firstWinsKeysWithValues: store.publicationAuthors.map { ($0.id, $0.name) })
+        return store.cvMediaAppearances.map {
             let title = cvMediaListTitle($0, language: language)
+            let authorNames = ([$0.authorID].compactMap { $0 } + $0.authorIDs)
+                .compactMap { authorNamesByID[$0] }
+                .joined(separator: " ")
             let categoryLabel = language.text("Media appearance", "Medverkan i media")
             let projectLabel = $0.projectIDs.compactMap { projectID in
                 store.projects.first(where: { $0.id == projectID })?.displayName(for: language)
@@ -339,6 +347,14 @@ struct DisseminationWorkspaceView: View {
                         $0.meetingMode,
                         $0.place,
                         $0.country,
+                        // Round 16: both languages, description, comment and
+                        // the people involved are searchable too.
+                        $0.titleSv,
+                        $0.titleEn,
+                        $0.descriptionSv,
+                        $0.descriptionEn,
+                        $0.comment,
+                        authorNames,
                     ].joined(separator: " ")
                 )
             )
@@ -412,6 +428,7 @@ struct DisseminationWorkspaceView: View {
         }
         .onAppear {
             if let route = store.route, shouldHandleDisseminationRoute(route) {
+                revealDisseminationRowForDirectNavigation(route.recordID)
                 setSelectedItemID(selectableDisseminationID(preferred: route.recordID))
                 store.consumeRoute()
             } else if selectedItemID == nil {
@@ -420,8 +437,20 @@ struct DisseminationWorkspaceView: View {
         }
         .onChange(of: store.route) { _, route in
             guard let route, shouldHandleDisseminationRoute(route) else { return }
+            revealDisseminationRowForDirectNavigation(route.recordID)
             setSelectedItemID(selectableDisseminationID(preferred: route.recordID))
             store.consumeRoute()
+        }
+        // A search that hides the selected item moves the selection to the
+        // first visible row.
+        .onChange(of: searchText) { _, _ in
+            let next = ListSelectionPolicy.selectionAfterFilterChange(
+                selected: selectedItemID,
+                visibleIDs: filteredRows.map(\.id)
+            )
+            if next != selectedItemID {
+                setSelectedItemID(next)
+            }
         }
         .onChange(of: selectedItemID) { _, newValue in
             store.rememberSelection(id: newValue, for: .cv)
@@ -436,8 +465,7 @@ struct DisseminationWorkspaceView: View {
         }
         .onChange(of: newRecordTrigger) { _, _ in
             guard isActive else { return }
-            let id = store.addCVMediaAppearance()
-            setSelectedItemID(cvToken(for: .mediaAppearance, id: id))
+            createMediaAppearanceRevealingIt()
         }
         .onChange(of: allRows.map(\.id)) { _, allIDs in
             guard let selectedItemID else {
@@ -461,8 +489,7 @@ struct DisseminationWorkspaceView: View {
                     .appTypography(.pageTitle)
                 Spacer()
                 cvCreateButton(language.text("New media appearance", "Ny medverkan i media")) {
-                    let id = store.addCVMediaAppearance()
-                    setSelectedItemID(cvToken(for: .mediaAppearance, id: id))
+                    createMediaAppearanceRevealingIt()
                 }
             }
 
@@ -484,10 +511,42 @@ struct DisseminationWorkspaceView: View {
                 }
             }
 
+            if hasActiveDisseminationFilters {
+                AppFilteredListBanner(
+                    displayedCount: filteredRows.count,
+                    totalCount: allRows.count,
+                    activeFilters: [ListFilterLabels.search(searchText, language: language)].compactMap { $0 },
+                    restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Dissemination.Filter"),
+                    language: language,
+                    clearAction: {
+                        searchText = ""
+                        RestoredListFilters.forget(workspace: "Dissemination")
+                    }
+                )
+            }
+
             disseminationList(rows: filteredRows)
         }
         .padding(14)
         .background(AppPalette.sidebarPanelSurface)
+    }
+
+    /// Direct navigation to an item the search hides clears the search (the
+    /// only filter here).
+    private func revealDisseminationRowForDirectNavigation(_ token: String) {
+        guard searchText.nonEmpty != nil,
+              allRows.contains(where: { $0.id == token }),
+              !filteredRows.contains(where: { $0.id == token }) else { return }
+        searchText = ""
+    }
+
+    /// A new media appearance has no title yet, so any search would hide it.
+    private func createMediaAppearanceRevealingIt() {
+        if hasActiveDisseminationFilters {
+            searchText = ""
+        }
+        let id = store.addCVMediaAppearance()
+        setSelectedItemID(cvToken(for: .mediaAppearance, id: id))
     }
 
     private func cvCreateButton(_ title: String, action: @escaping () -> Void) -> some View {
@@ -753,41 +812,23 @@ struct DisseminationWorkspaceView: View {
 }
 
 struct ExpertAssignmentsWorkspaceView: View {
-    private enum ExpertStatusFilter: String, Codable, CaseIterable, Hashable, Identifiable {
-        case ongoing
-        case completed
-        case accepted
-        case declined
+    /// Round 16 (user decision): status chips Pågående, Försenade, Klara,
+    /// Avböjda, Utan status. The duplicate "Accepterade" is gone; a filter
+    /// saved with it is read as no status filter.
+    private typealias ExpertStatusFilter = ExpertAssignmentStatusKey
 
-        var id: String { rawValue }
-
-        func label(language: AppLanguage) -> String {
-            switch self {
-            case .ongoing:
-                return language.text("Ongoing", "Pågående")
-            case .completed:
-                return language.text("Completed", "Slutförda")
-            case .accepted:
-                return language.text("Accepted", "Accepterade")
-            case .declined:
-                return language.text("Declined / not accepted", "Avböjda / ej accepterade")
-            }
-        }
-    }
-
+    /// One chip per expert-assignment category. Raw values are the
+    /// CVReviewCategory raw values, so filters saved earlier still apply.
     private enum ExpertCategoryFilter: String, Codable, CaseIterable, Hashable, Identifiable {
         case journalReview
+        case grantProposalReview
         case doctoralExamination
+        case otherExpertAssignment
 
         var id: String { rawValue }
 
         func label(language: AppLanguage) -> String {
-            switch self {
-            case .journalReview:
-                return language.text("Review", "Review")
-            case .doctoralExamination:
-                return language.text("Opponent / committee / examiner", "Opponent / betygsnämnd / examinator")
-            }
+            CVReviewCategory(rawValue: rawValue)?.localizedTitle(language) ?? rawValue
         }
     }
 
@@ -814,7 +855,16 @@ struct ExpertAssignmentsWorkspaceView: View {
 
     private var rows: [CVListRow] {
         let searchQuery = SearchFilterQuery(raw: searchText)
-        return store.cvReviewEntries
+        return allExpertRows
+            .filter { row in
+                matchesExpertSearch(row, query: searchQuery)
+                    && matchesExpertChipFilters(row)
+            }
+            .sorted(using: sortOrder)
+    }
+
+    private var allExpertRows: [CVListRow] {
+        store.cvReviewEntries
             .map {
                 let category = $0.category
                 let categoryLabel = category.localizedTitle(language)
@@ -845,16 +895,79 @@ struct ExpertAssignmentsWorkspaceView: View {
                         workflowStatus?.localizedTitle(language) ?? ""
                     ].joined(separator: " ")),
                     reviewWorkflowStatus: workflowStatus,
-                    reviewCategory: category
+                    reviewCategory: category,
+                    reviewStatusKeys: Set(ExpertAssignmentStatusKey.keys(for: $0).map(\.rawValue))
                 )
             }
-            .filter { row in
-                let matchesSearch = searchQuery.isEmpty || searchQuery.matches(normalizedHaystack: row.normalizedSearchBlob)
-                return matchesSearch
-                    && matchesExpertStatusFilters(row)
-                    && matchesExpertCategoryFilters(row)
-            }
-            .sorted(using: sortOrder)
+    }
+
+    private func matchesExpertSearch(_ row: CVListRow, query: SearchFilterQuery) -> Bool {
+        query.isEmpty || query.matches(normalizedHaystack: row.normalizedSearchBlob)
+    }
+
+    /// OR within the status chips and within the category chips, AND between
+    /// the two groups.
+    private func matchesExpertChipFilters(_ row: CVListRow) -> Bool {
+        matchesFilterChipGroups([
+            (selected: Set(selectedExpertStatusFilters.map(\.rawValue)), values: row.reviewStatusKeys),
+            (selected: Set(selectedExpertCategoryFilters.map(\.rawValue)), values: Set([row.reviewCategory?.rawValue].compactMap { $0 })),
+        ])
+    }
+
+    /// Changes when the user changes a filter (not when data changes).
+    private var expertFilterSignature: String {
+        [
+            searchText,
+            selectedExpertStatusFilters.map(\.rawValue).sorted().joined(separator: ","),
+            selectedExpertCategoryFilters.map(\.rawValue).sorted().joined(separator: ","),
+        ].joined(separator: "|")
+    }
+
+    private func clearAllExpertAssignmentFilters() {
+        searchText = ""
+        selectedExpertStatusFilters.removeAll()
+        selectedExpertCategoryFilters.removeAll()
+        RestoredListFilters.forget(workspace: "ExpertAssignments")
+    }
+
+    /// Direct navigation and new records: clears only the filters that hide
+    /// the assignment.
+    private func revealExpertAssignmentRow(_ token: String) {
+        guard let row = allExpertRows.first(where: { $0.id == token }) else { return }
+        if !matchesExpertSearch(row, query: SearchFilterQuery(raw: searchText)) {
+            searchText = ""
+        }
+        if !selectedExpertStatusFilters.isEmpty,
+           !matchesFilterChipGroups([(selected: Set(selectedExpertStatusFilters.map(\.rawValue)), values: row.reviewStatusKeys)]) {
+            selectedExpertStatusFilters.removeAll()
+        }
+        if let category = row.reviewCategory,
+           !selectedExpertCategoryFilters.isEmpty,
+           !selectedExpertCategoryFilters.contains(where: { $0.rawValue == category.rawValue }) {
+            selectedExpertCategoryFilters.removeAll()
+        }
+    }
+
+    private func createExpertAssignmentRevealingIt() {
+        let token = cvToken(for: .review, id: store.addCVReviewEntry())
+        revealExpertAssignmentRow(token)
+        setSelectedItemID(token)
+    }
+
+    private var activeExpertFilterDescriptions: [String] {
+        [
+            ListFilterLabels.search(searchText, language: language),
+            ListFilterLabels.chips(
+                ExpertStatusFilter.allCases
+                    .filter { selectedExpertStatusFilters.contains($0) }
+                    .map { $0.title(language: language) }
+            ),
+            ListFilterLabels.chips(
+                ExpertCategoryFilter.allCases
+                    .filter { selectedExpertCategoryFilters.contains($0) }
+                    .map { $0.label(language: language) }
+            ),
+        ].compactMap { $0 }
     }
 
     private var hasActiveExpertAssignmentFilters: Bool {
@@ -871,8 +984,7 @@ struct ExpertAssignmentsWorkspaceView: View {
                         .appTypography(.pageTitle)
                     Spacer()
                     Button(language.text("Add", "Lägg till")) {
-                        let id = store.addCVReviewEntry()
-                        setSelectedItemID(cvToken(for: .review, id: id))
+                        createExpertAssignmentRevealingIt()
                     }
                     .appAddButtonStyle()
                 }
@@ -892,11 +1004,20 @@ struct ExpertAssignmentsWorkspaceView: View {
                         expertFilterRows(language: language)
 
                         AppFilterClearAllRow(isVisible: hasActiveExpertAssignmentFilters) {
-                            searchText = ""
-                            selectedExpertStatusFilters.removeAll()
-                            selectedExpertCategoryFilters.removeAll()
+                            clearAllExpertAssignmentFilters()
                         }
                     }
+                }
+
+                if hasActiveExpertAssignmentFilters {
+                    AppFilteredListBanner(
+                        displayedCount: rows.count,
+                        totalCount: store.cvReviewEntries.count,
+                        activeFilters: activeExpertFilterDescriptions,
+                        restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "ExpertAssignments.Filter"),
+                        language: language,
+                        clearAction: clearAllExpertAssignmentFilters
+                    )
                 }
 
                 expertList(rows: rows)
@@ -947,6 +1068,7 @@ struct ExpertAssignmentsWorkspaceView: View {
             if let route = store.route,
                isExpertAssignmentRoute(route),
                route.recordID.hasPrefix("\(CVItemKind.review.rawValue):") {
+                revealExpertAssignmentRow(route.recordID)
                 setSelectedItemID(route.recordID)
                 store.consumeRoute()
             } else if selectedItemID == nil {
@@ -958,8 +1080,20 @@ struct ExpertAssignmentsWorkspaceView: View {
                   isExpertAssignmentRoute(route),
                   route.recordID.hasPrefix("\(CVItemKind.review.rawValue):")
             else { return }
+            revealExpertAssignmentRow(route.recordID)
             setSelectedItemID(route.recordID)
             store.consumeRoute()
+        }
+        // A filter change that hides the selected assignment moves the
+        // selection to the first visible row.
+        .onChange(of: expertFilterSignature) { _, _ in
+            let next = ListSelectionPolicy.selectionAfterFilterChange(
+                selected: selectedItemID,
+                visibleIDs: rows.map(\.id)
+            )
+            if next != selectedItemID {
+                setSelectedItemID(next)
+            }
         }
         .onChange(of: selectedItemID) { _, newValue in
             store.rememberSelection(id: newValue, for: .expertAssignments)
@@ -974,8 +1108,7 @@ struct ExpertAssignmentsWorkspaceView: View {
         }
         .onChange(of: newRecordTrigger) { _, _ in
             guard isActive else { return }
-            let id = store.addCVReviewEntry()
-            setSelectedItemID(cvToken(for: .review, id: id))
+            createExpertAssignmentRevealingIt()
         }
         .onReceive(
             store.$cvReviewEntries.map { $0.map { cvToken(for: .review, id: $0.id) } }.removeDuplicates().dropFirst()
@@ -1009,9 +1142,9 @@ struct ExpertAssignmentsWorkspaceView: View {
                 showsClearButton: !selectedExpertStatusFilters.isEmpty,
                 clearAction: { selectedExpertStatusFilters.removeAll() }
             ) {
-                ForEach(ExpertStatusFilter.allCases) { filter in
+                ForEach(ExpertStatusFilter.allCases, id: \.self) { filter in
                     AppFilterChip(
-                        label: filter.label(language: language),
+                        label: filter.title(language: language),
                         isSelected: selectedExpertStatusFilters.contains(filter)
                     ) {
                         toggleExpertStatusFilter(filter)
@@ -1048,34 +1181,6 @@ struct ExpertAssignmentsWorkspaceView: View {
         } else {
             selectedExpertCategoryFilters.insert(filter)
         }
-    }
-
-    private func matchesExpertStatusFilters(_ row: CVListRow) -> Bool {
-        guard !selectedExpertStatusFilters.isEmpty else { return true }
-        return selectedExpertStatusFilters.contains(where: { filter in
-            switch filter {
-            case .ongoing:
-                return row.reviewWorkflowStatus == .accepted || row.reviewWorkflowStatus == .overdue
-            case .completed:
-                return row.reviewWorkflowStatus == .completed
-            case .accepted:
-                return row.reviewWorkflowStatus == .accepted || row.reviewWorkflowStatus == .overdue
-            case .declined:
-                return row.reviewWorkflowStatus == nil
-            }
-        })
-    }
-
-    private func matchesExpertCategoryFilters(_ row: CVListRow) -> Bool {
-        guard !selectedExpertCategoryFilters.isEmpty else { return true }
-        return selectedExpertCategoryFilters.contains(where: { filter in
-            switch filter {
-            case .journalReview:
-                return row.reviewCategory == .journalReview
-            case .doctoralExamination:
-                return row.reviewCategory == .doctoralExamination
-            }
-        })
     }
 
     private func resolvedReviewSelection(from token: String) -> CVReviewEntry? {

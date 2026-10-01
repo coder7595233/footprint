@@ -4787,9 +4787,13 @@ struct CalendarWorkspaceView: View {
                             Button(language.text("Show all columns", "Visa alla kolumner")) {
                                 let allColumns = Set(CalendarWorkspaceColumn.allCases)
                                 let allMarkerColumns = Set(CalendarWorkspaceMarkerColumn.allCases)
+                                let conferencesWereHidden = !visibleCalendarColumns.contains(.conferences)
                                 visibleCalendarColumns = allColumns
                                 visibleCalendarMarkerColumns = allMarkerColumns
                                 persistCalendarColumnVisibility(allColumns, markerColumns: allMarkerColumns)
+                                if conferencesWereHidden {
+                                    rebuildDerivedCalendarData()
+                                }
                             }
                             .buttonStyle(.bordered)
                             .disabled(
@@ -5167,6 +5171,10 @@ struct CalendarWorkspaceView: View {
                     guard nextVisibleColumns != visibleCalendarColumns else { return }
                     visibleCalendarColumns = nextVisibleColumns
                     persistCalendarColumnVisibility(nextVisibleColumns)
+                    if column == .conferences {
+                        // Congresses move between their column and the rows.
+                        rebuildDerivedCalendarData()
+                    }
                 }
             )
         ) {
@@ -8090,10 +8098,34 @@ struct CalendarWorkspaceView: View {
             pinnedCalendarNavigationDate = targetDate
             resetRenderedDateWindow(centeredOn: targetDate)
             rebuildCalendarCache(skipIfUnchanged: false, scope: .visibleWindow)
+            revealCalendarEventThroughFiltersIfNeeded(request.eventSource)
             scheduleTargetedCalendarScroll(to: targetDate, using: proxy, animated: animated)
         }
         store.consumeCalendarRevealRequest()
         return true
+    }
+
+    /// Round 16: "Visa i kalendern" must show the target. When the active
+    /// filters hide it, they are reset (and hidden events shown when the
+    /// target itself is hidden from the calendar) before the pulse.
+    private func revealCalendarEventThroughFiltersIfNeeded(_ eventSource: CalendarWorkspaceEventSource?) {
+        guard let eventSource else { return }
+        let matchingEvents = cache.events.filter { $0.source == eventSource }
+        guard !matchingEvents.isEmpty,
+              !matchingEvents.contains(where: calendarEventPassesActiveFilters) else { return }
+        resetFilters()
+        if matchingEvents.allSatisfy(\.isHiddenFromCalendar) {
+            showsHiddenCalendarEvents = true
+        }
+    }
+
+    private func calendarEventPassesActiveFilters(_ event: CalendarWorkspaceEvent) -> Bool {
+        matchesHiddenCalendarFilter(event)
+            && matchesKindFilter(event)
+            && matchesProjectFilter(event)
+            && matchesResearcherFilter(event)
+            && matchesDayLocationFilter(event)
+            && matchesCalendarSearchFilter(event)
     }
 
     private func triggerCalendarRevealPulse(for eventSource: CalendarWorkspaceEventSource?, token: UUID) {
@@ -8288,6 +8320,7 @@ struct CalendarWorkspaceView: View {
         var hasher = Hasher()
         hasher.combine(cacheSignature?.value ?? 0)
         hasher.combine(filterStateKey)
+        hasher.combine(visibleCalendarColumns.contains(.conferences))
         hasher.combine(DateParsers.isoDay.string(from: today))
         hasher.combine(renderedDateWindow.map { DateParsers.isoDay.string(from: $0.start) })
         hasher.combine(renderedDateWindow.map { DateParsers.isoDay.string(from: $0.end) })
@@ -8658,6 +8691,7 @@ struct CalendarWorkspaceView: View {
 
         let pinnedNavigationDate = pinnedCalendarNavigationDate.map { workspaceCalendar.startOfDay(for: $0) }
         let pendingDefaultNavigationDate = pendingDefaultOpenDate.map { workspaceCalendar.startOfDay(for: $0) }
+        let showsConferenceColumn = visibleCalendarColumns.contains(.conferences)
         let shouldIncludeEmptyDays = includeEmptyDays && calendarSearchText.trimmedOrNil == nil
         let candidateDates: [Date]
         if shouldIncludeEmptyDays {
@@ -8697,8 +8731,10 @@ struct CalendarWorkspaceView: View {
             }
             let key = DateParsers.isoDay.string(from: date)
             let groupedEvents = groupedByDay[date, default: []]
+            // Round 16: with the Conferences column hidden, congresses are
+            // shown as ordinary rows instead of disappearing.
             let separatedEvents = groupedEvents.reduce(into: (events: [CalendarWorkspaceEvent](), conferenceEvents: [CalendarWorkspaceEvent]())) { result, event in
-                if isStandaloneCongressEvent(event) {
+                if showsConferenceColumn && isStandaloneCongressEvent(event) {
                     result.conferenceEvents.append(event)
                 } else {
                     result.events.append(event)

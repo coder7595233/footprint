@@ -281,11 +281,13 @@ struct PublicationAuthorsView: View {
                         title: language.text("Researchers", "Forskare"),
                         actionTitle: language.text("New researcher", "Ny forskare")
                     ) {
-                        setSelectedAuthorID(store.addPublicationAuthor(), armLock: true)
+                        createAuthorRevealingIt()
                     }
                     .frame(minHeight: 42)
 
                     authorFilterBar(language: language)
+
+                    authorFilteredListBanner(language: language)
 
                     authorResultsTable(language: language)
 
@@ -419,7 +421,7 @@ struct PublicationAuthorsView: View {
             }
             .onChange(of: newRecordTrigger) { _, _ in
                 guard isActive else { return }
-                setSelectedAuthorID(store.addPublicationAuthor(), armLock: true)
+                createAuthorRevealingIt()
             }
             .onChange(of: isActive) { _, active in
                 if active {
@@ -632,18 +634,88 @@ struct PublicationAuthorsView: View {
                     )
                 }
 
+                // The incomplete-data filter is chosen in the app menu and
+                // stored with the document; shown here so it is never invisible.
+                if let incompleteTitle = store.personIncompleteDataFilter.activeFilterTitle(language: language) {
+                    AppActiveFilterChip(
+                        title: incompleteTitle,
+                        systemImage: "exclamationmark.circle",
+                        clearTitle: language.text("Remove filter: \(incompleteTitle)", "Ta bort filtret: \(incompleteTitle)"),
+                        clearAction: { store.setPersonIncompleteDataFilter(.none) }
+                    )
+                }
+
                 AppFilterClearAllRow(isVisible: hasActiveAuthorFilters) {
-                    searchText = ""
-                    organizationFilters.removeAll()
-                    countryFilters.removeAll()
-                    showsOnlyCurrentUserAuthor = false
-                    showsOnlyActiveAuthors = false
-                    showsOnlyAuthorsWithPublications = false
-                    if store.personIncompleteDataFilter != .none {
-                        store.setPersonIncompleteDataFilter(.none)
-                    }
+                    clearAllAuthorFilters()
                 }
             }
+        }
+    }
+
+    /// A new researcher has no name, organization or activity yet, so those
+    /// filters would hide it at once; they are cleared so it stays visible.
+    /// The incomplete-data filter is kept (a new record always matches it).
+    private func createAuthorRevealingIt() {
+        searchText = ""
+        organizationFilters.removeAll()
+        countryFilters.removeAll()
+        showsOnlyCurrentUserAuthor = false
+        showsOnlyActiveAuthors = false
+        showsOnlyAuthorsWithPublications = false
+        setSelectedAuthorID(store.addPublicationAuthor(), armLock: true)
+    }
+
+    private func clearAllAuthorFilters() {
+        searchText = ""
+        organizationFilters.removeAll()
+        countryFilters.removeAll()
+        showsOnlyCurrentUserAuthor = false
+        showsOnlyActiveAuthors = false
+        showsOnlyAuthorsWithPublications = false
+        if store.personIncompleteDataFilter != .none {
+            store.setPersonIncompleteDataFilter(.none)
+        }
+        RestoredListFilters.forget(workspace: "Researchers")
+    }
+
+    private func activeAuthorFilterDescriptions(language: AppLanguage) -> [String] {
+        var parts: [String] = []
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            parts.append(search)
+        }
+        if showsOnlyCurrentUserAuthor {
+            parts.append(language.text("You", "Du"))
+        }
+        if showsOnlyActiveAuthors {
+            parts.append(language.text("Active", "Aktiva"))
+        }
+        if showsOnlyAuthorsWithPublications {
+            parts.append(language.text("Has publications", "Har publikationer"))
+        }
+        if let organizations = ListFilterLabels.chips(organizationFilters.sorted()) {
+            parts.append(organizations)
+        }
+        if let countries = ListFilterLabels.chips(countryFilters.sorted().map { language.localizedCountry($0) }) {
+            parts.append(countries)
+        }
+        if let incompleteTitle = store.personIncompleteDataFilter.activeFilterTitle(language: language) {
+            parts.append(incompleteTitle)
+        }
+        return parts
+    }
+
+    /// "Filtrerad lista: 12 av 116 visas" above the list while a filter is on.
+    @ViewBuilder
+    private func authorFilteredListBanner(language: AppLanguage) -> some View {
+        if hasActiveAuthorFilters {
+            AppFilteredListBanner(
+                displayedCount: filteredAuthorRows.count,
+                totalCount: store.coauthors.count,
+                activeFilters: activeAuthorFilterDescriptions(language: language),
+                restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Researchers.Filter"),
+                language: language,
+                clearAction: clearAllAuthorFilters
+            )
         }
     }
 
