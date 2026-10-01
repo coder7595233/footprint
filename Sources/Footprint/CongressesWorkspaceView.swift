@@ -176,6 +176,7 @@ struct CongressesWorkspaceView: View {
     @State private var congressRowsBuildGeneration: UInt = 0
     @State private var congressRowsBuildTask: Task<Void, Never>?
     @State private var congressTodayKey = CongressesWorkspaceView.todayKey()
+    @State private var hasAppliedLaunchFilterPolicy = false
     @State private var sortHistory = ListSortPersistence.load(
         defaultsKey: "CongressesListSort",
         defaultValue: [CongressListSortCriterion(column: .from, ascending: true)]
@@ -192,8 +193,16 @@ struct CongressesWorkspaceView: View {
         searchText.nonEmpty != nil
             || hidesPassedCongresses
             || hidesPassedAbstractDeadlines
-            || minimumYearValue != yearBounds.lowerBound
-            || maximumYearValue != yearBounds.upperBound
+            || yearFilterIsNarrowed
+    }
+
+    /// Round 16: while the rows are still being built the saved range is
+    /// judged by its "follows" flag, not against the current year.
+    private var yearFilterIsNarrowed: Bool {
+        guard !availableYears.isEmpty else {
+            return !dateFiltersFollowAvailableRange && !(minimumYearValue == 0 && maximumYearValue == 0)
+        }
+        return minimumYearValue != yearBounds.lowerBound || maximumYearValue != yearBounds.upperBound
     }
 
     nonisolated private static func buildRows(from snapshot: CongressRowsBuildSnapshot) -> [CongressWorkspaceRow] {
@@ -442,6 +451,7 @@ struct CongressesWorkspaceView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppPalette.canvasBottom)
         .onAppear {
+            applyLaunchFilterPolicyIfNeeded()
             refreshCongressTodayKeyIfNeeded(reason: "appear")
             rebuildCongressRows(reason: "appear")
             clampYearFiltersToAvailableRows()
@@ -545,7 +555,11 @@ struct CongressesWorkspaceView: View {
     }
 
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        // Round 16: filtered once per update; the row buttons used to filter
+        // the whole list again for every row.
+        let visibleRows = filteredRows
+        let selectedID = selectedRowID(in: visibleRows)
+        return VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 10) {
                 AppFilterCard {
                     VStack(alignment: .leading, spacing: 8) {
@@ -594,47 +608,85 @@ struct CongressesWorkspaceView: View {
                                 upperLabel: "\(language.text("Date to", "Datum till")): \(Int(maximumYearValue.rounded()))"
                             )
 
-                            if minimumYearValue != yearBounds.lowerBound || maximumYearValue != yearBounds.upperBound {
+                            if yearFilterIsNarrowed {
                                 FilterClearButton {
-                                    dateFiltersFollowAvailableRange = true
-                                    minimumYearValue = yearBounds.lowerBound
-                                    maximumYearValue = yearBounds.upperBound
+                                    resetCongressYearRange()
                                 }
                                 .padding(.bottom, 2)
                             }
                         }
-
-                        AppFilterClearAllRow(isVisible: hasActiveCongressFilters) {
-                            searchText = ""
-                            hidesPassedCongresses = false
-                            hidesPassedAbstractDeadlines = false
-                            dateFiltersFollowAvailableRange = true
-                            minimumYearValue = yearBounds.lowerBound
-                            maximumYearValue = yearBounds.upperBound
-                        }
+                        // Round 16: "clear all" now lives in the filtered-list
+                        // banner above the list.
                     }
+                }
+
+                if hasActiveCongressFilters {
+                    AppFilteredListBanner(
+                        displayedCount: visibleRows.count,
+                        totalCount: rows.count,
+                        activeFilters: activeCongressFilterDescriptions,
+                        restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Congresses"),
+                        language: language,
+                        clearAction: clearAllCongressFilters
+                    )
                 }
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
             .padding(.bottom, 12)
 
-            if filteredRows.isEmpty {
-                AppWorkspaceEmptyStateView(
-                    title: language.text("No congresses found", "Inga kongresser hittades"),
-                    subtitle: language.text("Adjust the search or add congresses to an organization.", "Ändra sökningen eller lägg till kongresser på en organisation."),
-                    kind: .congresses
-                )
-                .padding(18)
+            if visibleRows.isEmpty {
+                if !rows.isEmpty && hasActiveCongressFilters {
+                    // Round 16: congresses exist but the filters hide them.
+                    AppWorkspaceEmptyStateView(
+                        title: language.text("No records match the filters", "Inga poster matchar filtren"),
+                        subtitle: language.text("Try a broader search or clear the filters.", "Prova en bredare sökning eller rensa filtren."),
+                        kind: .congresses,
+                        actionTitle: language.text("Clear filters", "Rensa filter"),
+                        action: clearAllCongressFilters
+                    )
+                    .padding(18)
+                } else {
+                    AppWorkspaceEmptyStateView(
+                        title: language.text("No congresses found", "Inga kongresser hittades"),
+                        subtitle: language.text("Adjust the search or add congresses to an organization.", "Ändra sökningen eller lägg till kongresser på en organisation."),
+                        kind: .congresses
+                    )
+                    .padding(18)
+                }
             } else {
-                congressList(rows: filteredRows)
+                congressList(rows: visibleRows, selectedID: selectedID)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 12)
             }
         }
     }
 
-    private func congressList(rows: [CongressWorkspaceRow]) -> some View {
+    private func selectedRowID(in visibleRows: [CongressWorkspaceRow]) -> String? {
+        if let selectedCongressID, visibleRows.contains(where: { $0.id == selectedCongressID }) {
+            return selectedCongressID
+        }
+        return visibleRows.first?.id
+    }
+
+    private var activeCongressFilterDescriptions: [String] {
+        var descriptions: [String] = []
+        if let search = searchText.nonEmpty {
+            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        }
+        if hidesPassedCongresses {
+            descriptions.append(language.text("Passed congress dates hidden", "Passerade kongressdatum dolda"))
+        }
+        if hidesPassedAbstractDeadlines {
+            descriptions.append(language.text("Passed abstract deadlines hidden", "Passerade abstractdeadline dolda"))
+        }
+        if yearFilterIsNarrowed {
+            descriptions.append(yearRangeText)
+        }
+        return descriptions
+    }
+
+    private func congressList(rows: [CongressWorkspaceRow], selectedID: String?) -> some View {
         let fromWidth: CGFloat = 92
         let abstractWidth: CGFloat = 104
         let lateAbstractWidth: CGFloat = 118
@@ -658,7 +710,7 @@ struct CongressesWorkspaceView: View {
         } rows: {
             LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(rows) { row in
-                    congressRowButton(row, tableContentWidth: tableContentWidth)
+                    congressRowButton(row, isSelected: row.id == selectedID, tableContentWidth: tableContentWidth)
                     if row.id != rows.last?.id {
                         Divider()
                     }
@@ -689,9 +741,8 @@ struct CongressesWorkspaceView: View {
         )
     }
 
-    private func congressRowButton(_ row: CongressWorkspaceRow, tableContentWidth: CGFloat) -> some View {
-        let isSelected = selectedRow?.id == row.id
-        return AppListRowButton(
+    private func congressRowButton(_ row: CongressWorkspaceRow, isSelected: Bool, tableContentWidth: CGFloat) -> some View {
+        AppListRowButton(
             width: tableContentWidth,
             action: { setSelectedCongressID(row.id) },
             background: { congressListRowBackground(row: row, isSelected: isSelected) }
@@ -924,8 +975,8 @@ struct CongressesWorkspaceView: View {
         Binding(
             get: { minimumYearValue },
             set: { newValue in
-                dateFiltersFollowAvailableRange = false
                 minimumYearValue = min(newValue, maximumYearValue)
+                updateCongressRangeFollowingAfterUserEdit()
             }
         )
     }
@@ -934,33 +985,79 @@ struct CongressesWorkspaceView: View {
         Binding(
             get: { maximumYearValue },
             set: { newValue in
-                dateFiltersFollowAvailableRange = false
                 maximumYearValue = max(newValue, minimumYearValue)
+                updateCongressRangeFollowingAfterUserEdit()
             }
         )
     }
 
+    /// Round 16: a range dragged back to cover every year follows new years
+    /// again; a narrowed range is kept as chosen.
+    private func updateCongressRangeFollowingAfterUserEdit() {
+        let follows = minimumYearValue <= yearBounds.lowerBound && maximumYearValue >= yearBounds.upperBound
+        if dateFiltersFollowAvailableRange != follows {
+            dateFiltersFollowAvailableRange = follows
+        }
+    }
+
     private func clampYearFiltersToAvailableRows() {
+        // Round 16: the rows are built in the background. Before they exist
+        // the bounds are just the current year, and clamping then collapsed a
+        // saved range; it is fitted when the rows arrive instead.
+        guard !availableYears.isEmpty else { return }
         let bounds = yearBounds
         if dateFiltersFollowAvailableRange || (minimumYearValue == 0 && maximumYearValue == 0) {
-            minimumYearValue = bounds.lowerBound
-            maximumYearValue = bounds.upperBound
-            dateFiltersFollowAvailableRange = true
+            if minimumYearValue != bounds.lowerBound { minimumYearValue = bounds.lowerBound }
+            if maximumYearValue != bounds.upperBound { maximumYearValue = bounds.upperBound }
+            if !dateFiltersFollowAvailableRange { dateFiltersFollowAvailableRange = true }
         } else {
-            minimumYearValue = min(max(minimumYearValue, bounds.lowerBound), bounds.upperBound)
-            maximumYearValue = min(max(maximumYearValue, bounds.lowerBound), bounds.upperBound)
+            let lower = min(max(minimumYearValue, bounds.lowerBound), bounds.upperBound)
+            let upper = min(max(maximumYearValue, bounds.lowerBound), bounds.upperBound)
+            if minimumYearValue != lower { minimumYearValue = lower }
+            if maximumYearValue != upper { maximumYearValue = upper }
         }
+        if !yearFilterIsNarrowed {
+            // A range covering every year is no filter, so it must not make
+            // the list say "kept from last time".
+            for key in ["MinimumYear", "MaximumYear", "FollowsRange"] {
+                RestoredListFilters.markChanged(key: "Congresses.Filter.\(key)")
+            }
+        }
+    }
+
+    private func resetCongressYearRange() {
+        dateFiltersFollowAvailableRange = true
+        if availableYears.isEmpty {
+            minimumYearValue = 0
+            maximumYearValue = 0
+        } else {
+            minimumYearValue = yearBounds.lowerBound
+            maximumYearValue = yearBounds.upperBound
+        }
+    }
+
+    /// Round 16: clears every filter of this list (banner, empty list).
+    private func clearAllCongressFilters() {
+        searchText = ""
+        hidesPassedCongresses = false
+        hidesPassedAbstractDeadlines = false
+        resetCongressYearRange()
+        RestoredListFilters.forget(workspace: "Congresses")
     }
 
     private func clearCongressFiltersForDeactivationIfNeeded() {
         guard !store.shouldRetainListFilters(for: .congresses) else { return }
         guard hasActiveCongressFilters else { return }
-        searchText = ""
-        hidesPassedCongresses = false
-        hidesPassedAbstractDeadlines = false
-        dateFiltersFollowAvailableRange = true
-        minimumYearValue = yearBounds.lowerBound
-        maximumYearValue = yearBounds.upperBound
+        clearAllCongressFilters()
+    }
+
+    /// Round 16: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared when the list is first shown.
+    private func applyLaunchFilterPolicyIfNeeded() {
+        guard !hasAppliedLaunchFilterPolicy else { return }
+        hasAppliedLaunchFilterPolicy = true
+        guard !store.shouldRetainListFilters(for: .congresses) else { return }
+        clearAllCongressFilters()
     }
 
     private func reconcileSelection() {
