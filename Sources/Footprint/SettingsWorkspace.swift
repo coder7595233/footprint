@@ -1224,8 +1224,8 @@ struct SettingsWorkspaceView: View {
             Text(language.text("List filter memory", "Listfiltrens minne"))
                 .appTypography(.sectionTitle)
             Text(language.text(
-                "Choose which views should keep their current list filters when you switch to another view.",
-                "Välj vilka vyer som ska behålla sina aktuella listfilter när du växlar till en annan vy."
+                "Choose which views keep their list filters. Kept filters stay when you switch views and also until the next time you open the app. A filtered list always says so above the list, shows how many records are visible and has a Clear filters button.",
+                "Välj vilka vyer som ska behålla sina listfilter. Filter som behålls finns kvar när du växlar vy och även till nästa gång du öppnar appen. En filtrerad lista säger alltid det ovanför listan, visar hur många poster som syns och har knappen Rensa filter."
             ))
             .appTypography(.secondary)
             .foregroundStyle(.secondary)
@@ -1239,8 +1239,8 @@ struct SettingsWorkspaceView: View {
                         }
                         .appCheckboxStyle()
                         SettingsEffectNote(language.text(
-                            "Affects: the filters in the \(key.title(language: language)) list. On: they are kept when you leave the view and come back. Off: they are cleared when you leave the view.",
-                            "Påverkar: filtren i listan \(key.title(language: language)). På: de finns kvar när du lämnar vyn och kommer tillbaka. Av: de nollställs när du lämnar vyn."
+                            "Affects: the filters in the \(key.title(language: language)) list. On: they are kept when you leave the view and between sessions, and the list shows that it is filtered. Off: they are cleared when you leave the view.",
+                            "Påverkar: filtren i listan \(key.title(language: language)). På: de finns kvar när du lämnar vyn och mellan gångerna du använder appen, och listan visar att den är filtrerad. Av: de nollställs när du lämnar vyn."
                         ))
                     }
                 }

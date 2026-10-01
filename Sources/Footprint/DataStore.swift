@@ -25626,6 +25626,8 @@ final class GrantDataStore: ObservableObject {
                 grantNameLabel,
                 application.grantCategory,
                 application.resultLabel,
+                // Round 16: the status names in both languages are searchable.
+                ApplicationStatusCanonical.searchLabels(for: application.resultLabel).joined(separator: " "),
                 projectDisplayLabel,
                 application.applicationManager,
                 application.managerReason,

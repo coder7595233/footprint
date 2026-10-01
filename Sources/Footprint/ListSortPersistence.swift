@@ -16,6 +16,11 @@ struct WorkspaceFilterState<Value: Codable & Sendable>: DynamicProperty {
         if let data = UserDefaults.standard.data(forKey: self.defaultsKey),
            let decoded = try? JSONDecoder().decode(Value.self, from: data) {
             restored = decoded
+            // A value other than the default came back from an earlier run:
+            // the list shows "Sparat från förra gången" until it is changed.
+            if let defaultData = try? JSONEncoder().encode(defaultValue), defaultData != data {
+                RestoredListFilters.markRestored(key: defaultsKey)
+            }
         } else {
             restored = defaultValue
         }
@@ -26,6 +31,7 @@ struct WorkspaceFilterState<Value: Codable & Sendable>: DynamicProperty {
         get { value }
         nonmutating set {
             value = newValue
+            RestoredListFilters.markChanged(key: defaultsKey)
             guard let data = try? JSONEncoder().encode(newValue) else { return }
             UserDefaults.standard.set(data, forKey: defaultsKey)
         }
