@@ -350,7 +350,9 @@ struct DataMaintenanceWorkspaceView: View {
     @WorkspaceFilterState("DataQuality.Filter.QueryDraft") private var queryDraft = ""
     @WorkspaceFilterState("DataQuality.Filter.Query") private var query = ""
     @WorkspaceFilterState("DataQuality.Filter.Category") private var category: DataQualityCategory = .all
-    @WorkspaceFilterState("DataQuality.Filter.IssueTypes") private var selectedIssueFilters = DataQualityIssueFilter.defaultSelection
+    // Round 17: the stored choice is respected (default: every list, so each
+    // section header has a live count).
+    @WorkspaceFilterState("DataQuality.Filter.IssueTypes") private var selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
     @WorkspaceFilterState("DataQuality.Filter.ExpandedArchive") private var expandedArchivedIDs = Set<String>()
     @State private var selectedArchivedIDs = Set<String>()
     @WorkspaceFilterState("DataQuality.ExpandedSections") private var expandedSectionKeys = Set<DataQualitySectionKey>()
@@ -638,9 +640,18 @@ struct DataMaintenanceWorkspaceView: View {
             )
         )
         .onAppear {
-            // Every section header shows a live count, so all diagnostic
-            // types are loaded (the loader staggers them off the first frame).
-            selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
+            // Round 17: the issue types the user chose are kept (they used to
+            // be reset to all on every appear). With "keep filters" off in
+            // Settings, filters saved by an earlier run are cleared the
+            // first time the view is shown.
+            if ListFilterLaunchPolicy.shouldClearSavedFilters(
+                for: .dataQuality,
+                retainsFilters: store.shouldRetainListFilters(for: .dataQuality)
+            ) {
+                clearDataQualityFilters()
+                selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
+                expandedArchivedIDs.removeAll()
+            }
             queryDraft = query
             refreshCachedDiagnosticsIfActive(reason: "appear", force: false)
         }
@@ -888,7 +899,7 @@ struct DataMaintenanceWorkspaceView: View {
         queryDraft = ""
         query = ""
         category = .all
-        selectedIssueFilters = DataQualityIssueFilter.defaultSelection
+        selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
         expandedArchivedIDs.removeAll()
     }
 
@@ -963,7 +974,13 @@ struct DataMaintenanceWorkspaceView: View {
 
     @ViewBuilder
     private func dataQualityFilterBanner(language: AppLanguage) -> some View {
-        let counts = DataQualitySectionKey.allCases.compactMap { filteredSectionCounts($0) }
+        // Round 17: the sections count different things (records, issues,
+        // pairs), so the banner gives each section's own count instead of
+        // one sum that mixes them.
+        let counts = DataQualitySectionKey.allCases.compactMap { key -> (title: String, shown: Int, total: Int)? in
+            guard let count = filteredSectionCounts(key) else { return nil }
+            return (title: key.title(language: language), shown: count.shown, total: count.total)
+        }
         let activeFilters = [
             ListFilterLabels.search(query, language: language),
             category == .all ? nil : category.title(language: language),
@@ -975,6 +992,8 @@ struct DataMaintenanceWorkspaceView: View {
             totalCount: counts.reduce(0) { $0 + $1.total },
             activeFilters: activeFilters,
             restoredFromLastSession: restored,
+            countSummary: ListFilterLabels.sectionCounts(counts, language: language)
+                ?? language.text("nothing to show", "inget att visa"),
             language: language,
             clearAction: clearDataQualityFilters
         )

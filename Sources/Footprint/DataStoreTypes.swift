@@ -154,7 +154,9 @@ struct ApplicationRowSnapshot: Identifiable, Equatable {
     let isToApplyStatus: Bool
     let isBeforeOpening: Bool
     let isCurrentUserFirstApplicant: Bool
-    let applicationYear: Int
+    /// Round 17: nil when the application has no year (it is no longer placed
+    /// in the current year; see YearlessRecordRule).
+    let applicationYear: Int?
     let budgetAmount: Double
     let sortOrganization: String
     let sortGrantName: String
@@ -209,6 +211,9 @@ struct PublicationAuthorRowSnapshot: Identifiable, Equatable {
     let missingPrimaryOrganization: Bool
     let missingPrimaryCountry: Bool
     let missingTitle: Bool
+    /// Round 17: the researcher list's organization filter keys (organization
+    /// id when the affiliation is linked, otherwise the written name).
+    var affiliationOrganizationKeys: [String] = []
 }
 
 struct ProjectRowSnapshot: Identifiable, Equatable {

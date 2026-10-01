@@ -169,6 +169,8 @@ struct PublicationAuthorsView: View {
     let newRecordTrigger: Int
     let isActive: Bool
     @WorkspaceFilterState("Researchers.Filter.Search") private var searchText = ""
+    /// Round 17: organization ids (or the written name of an affiliation
+    /// that is not linked); see ResearcherOrganizationFilterKeys.
     @WorkspaceFilterState("Researchers.Filter.Organizations") private var organizationFilters: Set<String> = []
     @WorkspaceFilterState("Researchers.Filter.Countries") private var countryFilters: Set<String> = []
     @WorkspaceFilterState("Researchers.Filter.CurrentUser") private var showsOnlyCurrentUserAuthor = false
@@ -291,12 +293,17 @@ struct PublicationAuthorsView: View {
 
                     authorResultsTable(language: language)
 
-                    ListCountFootnote(displayedCount: filteredAuthorRows.count, totalCount: store.coauthors.count, language: language)
+                    // Round 17: the banner already gives the count while a
+                    // filter is on.
+                    if !hasActiveAuthorFilters {
+                        ListCountFootnote(displayedCount: filteredAuthorRows.count, totalCount: store.coauthors.count, language: language)
+                    }
                 }
             }
             .onAppear {
                 let onAppearStartedAt = CFAbsoluteTimeGetCurrent()
                 store.appendPerformanceDiagnostic("coauthors-view-onAppear-start")
+                applyAuthorLaunchFilterPolicyIfNeeded()
                 guard isActive else {
                     needsAuthorRowsRefreshWhenActive = true
                     needsAuthorFilterRebuildWhenActive = true
@@ -371,6 +378,9 @@ struct PublicationAuthorsView: View {
             .onReceive(
                 store.$metadata.map(\.personIncompleteDataFilter).removeDuplicates().dropFirst()
             ) { _ in
+                // Chosen now (app menu or this list), so not "kept from last
+                // time" any more.
+                RestoredListFilters.markChanged(key: Self.incompleteDataRestoredKey)
                 guard isActive else {
                     needsAuthorFilterRebuildWhenActive = true
                     return
@@ -378,7 +388,8 @@ struct PublicationAuthorsView: View {
                 scheduleFilteredAuthorRowsRebuild()
             }
             .onChange(of: store.language) { _, _ in
-                organizationFilters.removeAll()
+                // Round 17: the organization filter is stored by id, so it
+                // stays on when the language changes.
                 guard isActive else {
                     needsAuthorRowsRefreshWhenActive = true
                     needsAuthorFilterRebuildWhenActive = true
@@ -534,8 +545,13 @@ struct PublicationAuthorsView: View {
     private func refreshAuthorRows() {
         let rows = store.publicationAuthorRowSnapshots()
         authorRows = rows
-        organizationOptionsCache = Array(Set(rows.flatMap(\.affiliationOrganizations).compactMap(\.nonEmpty)))
-            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        let language = store.language
+        let organizationKeys = Set(rows.flatMap(\.affiliationOrganizationKeys))
+        organizationOptionsCache = Array(organizationKeys)
+            .map { (key: $0, label: organizationFilterLabel($0, language: language)) }
+            .sorted { $0.label.localizedStandardCompare($1.label) == .orderedAscending }
+            .map { $0.key }
+        migrateOrganizationFilterKeysIfNeeded(knownKeys: organizationKeys, hasRows: !rows.isEmpty)
         countryOptionsCache = Array(Set(rows.compactMap(\.primaryCountry.trimmedOrNil)))
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
         authorRowsAppliedGeneration &+= 1
@@ -543,6 +559,71 @@ struct PublicationAuthorsView: View {
 
     private func rebuildAuthorRows() {
         refreshAuthorRows()
+    }
+
+    /// Round 17: the organization's current name for a filter key (an id);
+    /// a written name is shown as it is.
+    private func organizationFilterLabel(_ key: String, language: AppLanguage) -> String {
+        guard let organization = store.organization(id: key) else { return key }
+        let name = language == .swedish
+            ? (organization.nameSv.nonEmpty ?? organization.nameEn)
+            : (organization.nameEn.nonEmpty ?? organization.nameSv)
+        return name.nonEmpty ?? key
+    }
+
+    /// Round 17: older versions stored the organization's display name. A
+    /// stored name that matches an organization becomes its id, and entries
+    /// that match nothing any more are dropped instead of hiding everyone.
+    private func migrateOrganizationFilterKeysIfNeeded(knownKeys: Set<String>, hasRows: Bool) {
+        // Not loaded yet: dropping entries now would lose a valid filter.
+        guard !organizationFilters.isEmpty, hasRows else { return }
+        var idsByName: [String: String] = [:]
+        for organization in store.organizations {
+            for name in [organization.nameSv, organization.nameEn] {
+                let key = normalizedSearchFilterText(name)
+                if !key.isEmpty, idsByName[key] == nil {
+                    idsByName[key] = organization.id
+                }
+            }
+        }
+        let migrated = ResearcherOrganizationFilterKeys.migrated(
+            organizationFilters,
+            knownKeys: knownKeys,
+            organizationIDForName: { idsByName[normalizedSearchFilterText($0)] }
+        )
+        if migrated != organizationFilters {
+            organizationFilters = migrated
+        }
+    }
+
+    private static let incompleteDataRestoredKey = "Researchers.Filter.IncompleteData"
+
+    /// Round 17: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared the first time the list is shown. The
+    /// incomplete-data filter comes back with the document; when it is on
+    /// at launch it is marked "kept from last time" like the others.
+    private func applyAuthorLaunchFilterPolicyIfNeeded() {
+        if ListFilterLaunchPolicy.shouldClearSavedFilters(
+            for: .researchers,
+            retainsFilters: store.shouldRetainListFilters(for: .researchers)
+        ) {
+            searchText = ""
+            organizationFilters.removeAll()
+            countryFilters.removeAll()
+            showsOnlyCurrentUserAuthor = false
+            showsOnlyActiveAuthors = false
+            showsOnlyAuthorsWithPublications = false
+            if store.personIncompleteDataFilter != .none {
+                store.setPersonIncompleteDataFilterSilently(.none)
+            }
+            RestoredListFilters.forget(workspace: "Researchers")
+            RestoredListFilters.markChanged(key: Self.incompleteDataRestoredKey)
+            return
+        }
+        RestoredListFilters.evaluateAtLaunch(
+            key: Self.incompleteDataRestoredKey,
+            isRestored: store.personIncompleteDataFilter != .none
+        )
     }
 
     private func clearAuthorFiltersForDeactivationIfNeeded() {
@@ -615,7 +696,8 @@ struct PublicationAuthorsView: View {
                         title: language.text("Remove filter", "Ta bort filter"),
                         emptyLabel: language.text("All organizations", "Alla organisationer"),
                         options: organizationOptions,
-                        selectedOptions: $organizationFilters
+                        selectedOptions: $organizationFilters,
+                        display: { organizationFilterLabel($0, language: language) }
                     )
                 }
 
@@ -645,9 +727,7 @@ struct PublicationAuthorsView: View {
                     )
                 }
 
-                AppFilterClearAllRow(isVisible: hasActiveAuthorFilters) {
-                    clearAllAuthorFilters()
-                }
+                // Round 17: "clear all" is the banner's "Rensa filter".
             }
         }
     }
@@ -692,7 +772,7 @@ struct PublicationAuthorsView: View {
         if showsOnlyAuthorsWithPublications {
             parts.append(language.text("Has publications", "Har publikationer"))
         }
-        if let organizations = ListFilterLabels.chips(organizationFilters.sorted()) {
+        if let organizations = ListFilterLabels.chips(organizationFilters.map { organizationFilterLabel($0, language: language) }.sorted()) {
             parts.append(organizations)
         }
         if let countries = ListFilterLabels.chips(countryFilters.sorted().map { language.localizedCountry($0) }) {
@@ -811,7 +891,7 @@ struct PublicationAuthorsView: View {
         } else {
             baseRows = authorRows
                 .filter { row in
-                    (organizationFilters.isEmpty || !Set(row.affiliationOrganizations).isDisjoint(with: organizationFilters))
+                    (organizationFilters.isEmpty || !organizationFilters.isDisjoint(with: row.affiliationOrganizationKeys))
                         && (countryFilters.isEmpty || countryFilters.contains(row.primaryCountry))
                         && (!showsOnlyCurrentUserAuthor || row.isCurrentUser)
                         && (!showsOnlyActiveAuthors || authorHasAnyActivity(row))

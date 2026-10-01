@@ -4048,6 +4048,20 @@ struct CalendarWorkspaceView: View {
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .background(AppPalette.calendarWorkspaceSurface)
+                // Round 17: while a filter is on, the calendar says so above
+                // the days, also when the filter panel is collapsed.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if let calendarFilterSummaryText {
+                        AppActiveFiltersBanner(
+                            summary: calendarFilterSummaryText,
+                            language: language,
+                            clearAction: resetFilters
+                        )
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(AppPalette.calendarWorkspaceSurface)
+                    }
+                }
                 .layoutPriority(0)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -4841,10 +4855,23 @@ struct CalendarWorkspaceView: View {
                 } label: {
                     Image(systemName: "sidebar.leading")
                         .frame(width: 22, height: 22)
+                        // Round 17: a small dot while a filter is on.
+                        .overlay(alignment: .topTrailing) {
+                            if hasActiveCalendarFilters {
+                                Circle()
+                                    .fill(Color.accentColor)
+                                    .frame(width: 7, height: 7)
+                                    .offset(x: 3, y: -3)
+                            }
+                        }
                 }
                 .buttonStyle(.borderless)
-                .help(language.text("Show filters", "Visa filter"))
-                .accessibilityLabel(language.text("Show filters", "Visa filter"))
+                .help(hasActiveCalendarFilters
+                    ? language.text("Show filters (filters are on)", "Visa filter (filter är på)")
+                    : language.text("Show filters", "Visa filter"))
+                .accessibilityLabel(hasActiveCalendarFilters
+                    ? language.text("Show filters (filters are on)", "Visa filter (filter är på)")
+                    : language.text("Show filters", "Visa filter"))
 
                 Text(language.text("Filters", "Filter"))
                     .calendarTypography(.tableHeader)

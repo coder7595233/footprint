@@ -53,6 +53,9 @@ struct OrganizationsDirectoryView: View {
     /// filter would hide it; handled as soon as its row exists.
     @State private var pendingRevealOrganizationID: String?
     @State private var hasAppliedLaunchFilterPolicy = false
+    /// Round 17: which chips would still find something, worked out with the
+    /// list (see organizationRowsSignature) instead of once per chip and redraw.
+    @State private var organizationChipAvailability: OrganizationChipAvailability?
 
     private var organizationSelectionBinding: Binding<String?> {
         Binding(
@@ -494,28 +497,26 @@ struct OrganizationsDirectoryView: View {
         return language.localizedGrantCategory(category)
     }
 
+    /// The chip availability for the filters shown now; nil while the list
+    /// is being rebuilt (every chip stays enabled until it is known).
+    private var currentOrganizationChipAvailability: OrganizationChipAvailability? {
+        guard organizationRowsSignature == currentOrganizationRowsSignature else { return nil }
+        return organizationChipAvailability
+    }
+
     private func isOrganizationCategoryFilterAvailable(_ category: String) -> Bool {
-        organizationFilterHasMatches(
-            selectedCategoryFilters: [category],
-            selectedRoleFilters: selectedRoleFilters,
-            onlyLinkedOrganizations: onlyLinkedOrganizations
-        )
+        guard let availability = currentOrganizationChipAvailability else { return true }
+        return availability.categories.contains(category)
     }
 
     private func isOrganizationRoleFilterAvailable(_ role: OrganizationRole) -> Bool {
-        organizationFilterHasMatches(
-            selectedCategoryFilters: selectedCategoryFilters,
-            selectedRoleFilters: [role],
-            onlyLinkedOrganizations: onlyLinkedOrganizations
-        )
+        guard let availability = currentOrganizationChipAvailability else { return true }
+        return availability.roles.contains(role)
     }
 
     private func isOnlyLinkedOrganizationsFilterAvailable() -> Bool {
-        organizationFilterHasMatches(
-            selectedCategoryFilters: selectedCategoryFilters,
-            selectedRoleFilters: selectedRoleFilters,
-            onlyLinkedOrganizations: true
-        )
+        guard let availability = currentOrganizationChipAvailability else { return true }
+        return availability.linkedRecords
     }
 
     private func organizationFilterHasMatches(
@@ -718,9 +719,10 @@ struct OrganizationsDirectoryView: View {
             onlyLinkedOrganizations: onlyLinkedOrganizations,
             sortHistory: sortHistory,
             language: language
-        ) { rows in
+        ) { rows, availability in
             guard generation == organizationRowsBuildGeneration else { return }
             filteredOrganizationRowsCache = rows
+            organizationChipAvailability = availability
             organizationRowsSignature = signature
             hasBuiltOrganizationRows = true
             reconcileOrganizationSelection(with: rows)
@@ -746,22 +748,71 @@ struct OrganizationsDirectoryView: View {
         onlyLinkedOrganizations: Bool,
         sortHistory: [OrganizationListSortCriterion],
         language: AppLanguage,
-        completion: @escaping @MainActor ([OrganizationDirectoryRow]) -> Void
+        completion: @escaping @MainActor ([OrganizationDirectoryRow], OrganizationChipAvailability) -> Void
     ) -> DispatchWorkItem {
         DispatchWorkItem {
+            // Round 17: the search is parsed once and each row is matched
+            // once; the list and the chip availability both use the result.
+            let query = SearchFilterQuery(raw: searchText)
+            let searchMatched = snapshots.filter { matchesOrganizationSearch($0, query: query, language: language) }
             let rows = Self.organizationRows(
-                from: snapshots,
-                searchText: searchText,
+                fromSearchMatched: searchMatched,
                 selectedCategoryFilters: selectedCategoryFilters,
                 selectedRoleFilters: selectedRoleFilters,
                 onlyLinkedOrganizations: onlyLinkedOrganizations,
-                sortHistory: sortHistory,
-                language: language
+                sortHistory: sortHistory
+            )
+            let availability = Self.chipAvailability(
+                searchMatched: searchMatched,
+                selectedCategoryFilters: selectedCategoryFilters,
+                selectedRoleFilters: selectedRoleFilters,
+                onlyLinkedOrganizations: onlyLinkedOrganizations
             )
             DispatchQueue.main.async {
-                completion(rows)
+                completion(rows, availability)
             }
         }
+    }
+
+    nonisolated private static func organizationRows(
+        fromSearchMatched snapshots: [OrganizationRowSnapshot],
+        selectedCategoryFilters: Set<String>,
+        selectedRoleFilters: Set<OrganizationRole>,
+        onlyLinkedOrganizations: Bool,
+        sortHistory: [OrganizationListSortCriterion]
+    ) -> [OrganizationDirectoryRow] {
+        snapshots
+            .filter { selectedCategoryFilters.isEmpty || selectedCategoryFilters.contains($0.category) }
+            .filter { selectedRoleFilters.isEmpty || !Set($0.roles).isDisjoint(with: selectedRoleFilters) }
+            .filter { !onlyLinkedOrganizations || $0.hasLinkedRecords }
+            .map(organizationRow(for:))
+            .sorted(using: organizationSortOrder(from: sortHistory))
+    }
+
+    /// Round 17: a chip is available when switching it on (with the other
+    /// groups as they are) would still find an organization.
+    nonisolated private static func chipAvailability(
+        searchMatched: [OrganizationRowSnapshot],
+        selectedCategoryFilters: Set<String>,
+        selectedRoleFilters: Set<OrganizationRole>,
+        onlyLinkedOrganizations: Bool
+    ) -> OrganizationChipAvailability {
+        var result = OrganizationChipAvailability()
+        for row in searchMatched {
+            let matchesCategory = selectedCategoryFilters.isEmpty || selectedCategoryFilters.contains(row.category)
+            let matchesRole = selectedRoleFilters.isEmpty || !Set(row.roles).isDisjoint(with: selectedRoleFilters)
+            let matchesLinked = !onlyLinkedOrganizations || row.hasLinkedRecords
+            if matchesRole && matchesLinked {
+                result.categories.insert(row.category)
+            }
+            if matchesCategory && matchesLinked {
+                result.roles.formUnion(row.roles)
+            }
+            if matchesCategory && matchesRole && row.hasLinkedRecords {
+                result.linkedRecords = true
+            }
+        }
+        return result
     }
 
     nonisolated private static func organizationRows(
@@ -819,7 +870,10 @@ struct OrganizationsDirectoryView: View {
     }
 
     nonisolated private static func matchesOrganizationSearch(_ row: OrganizationRowSnapshot, searchText: String, language: AppLanguage) -> Bool {
-        let searchQuery = SearchFilterQuery(raw: searchText)
+        matchesOrganizationSearch(row, query: SearchFilterQuery(raw: searchText), language: language)
+    }
+
+    nonisolated private static func matchesOrganizationSearch(_ row: OrganizationRowSnapshot, query searchQuery: SearchFilterQuery, language: AppLanguage) -> Bool {
         guard !searchQuery.isEmpty else { return true }
         let haystack = [
             row.displayName,
@@ -910,8 +964,8 @@ struct OrganizationsDirectoryView: View {
 
     private func activeOrganizationFilterDescriptions(language: AppLanguage) -> [String] {
         var descriptions: [String] = []
-        if let search = organizationSearchText.nonEmpty {
-            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        if let search = ListFilterLabels.search(organizationSearchText, language: language) {
+            descriptions.append(search)
         }
         if !selectedCategoryFilters.isEmpty {
             descriptions.append(
@@ -3673,6 +3727,14 @@ private struct ScrollToTrailingOnAppear<Content: View>: View {
             }
         }
     }
+}
+
+/// Round 17: which organization filter chips would still find something
+/// with the other filters as they are.
+private struct OrganizationChipAvailability: Equatable, Sendable {
+    var categories = Set<String>()
+    var roles = Set<OrganizationRole>()
+    var linkedRecords = false
 }
 
 private struct OrganizationDirectoryRow: Identifiable {
