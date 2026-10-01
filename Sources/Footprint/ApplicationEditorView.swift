@@ -3034,9 +3034,23 @@ private struct ApplicationTimelineStepper: View {
             .position(x: startX + (width / 2), y: markerCenterY)
     }
 
+    /// Locked records hide "Beslut väntas"; its place is kept so the other
+    /// circles sit where they do in the open editor.
+    private func isStepHidden(_ step: ApplicationTimelineStep) -> Bool {
+        application.isEditingLocked && step == .decisionExpected
+    }
+
+    /// A hidden step takes the colour of the step after it, so the line runs
+    /// straight past the empty place.
+    private func colorSourceStep(at index: Int) -> ApplicationTimelineStep {
+        let step = allSteps[index]
+        guard isStepHidden(step), index + 1 < allSteps.count else { return step }
+        return allSteps[index + 1]
+    }
+
     private func segmentBaseStyle(index: Int) -> (leadingColor: Color, trailingColor: Color, dashed: Bool) {
-        let leftStep = allSteps[index]
-        let rightStep = allSteps[index + 1]
+        let leftStep = colorSourceStep(at: index)
+        let rightStep = colorSourceStep(at: index + 1)
         if isStepDeemphasized(leftStep) || isStepDeemphasized(rightStep) {
             return (segmentEndpointColor(for: leftStep), segmentEndpointColor(for: rightStep), false)
         }
@@ -3062,6 +3076,17 @@ private struct ApplicationTimelineStepper: View {
 
     @ViewBuilder
     private func stepView(_ step: ApplicationTimelineStep, centerX: CGFloat, width: CGFloat) -> some View {
+        if isStepHidden(step) {
+            Color.clear
+                .frame(width: width, height: timelineHeight)
+                .allowsHitTesting(false)
+                .position(x: centerX, y: timelineHeight / 2)
+        } else {
+            visibleStepView(step, centerX: centerX, width: width)
+        }
+    }
+
+    private func visibleStepView(_ step: ApplicationTimelineStep, centerX: CGFloat, width: CGFloat) -> some View {
         VStack(spacing: 9) {
             markerView(for: step)
             labelBlock(for: step)
