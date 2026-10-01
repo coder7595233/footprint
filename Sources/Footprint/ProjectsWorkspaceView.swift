@@ -738,7 +738,7 @@ struct ProjectsWorkspaceView: View {
     }
 
     private func projectGrantedLabel(for row: ProjectDirectoryRow) -> String {
-        row.isLedByCurrentUser ? CurrencyFormatter.format(row.grantedAmount) : "–"
+        row.isLedByCurrentUser ? CurrencyFormatter.format(row.grantedAmount, language: store.language) : AmountFormatter.missing
     }
 
 }
@@ -775,7 +775,7 @@ struct ProjectCollaboratorFlagsView: View {
         HStack(spacing: 3) {
             ForEach(flags, id: \.self) { flag in
                 Text(flag)
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
             }
         }
     }

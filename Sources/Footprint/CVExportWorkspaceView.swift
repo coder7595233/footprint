@@ -680,8 +680,7 @@ struct CVExportWorkspaceView: View {
                         Button(language.text("Export", "Exportera")) {
                             performExport()
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(AppPalette.actionSave)
+                        .appSaveButtonStyle()
                         .disabled(!canExport)
                         Button(language.text("Open export folder", "Öppna exportmapp")) {
                             NSWorkspace.shared.open(store.exportDirectoryURL)
@@ -876,7 +875,7 @@ struct CVExportWorkspaceView: View {
                     .font(.system(size: 14, weight: isSelected ? .bold : .semibold))
                     .frame(width: 18, height: 18)
                 Text(kind.title(language: language))
-                    .font(.system(size: 15, weight: isSelected ? .semibold : .medium))
+                    .font(appFont(.panelTitle).weight(isSelected ? .semibold : .medium))
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -933,7 +932,7 @@ struct CVExportWorkspaceView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .frame(width: 16, height: 16)
                 Text(title)
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                    .font(appFont(.body).weight(isSelected ? .semibold : .medium))
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)
                 Spacer(minLength: 0)
@@ -962,7 +961,7 @@ struct CVExportWorkspaceView: View {
 
             if sections.allSatisfy({ $0.links.isEmpty }) {
                 Text(language.text("No linked source records are included in this preview.", "Inga länkade underlag ingår i den här förhandsvisningen."))
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
@@ -2674,7 +2673,7 @@ private struct CVProfileAuthorDataEditor: View {
 
                         CVProfileFieldBlock(title: language.text("Date of birth", "Födelsedatum"), width: 180) {
                             AppDateField(
-                                placeholder: "YYYY-MM-DD",
+                                placeholder: language.datePlaceholder,
                                 text: birthDateBinding,
                                 width: 180,
                                 language: language
@@ -2924,7 +2923,7 @@ private struct CVProfileDoctoralThesisEditor: View {
 
                     if let doiURL = draft.doiURL {
                         Link("DOI", destination: doiURL)
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(appFont(.secondary).weight(.semibold))
                             .foregroundStyle(AppPalette.linkAction)
                             .padding(.top, 24)
                     }
@@ -3089,7 +3088,7 @@ private struct CVProfileResumeEditor: View {
                     CVRichTextFormatButton(title: "U") { editorController.toggleUnderline() }
                     Spacer()
                     Text(language == .swedish ? "Svensk version" : "English version")
-                        .font(.system(size: 12))
+                        .font(appFont(.secondary))
                         .foregroundStyle(.secondary)
                 }
 
@@ -3157,11 +3156,11 @@ private struct CVProfileEmploymentRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             CVProfileRowField(width: 120) {
-                AppDateField(placeholder: "YYYY-MM-DD", text: $employment.from, width: 120, language: language)
+                AppDateField(placeholder: language.datePlaceholder, text: $employment.from, width: 120, language: language)
             }
 
             CVProfileRowField(width: 120) {
-                AppDateField(placeholder: "YYYY-MM-DD", text: $employment.to, width: 120, language: language)
+                AppDateField(placeholder: language.datePlaceholder, text: $employment.to, width: 120, language: language)
             }
 
             CVProfileRowField(width: 220) {
@@ -3265,11 +3264,11 @@ private struct CVProfileEducationRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             CVProfileRowField(width: 120) {
-                AppDateField(placeholder: "YYYY-MM-DD", text: $entry.from, width: 120, language: language)
+                AppDateField(placeholder: language.datePlaceholder, text: $entry.from, width: 120, language: language)
             }
 
             CVProfileRowField(width: 120) {
-                AppDateField(placeholder: "YYYY-MM-DD", text: $entry.to, width: 120, language: language)
+                AppDateField(placeholder: language.datePlaceholder, text: $entry.to, width: 120, language: language)
             }
 
             CVProfileRowField(width: 260) {

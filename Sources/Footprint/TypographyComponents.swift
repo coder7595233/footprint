@@ -75,8 +75,11 @@ struct AppTableHeaderText: View {
     let text: String
 
     var body: some View {
+        // Round 16: table headers use the table-header role; the leading
+        // padding keeps them aligned with the field text below.
         Text(text)
-            .appTypography(.fieldLabel)
+            .font(appFont(.tableHeader))
+            .padding(.leading, AppPalette.fieldHorizontalPadding)
             .foregroundStyle(AppPalette.appText)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
@@ -604,7 +607,7 @@ struct AppInlineTitleTextField: View {
     let placeholder: String
     let text: Binding<String>
     var formatter: (String) -> String = { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-    var font: NSFont = .systemFont(ofSize: 24, weight: .bold)
+    var font: NSFont = appNSFont(.pageTitle)
     var textColor: NSColor = .labelColor
     var placeholderColor: NSColor? = .secondaryLabelColor
     var minHeight: CGFloat = 30
@@ -1034,7 +1037,7 @@ struct AppBadgeText: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: size.fontSize, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .foregroundStyle(foreground)
             .lineLimit(1)
             .minimumScaleFactor(0.82)
@@ -1126,7 +1129,7 @@ struct AppInlineLinkLabel: View {
 
     var body: some View {
         Label(title, systemImage: systemImage)
-            .font(.system(size: fontSize, weight: weight))
+            .font(appFont(fontSize < 12.5 ? .secondary : .body).weight(weight))
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .fixedSize(horizontal: fixedSize, vertical: false)

@@ -246,7 +246,7 @@ private struct ProjectEthicsApplicationEditor: View {
                     lockedProjectComplianceValue(application.appliedOn, state: dateRangeState)
                 } else {
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: $application.appliedOn,
                         formatter: DateParsers.canonicalizedDayInput,
                         clearBackgroundInDarkNew: true,
@@ -260,7 +260,7 @@ private struct ProjectEthicsApplicationEditor: View {
                     lockedProjectComplianceValue(application.grantedOn, state: dateRangeState)
                 } else {
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: $application.grantedOn,
                         formatter: DateParsers.canonicalizedDayInput,
                         clearBackgroundInDarkNew: true,
@@ -595,7 +595,7 @@ private struct ProjectClinicalTrialRegistrationEditor: View {
                         lockedProjectComplianceValue(registration.registeredOn, state: dateRangeState)
                     } else {
                         CommitDateFieldWithTodayButton(
-                            placeholder: "YYYY-MM-DD",
+                            placeholder: language.datePlaceholder,
                             text: $registration.registeredOn,
                             formatter: DateParsers.canonicalizedDayInput,
                             clearBackgroundInDarkNew: true,
@@ -609,7 +609,7 @@ private struct ProjectClinicalTrialRegistrationEditor: View {
                         lockedProjectComplianceValue(registration.updatedOn, state: dateRangeState)
                     } else {
                         CommitDateFieldWithTodayButton(
-                            placeholder: "YYYY-MM-DD",
+                            placeholder: language.datePlaceholder,
                             text: $registration.updatedOn,
                             formatter: DateParsers.canonicalizedDayInput,
                             clearBackgroundInDarkNew: true,
@@ -710,7 +710,7 @@ private struct ProjectDataCollectionEditor: View {
                             lockedProjectComplianceValue(collection.from, state: dateRangeState)
                         } else {
                             CommitDateFieldWithTodayButton(
-                                placeholder: "YYYY-MM-DD",
+                                placeholder: language.datePlaceholder,
                                 text: Binding(
                                     get: { dataCollections[index].from },
                                     set: { newValue in
@@ -738,7 +738,7 @@ private struct ProjectDataCollectionEditor: View {
                             lockedProjectComplianceValue(collection.to, state: dateRangeState)
                         } else {
                             CommitDateFieldWithTodayButton(
-                                placeholder: "YYYY-MM-DD",
+                                placeholder: language.datePlaceholder,
                                 text: $dataCollections[index].to,
                                 formatter: DateParsers.canonicalizedDayInput,
                                 updatesContinuously: false,

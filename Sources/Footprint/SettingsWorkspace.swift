@@ -930,8 +930,7 @@ struct SettingsWorkspaceView: View {
                 Button(language.text("Choose folder…", "Välj mapp…")) {
                     chooseExportDirectory()
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
 
                 Button(language.text("Use Downloads", "Använd Hämtade filer")) {
                     store.setExportDirectory(nil)
@@ -1064,8 +1063,7 @@ struct SettingsWorkspaceView: View {
                 Button(language.text("Open active data folder", "Öppna aktiv datamapp")) {
                     NSWorkspace.shared.open(store.storageDirectoryURL)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
 
                 Button(language.text("Open backups folder", "Öppna backupmapp")) {
                     NSWorkspace.shared.open(store.backupsDirectoryURL)
@@ -1083,8 +1081,7 @@ struct SettingsWorkspaceView: View {
                     refreshPerformanceDiagnosticsStatus()
                     performanceDiagnosticsSummaryText = store.performanceDiagnosticsSummary()
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
             }
 
             SettingsEffectNote(language.text(
@@ -1109,8 +1106,7 @@ struct SettingsWorkspaceView: View {
                 Button(language.text("Create snapshot now", "Skapa snapshot nu")) {
                     createManualBackupSnapshot()
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
 
                 Button(language.text("Reload", "Ladda om")) {
                     reloadBackupCenterState()
@@ -1592,8 +1588,7 @@ struct SettingsWorkspaceView: View {
                         appChromeScheme = scheme
                         scheduleAutosave()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppPalette.actionSave)
+                    .appSaveButtonStyle()
                 } else {
                     Button(language.text("Use", "Använd")) {
                         appChromeScheme = scheme
@@ -1787,8 +1782,7 @@ struct SettingsWorkspaceView: View {
                     Label(updateTitle, systemImage: "arrow.triangle.2.circlepath")
                         .lineLimit(1)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -2143,8 +2137,7 @@ struct SettingsWorkspaceView: View {
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(AppPalette.actionSave)
+                        .appSaveButtonStyle()
                         .disabled(!hasSelectedPreset)
                         .frame(maxWidth: 260)
                     }
@@ -2205,8 +2198,7 @@ struct SettingsWorkspaceView: View {
                     Label(updateTitle, systemImage: "arrow.triangle.2.circlepath")
                         .lineLimit(1)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
                 .disabled(!hasSelectedPreset)
             }
 
@@ -2313,8 +2305,7 @@ struct SettingsWorkspaceView: View {
                         Label(updateTitle, systemImage: "arrow.triangle.2.circlepath")
                             .lineLimit(1)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppPalette.actionSave)
+                    .appSaveButtonStyle()
                     .disabled(!hasSelectedPreset)
                 }
 
@@ -3730,8 +3721,7 @@ struct SettingsWorkspaceView: View {
                             Button(language.text("Move activities and delete category", "Flytta aktiviteterna och ta bort kategorin")) {
                                 confirmPendingCalendarMeetingCategoryDeletionTransfer()
                             }
-                            .buttonStyle(.borderedProminent)
-                            .tint(AppPalette.actionSave)
+                            .appSaveButtonStyle()
                         }
                     }
                     .padding(14)
@@ -4566,10 +4556,8 @@ struct SettingsWorkspaceView: View {
     }
 
     private func backupSnapshotDateText(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        // Round 16: ISO date and 24-hour time, whatever the system locale.
+        AppTimestampFormatter.dateAndTime(date)
     }
 
     /// The items grouped by where they are used ("Teaching · participant

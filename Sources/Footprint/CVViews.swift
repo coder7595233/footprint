@@ -1830,7 +1830,10 @@ struct CVConferenceContributionDetailView: View {
                     if !isEditingLocked {
                         AppDestructiveActionButton(
                             title: usesAbstractTerminology ? language.text("Delete abstract", "Ta bort abstract") : language.text("Delete conference contribution", "Ta bort konferensbidrag"),
-                            help: usesAbstractTerminology ? language.text("Delete this abstract", "Ta bort detta abstract") : language.text("Delete this conference contribution", "Ta bort detta konferensbidrag")
+                            help: usesAbstractTerminology ? language.text("Delete this abstract", "Ta bort detta abstract") : language.text("Delete this conference contribution", "Ta bort detta konferensbidrag"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: usesAbstractTerminology ? language.text("Delete abstract?", "Ta bort abstract?") : language.text("Delete conference contribution?", "Ta bort konferensbidrag?"),
+                            confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras.")
                         ) {
                             store.deleteCVConferenceContribution(id: contribution.id)
                         }
@@ -1962,9 +1965,9 @@ struct CVConferenceContributionDetailView: View {
                             if showsPublicationBibliographyRow {
                                 HStack(alignment: .top, spacing: 12) {
                                     if shouldShowPublicationField(draft.journalVolume) {
-                                        CVLabeledField(title: "Volume", compact: isEditingLocked) {
+                                        CVLabeledField(title: language.text("Volume", "Volym"), compact: isEditingLocked) {
                                             publicationValueField(
-                                                placeholder: "Volume",
+                                                placeholder: language.text("Volume", "Volym"),
                                                 value: draft.journalVolume,
                                                 text: binding(\.journalVolume)
                                             )
@@ -3422,7 +3425,13 @@ private struct CVMediaAppearanceDetailView: View {
                 if !isEditingLocked {
                     HStack {
                         Spacer()
-                        AppDestructiveActionButton(title: language.text("Delete", "Ta bort")) {
+                        AppDestructiveActionButton(
+                            title: language.text("Delete", "Ta bort"),
+                            help: language.text("Delete media appearance", "Ta bort medverkan i media"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Delete media appearance?", "Ta bort medverkan i media?"),
+                            confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras.")
+                        ) {
                             store.deleteCVMediaAppearance(id: appearance.id)
                         }
                     }
@@ -4378,7 +4387,10 @@ private struct CVReviewEntryDetailView: View {
                     if !isEditingLocked {
                         AppDestructiveActionButton(
                             title: language.text("Delete", "Ta bort"),
-                            help: language.text("Delete this expert assignment", "Ta bort detta sakkunniguppdrag")
+                            help: language.text("Delete this expert assignment", "Ta bort detta sakkunniguppdrag"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Delete expert assignment?", "Ta bort sakkunniguppdrag?"),
+                            confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras.")
                         ) {
                             store.deleteCVReviewEntry(id: review.id)
                         }
@@ -5150,7 +5162,13 @@ struct CVOtherPublicationDetailView: View {
                 if !isDoctoralThesis {
                     HStack {
                         Spacer()
-                        AppDestructiveActionButton(title: language.text("Delete", "Ta bort")) {
+                        AppDestructiveActionButton(
+                            title: language.text("Delete", "Ta bort"),
+                            help: language.text("Delete other publication", "Ta bort övrig publikation"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Delete other publication?", "Ta bort övrig publikation?"),
+                            confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras.")
+                        ) {
                             store.deleteCVOtherPublication(id: item.id)
                         }
                     }
@@ -5296,7 +5314,7 @@ private struct CVDateField: View {
 
     var body: some View {
         AppDateField(
-            placeholder: "YYYY-MM-DD",
+            placeholder: language.datePlaceholder,
             text: $text,
             width: 120,
             showsTodayButton: showsTodayButton,

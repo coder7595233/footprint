@@ -551,13 +551,13 @@ private struct ContributorCompositionPopover: View {
             if title != language.text("Statistics", "Statistik") {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(appFont(.sectionTitle))
                 }
             }
             if meetingStatistics == nil && showsContributorComposition {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(summaryText)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -593,14 +593,14 @@ private struct ContributorCompositionPopover: View {
                     VStack(alignment: .leading, spacing: 4) {
                         StatisticsSectionHeading(text: compositionTitle ?? title)
                         Text(summaryText)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(appFont(.secondary).weight(.medium))
                             .foregroundStyle(.secondary)
                     }
                 }
 
                 if snapshot.totalCount == 0 {
                     Text(language.text("No people to summarize yet.", "Inga personer att sammanfatta ännu."))
-                        .font(.system(size: 13))
+                        .font(appFont(.body))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 } else {
@@ -617,7 +617,7 @@ private struct ContributorCompositionPopover: View {
                                     "Kön visas som okänt när det inte går att avgöra från sparad metadata."
                                 )
                             )
-                            .font(.system(size: 12))
+                            .font(appFont(.secondary))
                             .foregroundStyle(.secondary)
                         }
 
@@ -724,7 +724,7 @@ private struct ContributorStatisticsTableSection: View {
                     .frame(maxWidth: .infinity, alignment: isHeader ? .leading : .trailing)
             }
         }
-        .font(.system(size: isHeader ? 11 : 12, weight: isHeader ? .semibold : .medium))
+        .font(isHeader ? appFont(.tableHeader) : appFont(.secondary).weight(.medium))
         .foregroundStyle(isHeader ? AnyShapeStyle(.secondary) : AnyShapeStyle(AppPalette.appText))
         .monospacedDigit()
         .padding(.horizontal, 10)
@@ -762,7 +762,7 @@ private struct StatisticsSectionHeading: View {
     var body: some View {
         HStack(spacing: 10) {
             Text(text)
-                .font(.system(size: 16, weight: .bold))
+                .font(appFont(.statTitle))
             Rectangle()
                 .fill(AppPalette.subtleBorder)
                 .frame(height: 1)
@@ -777,7 +777,7 @@ private struct ContributorStatisticsSummarySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(language.text("Key figures", "Nyckeltal"))
-                .font(.system(size: 16, weight: .bold))
+                .font(appFont(.statTitle))
 
             LazyVGrid(
                 columns: [
@@ -789,16 +789,16 @@ private struct ContributorStatisticsSummarySection: View {
                 ForEach(rows) { row in
                     VStack(alignment: .leading, spacing: 3) {
                         Text(row.label)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(appFont(.secondary).weight(.medium))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                         HStack(alignment: .firstTextBaseline, spacing: 5) {
                             Text(row.value)
-                                .font(.system(size: 20, weight: .bold))
+                                .font(appFont(.statValue))
                                 .monospacedDigit()
                             if let detail = row.detail?.trimmedOrNil {
                                 Text(detail)
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(appFont(.secondary).weight(.medium))
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.85)
@@ -861,7 +861,7 @@ private struct CalendarMeetingStatisticsSection: View {
 
             if summary.meetingsWithoutDurationCount > 0 {
                 Text(calendarMeetingStatisticsMissingDurationText(summary, language: language))
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
             }
 
@@ -965,7 +965,7 @@ private struct CalendarActivityDistributionSection: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 108, height: 38, alignment: .leading)
 
@@ -985,9 +985,9 @@ private struct CalendarActivityDistributionSection: View {
                                 if fitsInside {
                                     VStack(spacing: 0) {
                                         Text(entry.label)
-                                            .font(.system(size: 12, weight: .semibold))
+                                            .font(appFont(.secondary).weight(.semibold))
                                         Text("\(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))")
-                                            .font(.system(size: 11, weight: .bold))
+                                            .font(appFont(.secondary).weight(.bold))
                                     }
                                     .foregroundStyle(.white.opacity(0.96))
                                     .lineLimit(1)
@@ -1015,9 +1015,9 @@ private struct CalendarActivityDistributionSection: View {
                         .frame(width: 9, height: 9)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(entry.label)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(appFont(.secondary).weight(.medium))
                         Text("\(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(appFont(.secondary).weight(.medium))
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
@@ -1030,8 +1030,8 @@ private struct CalendarActivityDistributionSection: View {
 
     private func minimumInlineWidth(for entry: CalendarActivityDistributionEntry) -> CGFloat {
         max(
-            measuredWidth(entry.label, size: 12, weight: .semibold),
-            measuredWidth("\(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))", size: 11, weight: .bold)
+            measuredWidth(entry.label, size: appNSFont(.secondary).pointSize, weight: .semibold),
+            measuredWidth("\(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))", size: appNSFont(.secondary).pointSize, weight: .bold)
         ) + 12
     }
 
@@ -1069,7 +1069,7 @@ private struct CalendarMeetingStatisticsMeetingGroup: View {
                     .buttonStyle(.plain)
                 } else {
                     Text(heading)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(appFont(.statTitle))
                         .foregroundStyle(AppPalette.appText)
                 }
                 if !startsCollapsed || isExpanded {
@@ -1098,7 +1098,7 @@ private struct CalendarMeetingStatisticsMeetingRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: 6) {
             Text(calendarMeetingStatisticsMeetingTitle(meeting, language: language))
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -1107,7 +1107,7 @@ private struct CalendarMeetingStatisticsMeetingRow: View {
             calendarMeetingStatisticsSeparator
 
             Text(calendarMeetingStatisticsMeetingTiming(meeting, language: language))
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
@@ -1115,7 +1115,7 @@ private struct CalendarMeetingStatisticsMeetingRow: View {
             calendarMeetingStatisticsSeparator
 
             Text(calendarMeetingStatisticsMeetingModeText(meeting, language: language))
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
@@ -1123,7 +1123,7 @@ private struct CalendarMeetingStatisticsMeetingRow: View {
             calendarMeetingStatisticsSeparator
 
             Text(calendarMeetingStatisticsParticipantText(meeting, language: language))
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -1174,7 +1174,7 @@ private struct ContributorCompositionBarSection: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 108, height: 38, alignment: .leading)
 
@@ -1195,9 +1195,9 @@ private struct ContributorCompositionBarSection: View {
                                         if fitsInside {
                                             VStack(spacing: 0) {
                                                 Text(entry.label)
-                                                    .font(.system(size: 12, weight: .semibold))
+                                                    .font(appFont(.secondary).weight(.semibold))
                                                 Text(contributorCompositionSegmentLabel(count: entry.count, percentage: entry.percentage))
-                                                    .font(.system(size: 11, weight: .bold))
+                                                    .font(appFont(.secondary).weight(.bold))
                                             }
                                             .foregroundStyle(entry.foregroundColor)
                                             .lineLimit(1)
@@ -1236,7 +1236,7 @@ private struct ContributorCompositionBarSection: View {
                                 .appTypography(.tableHeader)
                                 .lineLimit(2)
                             Text(contributorCompositionSegmentLabel(count: entry.count, percentage: entry.percentage))
-                                .font(.system(size: 11, weight: .medium))
+                                .font(appFont(.secondary).weight(.medium))
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }
@@ -1249,8 +1249,9 @@ private struct ContributorCompositionBarSection: View {
     }
 
     private func minimumInlineWidth(for entry: ContributorCompositionPopover.BarEntry) -> CGFloat {
-        let titleFont = NSFont.systemFont(ofSize: 12, weight: .semibold)
-        let valueFont = NSFont.systemFont(ofSize: 11, weight: .bold)
+        // Measured with the same size as the secondary text role used in the bar.
+        let titleFont = NSFont.systemFont(ofSize: appNSFont(.secondary).pointSize, weight: .semibold)
+        let valueFont = NSFont.systemFont(ofSize: appNSFont(.secondary).pointSize, weight: .bold)
         let titleWidth = ceil((entry.label as NSString).size(withAttributes: [.font: titleFont]).width)
         let value = contributorCompositionSegmentLabel(count: entry.count, percentage: entry.percentage)
         let valueWidth = ceil((value as NSString).size(withAttributes: [.font: valueFont]).width)
@@ -1717,16 +1718,16 @@ struct GrantOutcomeCompactRows: View {
             VStack(alignment: .leading, spacing: 4) {
                 if let title {
                     Text(title)
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(appFont(.tableHeader))
                         .padding(.bottom, 2)
                 }
 
                 CompactStatisticBarRow(
                     title: language.text("Status", "Status"),
                     segments: [
-                        statusSegment(label: language.text("Awaiting reply", "Väntar svar"), matching: waiting, total: relevant.count, color: AppPalette.statsCardPendingStart, endColor: AppPalette.statsCardPendingEnd, usesGrantedAmount: false),
-                        statusSegment(label: language.text("Granted", "Beviljade"), matching: granted, total: relevant.count, color: AppPalette.statsCardGrantedStart, endColor: AppPalette.statsCardGrantedEnd, usesGrantedAmount: true),
-                        statusSegment(label: language.text("Declined", "Avslagna"), matching: rejected, total: relevant.count, color: AppPalette.statsCardDeclinedStart, endColor: AppPalette.statsCardDeclinedEnd, usesGrantedAmount: false),
+                        statusSegment(label: ApplicationOutcome.awaitingDecision.heading(language), matching: waiting, total: relevant.count, color: AppPalette.statsCardPendingStart, endColor: AppPalette.statsCardPendingEnd, usesGrantedAmount: false),
+                        statusSegment(label: ApplicationOutcome.granted.heading(language), matching: granted, total: relevant.count, color: AppPalette.statsCardGrantedStart, endColor: AppPalette.statsCardGrantedEnd, usesGrantedAmount: true),
+                        statusSegment(label: ApplicationOutcome.declined.heading(language), matching: rejected, total: relevant.count, color: AppPalette.statsCardDeclinedStart, endColor: AppPalette.statsCardDeclinedEnd, usesGrantedAmount: false),
                         statusSegment(label: language.text("Other", "Övriga"), matching: others, total: relevant.count, color: Color(nsColor: .systemGray), endColor: nil, usesGrantedAmount: false),
                     ].compactMap { $0 }
                 )
@@ -1801,12 +1802,8 @@ struct GrantOutcomeCompactRows: View {
 }
 
 func inlineStatisticsSEKText(_ value: Double, language: AppLanguage) -> String {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .decimal
-    formatter.locale = Locale(identifier: language == .swedish ? "sv_SE" : "en_US")
-    formatter.maximumFractionDigits = 0
-    let text = formatter.string(from: NSNumber(value: value)) ?? "\(Int(value.rounded()))"
-    return "\(text) kr"
+    // Round 16: shared formatter ("kr" in Swedish, "SEK" in English).
+    AmountFormatter.sek(value, language: language)
 }
 
 /// Inline activity statistics as compact one-line rows: completed/planned
@@ -1850,7 +1847,7 @@ struct CalendarMeetingCompactStatisticsSection: View {
 
             if summary.meetingsWithoutDurationCount > 0 {
                 Text(calendarMeetingStatisticsMissingDurationText(summary, language: language))
-                    .font(.system(size: 11))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
             }
         }

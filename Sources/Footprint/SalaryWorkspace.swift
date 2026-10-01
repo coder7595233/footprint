@@ -696,7 +696,7 @@ struct SalaryWorkspaceView: View {
 
                 salaryFormRow(language.text("From", "Från")) {
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: Binding(
                             get: { period.wrappedValue.from },
                             set: { newValue in
@@ -721,7 +721,7 @@ struct SalaryWorkspaceView: View {
 
                 salaryFormRow(language.text("To", "Till")) {
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: Binding(
                             get: { period.wrappedValue.to },
                             set: { period.wrappedValue.to = $0 }
@@ -924,7 +924,7 @@ struct SalaryWorkspaceView: View {
             .frame(width: 320)
 
             CommitDateFieldWithTodayButton(
-                placeholder: "YYYY-MM-DD",
+                placeholder: language.datePlaceholder,
                 text: Binding(
                     get: { period.wrappedValue.from },
                     set: { newValue in
@@ -945,7 +945,7 @@ struct SalaryWorkspaceView: View {
             )
 
             CommitDateFieldWithTodayButton(
-                placeholder: "YYYY-MM-DD",
+                placeholder: language.datePlaceholder,
                 text: Binding(
                     get: { period.wrappedValue.to },
                     set: { period.wrappedValue.to = $0 }
@@ -998,7 +998,7 @@ struct SalaryWorkspaceView: View {
 
     private func inlineSalaryTrashButton(action: @escaping () -> Void) -> some View {
         AppIconDeleteButton(
-            title: "Ta bort",
+            title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
             action: action

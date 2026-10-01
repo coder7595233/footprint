@@ -254,7 +254,7 @@ struct AppFilterChip: View {
                     .minimumScaleFactor(0.82)
                     .truncationMode(.tail)
             }
-            .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
+            .font(appFont(.secondary).weight(isSelected ? .semibold : .medium))
             .foregroundStyle(isEnabled ? (isSelected ? AppPalette.appText : .primary) : .secondary)
             .padding(.horizontal, 10)
             .frame(minHeight: 28, alignment: .leading)
@@ -303,7 +303,7 @@ struct AppEmptyStateView: View {
 
                 if isCompact {
                     Text(title)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 } else {
@@ -319,9 +319,8 @@ struct AppEmptyStateView: View {
 
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
-                        .buttonStyle(.borderedProminent)
+                        .appSaveButtonStyle()
                         .controlSize(.regular)
-                        .tint(AppPalette.actionSave)
                 }
             }
             .frame(maxWidth: isCompact ? 320 : 440)
@@ -486,7 +485,7 @@ struct AppLinkDestinationLabel: View {
     var body: some View {
         if usesTitle {
             Label(kind.title(language: language), systemImage: kind.systemImage)
-                .font(.system(size: fontSize, weight: weight))
+                .font(appFont(fontSize < 12.5 ? .secondary : .body).weight(weight))
                 .labelStyle(.titleAndIcon)
                 .lineLimit(1)
                 .fixedSize(horizontal: fixedSize, vertical: false)
@@ -494,7 +493,7 @@ struct AppLinkDestinationLabel: View {
                 .help(kind.helpTitle(language: language))
         } else {
             Label(kind.title(language: language), systemImage: kind.systemImage)
-                .font(.system(size: fontSize, weight: weight))
+                .font(appFont(fontSize < 12.5 ? .secondary : .body).weight(weight))
                 .labelStyle(.iconOnly)
                 .lineLimit(1)
                 .fixedSize(horizontal: fixedSize, vertical: false)
@@ -685,7 +684,7 @@ struct AppPDFAttachmentControl: View {
 
             if showsFilename {
                 Text(displayName)
-                    .font(.system(size: style == .compact ? 12 : 13, weight: style == .compact ? .regular : .medium))
+                    .font(style == .compact ? appFont(.secondary) : appFont(.body).weight(.medium))
                     .foregroundStyle(filename == nil && resolvedDisplayLabel == nil ? .secondary : .primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -937,7 +936,7 @@ struct AppListRowButton<Background: View, Content: View>: View {
     var body: some View {
         Button(action: action) {
             content
-                .font(.system(size: 12))
+                .font(appFont(.secondary))
                 .padding(.leading, horizontalPadding + 4)
                 .padding(.trailing, horizontalPadding)
                 .padding(.vertical, verticalPadding)
@@ -1187,7 +1186,7 @@ struct MultiSelectFilterMenu: View {
                                 }
                             )) {
                                 Text(display(option))
-                                    .font(.system(size: 13))
+                                    .font(appFont(.body))
                                     .lineLimit(1)
                                     .truncationMode(.tail)
                             }
@@ -1318,7 +1317,7 @@ struct AppFilterRangeControl: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
 
             if bounds.lowerBound < bounds.upperBound {
                 if lowerLabel != nil || upperLabel != nil {
@@ -1343,7 +1342,7 @@ struct AppFilterRangeControl: View {
                 )
             } else {
                 Text(verbatim: unavailableText ?? String(Int(bounds.lowerBound)))
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -1645,7 +1644,7 @@ struct AppCompactReferenceTable<Header: View, Rows: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             if let heading = title?.nonEmpty {
                 Text(heading)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(appFont(.tableHeader))
                     .foregroundStyle(.secondary)
             }
 
@@ -1673,12 +1672,12 @@ struct AppCompactEmptyListLabel: View {
     var body: some View {
         VStack(spacing: 2) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             if let subtitle = subtitle.nonEmpty {
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
             }
@@ -1692,7 +1691,7 @@ struct AppCompactListSectionLabel: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: 12, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .foregroundStyle(.secondary)
     }
 }
@@ -1841,7 +1840,7 @@ struct ListCountFootnote: View {
     var body: some View {
         if displayedCount != totalCount {
             Text(footerText)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -1868,7 +1867,7 @@ struct AppActiveFilterChip: View {
             Image(systemName: systemImage)
                 .font(.system(size: 12, weight: .semibold))
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             if let clearAction {
@@ -1935,11 +1934,11 @@ struct AppInlineDataQualityPanel: View {
                             .padding(.top, 6)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(issue.title)
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(appFont(.secondary).weight(.semibold))
                                 .foregroundStyle(.primary)
                             if !issue.details.isEmpty {
                                 Text(issue.details)
-                                    .font(.system(size: 12))
+                                    .font(appFont(.secondary))
                                     .foregroundStyle(.secondary)
                                     .lineLimit(2)
                             }
@@ -1949,7 +1948,7 @@ struct AppInlineDataQualityPanel: View {
 
                 if issues.count > 4 {
                     Text("+\(issues.count - 4)")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -2010,19 +2009,21 @@ struct FootprintMetadataChip: View {
                     .font(.system(size: 12, weight: .semibold))
             }
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(isSelected ? .semibold : .medium))
                 .lineLimit(1)
         }
-        .foregroundStyle(isSelected ? AppPalette.activeTabText : AppPalette.appText.opacity(0.82))
+        // Round 16: the selected look matches AppFilterChip (same corner
+        // radius, fill and stroke) so both kinds of chip read the same way.
+        .foregroundStyle(isSelected ? AppPalette.appText : AppPalette.appText.opacity(0.82))
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(
-            Capsule(style: .continuous)
-                .fill(isSelected ? AppPalette.activeTabSurface : AppPalette.fieldSurface)
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(isSelected ? AppPalette.activeTabSurface.opacity(0.24) : AppPalette.fieldSurface)
         )
         .overlay(
-            Capsule(style: .continuous)
-                .stroke(isSelected ? AppPalette.activeTabSurface.opacity(0.36) : AppPalette.subtleBorder, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .stroke(isSelected ? AppPalette.activeTabSurface.opacity(0.78) : AppPalette.subtleBorder, lineWidth: 1)
         )
     }
 }
@@ -2060,13 +2061,13 @@ struct AppMetadataLabel: View {
     private var font: Font {
         switch style {
         case .normal:
-            return .system(size: 11, weight: .semibold)
+            return appFont(.secondary).weight(.semibold)
         case .count:
-            return .system(size: 11, weight: .bold)
+            return appFont(.secondary).weight(.bold)
         case .micro:
-            return .system(size: 10, weight: .semibold)
+            return appFont(.secondary).weight(.semibold)
         case .monospaced:
-            return .system(size: 11, weight: .semibold, design: .monospaced)
+            return appFont(.secondary).weight(.semibold).monospaced()
         }
     }
 }
@@ -2105,7 +2106,7 @@ struct AppOutcomeBars: View {
                 let fraction = Double(item.count) / Double(denominator)
                 HStack(spacing: 10) {
                     Text(item.title)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(appFont(.secondary).weight(.semibold))
                         .foregroundStyle(.secondary)
                         .frame(width: labelWidth, alignment: .leading)
 
@@ -2121,7 +2122,7 @@ struct AppOutcomeBars: View {
                     .frame(height: 10)
 
                     Text("\(item.count) (\(Int((fraction * 100).rounded())) %)")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(appFont(.secondary).weight(.bold))
                         .monospacedDigit()
                         .foregroundStyle(AppPalette.appText)
                         .frame(width: countWidth, alignment: .trailing)
@@ -2163,11 +2164,11 @@ struct AppStatisticListRow<Leading: View, Trailing: View>: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(AppPalette.appText)
                     .lineLimit(titleLineLimit)
                 Text(subtitle)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(subtitleLineLimit)
             }
@@ -2185,7 +2186,7 @@ struct SortableListHeaderLabel: View {
     let title: String
     let ascending: Bool?
     var sortIndex: Int? = nil
-    var fontSize: CGFloat = 12
+    var fontSize: CGFloat? = nil
     var foreground: Color = .secondary
 
     var body: some View {
@@ -2202,7 +2203,8 @@ struct SortableListHeaderLabel: View {
                 }
             }
         }
-        .font(.system(size: fontSize, weight: .semibold))
+        // Round 16: follows the table-header typography setting unless a size is given.
+        .font(fontSize.map { .system(size: $0, weight: .semibold) } ?? appFont(.tableHeader))
         .foregroundStyle(foreground)
         .contentShape(Rectangle())
     }
@@ -2216,7 +2218,7 @@ struct AppSortableListHeader: View {
     var minWidth: CGFloat? = nil
     var maxWidth: CGFloat? = nil
     var alignment: Alignment = .leading
-    var fontSize: CGFloat = 12
+    var fontSize: CGFloat? = nil
     var foreground: Color = .secondary
     let resetTitle: String
     let onToggle: () -> Void
@@ -2368,15 +2370,45 @@ struct AppDestructiveActionButton: View {
     let title: String
     var systemImage = "trash"
     var help: String? = nil
+    /// Round 16: with a cancel title the button asks before it deletes, like
+    /// `DeleteActionButton`. Leave it nil only when the caller already shows
+    /// its own confirmation (for example an alert of its own).
+    var cancelTitle: String? = nil
+    var confirmationTitle: String? = nil
+    var confirmationMessage: String? = nil
     let action: () -> Void
+    /// Returns true when the store will show its own linked-object warning for
+    /// this deletion; the button then skips its own question so the user is
+    /// asked exactly once.
+    var storeAsksFirst: (() -> Bool)? = nil
+
+    @State private var showsConfirmation = false
 
     var body: some View {
-        Button(role: .destructive, action: action) {
+        Button(role: .destructive) {
+            if cancelTitle == nil || storeAsksFirst?() == true {
+                action()
+            } else {
+                showsConfirmation = true
+            }
+        } label: {
             Label(title, systemImage: systemImage)
         }
         .appDeleteButtonStyle()
         .help(help ?? title)
         .accessibilityLabel(help ?? title)
+        .confirmationDialog(
+            confirmationTitle ?? help ?? title,
+            isPresented: $showsConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(title, role: .destructive, action: action)
+            Button(cancelTitle ?? "", role: .cancel) {}
+        } message: {
+            if let confirmationMessage {
+                Text(confirmationMessage)
+            }
+        }
     }
 }
 
@@ -2690,7 +2722,7 @@ private struct AppDeleteButtonModifier: ViewModifier {
         // the bezel, including the desaturated bezel of an inactive window —
         // forced white there was unreadable on the near-white gray.
         content
-            .font(.system(size: 13, weight: .semibold))
+            .font(appFont(.body).weight(.semibold))
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
             .tint(AppPalette.actionDelete)
@@ -2700,7 +2732,7 @@ private struct AppDeleteButtonModifier: ViewModifier {
 private struct AppAddButtonModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.system(size: 13, weight: .semibold))
+            .font(appFont(.body).weight(.semibold))
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
             .tint(AppPalette.linkAction)
@@ -2708,6 +2740,13 @@ private struct AppAddButtonModifier: ViewModifier {
 }
 
 extension View {
+    /// Round 16: the one look for save and confirm buttons (prominent bezel
+    /// with the save tint), instead of tinting each button by hand.
+    func appSaveButtonStyle() -> some View {
+        buttonStyle(.borderedProminent)
+            .tint(AppPalette.actionSave)
+    }
+
     func appDeleteButtonStyle() -> some View {
         modifier(AppDeleteButtonModifier())
     }

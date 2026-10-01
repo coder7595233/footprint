@@ -179,7 +179,7 @@ extension GrantApplication {
         let project = store.projectLabel(for: self, language: language)?.nonEmpty ?? language.text("No project", "Saknar projekt")
         let organizationName = store.organizationLabel(for: self, language: language)
         let amount = isGranted ? grantedAmountValue : appliedAmountValue
-        let suffix = CurrencyFormatter.format(amount, code: currency)
+        let suffix = CurrencyFormatter.format(amount, code: currency, language: language)
         return "\(project) (\(organizationName)), \(suffix)"
     }
 }

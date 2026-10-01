@@ -33,7 +33,7 @@ struct StatisticsKickerText: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(.system(size: 11, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .tracking(1.8)
             .foregroundStyle(.secondary)
     }
@@ -74,7 +74,7 @@ struct StatisticsPageHeader: View {
             StatisticsSerifTitleText(text: title, size: 26)
             if let subtitle, !subtitle.isEmpty {
                 Text(subtitle)
-                    .font(.system(size: 13))
+                    .font(appFont(.body))
                     .foregroundStyle(.secondary)
             }
             StatisticsEditorialRule()

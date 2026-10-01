@@ -163,22 +163,22 @@ extension GrantDataStore {
                     "\(coApplicantGrants.count)",
                 ],
                 [
-                    annualReportText(language, english: "Awarded", swedish: "Beviljade"),
+                    ApplicationOutcome.granted.heading(language),
                     awardedCount(mainApplicantGrants),
                     awardedCount(coApplicantGrants),
                 ],
                 [
-                    annualReportText(language, english: "Pending decision", swedish: "Väntar beslut"),
+                    ApplicationOutcome.awaitingDecision.heading(language),
                     statusCount(mainApplicantGrants, status: .waiting),
                     statusCount(coApplicantGrants, status: .waiting),
                 ],
                 [
-                    annualReportText(language, english: "Declined", swedish: "Avslagna"),
+                    ApplicationOutcome.declined.heading(language),
                     statusCount(mainApplicantGrants, status: .rejected),
                     statusCount(coApplicantGrants, status: .rejected),
                 ],
                 [
-                    annualReportText(language, english: "Awarded amount", swedish: "Beviljat belopp"),
+                    annualReportText(language, english: "Granted amount", swedish: "Beviljat belopp"),
                     awardedAmount(mainApplicantGrants),
                     awardedAmount(coApplicantGrants),
                 ],
@@ -321,7 +321,7 @@ extension GrantDataStore {
             .map { application in
                 let originalAmount = annualReportGrantOriginalAmount(application)
                 let amountText = isGrantAmountUnconverted(for: application, amount: originalAmount)
-                    ? CurrencyFormatter.format(originalAmount, code: application.currencyCode)
+                    ? CurrencyFormatter.format(originalAmount, code: application.currencyCode, language: language)
                         + " (" + language.text("not converted", "ej omräknat") + ")"
                     : annualReportSEKAmountText(annualReportGrantAmount(application), language: language)
                 return (
@@ -613,11 +613,11 @@ extension GrantDataStore {
     private func annualReportGrantStatusText(_ status: AnnualReportGrantStatus?, language: AppLanguage) -> String {
         switch status {
         case .waiting:
-            return annualReportText(language, english: "Pending decision", swedish: "Väntar beslut")
+            return ApplicationOutcome.awaitingDecision.label(language)
         case .granted:
-            return annualReportText(language, english: "Awarded", swedish: "Beviljad")
+            return ApplicationOutcome.granted.label(language)
         case .rejected:
-            return annualReportText(language, english: "Declined", swedish: "Avslagen")
+            return ApplicationOutcome.declined.label(language)
         case nil:
             return "–"
         }
@@ -632,7 +632,7 @@ extension GrantDataStore {
         case .accepted:
             return annualReportText(language, english: "Accepted", swedish: "Accepterad")
         case .rejected:
-            return annualReportText(language, english: "Rejected", swedish: "Refuserad")
+            return PublicationOutcomeWording.rejectedLabel(language)
         case .published:
             return annualReportText(language, english: "Published", swedish: "Publicerad")
         }

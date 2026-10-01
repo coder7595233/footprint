@@ -77,7 +77,7 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
                             .frame(width: rowLabelWidth, height: headerHeight)
                         ForEach(years, id: \.self) { year in
                             Text(String(year))
-                                .font(.system(size: 13, weight: .medium))
+                                .font(appFont(.body).weight(.medium))
                                 .foregroundStyle(.primary)
                                 .frame(width: yearColumnWidth, height: headerHeight, alignment: .bottom)
                         }
@@ -227,7 +227,7 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
                 spentOverlay(for: entry, visibleBarStart: barStartDate, visibleBarEnd: barEndDate)
 
                 Text(text)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(AppPalette.semanticOnColor)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -323,7 +323,7 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
 
                 if width >= 56 {
                     Text(bar.title)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(appFont(.secondary).weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.tail)

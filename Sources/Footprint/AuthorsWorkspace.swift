@@ -2949,7 +2949,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func authorHeader(language: AppLanguage) -> some View {
-        let titleFont = NSFont.systemFont(ofSize: 24, weight: .bold)
+        let titleFont = appNSFont(.pageTitle)
         let firstNameWidth = authorTitleFieldWidth(
             text: draft.firstName,
             placeholder: language.text("First name", "Förnamn"),
@@ -3023,9 +3023,15 @@ private struct PublicationAuthorEditorView: View {
                     )
             }
             Spacer()
-            AppDestructiveActionButton(title: language.text("Delete", "Ta bort")) {
-                store.deletePublicationAuthor(id: author.id)
-            }
+            AppDestructiveActionButton(
+                title: language.text("Delete", "Ta bort"),
+                help: language.text("Delete researcher", "Ta bort forskare"),
+                cancelTitle: language.text("Cancel", "Avbryt"),
+                confirmationTitle: language.text("Delete researcher?", "Ta bort forskare?"),
+                confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras."),
+                action: { store.deletePublicationAuthor(id: author.id) },
+                storeAsksFirst: { store.publicationAuthorDeletionShowsImpactWarning(id: author.id) }
+            )
         }
         .frame(minHeight: 34, alignment: .top)
     }
@@ -3053,7 +3059,7 @@ private struct PublicationAuthorEditorView: View {
                     addNameVariantRow(isFormerName: true)
                 }
                 .buttonStyle(.borderless)
-                .font(.system(size: 11, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 Spacer(minLength: 0)
             }
             ForEach(formerNameIndices, id: \.self) { index in
@@ -3065,7 +3071,7 @@ private struct PublicationAuthorEditorView: View {
                     addNameVariantRow(isFormerName: false)
                 }
                 .buttonStyle(.borderless)
-                .font(.system(size: 11, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 Spacer(minLength: 0)
             }
             ForEach(spellingIndices, id: \.self) { index in
@@ -3136,7 +3142,7 @@ private struct PublicationAuthorEditorView: View {
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .help(language.text(
                     "Choices for this name: move it between former names and spellings, make it the current name, or replace it with the current name in all records (asks first; can be undone).",
                     "Val för detta namn: flytta mellan tidigare namn och stavningar, gör till aktuellt namn, eller ersätt med aktuellt namn i alla poster (frågar först; går att ångra)."
@@ -3372,7 +3378,7 @@ private struct PublicationAuthorEditorView: View {
                 }
                 .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "homeAddress"))
                 compactField(language.text("Date of birth", "Födelsedatum"), width: 120) {
-                    PlainDateField(text: binding(\.birthDate))
+                    PlainDateField(text: binding(\.birthDate), language: language)
                 }
                 .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "birthDate"))
             }
@@ -5079,13 +5085,15 @@ private struct PlainDateField: View {
     @Binding var text: String
     var isDisabled: Bool = false
     var isIllogical: Bool = false
+    var language: AppLanguage = .swedish
 
     var body: some View {
         AppDateField(
-            placeholder: "YYYY-MM-DD",
+            placeholder: language.datePlaceholder,
             text: $text,
             width: 104,
-            state: isIllogical ? .invalid("Ologisk datumkombination") : .normal,
+            language: language,
+            state: isIllogical ? .invalid(language.text("Illogical date combination", "Ologisk datumkombination")) : .normal,
             isDisabled: isDisabled,
             horizontalPadding: 8,
             verticalPadding: 4

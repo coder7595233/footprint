@@ -1776,7 +1776,7 @@ private struct LocalizedOptionDetailView: View {
                             .fixedSize(horizontal: true, vertical: false)
 
                             Toggle(
-                                language.text("Hide declined grants", "Dölj nekade anslag"),
+                                language.text("Hide declined applications", "Dölj avslagna anslag"),
                                 isOn: $hideRejectedOrganizationTimelineGrants
                             )
                             .appCheckboxStyle()
@@ -1832,17 +1832,17 @@ private struct LocalizedOptionDetailView: View {
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(congress.title.nonEmpty ?? language.text("Congress", "Kongress"))
-                                        .font(.system(size: 12.5, weight: .semibold))
+                                        .font(appFont(.body).weight(.semibold))
                                         .foregroundStyle(AppPalette.appText)
                                         .lineLimit(1)
                                     Text(organizationCongressPlaceText(congress).nonEmpty ?? option.displayName(for: language))
-                                        .font(.system(size: 12))
+                                        .font(appFont(.secondary))
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
                                 }
                                 Spacer()
                                 Text(organizationCongressDateText(congress))
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(appFont(.secondary).weight(.medium))
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                                 if CongressesWorkspaceView.congressCurrentUserParticipates(
@@ -1850,7 +1850,7 @@ private struct LocalizedOptionDetailView: View {
                                     currentUserAuthor: store.currentUserAuthor()
                                 ) {
                                     Text(language.text("Attend", "Medverkar"))
-                                        .font(.system(size: 12, weight: .semibold))
+                                        .font(appFont(.secondary).weight(.semibold))
                                         .padding(.horizontal, 7)
                                         .padding(.vertical, 3)
                                         .background(AppPalette.shadeGreen, in: Capsule(style: .continuous))
@@ -3033,7 +3033,7 @@ private struct SalaryCalculatorSalaryMatrixSection: View {
                             let isPlaceholder = Self.isEmpty(period)
                             VStack(alignment: .leading, spacing: 6) {
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.from),
                                     formatter: normalizeSalaryDateInput,
                                     width: dateColumnWidth,
@@ -3042,7 +3042,7 @@ private struct SalaryCalculatorSalaryMatrixSection: View {
                                 )
 
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.to),
                                     formatter: normalizeSalaryDateInput,
                                     width: dateColumnWidth,
@@ -3194,7 +3194,7 @@ private struct SalaryCalculatorSharedCostMatrixSection: View {
                             let isPlaceholder = Self.isEmpty(period)
                             VStack(alignment: .leading, spacing: 6) {
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.from),
                                     formatter: normalizeSalaryDateInput,
                                     width: columnWidth,
@@ -3203,7 +3203,7 @@ private struct SalaryCalculatorSharedCostMatrixSection: View {
                                 )
 
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.to),
                                     formatter: normalizeSalaryDateInput,
                                     width: columnWidth,
@@ -3399,19 +3399,19 @@ private struct SalaryCalculatorResultsSection: View {
                             }
                         }
                         valueRow { row in
-                            CurrencyFormatter.format(row.totalAnnualCost)
+                            CurrencyFormatter.format(row.totalAnnualCost, language: language)
                         }
                         valueRow { row in
-                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost) : "—"
+                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost, language: language) : AmountFormatter.missing
                         }
                         valueRow { row in
-                            CurrencyFormatter.format(row.totalAnnualCost / 12)
+                            CurrencyFormatter.format(row.totalAnnualCost / 12, language: language)
                         }
                         valueRow { row in
-                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost / 12) : "—"
+                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost / 12, language: language) : AmountFormatter.missing
                         }
                         valueRow { row in
-                            row.totalSelectedCost > 0 ? CurrencyFormatter.format(row.totalSelectedCost) : "—"
+                            row.totalSelectedCost > 0 ? CurrencyFormatter.format(row.totalSelectedCost, language: language) : AmountFormatter.missing
                         }
                         Color.clear
                             .frame(width: 1, height: 1)
@@ -3453,7 +3453,7 @@ private struct SalaryCalculatorResultsSection: View {
         HStack(spacing: 14) {
             ForEach(rows) { row in
                 Text(value(row))
-                    .font(.system(size: 13, weight: .regular))
+                    .font(appFont(.body))
                     .frame(width: 120, alignment: .leading)
             }
         }

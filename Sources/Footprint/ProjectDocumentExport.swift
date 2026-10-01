@@ -743,12 +743,12 @@ extension GrantDataStore {
             func fraction(_ count: Int) -> Double { Double(count) / Double(totalApplications) }
             func valueText(_ count: Int, _ amountSEK: Double) -> String {
                 amountSEK > 0
-                    ? "\(count) · \(projectDocumentSEKText(amountSEK, language: language)) kr"
+                    ? "\(count) · \(projectDocumentSEKText(amountSEK, language: language)) \(AmountFormatter.sekUnit(language))"
                     : "\(count)"
             }
             var bars: [CVExportStatisticBar] = [
                 CVExportStatisticBar(
-                    label: language.text("Granted", "Beviljade"),
+                    label: ApplicationOutcome.granted.heading(language),
                     valueText: valueText(granted.count, grantedSEK),
                     fraction: fraction(granted.count),
                     colorHex: "16A34A"
@@ -758,7 +758,7 @@ extension GrantDataStore {
                 bars.append(
                     CVExportStatisticBar(
                         label: language.text("Spent of granted", "Förbrukat av beviljat"),
-                        valueText: "\(projectDocumentSEKText(spentSEK, language: language)) kr",
+                        valueText: "\(projectDocumentSEKText(spentSEK, language: language)) \(AmountFormatter.sekUnit(language))",
                         fraction: min(1, spentSEK / grantedSEK),
                         colorHex: "15803D"
                     )
@@ -766,13 +766,13 @@ extension GrantDataStore {
             }
             bars.append(contentsOf: [
                 CVExportStatisticBar(
-                    label: language.text("Pending decision", "Väntar beslut"),
+                    label: ApplicationOutcome.awaitingDecision.heading(language),
                     valueText: valueText(waiting.count, waitingSEK),
                     fraction: fraction(waiting.count),
                     colorHex: "D97706"
                 ),
                 CVExportStatisticBar(
-                    label: language.text("Declined", "Avslag"),
+                    label: ApplicationOutcome.declined.heading(language),
                     valueText: valueText(rejected.count, rejectedSEK),
                     fraction: fraction(rejected.count),
                     colorHex: "DC2626"

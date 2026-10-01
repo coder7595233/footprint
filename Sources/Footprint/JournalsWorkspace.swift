@@ -1722,7 +1722,7 @@ private struct PublicationJournalEditorView: View {
                     AppInlineTitleTextField(
                         placeholder: language.text("Journal name", "Tidskriftsnamn"),
                         text: binding(\.name),
-                        font: .systemFont(ofSize: 24, weight: .bold),
+                        font: appNSFont(.pageTitle),
                         minHeight: 30
                     )
                     if let journalHomeURL {
@@ -1738,9 +1738,15 @@ private struct PublicationJournalEditorView: View {
                         .foregroundStyle(AppPalette.linkAction)
                     }
                     Spacer()
-                    AppDestructiveActionButton(title: language.text("Delete", "Ta bort")) {
-                        store.deletePublicationJournal(id: journal.id)
-                    }
+                    AppDestructiveActionButton(
+                        title: language.text("Delete", "Ta bort"),
+                        help: language.text("Delete journal", "Ta bort tidskrift"),
+                        cancelTitle: language.text("Cancel", "Avbryt"),
+                        confirmationTitle: language.text("Delete journal?", "Ta bort tidskrift?"),
+                        confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras."),
+                        action: { store.deletePublicationJournal(id: journal.id) },
+                        storeAsksFirst: { store.publicationJournalDeletionShowsImpactWarning(id: journal.id) }
+                    )
                 }
                 .frame(minHeight: 42)
 
@@ -2122,7 +2128,11 @@ private struct PublicationJournalEditorView: View {
                                         .appTextInputChrome()
                                 }
                                 Spacer()
-                                AppDestructiveActionButton(title: language.text("Delete row", "Ta bort rad")) {
+                                AppDestructiveActionButton(
+                                    title: language.text("Delete row", "Ta bort rad"),
+                                    cancelTitle: language.text("Cancel", "Avbryt"),
+                                    confirmationTitle: language.text("Delete ranking row?", "Ta bort rankningsrad?")
+                                ) {
                                     deleteRankingRow(id: row.id)
                                 }
                             }
@@ -2596,9 +2606,9 @@ private enum PublicationJournalStatisticsOutcome: String, CaseIterable, Identifi
         case .accepted:
             return language.text("Accepted", "Accepterade")
         case .rejected:
-            return language.text("Rejected", "Refuserade")
+            return PublicationOutcomeWording.rejectedHeading(language)
         case .waiting:
-            return language.text("Pending", "Väntar svar")
+            return language.text("Awaiting decision", "Väntar svar")
         }
     }
 }
@@ -2892,7 +2902,7 @@ private struct PublicationJournalRankingChartCard: View {
                                 .fill(item.color)
                                 .frame(width: 18, height: 3)
                             Text(item.title(language: language))
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(appFont(.secondary).weight(.semibold))
                                 .foregroundStyle(AppPalette.appText)
                         }
                     }
@@ -2939,7 +2949,7 @@ private struct PublicationJournalRankingLineChart: View {
                     .stroke(AppPalette.subtleBorder.opacity(index == gridLineCount ? 0.9 : 0.55), lineWidth: 1)
 
                     Text(formattedAxisValue(maximumValue * Double(gridLineCount - index) / Double(gridLineCount)))
-                        .font(.system(size: 10, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                         .frame(width: leftInset - 7, alignment: .trailing)
                         .position(x: (leftInset - 7) / 2, y: y)
@@ -2954,7 +2964,7 @@ private struct PublicationJournalRankingLineChart: View {
                     .stroke(AppPalette.subtleBorder.opacity(0.28), lineWidth: 1)
 
                     Text("\(year)")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                         .fixedSize()
                         .position(x: x, y: topInset + plotHeight + 18)

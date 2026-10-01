@@ -4451,7 +4451,7 @@ final class StabilityTests: XCTestCase {
         XCTAssertEqual(mainGrantDetails.layoutKind, "pageBreakBefore")
         XCTAssertEqual(grants.rows.first { $0.first == "Ansökningar" }, ["Ansökningar", "3", "1"])
         XCTAssertEqual(grants.rows.first { $0.first == "Beviljade" }, ["Beviljade", "1", "0"])
-        XCTAssertEqual(grants.rows.first { $0.first == "Väntar beslut" }, ["Väntar beslut", "1", "1"])
+        XCTAssertEqual(grants.rows.first { $0.first == "Väntar svar" }, ["Väntar svar", "1", "1"])
         XCTAssertEqual(grants.rows.first { $0.first == "Avslagna" }, ["Avslagna", "1", "0"])
         XCTAssertEqual(mainGrantDetails.headers, ["Status", "Datum", "Finansiär", "Anslag", "Belopp i SEK"])
         XCTAssertEqual(mainGrantDetails.rows.count, 3)
@@ -5933,10 +5933,10 @@ final class StabilityTests: XCTestCase {
         XCTAssertTrue(providerBars.contains { $0.id == "funder-grant-app-shared" && $0.applicationID == "app-shared" })
         XCTAssertTrue(managerBars.contains { $0.id == "managed-grant-app-shared" && $0.applicationID == "app-shared" })
         let providerBar = try XCTUnwrap(providerBars.first { $0.applicationID == "app-provider" })
-        XCTAssertEqual(providerBar.title, "Projekt Alfa · Dubbel organisation · 125 000 SEK")
+        XCTAssertEqual(providerBar.title, "Projekt Alfa · Dubbel organisation · 125 000 kr")
         XCTAssertFalse(providerBar.title.contains("Att söka"))
         let managerBar = try XCTUnwrap(managerBars.first { $0.applicationID == "app-manager" })
-        XCTAssertEqual(managerBar.title, "Projekt Beta · Annan anslagsgivare · 200 000 SEK")
+        XCTAssertEqual(managerBar.title, "Projekt Beta · Annan anslagsgivare · 200 000 kr")
         XCTAssertFalse(managerBar.title.contains("Väntar svar"))
         let sharedProviderBar = try XCTUnwrap(providerBars.first { $0.applicationID == "app-shared" })
         XCTAssertEqual(sharedProviderBar.fullySpentDate.map(DateParsers.isoDay.string(from:)), "2026-06-30")
@@ -6108,9 +6108,9 @@ final class StabilityTests: XCTestCase {
         XCTAssertEqual(employerGroup.bars.count, 2)
 
         let employmentBar = try XCTUnwrap(employerGroup.bars.first)
-        XCTAssertEqual(employmentBar.title, "Researcher · 55 000 SEK/mån · 2026-03-01 - 2026-06-30")
-        XCTAssertEqual(employmentBar.hoverText, "Arbetsgivare: anställning och lön\nResearcher · 55 000 SEK/mån · 2026-03-01 - 2026-06-30")
-        XCTAssertTrue(employmentBar.title.contains("55 000 SEK/mån"))
+        XCTAssertEqual(employmentBar.title, "Researcher · 55 000 kr/mån · 2026-03-01 - 2026-06-30")
+        XCTAssertEqual(employmentBar.hoverText, "Arbetsgivare: anställning och lön\nResearcher · 55 000 kr/mån · 2026-03-01 - 2026-06-30")
+        XCTAssertTrue(employmentBar.title.contains("55 000 kr/mån"))
         XCTAssertEqual(DateParsers.isoDay.string(from: employmentBar.start), "2026-03-01")
         XCTAssertEqual(DateParsers.isoDay.string(from: employmentBar.end), "2026-06-30")
     }
@@ -6153,7 +6153,7 @@ final class StabilityTests: XCTestCase {
         let combinedBar = try XCTUnwrap(combinedSnapshot.groups.first { $0.id == "employer" }?.bars.first)
         XCTAssertEqual(DateParsers.isoDay.string(from: combinedBar.start), "2026-05-01")
         XCTAssertEqual(DateParsers.isoDay.string(from: combinedBar.end), "2027-12-31")
-        XCTAssertEqual(combinedBar.title, "Senior Researcher · 60 000 SEK/mån · 2026-05-01 - pågående")
+        XCTAssertEqual(combinedBar.title, "Senior Researcher · 60 000 kr/mån · 2026-05-01 - pågående")
 
         let salaryOnlySnapshot = GrantDataStore.buildOrganizationTimelineSnapshot(
             organization: organization,
@@ -6166,7 +6166,7 @@ final class StabilityTests: XCTestCase {
         )
         let salaryOnlyBar = try XCTUnwrap(salaryOnlySnapshot.groups.first { $0.id == "employer" }?.bars.first)
         XCTAssertEqual(DateParsers.isoDay.string(from: salaryOnlyBar.end), "2027-12-31")
-        XCTAssertEqual(salaryOnlyBar.title, "60 000 SEK/mån · 2026-05-01 - pågående")
+        XCTAssertEqual(salaryOnlyBar.title, "60 000 kr/mån · 2026-05-01 - pågående")
 
         let employmentOnlySnapshot = GrantDataStore.buildOrganizationTimelineSnapshot(
             organization: organization,

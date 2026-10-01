@@ -1008,7 +1008,7 @@ struct CongressMapWorkspaceView: View {
                     ProgressView()
                         .controlSize(.small)
                     Text(language.text("Placing locations", "Placerar platser"))
-                        .font(.system(size: 12.5, weight: .medium))
+                        .font(appFont(.body).weight(.medium))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -1036,7 +1036,7 @@ struct CongressMapWorkspaceView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(language.text("Months: \(Int(visibleMonthsFrom))–\(Int(visibleMonthsAhead))", "Månader: \(Int(visibleMonthsFrom))–\(Int(visibleMonthsAhead))"))
-                        .font(.system(size: 12.5, weight: .semibold))
+                        .font(appFont(.body).weight(.semibold))
                         .foregroundStyle(AppPalette.appText)
                     AppRangeSlider(
                         lowerValue: visibleMonthsFromBinding,
@@ -1053,7 +1053,7 @@ struct CongressMapWorkspaceView: View {
                     isOn: $hidesPassedAbstractDeadlines
                 )
                 .appCheckboxStyle()
-                .font(.system(size: 12.5, weight: .medium))
+                .font(appFont(.body).weight(.medium))
                 .fixedSize()
 
                 Toggle(
@@ -1061,7 +1061,7 @@ struct CongressMapWorkspaceView: View {
                     isOn: $showsParticipatedCongressesOnly
                 )
                 .appCheckboxStyle()
-                .font(.system(size: 12.5, weight: .medium))
+                .font(appFont(.body).weight(.medium))
                 .fixedSize()
 
                 Toggle(
@@ -1069,7 +1069,7 @@ struct CongressMapWorkspaceView: View {
                     isOn: $showsHiddenCongresses
                 )
                 .appCheckboxStyle()
-                .font(.system(size: 12.5, weight: .medium))
+                .font(appFont(.body).weight(.medium))
                 .fixedSize()
             }
         }
@@ -1082,10 +1082,10 @@ struct CongressMapWorkspaceView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(language.text("Upcoming congresses", "Kommande kongresser"))
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(appFont(.panelTitle))
                 Spacer()
                 Text("\(rows.count)")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(appFont(.secondary).weight(.bold))
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 16)
@@ -1117,7 +1117,7 @@ struct CongressMapWorkspaceView: View {
                 if !rowsWithoutCoordinates.isEmpty {
                     Divider()
                     Text(missingLocationText)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
@@ -1168,7 +1168,7 @@ struct CongressMapWorkspaceView: View {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(row.dateText)
-                        .font(.system(size: 12, weight: .bold))
+                        .font(appFont(.secondary).weight(.bold))
                         .monospacedDigit()
                         .foregroundStyle(AppPalette.appText)
                     if row.hasUncertainDate {
@@ -1184,12 +1184,12 @@ struct CongressMapWorkspaceView: View {
                 }
 
                 Text(row.title)
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .font(appFont(.body).weight(.semibold))
                     .lineLimit(2)
                     .foregroundStyle(AppPalette.appText)
 
                 Text([row.placeText.nonEmpty, row.organizationName.nonEmpty].compactMap { $0 }.joined(separator: " - "))
-                    .font(.system(size: 12, weight: .regular))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
@@ -1419,7 +1419,7 @@ struct CongressMapWorkspaceView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
                         Text(row.title)
-                            .font(.system(size: 12.5, weight: .semibold))
+                            .font(appFont(.body).weight(.semibold))
                             .foregroundStyle(.black)
                             .fixedSize(horizontal: false, vertical: true)
                         if let url = normalizedWebLinkURL(row.link) {
@@ -1435,7 +1435,7 @@ struct CongressMapWorkspaceView: View {
 
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
                         Text(row.dateText)
-                            .font(.system(size: 10.5, weight: .medium))
+                            .font(appFont(.secondary).weight(.medium))
                             .monospacedDigit()
                             .foregroundStyle(Color.black.opacity(0.82))
                         calendarLink(
@@ -1461,13 +1461,13 @@ struct CongressMapWorkspaceView: View {
 
             if row.isHiddenOnMap {
                 Label(language.text("Hidden on map", "Dold på kartan"), systemImage: "eye.slash")
-                    .font(.system(size: 11.5, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
             }
 
             if let placeText = row.placeText.nonEmpty {
                 Text(placeText)
-                    .font(.system(size: 12.5, weight: .regular))
+                    .font(appFont(.body))
                     .foregroundStyle(Color.black.opacity(0.74))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -1475,7 +1475,7 @@ struct CongressMapWorkspaceView: View {
             if !row.organizationName.isEmpty {
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
                     Text(row.organizationName)
-                        .font(.system(size: 12.5, weight: .regular))
+                        .font(appFont(.body))
                         .foregroundStyle(Color.black.opacity(0.74))
                         .fixedSize(horizontal: false, vertical: true)
                     Button {
@@ -1495,7 +1495,7 @@ struct CongressMapWorkspaceView: View {
                     ForEach(Array(deadlines.enumerated()), id: \.offset) { _, deadline in
                         HStack(alignment: .firstTextBaseline, spacing: 5) {
                             Text(deadline.text)
-                                .font(.system(size: 12, weight: .medium))
+                                .font(appFont(.secondary).weight(.medium))
                                 .foregroundStyle(Color.black.opacity(0.86))
                             calendarLink(
                                 for: row,
@@ -1510,7 +1510,7 @@ struct CongressMapWorkspaceView: View {
 
             if let timeZoneDifferenceText = timeZoneDifferenceText(for: row) {
                 Text(timeZoneDifferenceText)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(Color.black.opacity(0.68))
                     .padding(.top, 2)
             }
@@ -4732,10 +4732,10 @@ private struct CongressMapAdaptiveCalloutLabel: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(clusterTitle(count: count, placeText: placeText))
-                    .font(.system(size: 12.5, weight: .bold))
+                    .font(appFont(.body).weight(.bold))
                     .lineLimit(1)
                 Text(language.text("Click to show the nearest congress", "Klicka för att visa närmaste kongress"))
-                    .font(.system(size: 11.5, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -4789,7 +4789,7 @@ private struct CongressMapAdaptiveCalloutLabel: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
                 Text(dateAndPlaceText)
-                    .font(.system(size: 12, weight: .bold))
+                    .font(appFont(.secondary).weight(.bold))
                     .lineLimit(1)
                 if row.hasUncertainDate {
                     Image(systemName: "questionmark.circle")
@@ -4801,7 +4801,7 @@ private struct CongressMapAdaptiveCalloutLabel: View {
                 }
             }
             Text(row.title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .lineLimit(2)
         }
         .foregroundStyle(AppPalette.appText)
@@ -4846,7 +4846,7 @@ private struct CongressMapAdaptiveCalloutLabel: View {
 
     private var daysRemainingBox: some View {
         Text(daysRemainingText)
-            .font(.system(size: 12, weight: .bold))
+            .font(appFont(.secondary).weight(.bold))
             .foregroundStyle(AppPalette.appText)
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
