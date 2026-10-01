@@ -18,8 +18,8 @@ extension GrantDataStore {
         flushPendingPersistenceIfNeeded()
         let language = language
         performBackgroundOperation(
-            startMessage: language.text("Checking backup health…", "Kontrollerar backuphälsa…"),
-            failureMessage: language.text("Backup health check failed.", "Kontroll av backuphälsa misslyckades."),
+            startMessage: language.text("Checking backup health…", "Kontrollerar säkerhetskopiornas skick…"),
+            failureMessage: language.text("Backup health check failed.", "Kontrollen av säkerhetskopiornas skick misslyckades."),
             work: {
                 try Self.backupHealthSummaryText(language: language)
             },
@@ -34,8 +34,8 @@ extension GrantDataStore {
         flushPendingPersistenceIfNeeded()
         let language = language
         performBackgroundOperation(
-            startMessage: language.text("Preparing backup preview…", "Förbereder backupförhandsvisning…"),
-            failureMessage: language.text("Backup preview failed.", "Backupförhandsvisning misslyckades."),
+            startMessage: language.text("Preparing backup preview…", "Förbereder förhandsvisning av säkerhetskopian…"),
+            failureMessage: language.text("Backup preview failed.", "Förhandsvisningen av säkerhetskopian misslyckades."),
             work: {
                 try Self.backupRestorePreviewSummaryText(language: language, directoryURL: directoryURL)
             },
@@ -87,8 +87,8 @@ extension GrantDataStore {
         let language = language
 
         performBackgroundOperation(
-            startMessage: language.text("Restoring backup…", "Återställer backup…"),
-            failureMessage: language.text("Could not restore backup.", "Kunde inte återställa backup."),
+            startMessage: language.text("Restoring backup…", "Återställer säkerhetskopia…"),
+            failureMessage: language.text("Could not restore backup.", "Kunde inte återställa säkerhetskopian."),
             work: {
                 let payload = try Self.decodeRestorePayload(from: directoryURL)
                 // With writes blocked the in-memory state is empty; a safety
@@ -228,13 +228,13 @@ extension GrantDataStore {
             registerArchiveUndo(
                 snapshot: result.previousSnapshot,
                 archivedRecords: result.previousArchivedRecords,
-                actionName: language.text("Restore backup", "Återställ backup")
+                actionName: language.text("Restore backup", "Återställ säkerhetskopia")
             )
         }
         notice = StoreNotice(
             message: language.text(
                 "Restored backup and verified stored data.",
-                "Återställde backup och verifierade lagrade data."
+                "Återställde säkerhetskopian och verifierade lagrade data."
             ),
             tone: .success
         )

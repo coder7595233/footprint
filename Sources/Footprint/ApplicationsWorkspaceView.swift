@@ -1185,13 +1185,17 @@ struct ApplicationsView: View {
     }
 
     private func sumRangeLabel(language: AppLanguage) -> String {
-        let lower = formattedAmountInMillions(min(minimumAmountValue, maximumAmountValue), language: language)
+        // Round 17: the shared amount formatter (same decimals and units as
+        // everywhere else, "mkr" / "MSEK").
+        let lower = AmountFormatter.decimal(
+            max(0, min(minimumAmountValue, maximumAmountValue)) / 1_000_000,
+            language: language
+        )
         let upper = max(minimumAmountValue, maximumAmountValue)
-        // Round 16: same units as everywhere else ("mkr" / "MSEK").
         let millionsUnit = AmountFormatter.millionsUnit(language)
         let upperText = upper >= 20_000_000
             ? ">20 \(millionsUnit)"
-            : "\(formattedAmountInMillions(upper, language: language)) \(millionsUnit)"
+            : AmountFormatter.millions(max(0, upper), language: language)
         return "\(language.text("Amount", "Belopp")): \(lower) – \(upperText)"
     }
 
@@ -1218,17 +1222,6 @@ struct ApplicationsView: View {
             String(applicationRowsAppliedGeneration),
             sortSignature
         ].joined(separator: "||")
-    }
-
-    private func formattedAmountInMillions(_ value: Double, language: AppLanguage) -> String {
-        let millions = max(0, value) / 1_000_000
-        let formatter = NumberFormatter()
-        formatter.locale = language == .swedish ? Locale(identifier: "sv_SE") : Locale(identifier: "en_US")
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = millions.rounded() == millions ? 0 : 1
-        formatter.maximumFractionDigits = 1
-        formatter.usesGroupingSeparator = false
-        return formatter.string(from: NSNumber(value: millions)) ?? "\(millions)"
     }
 
     @ViewBuilder

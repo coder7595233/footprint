@@ -3404,7 +3404,7 @@ private struct PublicationAuthorEditorView: View {
                 }
                 HStack(spacing: 10) {
                     compactField(language.text("Phone label", "Telefonetikett"), width: 120) {
-                        researcherTextField(language.text("Work, home, mobile...", "Arbete, hem, mobil..."), text: binding(\.phoneLabel))
+                        researcherTextField(language.text("Work, home, mobile…", "Arbete, hem, mobil…"), text: binding(\.phoneLabel))
                     }
                     .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "phoneLabel"))
                     compactField(language.text("Phone number", "Telefonnummer"), width: 180) {
@@ -3412,7 +3412,7 @@ private struct PublicationAuthorEditorView: View {
                     }
                     .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "phoneNumber"))
                     compactField(language.text("Phone label 2", "Telefonetikett 2"), width: 120) {
-                        researcherTextField(language.text("Work, home, mobile...", "Arbete, hem, mobil..."), text: binding(\.phoneLabelSecondary))
+                        researcherTextField(language.text("Work, home, mobile…", "Arbete, hem, mobil…"), text: binding(\.phoneLabelSecondary))
                     }
                     .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "phoneLabelSecondary"))
                     compactField(language.text("Phone number 2", "Telefonnummer 2"), width: 180) {
@@ -3545,7 +3545,9 @@ private struct PublicationAuthorEditorView: View {
                     }
                         AppIconDeleteButton(
                             title: language.text("Delete affiliation", "Ta bort affiliering"),
-                            width: 24
+                            width: 24,
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Delete affiliation?", "Ta bort affilieringen?")
                         ) {
                             guard !affiliation.isEmpty else { return }
                             removeAffiliation(id: affiliation.id)

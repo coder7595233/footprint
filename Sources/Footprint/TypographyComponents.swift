@@ -1016,6 +1016,14 @@ struct AppCompactRowTitleText: View {
     }
 }
 
+/// Round 17: the one font for badge-like texts (short status words, counts in
+/// capsules, step numbers and markers such as the "?" on uncertain dates).
+/// Follows the secondary typography setting, always semibold, so badges
+/// look alike across the app.
+func appBadgeFont() -> Font {
+    appFont(.secondary).weight(.semibold)
+}
+
 struct AppBadgeText: View {
     enum Size {
         case compact
@@ -1037,7 +1045,7 @@ struct AppBadgeText: View {
 
     var body: some View {
         Text(text)
-            .font(appFont(.secondary).weight(.semibold))
+            .font(appBadgeFont())
             .foregroundStyle(foreground)
             .lineLimit(1)
             .minimumScaleFactor(0.82)

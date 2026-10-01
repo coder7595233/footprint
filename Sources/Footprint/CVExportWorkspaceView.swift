@@ -960,10 +960,7 @@ struct CVExportWorkspaceView: View {
             AppPanelHeadingText(text: language.text("Edit source records", "Redigera underlag"))
 
             if sections.allSatisfy({ $0.links.isEmpty }) {
-                Text(language.text("No linked source records are included in this preview.", "Inga länkade underlag ingår i den här förhandsvisningen."))
-                    .font(appFont(.secondary))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                AppCompactEmptyListLabel(title: language.text("No linked source records are included in this preview", "Inga länkade underlag ingår i den här förhandsvisningen"))
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
@@ -1376,7 +1373,7 @@ struct CVExportWorkspaceView: View {
                                 id: "organization-\(organization.id)",
                                 title: title,
                                 subtitle: organization.city.nonEmpty,
-                                systemImage: "building.2",
+                                systemImage: AppTab.organizations.symbolName,
                                 matchTerms: [
                                     organization.nameSv,
                                     organization.nameEn,
@@ -1422,7 +1419,7 @@ struct CVExportWorkspaceView: View {
                             id: "conference-\(contribution.id)",
                             title: contribution.localizedTitle(language: language).nonEmpty ?? contribution.displayTitle,
                             subtitle: contribution.localizedMeeting(language: language).nonEmpty ?? contribution.publicationYear.nonEmpty,
-                            systemImage: "person.3",
+                            systemImage: AppTab.congresses.symbolName,
                             matchTerms: [
                                 contribution.localizedName(language: language),
                                 contribution.localizedTitle(language: language),
@@ -1450,7 +1447,7 @@ struct CVExportWorkspaceView: View {
                             id: "media-\(appearance.id)",
                             title: appearance.localizedTitle(language: language).nonEmpty ?? appearance.displayTitle,
                             subtitle: appearance.publicationDate.nonEmpty,
-                            systemImage: "megaphone",
+                            systemImage: AppTab.dissemination.symbolName,
                             matchTerms: [
                                 appearance.localizedDescription(language: language),
                                 appearance.localizedTitle(language: language),
@@ -1514,7 +1511,7 @@ struct CVExportWorkspaceView: View {
                             id: "doctoral-\(candidate.id)",
                             title: candidate.candidateName.nonEmpty ?? language.text("Doctoral candidate", "Doktorand"),
                             subtitle: candidate.doctoralProjectName.nonEmpty,
-                            systemImage: "person.crop.rectangle.stack",
+                            systemImage: AppTab.doctoralCandidates.symbolName,
                             matchTerms: cvPreviewDoctoralCandidateMatchTerms(for: candidate),
                             destination: .route(AppRoute(recordID: candidate.id, destination: .doctoralCandidates))
                         )
@@ -1612,7 +1609,7 @@ struct CVExportWorkspaceView: View {
                         id: "doctoral-\(candidate.id)",
                         title: candidate.candidateName.nonEmpty ?? language.text("Doctoral candidate", "Doktorand"),
                         subtitle: candidate.doctoralProjectName.nonEmpty,
-                        systemImage: "person.crop.rectangle.stack",
+                        systemImage: AppTab.doctoralCandidates.symbolName,
                         matchTerms: cvPreviewDoctoralCandidateMatchTerms(for: candidate),
                         destination: .route(AppRoute(recordID: candidate.id, destination: .doctoralCandidates))
                     )
@@ -1626,7 +1623,7 @@ struct CVExportWorkspaceView: View {
                         id: "conference-\(contribution.id)",
                         title: contribution.localizedTitle(language: language).nonEmpty ?? contribution.displayTitle,
                         subtitle: contribution.localizedMeeting(language: language).nonEmpty ?? contribution.publicationYear.nonEmpty,
-                        systemImage: "person.3",
+                        systemImage: AppTab.congresses.symbolName,
                         matchTerms: [
                             contribution.localizedName(language: language),
                             contribution.localizedTitle(language: language),
@@ -1649,7 +1646,7 @@ struct CVExportWorkspaceView: View {
                         id: "media-\(appearance.id)",
                         title: appearance.localizedTitle(language: language).nonEmpty ?? appearance.displayTitle,
                         subtitle: appearance.publicationDate.nonEmpty,
-                        systemImage: "megaphone",
+                        systemImage: AppTab.dissemination.symbolName,
                         matchTerms: [
                             appearance.localizedDescription(language: language),
                             appearance.localizedTitle(language: language),
@@ -2158,10 +2155,7 @@ struct CVExportWorkspaceView: View {
                 }
 
                 if filteredVRCandidates.isEmpty {
-                    Text(language.text("No original articles matched the filters.", "Inga originalartiklar matchade filtren."))
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    AppCompactEmptyListLabel(title: language.text("No original articles matched the filters", "Inga originalartiklar matchade filtren"))
                         .padding(.top, 4)
                 }
             }
@@ -2691,8 +2685,7 @@ private struct CVProfileAuthorDataEditor: View {
                 GroupBox {
                     VStack(alignment: .leading, spacing: 12) {
                         if draft.employments.isEmpty {
-                            Text(language.text("No employments added yet.", "Inga anställningar tillagda ännu."))
-                                .foregroundStyle(.secondary)
+                            AppCompactEmptyListLabel(title: language.text("No employments added yet", "Inga anställningar tillagda ännu"))
                         } else {
                             employmentHeaderRow
                             ForEach(draft.employments) { employment in
@@ -2723,8 +2716,7 @@ private struct CVProfileAuthorDataEditor: View {
                 GroupBox {
                     VStack(alignment: .leading, spacing: 12) {
                         if draft.educationEntries.isEmpty {
-                            Text(language.text("No education or courses added yet.", "Inga utbildningar eller kurser tillagda ännu."))
-                                .foregroundStyle(.secondary)
+                            AppCompactEmptyListLabel(title: language.text("No education or courses added yet", "Inga utbildningar eller kurser tillagda ännu"))
                         } else {
                             educationHeaderRow
                             ForEach(draft.educationEntries) { entry in
@@ -3189,7 +3181,12 @@ private struct CVProfileEmploymentRow: View {
                     .appTextInputChrome()
             }
 
-            AppIconDeleteButton(title: language.text("Delete", "Ta bort"), action: onDelete)
+            AppIconDeleteButton(
+                title: language.text("Delete", "Ta bort"),
+                cancelTitle: language.text("Cancel", "Avbryt"),
+                confirmationTitle: language.text("Delete row?", "Ta bort raden?"),
+                action: onDelete
+            )
             .padding(.top, 6)
         }
     }
@@ -3300,7 +3297,12 @@ private struct CVProfileEducationRow: View {
                 )
             }
 
-            AppIconDeleteButton(title: language.text("Delete", "Ta bort"), action: onDelete)
+            AppIconDeleteButton(
+                title: language.text("Delete", "Ta bort"),
+                cancelTitle: language.text("Cancel", "Avbryt"),
+                confirmationTitle: language.text("Delete row?", "Ta bort raden?"),
+                action: onDelete
+            )
             .padding(.top, 6)
         }
     }

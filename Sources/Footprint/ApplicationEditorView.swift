@@ -1833,6 +1833,8 @@ struct ApplicationEditorView: View {
             title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
+            cancelTitle: store.language.text("Cancel", "Avbryt"),
+            confirmationTitle: store.language.text("Delete row?", "Ta bort raden?"),
             action: action
         )
     }

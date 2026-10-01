@@ -2185,9 +2185,7 @@ private struct PublicationJournalEditorView: View {
                     }
 
                     if draft.rankingRows.isEmpty {
-                        Text(language.text("No ranking rows yet.", "Inga rankingrader ännu."))
-                            .appTypography(.secondary)
-                            .foregroundStyle(.primary)
+                        AppCompactEmptyListLabel(title: language.text("No ranking rows yet", "Inga rankingrader ännu"))
                     }
 
                     Menu {
@@ -2199,14 +2197,12 @@ private struct PublicationJournalEditorView: View {
                     } label: {
                         Label(language.text("Add ranking row", "Lägg till rankingrad"), systemImage: "plus")
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    .appAddButtonStyle()
                     .padding(.top, draft.rankingRows.isEmpty ? 0 : 4)
                 }
                 }
             } else {
-                ProgressView()
-                    .controlSize(.small)
+                AppLoadingLabel(language: language)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -2270,8 +2266,7 @@ private struct PublicationJournalEditorView: View {
     private func linkedReviewsPanel(language: AppLanguage) -> some View {
         PublicationCompactPanel(title: language.text("Related reviews", "Relaterade sakkunniguppdrag"), usesInnerSurface: false) {
             if !showLinkedDataSection {
-                ProgressView()
-                    .controlSize(.small)
+                AppLoadingLabel(language: language)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 AppCompactReferenceList(isEmpty: linkedReviews.isEmpty, emptyTitle: language.text("No records", "Inga poster"), rowSpacing: 0) {
@@ -2669,9 +2664,7 @@ private struct PublicationJournalStatisticsCard: View {
                 .foregroundStyle(AppPalette.appText)
 
             if rows.isEmpty {
-                Text(language.text("No accepted, rejected or pending submissions found for this journal.", "Inga accepterade, refuserade eller väntande inskick hittades för tidskriften."))
-                    .appTypography(.secondary)
-                    .foregroundStyle(.secondary)
+                AppCompactEmptyListLabel(title: language.text("No accepted, rejected or pending submissions found for this journal", "Inga accepterade, refuserade eller väntande inskick hittades för tidskriften"))
             } else {
                 PublicationJournalStatisticsOutcomeBar(rows: rows, language: language)
             }
@@ -2701,7 +2694,7 @@ private struct PublicationJournalStatisticsOutcomeBar: View {
                             Text(segment.outcome.title(language: language))
                                 .appTypography(.tableHeader)
                             Text("\(segment.count)")
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .font(appFont(.statValue))
                                 .monospacedDigit()
                         }
                         .foregroundStyle(AppPalette.semanticOnColor)

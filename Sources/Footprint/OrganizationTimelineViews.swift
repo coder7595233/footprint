@@ -71,9 +71,7 @@ struct OrganizationTimelineView: View {
 
     var body: some View {
         if snapshot.isEmpty {
-            Text(language.text("No timed organization processes yet.", "Inga tidsatta organisationsprocesser än."))
-                .font(appFont(.secondary))
-                .foregroundStyle(.secondary)
+            AppCompactEmptyListLabel(title: language.text("No timed organization processes yet", "Inga tidsatta organisationsprocesser än"))
         } else {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: true) {

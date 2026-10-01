@@ -1399,7 +1399,9 @@ private struct DoctoralCandidateDetailView: View {
                                 if !rowIsPlaceholder && !draft.isEditingLocked {
                                     AppInlineDeleteButton(
                                         title: language.text("Delete supervisor", "Ta bort handledare"),
-                                        width: 34
+                                        width: 34,
+                                        cancelTitle: language.text("Cancel", "Avbryt"),
+                                        confirmationTitle: language.text("Delete supervisor?", "Ta bort handledaren?")
                                     ) {
                                         removeSupervisor(at: index)
                                     }
@@ -1517,13 +1519,14 @@ private struct DoctoralCandidateDetailView: View {
                                 }
                                 Spacer(minLength: 0)
                                 if !placeholder && !draft.isEditingLocked {
-                                    Button(role: .destructive) {
+                                    AppRowDeleteIconButton(
+                                        title: language.text("Remove supervision period", "Ta bort handledningsperiod"),
+                                        cancelTitle: language.text("Cancel", "Avbryt"),
+                                        confirmationTitle: language.text("Remove supervision period?", "Ta bort handledningsperiod?"),
+                                        width: 34
+                                    ) {
                                         removeSupervisionPeriod(at: index)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .foregroundStyle(AppPalette.actionDelete)
                                     }
-                                    .buttonStyle(.bordered)
                                 } else {
                                     Color.clear.frame(width: 34, height: 1)
                                 }
@@ -1580,9 +1583,7 @@ private struct DoctoralCandidateDetailView: View {
                                     .font(appFont(.secondary))
                                     .foregroundStyle(.secondary)
                             } else if eligiblePublicationChoices.isEmpty {
-                                Text(language.text("No publications with this doctoral candidate in the author list were found.", "Inga publikationer med denna doktorand i författarlistan hittades."))
-                                    .font(appFont(.secondary))
-                                    .foregroundStyle(.secondary)
+                                AppCompactEmptyListLabel(title: language.text("No publications with this doctoral candidate in the author list were found", "Inga publikationer med denna doktorand i författarlistan hittades"))
                             }
                         }
 
@@ -1641,13 +1642,13 @@ private struct DoctoralCandidateDetailView: View {
                                 .buttonStyle(.plain)
 
                                 if !draft.isEditingLocked {
-                                    Button(role: .destructive) {
+                                    AppRowDeleteIconButton(
+                                        title: language.text("Remove publication link", "Ta bort koppling till publikation"),
+                                        cancelTitle: language.text("Cancel", "Avbryt"),
+                                        confirmationTitle: language.text("Remove the link to this publication?", "Ta bort kopplingen till publikationen?")
+                                    ) {
                                         removePublicationLink(publication.id)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .foregroundStyle(AppPalette.actionDelete)
                                     }
-                                    .buttonStyle(.bordered)
                                 }
                             }
                             .padding(.horizontal, 10)
@@ -1935,7 +1936,9 @@ private struct DoctoralCandidateDetailView: View {
                         if !draft.isEditingLocked {
                             AppInlineDeleteButton(
                                 title: language.text("Delete document", "Ta bort dokument"),
-                                width: 34
+                                width: 34,
+                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                confirmationTitle: language.text("Delete document?", "Ta bort dokumentet?")
                             ) {
                                 removeDoctoralDocument(id: document.id)
                             }
@@ -1945,9 +1948,7 @@ private struct DoctoralCandidateDetailView: View {
             }
 
             if visibleDocumentRows.isEmpty {
-                Text(language.text("No documents uploaded.", "Inga dokument uppladdade."))
-                    .font(appFont(.secondary))
-                    .foregroundStyle(.secondary)
+                AppCompactEmptyListLabel(title: language.text("No documents uploaded", "Inga dokument uppladdade"))
             }
         }
         .padding(12)
@@ -2017,7 +2018,9 @@ private struct DoctoralCandidateDetailView: View {
                             )
                             AppInlineDeleteButton(
                                 title: language.text("Delete course", "Ta bort kurs"),
-                                width: 34
+                                width: 34,
+                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                confirmationTitle: language.text("Delete course?", "Ta bort kursen?")
                             ) {
                                 removeDoctoralCourse(id: course.id)
                             }
@@ -2035,9 +2038,7 @@ private struct DoctoralCandidateDetailView: View {
             }
 
             if visibleCourseRows.isEmpty {
-                Text(language.text("No courses added.", "Inga kurser tillagda."))
-                    .font(appFont(.secondary))
-                    .foregroundStyle(.secondary)
+                AppCompactEmptyListLabel(title: language.text("No courses added", "Inga kurser tillagda"))
             }
 
             if !visibleCourseRows.isEmpty {

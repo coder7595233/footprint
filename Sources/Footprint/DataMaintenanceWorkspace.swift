@@ -1219,14 +1219,14 @@ struct DataMaintenanceWorkspaceView: View {
             return language.text("No problem types selected", "Inga problemtyper valda")
         }
         if !selectedIssueFilters.isDisjoint(with: loadingIssueFilters) {
-            return language.text("Loading \(rowCount) rows...", "Laddar \(rowCount) rader...")
+            return language.text("Loading \(rowCount) rows…", "Laddar \(rowCount) rader…")
         }
         return language.text("\(rowCount) rows", "\(rowCount) rader")
     }
 
     private func issueCountText(for filter: DataQualityIssueFilter, language: AppLanguage) -> String {
         if loadingIssueFilters.contains(filter) {
-            return "..."
+            return "…"
         }
         guard loadedIssueFilters.contains(filter) else {
             return "–"
@@ -1340,7 +1340,7 @@ struct DataMaintenanceWorkspaceView: View {
                 dataQualityColumnEmptyText(language.text("Not selected", "Inte vald"))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if isLoading && issues.isEmpty {
-                dataQualityColumnEmptyText(language.text("Loading...", "Laddar..."))
+                dataQualityColumnEmptyText(language.text("Loading…", "Laddar…"))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if issues.isEmpty {
                 dataQualityColumnEmptyText(language.text("No rows", "Inga rader"))
@@ -1507,14 +1507,8 @@ struct DataMaintenanceWorkspaceView: View {
 
     @ViewBuilder
     private func dataQualityEmptyState(language: AppLanguage) -> some View {
-        HStack(spacing: 10) {
-            DataQualityStatusIcon(tone: .ok, size: 15)
-            Text(language.text("No rows match the current filters.", "Inga rader matchar nuvarande filter."))
-                .appTypography(.body)
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .padding(14)
+        AppCompactEmptyListLabel(title: language.text("No rows match the current filters", "Inga rader matchar nuvarande filter"))
+            .padding(14)
     }
 
     @ViewBuilder
@@ -2012,7 +2006,7 @@ struct DataMaintenanceWorkspaceView: View {
                                 .help(language.text("Hide this duplicate warning", "Dölj den här dublettvarningen"))
                             }
                             if store.supportsDuplicateMerge(for: issue.groupKind), issue.entries.count > 1 {
-                                Button(language.text("Merge...", "Slå ihop...")) {
+                                Button(language.text("Merge…", "Slå ihop…")) {
                                     pendingDuplicateMergeIssue = issue
                                 }
                                 .buttonStyle(.bordered)
@@ -2320,9 +2314,7 @@ struct DataMaintenanceWorkspaceView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
                 if revisionHistory.isEmpty {
-                    Text(language.text("No recent changes", "Inga senaste ändringar"))
-                        .appTypography(.secondary)
-                        .foregroundStyle(.secondary)
+                    AppCompactEmptyListLabel(title: language.text("No recent changes", "Inga senaste ändringar"))
                 } else {
                     ForEach(revisionHistory) { entry in
                         HStack(alignment: .firstTextBaseline) {
@@ -2798,26 +2790,17 @@ private struct IssueSeverityBadge: View {
 private struct ArchivePermanentDeleteIconButton: View {
     let language: AppLanguage
     let action: () -> Void
-    @State private var showsConfirmation = false
 
     var body: some View {
-        Button(role: .destructive) {
-            showsConfirmation = true
-        } label: {
-            Image(systemName: "trash")
-                .frame(width: 24, height: 22)
-        }
-        .buttonStyle(.borderless)
-        .help(language.text("Delete permanently", "Ta bort permanent"))
-        .accessibilityLabel(language.text("Delete permanently", "Ta bort permanent"))
-        .confirmationDialog(
-            language.text("Delete archived record permanently?", "Ta bort arkiverad post permanent?"),
-            isPresented: $showsConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(language.text("Delete", "Ta bort"), role: .destructive, action: action)
-            Button(language.text("Cancel", "Avbryt"), role: .cancel) {}
-        }
+        // Round 17: the shared row trash icon, which always asks first.
+        AppRowDeleteIconButton(
+            title: language.text("Delete permanently", "Ta bort permanent"),
+            cancelTitle: language.text("Cancel", "Avbryt"),
+            confirmationTitle: language.text("Delete archived record permanently?", "Ta bort arkiverad post permanent?"),
+            width: 24,
+            height: 22,
+            action: action
+        )
     }
 }
 
@@ -3321,9 +3304,7 @@ private struct NameLinkResearcherPicker: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if options.isEmpty {
-                        Text(language.text("No researcher matches.", "Ingen forskare matchar."))
-                            .appTypography(.secondary)
-                            .foregroundStyle(.secondary)
+                        AppCompactEmptyListLabel(title: language.text("No researcher matches", "Ingen forskare matchar"))
                             .padding(8)
                     }
                     ForEach(options) { option in

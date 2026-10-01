@@ -695,8 +695,7 @@ struct ProjectDetailView: View {
     @ViewBuilder
     private func grantedApplicationsAndTimelineContent(language: AppLanguage) -> some View {
         if isLoadingProjectDerivedData {
-            ProgressView()
-                .controlSize(.small)
+            AppLoadingLabel(language: language)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             let timelineSnapshot = visibleProjectTimelineSnapshot
@@ -830,8 +829,9 @@ struct ProjectDetailView: View {
                 text: language.text("Applications awaiting decision", "Ansökningar som väntar svar")
             )
             HStack(spacing: 6) {
-                Text("📄")
-                    .font(.system(size: 12))
+                Image(systemName: AppTab.publications.symbolName)
+                    .font(.system(size: 10))
+                    .foregroundStyle(AppPalette.appText)
                     .frame(width: 22, height: 12)
                 Text(language.text("Publications", "Publikationer"))
                     .foregroundStyle(.secondary)
@@ -987,8 +987,7 @@ struct ProjectDetailView: View {
                     }
                 }
                 if isLoadingProjectDerivedData {
-                    ProgressView()
-                        .controlSize(.small)
+                    AppLoadingLabel(language: language)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     AppCompactReferenceList(isEmpty: projectApplicationsForList.isEmpty, emptyTitle: language.text("No records", "Inga poster"), rowSpacing: 0) {
@@ -1895,6 +1894,8 @@ struct ProjectDetailView: View {
             title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
+            cancelTitle: store.language.text("Cancel", "Avbryt"),
+            confirmationTitle: store.language.text("Delete row?", "Ta bort raden?"),
             action: action
         )
     }
@@ -2184,9 +2185,9 @@ struct GrantOutcomeDistributionCard: View {
                     }
                     .frame(width: contentWidth, alignment: .leading)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                         .stroke(AppPalette.border, lineWidth: 1)
                 )
             }
@@ -2301,7 +2302,7 @@ struct GrantOutcomeDistributionCard: View {
     private func segmentLabel(_ segment: GrantOutcomeDistributionSegment) -> some View {
         if compactAmountOnly {
             Text("\(segment.amountText) (\(segment.percentageText))")
-                .font(appFont(.secondary).weight(.bold))
+                .font(appBadgeFont())
                 .foregroundStyle(AppPalette.semanticOnColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
@@ -2315,7 +2316,7 @@ struct GrantOutcomeDistributionCard: View {
                     .frame(maxWidth: .infinity, alignment: .center)
 
                 Text("\(segment.amountText) (\(segment.percentageText))")
-                    .font(appFont(.secondary).weight(.bold))
+                    .font(appBadgeFont())
                     .foregroundStyle(AppPalette.semanticOnColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)

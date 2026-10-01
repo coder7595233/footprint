@@ -3831,7 +3831,9 @@ private struct TeachingRolesCatalogPopover: View {
 
                     if !option.isEmpty {
                         AppInlineDeleteButton(
-                            title: language.text("Delete option", "Ta bort alternativ")
+                            title: language.text("Delete option", "Ta bort alternativ"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Delete option?", "Ta bort alternativet?")
                         ) {
                             guard options.indices.contains(index) else { return }
                             options.remove(at: index)

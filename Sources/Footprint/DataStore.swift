@@ -10874,6 +10874,14 @@ final class GrantDataStore: ObservableObject {
         ]
     }
 
+    /// Round 17: the granted sum in the Excel statistics sheet is in whole
+    /// kronor (the user's rule is kr or mkr, never tkr). Plain digits so
+    /// Excel reads the cell as a number.
+    nonisolated static func grantStatisticsWorkbookKronorText(_ amountInSEK: Double) -> String {
+        guard amountInSEK.isFinite else { return "0" }
+        return String(Int(amountInSEK.rounded()))
+    }
+
     private func statisticsWorkbookSheets() -> [WorkbookExportSheet] {
         // Round 12: the user's own grants as main applicant (as the default
         // elsewhere), not every grant in the app.
@@ -10884,7 +10892,7 @@ final class GrantDataStore: ObservableObject {
             ApplicationOutcome.granted.heading(language),
             ApplicationOutcome.awaitingDecision.heading(language),
             ApplicationOutcome.declined.heading(language),
-            language.text("Granted sum (kSEK)", "Summa beviljat (tkr)"),
+            language.text("Granted sum (SEK)", "Summa beviljat (kr)"),
         ]] + grantYears.map { year in
             let awarded = applications.filter { $0.statsYear == year && $0.resultLabel == "Beviljat" }
             let pending = applications.filter { $0.statsYear == year && $0.resultLabel == "Väntar svar" }
@@ -10894,7 +10902,9 @@ final class GrantDataStore: ObservableObject {
                 "\(awarded.count)",
                 "\(pending.count)",
                 "\(declined.count)",
-                "\(Int((awarded.reduce(0) { $0 + grantStatisticsAmountInSEK(for: $1, amount: $1.grantedAmountValue) } / 1000).rounded()))",
+                GrantDataStore.grantStatisticsWorkbookKronorText(
+                    awarded.reduce(0) { $0 + grantStatisticsAmountInSEK(for: $1, amount: $1.grantedAmountValue) }
+                ),
             ]
         }
 
@@ -15307,11 +15317,18 @@ final class GrantDataStore: ObservableObject {
         }
     }
 
+    /// Round 17: true when deleting the activity type shows the store's own
+    /// linked-object warning, so the row's trash icon does not ask twice.
+    func teachingFormatDeletionShowsImpactWarning(id: String) -> Bool {
+        let name = teachingFormats.first(where: { $0.id == id })?.name
+        return deletionImpactDetailsForTeachingFormat(name: name).contains { !$0.isEmpty }
+    }
+
     func deleteTeachingFormat(id: String) {
         let previousName = teachingFormats.first(where: { $0.id == id })?.name
         let details = deletionImpactDetailsForTeachingFormat(name: previousName)
         if requestDeletionConfirmationIfNeeded(
-            title: language.text("Delete teaching format?", "Ta bort undervisningsformat?"),
+            title: language.text("Delete activity type?", "Ta bort aktivitetstyp?"),
             details: details,
             action: { [weak self] in self?.deleteTeachingFormatConfirmed(id: id) }
         ) {
@@ -18644,7 +18661,7 @@ final class GrantDataStore: ObservableObject {
         let startupStorageMissingValue = storageReadiness.missingRequiredSQLiteDocuments.isEmpty
             ? language.text("None", "Inga")
             : storageReadiness.missingRequiredSQLiteDocuments.prefix(4).joined(separator: ", ")
-                + (storageReadiness.missingRequiredSQLiteDocuments.count > 4 ? " ..." : "")
+                + (storageReadiness.missingRequiredSQLiteDocuments.count > 4 ? " …" : "")
         let startupStorageDetails = [
             DataStructureDiagnosticItem.Detail(
                 id: "sqlite-documents",
@@ -18663,7 +18680,7 @@ final class GrantDataStore: ObservableObject {
             ),
             DataStructureDiagnosticItem.Detail(
                 id: "backups",
-                title: language.text("Backups", "Backuper"),
+                title: language.text("Backups", "Säkerhetskopior"),
                 value: "\(storageReadiness.backupCount)"
             ),
         ]
@@ -18758,7 +18775,7 @@ final class GrantDataStore: ObservableObject {
             ),
             DataStructureDiagnosticItem.Detail(
                 id: "backup-restore",
-                title: language.text("Backup/restore", "Backup/återställning"),
+                title: language.text("Backup/restore", "Säkerhetskopiering/återställning"),
                 value: FootprintStorageContract.backupFormat
             ),
         ]
@@ -19086,7 +19103,7 @@ final class GrantDataStore: ObservableObject {
                 language.text("Active storage", "Aktiv lagring"),
                 activeStorageUsesSQLite ? "SQLite" : language.text("SQLite unavailable", "SQLite saknas"),
                 activeStorageUsesSQLite
-                    ? language.text("Runtime writes, internal backup and restore use SQLite.", "Körning, intern backup och återställning använder SQLite.")
+                    ? language.text("Runtime writes, internal backup and restore use SQLite.", "Körning, intern säkerhetskopiering och återställning använder SQLite.")
                     : language.text("Runtime writes are stopped until SQLite is available.", "Körningsskrivning stoppas tills SQLite är tillgänglig."),
                 activeStorageUsesSQLite ? .ok : .warning,
                 details: activeStorageDetails
@@ -19096,7 +19113,7 @@ final class GrantDataStore: ObservableObject {
                 language.text("Database lock readiness", "Databaslåsning"),
                 databaseLockReady ? language.text("Ready", "Klar") : language.text("Needs review", "Behöver granskas"),
                 databaseLockReady
-                    ? language.text("SQLite is the only active storage; IDs, relations, backup and restore match the locked contract.", "SQLite är enda aktiva lagringen; ID:n, relationer, backup och återställning följer det låsta kontraktet.")
+                    ? language.text("SQLite is the only active storage; IDs, relations, backup and restore match the locked contract.", "SQLite är enda aktiva lagringen; ID:n, relationer, säkerhetskopiering och återställning följer det låsta kontraktet.")
                     : language.text("One or more storage-lock conditions still need review before the database contract is frozen.", "Ett eller flera villkor behöver granskas innan databaskontraktet låses."),
                 databaseLockReady ? .ok : .warning,
                 details: databaseLockDetails
@@ -19140,9 +19157,9 @@ final class GrantDataStore: ObservableObject {
             ),
             item(
                 "backup-count",
-                language.text("Safety backups", "Säkerhetsbackuper"),
+                language.text("Safety backups", "Säkerhetskopior före underhåll"),
                 "\(backupCount)",
-                language.text("Startup maintenance creates a forced backup before schema/data maintenance on existing data.", "Startunderhåll skapar en tvingad backup före schema- och dataunderhåll på befintliga data."),
+                language.text("Startup maintenance creates a forced backup before schema/data maintenance on existing data.", "Startunderhåll skapar en tvingad säkerhetskopia före schema- och dataunderhåll på befintliga data."),
                 backupCount > 0 ? .ok : .warning
             )
         ]

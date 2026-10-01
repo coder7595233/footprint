@@ -164,7 +164,12 @@ private struct CentralTaskRowEditor: View {
                 .padding(.top, 7)
 
                 if !isReadOnly {
-                    AppIconDeleteButton(title: language.text("Delete task", "Ta bort uppgift"), width: 18) {
+                    AppIconDeleteButton(
+                        title: language.text("Delete task", "Ta bort uppgift"),
+                        width: 18,
+                        cancelTitle: language.text("Cancel", "Avbryt"),
+                        confirmationTitle: language.text("Delete task?", "Ta bort uppgiften?")
+                    ) {
                         store.removeTaskItem(id: taskID)
                     }
                     .padding(.top, 7)
