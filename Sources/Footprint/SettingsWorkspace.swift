@@ -4384,15 +4384,18 @@ struct SettingsWorkspaceView: View {
     }
 
     private func performanceStatusColor(_ tone: String) -> Color {
+        // Round 17: icons and thin strokes use the mark colours (clearly
+        // green/orange/red, never the pale fills); "info" has no status and
+        // is neutral grey.
         switch tone {
         case "ok":
-            return AppPalette.vividGreen
+            return AppPalette.statusMark(.done)
         case "warning":
-            return AppPalette.vividOrange
+            return AppPalette.statusMark(.warning)
         case "critical":
-            return AppPalette.vividRed
+            return AppPalette.statusMark(.negative)
         default:
-            return AppPalette.vividBlue
+            return AppPalette.statusMark(.inactive)
         }
     }
 

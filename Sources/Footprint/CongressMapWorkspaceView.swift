@@ -3440,14 +3440,14 @@ private final class CongressMapNativeClusterView: MKAnnotationView {
         leaderLineHaloLayer.lineCap = .round
         leaderLineHaloLayer.lineJoin = .round
         leaderLineLayer.fillColor = NSColor.clear.cgColor
-        leaderLineLayer.strokeColor = NSColor.systemIndigo.cgColor
+        leaderLineLayer.strokeColor = NSColor.systemBlue.cgColor
         leaderLineLayer.lineWidth = 2.5
         leaderLineLayer.lineCap = .round
         leaderLineLayer.lineJoin = .round
         layer?.addSublayer(leaderLineHaloLayer)
         layer?.addSublayer(leaderLineLayer)
         markerView.wantsLayer = true
-        markerView.layer?.backgroundColor = NSColor.systemIndigo.cgColor
+        markerView.layer?.backgroundColor = NSColor.systemBlue.cgColor
         markerView.layer?.cornerRadius = 18
         markerView.layer?.borderColor = NSColor.white.withAlphaComponent(0.9).cgColor
         markerView.layer?.borderWidth = 1.5
@@ -3520,7 +3520,7 @@ private final class CongressMapNativeClusterView: MKAnnotationView {
             pill.configure(
                 title: row.title,
                 date: row.startDateText,
-                accentColor: .systemIndigo,
+                accentColor: .systemBlue,
                 maximumWidth: 240
             )
             addSubview(pill)
@@ -4352,10 +4352,21 @@ private struct CongressMapNativeView: NSViewRepresentable {
             if isSelected {
                 return .systemBlue
             }
-            if row.currentUserParticipates {
-                return .systemGreen
+            // Round 17: the shared congress rule (attending yellow, attended
+            // green, not attending grey); a congress without status keeps
+            // the blue (white in dark mode) pin.
+            let isPast = Calendar.current.startOfDay(for: row.endDate) < Calendar.current.startOfDay(for: Date())
+            let tone = AppStatusTones.congress(AppStatusTones.congressStatus(
+                isAttending: row.currentUserParticipates,
+                isPast: isPast,
+                hasContribution: row.hasLinkedAbstractOrContribution,
+                hasRejectedContribution: false
+            ))
+            let dark = AppAppearanceRegistry.usesDarkPalette()
+            if tone.hasFill {
+                return AppPalette.statusMarkNSColor(tone, dark: dark)
             }
-            return AppAppearanceRegistry.usesDarkPalette() ? .white : .controlAccentColor
+            return dark ? .white : .controlAccentColor
         }
 
         private func congressLocationKey(for row: CongressMapRow) -> String {

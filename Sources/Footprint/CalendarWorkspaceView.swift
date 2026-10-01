@@ -6467,7 +6467,7 @@ struct CalendarWorkspaceView: View {
     }
 
     private func detailTextColor(for event: CalendarWorkspaceEvent) -> Color {
-        event.isRolledOverPastDue ? AppPalette.statusText(AppStatusTones.task(isCompleted: false, isOverdue: true)) : eventBodyTextColor(for: event)
+        event.isRolledOverPastDue ? AppPalette.lateText : eventBodyTextColor(for: event)
     }
 
     private func dateAccentTextColor(for group: CalendarWorkspaceDayGroup) -> Color {
@@ -9734,14 +9734,13 @@ private struct CalendarGoToDatePopover: View {
         if isSelected(date) {
             return AppPalette.actionSave.opacity(0.95)
         }
-        if isToday(date) {
-            return AppPalette.vividBlue.opacity(0.14)
-        }
         return Color.clear
     }
 
+    // Round 17: today is marked like in the timelines (red ring and red
+    // text); the selected day stays the accent colour.
     private func dayStrokeColor(_ date: Date) -> Color {
-        isToday(date) ? AppPalette.vividBlue.opacity(0.65) : Color.clear
+        isToday(date) ? AppPalette.todayMarker : Color.clear
     }
 
     private func dayTextColor(_ date: Date) -> Color {
@@ -9749,7 +9748,7 @@ private struct CalendarGoToDatePopover: View {
             return .white
         }
         if isToday(date) {
-            return AppPalette.vividBlue
+            return AppPalette.todayMarker
         }
         return AppPalette.appText
     }

@@ -52,15 +52,40 @@ private struct CongressListSortCriterion: AppListSortCriterion {
 
 private enum CongressWorkspaceStatusTone: String, Hashable, Sendable {
     case attending
+    case attended
     case abstractOnly
     case rejected
     case missed
     case neutral
 
+    init(_ status: AppStatusTones.CongressStatus) {
+        switch status {
+        case .attending: self = .attending
+        case .attended: self = .attended
+        case .rejected: self = .rejected
+        case .notAttending: self = .missed
+        case .contributionOnly: self = .abstractOnly
+        case .planned: self = .neutral
+        }
+    }
+
+    var congressStatus: AppStatusTones.CongressStatus {
+        switch self {
+        case .attending: return .attending
+        case .attended: return .attended
+        case .rejected: return .rejected
+        case .missed: return .notAttending
+        case .abstractOnly: return .contributionOnly
+        case .neutral: return .planned
+        }
+    }
+
     func label(language: AppLanguage) -> String {
         switch self {
         case .attending:
             return language.text("Attend", "Medverkar")
+        case .attended:
+            return language.text("Attended", "Medverkade")
         case .abstractOnly:
             return language.text("Abstract", "Abstract")
         case .rejected:
@@ -72,16 +97,10 @@ private enum CongressWorkspaceStatusTone: String, Hashable, Sendable {
         }
     }
 
-    /// Round 16: the shared status tones (a passed congress is grey:
-    /// nothing to do now).
+    /// Round 17: the shared congress rule (attending = yellow, attended =
+    /// green, not attending = grey, planned = no fill).
     var statusTone: AppStatusTone {
-        switch self {
-        case .attending: return .done
-        case .abstractOnly: return .pending
-        case .rejected: return .negative
-        case .missed: return .inactive
-        case .neutral: return .none
-        }
+        AppStatusTones.congress(congressStatus)
     }
 
     var fill: Color {
@@ -89,7 +108,7 @@ private enum CongressWorkspaceStatusTone: String, Hashable, Sendable {
     }
 
     var stroke: Color {
-        statusTone.hasFill ? AppPalette.statusText(statusTone).opacity(0.45) : AppPalette.border
+        statusTone.hasFill ? AppPalette.statusEdge(statusTone) : AppPalette.border
     }
 }
 
@@ -1312,19 +1331,12 @@ struct CongressesWorkspaceView: View {
         linkedContributions: [CVConferenceContribution],
         isPast: Bool
     ) -> CongressWorkspaceStatusTone {
-        if linkedContributions.contains(where: \.isRejected) {
-            return .rejected
-        }
-        if currentUserParticipates {
-            return .attending
-        }
-        if hasAbstractOrContributionData(linkedContributions: linkedContributions) {
-            return .abstractOnly
-        }
-        if isPast {
-            return .missed
-        }
-        return .neutral
+        CongressWorkspaceStatusTone(AppStatusTones.congressStatus(
+            isAttending: currentUserParticipates,
+            isPast: isPast,
+            hasContribution: hasAbstractOrContributionData(linkedContributions: linkedContributions),
+            hasRejectedContribution: linkedContributions.contains(where: \.isRejected)
+        ))
     }
 
     nonisolated private static func hasAbstractOrContributionData(
@@ -2805,7 +2817,7 @@ private struct CongressDetailPane: View {
                     .foregroundStyle(.secondary)
                 CongressMiniBadge(
                     text: contribution.effectiveStatus.displayName(language: language),
-                    isPositive: contribution.effectiveStatus == .accepted || contribution.effectiveStatus == .presented
+                    tone: AppStatusTones.conferenceContribution(contribution.effectiveStatus)
                 )
             }
             .padding(.horizontal, 12)
@@ -3755,11 +3767,13 @@ private struct CongressDetailPane: View {
 private struct CongressMiniBadge: View {
     let text: String
     var isPositive: Bool = false
+    /// Round 17: the shared status tone (wins over `isPositive`).
+    var tone: AppStatusTone? = nil
 
     var body: some View {
         AppSemanticStatusBadge(
             text: text,
-            colors: isPositive ? .saveSolid : .neutralCard,
+            colors: tone.map { AppBadgeColors.status($0) } ?? (isPositive ? AppBadgeColors.saveSolid : AppBadgeColors.neutralCard),
             size: .compact,
             horizontalPadding: 7,
             verticalPadding: 3

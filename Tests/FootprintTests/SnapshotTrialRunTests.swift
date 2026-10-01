@@ -1097,4 +1097,47 @@ final class SnapshotTrialRunTests: XCTestCase {
         print("SNAPSHOT: R16 Projekt som ändrades vid sparning: \(changedProjects)")
         XCTAssertEqual(withAnswers, 0, "no answers are stored without the user answering")
     }
+
+    /// Round 17: "Tillbakadragen" is its own (grey) group and never counts
+    /// as "Avslag"; a fully spent grant is a paler green instead of grey.
+    /// Prints only counts: applications per outcome group, fully spent
+    /// grants, and the declined/withdrawn totals of the organisation
+    /// summaries. No names or values.
+    @MainActor
+    func testSnapshotRound17WithdrawnAndSpentCounts() throws {
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+
+        var groupCounts: [AppStatusTones.ApplicationOutcomeGroup: Int] = [:]
+        for application in store.applications {
+            let group = AppStatusTones.applicationOutcomeGroup(
+                resultLabel: application.resultLabel,
+                isGranted: application.isGranted
+            )
+            groupCounts[group, default: 0] += 1
+        }
+        let groupSummary = AppStatusTones.ApplicationOutcomeGroup.allCases
+            .map { "\($0.rawValue) \(groupCounts[$0] ?? 0)" }
+            .joined(separator: ", ")
+        print("SNAPSHOT: R17 Ansökningar per utfall: \(groupSummary)")
+
+        let spentGrants = store.applications.filter { $0.isGranted && store.isEffectivelyFullySpent($0) }.count
+        print("SNAPSHOT: R17 Förbrukade beviljade anslag (ljusare grön): \(spentGrants)")
+
+        var summary = OrganizationApplicationSummary()
+        for application in store.applications {
+            summary.include(application)
+        }
+        print("SNAPSHOT: R17 Organisationssammanfattning (alla ansökningar): avslag \(summary.rejected), tillbakadragna \(summary.withdrawn)")
+        XCTAssertEqual(summary.rejected, groupCounts[.declined] ?? 0, "only Avslag counts as declined")
+        XCTAssertEqual(summary.withdrawn, groupCounts[.withdrawn] ?? 0)
+
+        let rows = store.organizationRowSnapshots()
+        let rowDeclined = rows.reduce(0) { $0 + $1.rejectedCount }
+        let rowWithdrawn = rows.reduce(0) { $0 + $1.withdrawnCount }
+        print("SNAPSHOT: R17 Organisationsrader: \(rows.count), avslag \(rowDeclined), tillbakadragna \(rowWithdrawn)")
+
+        let dashboard = store.summary
+        print("SNAPSHOT: R17 Översikt: avslag \(dashboard.rejectedCount), tillbakadragna \(dashboard.withdrawnCount)")
+    }
 }

@@ -2103,7 +2103,7 @@ struct DataMaintenanceWorkspaceView: View {
         } label: {
             Image(systemName: selectedArchivedIDs.contains(itemID) ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 16))
-                .foregroundStyle(selectedArchivedIDs.contains(itemID) ? AppPalette.vividBlue : Color.secondary)
+                .foregroundStyle(selectedArchivedIDs.contains(itemID) ? AppPalette.statusMark(.done) : Color.secondary)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(

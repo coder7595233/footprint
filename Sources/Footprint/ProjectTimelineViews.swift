@@ -252,7 +252,14 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
             let overlayWidth = max(overlayEndX - overlayStartX, 0)
 
             if overlayStartDate < visibleBarEnd, overlayWidth > 0 {
-                StripedTimelineOverlay(color: AppPalette.statusText(.inactive), lineWidth: 2, spacing: 8)
+                // Round 17: a fully spent grant stays green, only paler
+                // (it used to get grey stripes).
+                Rectangle()
+                    .fill(AppPalette.statusFillPale(.done))
+                    .overlay(
+                        Rectangle()
+                            .stroke(AppPalette.statusEdge(.done), lineWidth: 1)
+                    )
                     .frame(width: overlayWidth, height: barHeight)
                     .offset(x: rowLabelWidth + overlayStartX, y: max((rowHeight - barHeight) / 2, 0))
                     .allowsHitTesting(false)

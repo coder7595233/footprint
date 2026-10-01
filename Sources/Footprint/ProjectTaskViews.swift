@@ -113,7 +113,9 @@ private struct CentralTaskRowEditor: View {
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
         if deadlineDay < todayStart {
-            return AppPalette.statusFill(AppStatusTones.task(isCompleted: false, isOverdue: true))
+            // Round 17: overdue tasks use the strong "late" red-orange
+            // (the same as the calendar's overdue dots).
+            return AppPalette.lateMark
         }
         // Settings > Calendar: "due soon" this many days ahead (default 7).
         if let weekAhead = calendar.date(byAdding: .day, value: store.calendarReminderSettings.taskDueSoonDays, to: todayStart),

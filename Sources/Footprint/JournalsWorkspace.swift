@@ -2785,14 +2785,37 @@ struct PublicationJournalRankingSeries: Identifiable, Equatable {
         }
     }
 
+    /// Round 17: the four lines carry no status, so they are shades of
+    /// blue (dark, medium, light and grey-blue), readable in light and dark
+    /// mode. The Norwegian list's points are coloured by level instead
+    /// (see `pointColor(for:)`).
     var color: Color {
         switch metric {
-        case .jci: return AppPalette.chartBlue
-        case .jif: return AppPalette.chartGreen
-        case .sjr: return AppPalette.chartYellow
-        case .norwegian: return AppPalette.chartRed
+        case .jci: return journalRankingBlue(light: 0x1F4E8C, dark: 0x4F7FC4)
+        case .jif: return journalRankingBlue(light: 0x3B7DD8, dark: 0x79AEF2)
+        case .sjr: return journalRankingBlue(light: 0x8DBBEA, dark: 0xBCD8F7)
+        case .norwegian: return journalRankingBlue(light: 0x7A8DA3, dark: 0x8E9DB0)
         }
     }
+
+    /// A point's colour: the line colour, except on the Norwegian list where
+    /// level 2 is green, level 1 yellow and level 0 red.
+    func pointColor(for point: PublicationJournalRankingPoint) -> Color {
+        guard metric == .norwegian else { return color }
+        return AppPalette.statusMark(AppStatusTones.norwegianListLevel(point.value))
+    }
+}
+
+private func journalRankingBlue(light: Int, dark: Int) -> Color {
+    Color(nsColor: NSColor(name: nil) { _ in
+        let hex = AppAppearanceRegistry.usesDarkPalette() ? dark : light
+        return NSColor(
+            srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
+            green: CGFloat((hex >> 8) & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255,
+            alpha: 1
+        )
+    })
 }
 
 func publicationJournalRankingSeries(for journal: PublicationJournal) -> [PublicationJournalRankingSeries] {
@@ -2898,6 +2921,9 @@ private struct PublicationJournalRankingChartCard: View {
                             Text(item.title(language: language))
                                 .font(appFont(.secondary).weight(.semibold))
                                 .foregroundStyle(AppPalette.appText)
+                            if item.metric == .norwegian {
+                                norwegianLevelLegend
+                            }
                         }
                     }
                 }
@@ -2912,6 +2938,26 @@ private struct PublicationJournalRankingChartCard: View {
             }
         }
         .modifier(AppStatisticCardModifier())
+    }
+
+    /// Round 17: the Norwegian list's level colours (2 / 1 / 0).
+    private var norwegianLevelLegend: some View {
+        HStack(spacing: 4) {
+            ForEach([2.0, 1.0, 0.0], id: \.self) { level in
+                HStack(spacing: 2) {
+                    Circle()
+                        .fill(AppPalette.statusMark(AppStatusTones.norwegianListLevel(level)))
+                        .frame(width: 7, height: 7)
+                    Text("\(Int(level))")
+                        .font(appFont(.secondary))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .help(language.text(
+            "Points: level 2 green, level 1 yellow, level 0 red",
+            "Punkter: nivå 2 grön, nivå 1 gul, nivå 0 röd"
+        ))
     }
 }
 
@@ -2985,7 +3031,7 @@ private struct PublicationJournalRankingLineChart: View {
                     ForEach(visiblePoints) { point in
                         let location = pointPosition(point, plotWidth: plotWidth, plotHeight: plotHeight)
                         Circle()
-                            .fill(item.color)
+                            .fill(item.pointColor(for: point))
                             .frame(width: 8, height: 8)
                             .overlay(Circle().stroke(AppPalette.cardSurface, lineWidth: 1.5))
                             .position(location)

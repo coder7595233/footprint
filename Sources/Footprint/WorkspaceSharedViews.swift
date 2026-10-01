@@ -133,10 +133,12 @@ struct AppReminderCountBadge: View {
 
 struct AppReminderDot: View {
     var body: some View {
+        // Round 17: the shared "late" colour; the thin ring uses the
+        // background colour so the dot also stands out in dark mode.
         Circle()
-            .fill(Color(red: 0.96, green: 0.03, blue: 0.07))
+            .fill(AppPalette.lateMark)
             .frame(width: 9, height: 9)
-            .overlay(Circle().stroke(Color.white.opacity(0.92), lineWidth: 1))
+            .overlay(Circle().stroke(Color(nsColor: .controlBackgroundColor), lineWidth: 1))
     }
 }
 
@@ -289,7 +291,7 @@ struct AppEmptyStateView: View {
             VStack(spacing: isCompact ? 8 : 14) {
                 Image(systemName: systemImage)
                     .font(.system(size: isCompact ? 15 : 24, weight: .semibold))
-                    .foregroundStyle(AppPalette.vividBlue)
+                    .foregroundStyle(Color.secondary)
                     .frame(width: isCompact ? 30 : 52, height: isCompact ? 30 : 52)
                     .background(Circle().fill(AppPalette.emptyStateIconSurface))
 
@@ -633,7 +635,7 @@ private extension AppLinkDestinationKind {
 
 struct AttachmentWarningIcon: View {
     var size: CGFloat = 16
-    var tint: Color = AppPalette.vividOrange
+    var tint: Color = AppPalette.statusMark(.warning)
     var help: String
 
     var body: some View {
@@ -845,7 +847,9 @@ struct SelectedListRowBackground: View {
     var indicatorFill: Color? = nil
 
     private var resolvedIndicatorFill: Color {
-        indicatorFill ?? AppPalette.vividBlue
+        // Round 17: a row without status gets no strip (a blue strip read as
+        // a status); the selection shows through the background and border.
+        indicatorFill ?? Color.clear
     }
 
     private var indicatorWidth: CGFloat {

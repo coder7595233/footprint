@@ -250,6 +250,8 @@ struct OrganizationRowSnapshot: Identifiable, Equatable {
     let waitingCount: Int
     let grantedCount: Int
     let rejectedCount: Int
+    /// Round 17: withdrawn applications, counted apart from declined ones.
+    var withdrawnCount: Int = 0
     let hasLinkedRecords: Bool
     let isGrantProvider: Bool
     let isStewardshipOrganization: Bool

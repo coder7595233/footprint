@@ -2825,9 +2825,10 @@ private struct ConferenceSubmissionTimelineStepper: View {
     let onMutate: () -> Void
 
     private let horizontalInset: CGFloat = 62
-    private let circleSize: CGFloat = 24
-    private let timelineHeight: CGFloat = 156
-    private let markerCenterY: CGFloat = 18
+    // Round 17: circles about 17 % larger (24 → 28) with thinner edges.
+    private let circleSize: CGFloat = 28
+    private let timelineHeight: CGFloat = 160
+    private let markerCenterY: CGFloat = 20
     private let inactiveGray = AppTimelineStrip<ConferenceSubmissionStep, EmptyView>.inactiveGray
     private let futureGray = AppTimelineStrip<ConferenceSubmissionStep, EmptyView>.futureGray
 
@@ -2887,7 +2888,7 @@ private struct ConferenceSubmissionTimelineStepper: View {
             timelineGradientLine(
                 startX: startX,
                 endX: endX,
-                lineWidth: 2.5,
+                lineWidth: 2,
                 colors: [segmentEndpointColor(for: leftStep), segmentEndpointColor(for: rightStep)]
             )
         } else {
@@ -2897,7 +2898,7 @@ private struct ConferenceSubmissionTimelineStepper: View {
             }
             .stroke(
                 inactiveGray,
-                style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [7, 5])
+                style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [7, 5])
             )
         }
     }
@@ -2961,11 +2962,11 @@ private struct ConferenceSubmissionTimelineStepper: View {
             Circle()
                 .fill(completed ? fillColor : AppPalette.fieldSurface)
             Circle()
-                .stroke(completed || deemphasized ? strokeColor : (stepHasDefinedDate(step) ? futureGray : inactiveGray), lineWidth: completed ? 2.2 : 1.8)
+                .stroke(completed || deemphasized ? strokeColor : (stepHasDefinedDate(step) ? futureGray : inactiveGray), lineWidth: completed ? 1.6 : 1.5)
 
             if completed && !deemphasized {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 13, weight: .heavy))
+                    .font(.system(size: 14, weight: .heavy))
                     .foregroundStyle(submissionStepTone(for: step) == nil ? strokeColor : AppPalette.statusOnFill)
             }
         }
@@ -3184,7 +3185,7 @@ private struct ConferenceSubmissionTimelineStepper: View {
     }
 
     private func completedStrokeColor(for step: ConferenceSubmissionStep) -> Color {
-        submissionStepTone(for: step).map(AppPalette.statusText) ?? inactiveGray
+        submissionStepTone(for: step).map(AppPalette.statusEdge) ?? inactiveGray
     }
 
     private func isStepCompleted(_ step: ConferenceSubmissionStep) -> Bool {
@@ -4126,10 +4127,11 @@ private struct CVReviewWorkflowTimeline: View {
     let language: AppLanguage
 
     private let horizontalInset: CGFloat = 68
-    private let circleSize: CGFloat = 24
-    private var markerCenterY: CGFloat { isEditingLocked ? 14 : 18 }
+    // Round 17: circles about 17 % larger (24 → 28).
+    private let circleSize: CGFloat = 28
+    private var markerCenterY: CGFloat { isEditingLocked ? 16 : 20 }
     private var stepWidth: CGFloat { isEditingLocked ? 150 : 190 }
-    private var timelineHeight: CGFloat { isEditingLocked ? 72 : 128 }
+    private var timelineHeight: CGFloat { isEditingLocked ? 76 : 132 }
     private let inactiveGray = AppTimelineStrip<CVReviewWorkflowStep, EmptyView>.inactiveGray
 
     private var visibleSteps: [CVReviewWorkflowStep] {
@@ -4251,18 +4253,18 @@ private struct CVReviewWorkflowTimeline: View {
     }
 
     private func stepIconColor(_ step: CVReviewWorkflowStep) -> Color {
-        AppPalette.statusText(stepTone(step))
+        AppPalette.statusEdge(stepTone(step))
     }
 
     private func segmentProgressColor(index: Int) -> Color {
-        guard visibleSteps.indices.contains(index) else { return AppPalette.statusText(.pending) }
+        guard visibleSteps.indices.contains(index) else { return AppPalette.statusEdge(.pending) }
         if stepHasDefinedDate(.completed) {
-            return AppPalette.statusText(.done)
+            return AppPalette.statusEdge(.done)
         }
         if deadlineIsOverdue {
-            return AppPalette.statusText(.warning)
+            return AppPalette.statusEdge(.warning)
         }
-        return AppPalette.statusText(.pending)
+        return AppPalette.statusEdge(.pending)
     }
 
     private func stepIsActive(_ step: CVReviewWorkflowStep) -> Bool {

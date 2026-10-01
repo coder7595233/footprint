@@ -1559,8 +1559,9 @@ struct ApplicationsView: View {
     }
 
     private func applicationRowToneFillColor(for row: ApplicationRowSnapshot) -> Color? {
-        // Round 16: the shared application status tones.
-        AppPalette.statusRowFill(AppStatusTones.application(row))
+        // Round 16: the shared application status tones (round 17: a fully
+        // spent grant is a paler green).
+        AppPalette.applicationFill(AppStatusTones.application(row), isFullySpent: row.isFullySpent)
     }
 
     private func rowMatchesSelection(row: ApplicationRowSnapshot, selectionID: String) -> Bool {
@@ -1709,10 +1710,14 @@ struct ApplicationsView: View {
         if row.isGranted {
             return 4
         }
-        if result.localizedCaseInsensitiveContains("Avslag") || result == "Tillbakadragen" {
+        if result.localizedCaseInsensitiveContains("Avslag") {
             return 5
         }
-        return 6
+        // Round 17: withdrawn is its own group, after declined.
+        if result == "Tillbakadragen" {
+            return 6
+        }
+        return 7
     }
 
     private func trimFilterCachesIfNeeded() {

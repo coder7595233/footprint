@@ -2076,18 +2076,13 @@ private enum PublicationPipelineCurtainLane: String, CaseIterable, Identifiable 
         }
     }
 
+    /// Round 17: every lane is work in progress or waiting for the journal,
+    /// so all lanes share the pending (yellow) tone; "published" (done,
+    /// green) has no lane here.
     var tint: Color {
         switch self {
-        case .dataCollection:
-            return AppPalette.vividBlue
-        case .dataAnalysis:
-            return AppPalette.shadeBlue
-        case .writing:
-            return AppPalette.vividOrange
-        case .withCoauthors:
-            return AppPalette.chartYellow
-        case .submitted:
-            return AppPalette.vividGreen
+        case .dataCollection, .dataAnalysis, .writing, .withCoauthors, .submitted:
+            return AppPalette.statusFill(.pending)
         }
     }
 }

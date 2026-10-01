@@ -641,7 +641,7 @@ struct CommitDateFieldWithTodayButton: View {
                     showingPicker.toggle()
                 } label: {
                     Image(systemName: "calendar")
-                        .foregroundStyle(AppPalette.vividBlue)
+                        .foregroundStyle(Color.secondary)
                         .frame(width: 30, height: 30)
                         .background(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -747,7 +747,7 @@ struct AppDateField: View {
                     showingPicker.toggle()
                 } label: {
                     Image(systemName: "calendar")
-                        .foregroundStyle(AppPalette.vividBlue)
+                        .foregroundStyle(Color.secondary)
                         .frame(width: 30, height: 30)
                         .background(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)

@@ -166,14 +166,14 @@ private struct OrganizationCompactGrantStatsRow: View {
 
     private var segments: [OrganizationCompactGrantStatsSegment] {
         let relevant = applications.filter { !$0.isToApplyStatus }
-        let rejected = relevant.filter {
-            let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-            return status == "Avslag" || status == "Tillbakadragen"
-        }
+        // Round 17: withdrawn applications are their own (grey) group.
+        let rejected = relevant.filter { AppStatusTones.isDeclined(resultLabel: $0.resultLabel) }
+        let withdrawn = relevant.filter { AppStatusTones.isWithdrawn(resultLabel: $0.resultLabel) }
         let waiting = relevant.filter { $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) == "Väntar svar" }
         let granted = relevant.filter(\.isGranted)
         let buckets: [(GrantOutcomeSegmentKind, [GrantApplication])] = [
             (.rejected, rejected),
+            (.withdrawn, withdrawn),
             (.waiting, waiting),
             (.granted, granted)
         ]
@@ -237,7 +237,7 @@ private struct OrganizationCompactGrantStatsRow: View {
     private func statsAmount(for application: GrantApplication, kind: GrantOutcomeSegmentKind) -> Double {
         let amount: Double?
         switch kind {
-        case .rejected, .waiting:
+        case .rejected, .withdrawn, .waiting:
             amount = application.appliedAmountValue ?? application.preferredBudgetAmountValue
         case .granted:
             amount = application.grantedAmountValue ?? application.appliedAmountValue
@@ -514,10 +514,13 @@ private struct OrganizationCompactGrantApplicationsTable: View {
         if application.isGranted {
             return 2
         }
-        if status == "Avslag" || status == "Tillbakadragen" {
+        if status == "Avslag" {
             return 3
         }
-        return 4
+        if status == "Tillbakadragen" {
+            return 4
+        }
+        return 5
     }
 
     private func rowAmountValue(for application: GrantApplication) -> Double? {
@@ -631,7 +634,9 @@ private struct OrganizationCompactGrantApplicationsTable: View {
     private func statusBadgeColors(for application: GrantApplication) -> (foreground: Color, background: Color, stroke: Color) {
         // Round 16: the shared application status tones.
         let colors = AppBadgeColors.status(store.applicationStatusTone(application))
-        return (foreground: colors.foreground, background: colors.background, stroke: colors.stroke)
+        // Round 17: a fully spent grant is the paler green.
+        let background = store.applicationRowFill(application) ?? colors.background
+        return (foreground: colors.foreground, background: background, stroke: colors.stroke)
     }
 }
 

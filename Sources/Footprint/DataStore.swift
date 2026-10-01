@@ -21,11 +21,14 @@ struct CalendarContentUpdate: Identifiable, Equatable {
     var pulses: Bool = true
 }
 
-private struct OrganizationApplicationSummary: Equatable {
+/// Round 17: internal (was private) so tests can check the counting rule;
+/// withdrawn applications are their own group and never count as declined.
+struct OrganizationApplicationSummary: Equatable {
     var submitted = 0
     var waiting = 0
     var granted = 0
     var rejected = 0
+    var withdrawn = 0
 
     mutating func include(_ application: GrantApplication) {
         submitted += 1
@@ -35,9 +38,10 @@ private struct OrganizationApplicationSummary: Equatable {
         if application.isGranted {
             granted += 1
         }
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if status == "Avslag" || status == "Tillbakadragen" {
+        if AppStatusTones.isDeclined(resultLabel: application.resultLabel) {
             rejected += 1
+        } else if AppStatusTones.isWithdrawn(resultLabel: application.resultLabel) {
+            withdrawn += 1
         }
     }
 }
@@ -350,6 +354,7 @@ final class GrantDataStore: ObservableObject {
     struct OrganizationTimelineSnapshot {
         enum GrantStatus: Hashable {
             case rejected
+            case withdrawn
             case waiting
             case granted
             case toApply
@@ -2427,10 +2432,11 @@ final class GrantDataStore: ObservableObject {
 
     var summary: DashboardSummary {
         let granted = applications.filter(\.isGranted)
+        // Round 17: withdrawn applications are counted on their own.
         let rejected = applications.filter {
-            let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-            return status.localizedCaseInsensitiveContains("Avslag") || status == "Tillbakadragen"
+            $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines).localizedCaseInsensitiveContains("Avslag")
         }
+        let withdrawn = applications.filter { AppStatusTones.isWithdrawn(resultLabel: $0.resultLabel) }
         let pending = applications.filter { Self.isPendingStatus($0.resultLabel) }
         let requested = applications.reduce(0) { total, application in
             total + grantStatisticsAmountInSEK(for: application, amount: application.appliedAmountValue)
@@ -2445,7 +2451,8 @@ final class GrantDataStore: ObservableObject {
             rejectedCount: rejected.count,
             pendingCount: pending.count,
             totalRequested: requested,
-            totalAwarded: awarded
+            totalAwarded: awarded,
+            withdrawnCount: withdrawn.count
         )
     }
 
@@ -26078,6 +26085,7 @@ final class GrantDataStore: ObservableObject {
                 waitingCount: counts.waiting,
                 grantedCount: counts.granted,
                 rejectedCount: counts.rejected,
+                withdrawnCount: counts.withdrawn,
                 hasLinkedRecords: hasLinkedRecords,
                 isGrantProvider: organization.roles.contains(.grantProvider),
                 isStewardshipOrganization: isStewardshipOrganization(organization),
@@ -27349,11 +27357,9 @@ final class GrantDataStore: ObservableObject {
                 return (applicationTitlesByID[$0.id] ?? "").localizedStandardCompare(applicationTitlesByID[$1.id] ?? "") == .orderedAscending
             }
 
+        // Round 17: "Avslagna" lists declined applications only.
         let rejectedApplications = applications
-            .filter {
-                let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-                return status == "Avslag" || status == "Tillbakadragen"
-            }
+            .filter { AppStatusTones.isDeclined(resultLabel: $0.resultLabel) }
             .sorted {
                 let leftDate = $0.applicationDate ?? .distantPast
                 let rightDate = $1.applicationDate ?? .distantPast
@@ -27788,7 +27794,7 @@ final class GrantDataStore: ObservableObject {
         applications.compactMap { application -> OrganizationTimelineSnapshot.Bar? in
             guard let status = organizationTimelineGrantStatus(for: application),
                   let range = organizationTimelineGrantDateRange(for: application, status: status) else { return nil }
-            if hideRejectedGrants, status == .rejected {
+            if hideRejectedGrants, status == .rejected || status == .withdrawn {
                 return nil
             }
             let rolePrefix = role == .fundManager ? "managed" : "funder"
@@ -28028,8 +28034,12 @@ final class GrantDataStore: ObservableObject {
         if status == "Väntar svar" {
             return .waiting
         }
-        if status == "Avslag" || status == "Tillbakadragen" {
+        if status == "Avslag" {
             return .rejected
+        }
+        // Round 17: withdrawn is grey, not red.
+        if status == "Tillbakadragen" {
+            return .withdrawn
         }
         if application.isToApplyStatus {
             return .toApply
@@ -28058,7 +28068,7 @@ final class GrantDataStore: ObservableObject {
         case .waiting:
             startDate = application.applicationDate ?? application.openDate ?? application.closeDate
             endDate = application.decisionExpectedDate ?? application.closeDate ?? application.applicationDate ?? startDate
-        case .rejected:
+        case .rejected, .withdrawn:
             let decision = application.deniedDate ?? application.withdrawnDate ?? application.decisionDate
             startDate = application.applicationDate ?? application.openDate ?? application.closeDate ?? decision
             endDate = decision ?? application.decisionExpectedDate ?? startDate
@@ -28080,7 +28090,7 @@ final class GrantDataStore: ObservableObject {
         switch status {
         case .granted:
             amount = application.grantedAmountValue ?? application.appliedAmountValue
-        case .rejected, .waiting:
+        case .rejected, .withdrawn, .waiting:
             amount = application.appliedAmountValue ?? application.preferredBudgetAmountValue
         case .toApply:
             amount = application.preferredBudgetAmountValue
@@ -28105,7 +28115,7 @@ final class GrantDataStore: ObservableObject {
                 || application.decisionExpectedOnUncertain
                 || application.firstDispositionOnUncertain
                 || application.lastDispositionOnUncertain
-        case .rejected:
+        case .rejected, .withdrawn:
             return application.appliedOnUncertain
                 || application.deniedOnUncertain
                 || application.withdrawnOnUncertain

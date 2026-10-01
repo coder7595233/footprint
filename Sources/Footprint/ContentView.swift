@@ -134,11 +134,12 @@ enum BadgeTone: Equatable {
     }
 
     /// Round 16: every badge colour comes from the shared status palette.
-    /// `positiveMuted` (old "spent" green) is now grey.
+    /// Round 17: `positiveMuted` (a fully spent grant) is done again, drawn
+    /// with the paler green.
     nonisolated var statusTone: AppStatusTone {
         switch self {
-        case .positive: return .done
-        case .positiveMuted, .inactive: return .inactive
+        case .positive, .positiveMuted: return .done
+        case .inactive: return .inactive
         case .negative: return .negative
         case .pending: return .pending
         case .warning: return .warning
@@ -148,6 +149,9 @@ enum BadgeTone: Equatable {
     }
 
     var colors: (foreground: Color, background: Color) {
+        if self == .positiveMuted {
+            return (AppPalette.statusOnFill, AppPalette.statusFillPale(.done))
+        }
         let tone = statusTone
         switch tone {
         case .none:
@@ -282,19 +286,20 @@ func statusTone(for result: String?) -> BadgeTone {
 }
 
 func applicationTone(for application: GrantApplication) -> BadgeTone {
-    BadgeTone(AppStatusTones.application(application))
+    // Round 17: a fully spent grant is the paler green.
+    let tone = AppStatusTones.application(application)
+    return tone == .done && application.isFullySpent ? .positiveMuted : BadgeTone(tone)
 }
 
 private func applicationTone(for application: ApplicationRowSnapshot) -> BadgeTone {
-    BadgeTone(AppStatusTones.application(application))
+    let tone = AppStatusTones.application(application)
+    return tone == .done && application.isFullySpent ? .positiveMuted : BadgeTone(tone)
 }
 
 private func summarizedCounts(for applications: [GrantApplication]) -> (submitted: Int, rejected: Int, waiting: Int, granted: Int, toApply: Int) {
     let granted = applications.filter { $0.resultLabel == "Beviljat" }.count
-    let rejected = applications.filter {
-        let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        return status == "Avslag" || status == "Tillbakadragen"
-    }.count
+    // Round 17: withdrawn applications are not declined.
+    let rejected = applications.filter { AppStatusTones.isDeclined(resultLabel: $0.resultLabel) }.count
     let waiting = applications.filter { $0.resultLabel == "Väntar svar" }.count
     let toApply = applications.filter {
         let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)

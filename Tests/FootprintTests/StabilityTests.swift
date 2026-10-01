@@ -8420,13 +8420,14 @@ final class StabilityTests: XCTestCase {
         XCTAssertEqual(CalendarWorkspaceEventKind.applicationDeadline.filterTitle(language: .english), "Deadlines")
     }
 
+    // Round 17: Save is the accent blue in every mode (it was the positive
+    // green in dark mode, which read as a status colour).
     func testDarkModesUsePositivePrimaryActionButtons() throws {
         let expected = try XCTUnwrap(
-            AppAppearanceRegistry.semanticColor(.positive, shaded: false, useDarkPalette: true)
-                .usingColorSpace(.deviceRGB)
+            NSColor.controlAccentColor.usingColorSpace(.deviceRGB)
         )
 
-        for mode in [AppVisualMode.dark, .darkClean, .darkNew] {
+        for mode in AppVisualMode.allCases {
             let actual = try XCTUnwrap(AppPalette.actionSaveColor(for: mode).usingColorSpace(.deviceRGB))
             XCTAssertEqual(actual.redComponent, expected.redComponent, accuracy: 0.001)
             XCTAssertEqual(actual.greenComponent, expected.greenComponent, accuracy: 0.001)

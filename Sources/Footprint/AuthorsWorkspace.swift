@@ -3671,7 +3671,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func applicationStatusColor(for application: GrantApplication) -> Color {
-        AppPalette.statusCapsuleFill(store.applicationStatusTone(application))
+        store.applicationCapsuleFill(application)
     }
 
     private func dispositionStatus(for application: GrantApplication) -> String {
@@ -4558,7 +4558,7 @@ private struct AuthorLinkedApplicationsPanel: View, Equatable {
     }
 
     private func applicationStatusShadeColor(for application: GrantApplication) -> Color? {
-        AppPalette.statusRowFill(store.applicationStatusTone(application))
+        store.applicationRowFill(application)
     }
 
     private func applicationAmountText(for application: GrantApplication) -> String {

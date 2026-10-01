@@ -1261,11 +1261,13 @@ private struct LocalizedOptionDetailView: View {
             .sorted { fundTitle(for: $0) < fundTitle(for: $1) }
     }
 
+    // Round 17: declined and withdrawn are separate groups.
     private var funderRejectedApplications: [GrantApplication] {
-        applications.filter {
-            let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-            return status == "Avslag" || status == "Tillbakadragen"
-        }
+        applications.filter { AppStatusTones.isDeclined(resultLabel: $0.resultLabel) }
+    }
+
+    private var funderWithdrawnApplications: [GrantApplication] {
+        applications.filter { AppStatusTones.isWithdrawn(resultLabel: $0.resultLabel) }
     }
 
     private var funderWaitingApplications: [GrantApplication] {
@@ -1273,10 +1275,11 @@ private struct LocalizedOptionDetailView: View {
     }
 
     private var managedRejectedApplications: [GrantApplication] {
-        managedApplications.filter {
-            let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-            return status == "Avslag" || status == "Tillbakadragen"
-        }
+        managedApplications.filter { AppStatusTones.isDeclined(resultLabel: $0.resultLabel) }
+    }
+
+    private var managedWithdrawnApplications: [GrantApplication] {
+        managedApplications.filter { AppStatusTones.isWithdrawn(resultLabel: $0.resultLabel) }
     }
 
     private var managedWaitingApplications: [GrantApplication] {
@@ -1291,6 +1294,8 @@ private struct LocalizedOptionDetailView: View {
             return funderWaitingApplications
         case .rejected:
             return funderRejectedApplications
+        case .withdrawn:
+            return funderWithdrawnApplications
         case .granted:
             return relevant.filter(\.isGranted)
         }
@@ -1311,6 +1316,8 @@ private struct LocalizedOptionDetailView: View {
             return managedWaitingApplications
         case .rejected:
             return managedRejectedApplications
+        case .withdrawn:
+            return managedWithdrawnApplications
         case .granted:
             return relevant.filter(\.isGranted)
         }

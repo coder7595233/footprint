@@ -1114,12 +1114,12 @@ enum AppPalette {
         AppAppearanceRegistry.semanticColor(.positive, shaded: shaded, useDarkPalette: useDarkPalette ?? AppAppearanceRegistry.usesDarkPalette())
     }
 
+    /// Round 17: Save is the accent blue in every mode (it was green in
+    /// dark mode, which read as a status).
     static func actionSaveColor(for mode: AppVisualMode) -> NSColor {
         switch mode {
-        case .light, .lightClean:
+        case .light, .lightClean, .dark, .darkClean, .darkNew:
             return NSColor.controlAccentColor
-        case .dark, .darkClean, .darkNew:
-            return accentColor(shaded: false, useDarkPalette: true)
         }
     }
 
@@ -1253,7 +1253,8 @@ enum AppPalette {
     static let detailPanelSurface = appChromeSurfaceColor(.workspace)
     static var vividGreen: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.positive, shaded: false)) }
     static var vividYellow: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }
-    static var vividOrange: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }
+    // Round 17: real orange (it used to equal yellow).
+    static var vividOrange: Color { statusFill(.warning) }
     static var vividRed: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.negative, shaded: false)) }
     static var vividBlue: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.neutral, shaded: false)) }
     static var shadeGreen: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.positive, shaded: true)) }
