@@ -1057,4 +1057,44 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertEqual(projectTasksAgain, projectTasksAfter, "a second start adds no tasks")
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round14-new-funds-tasks-once" })
     }
+
+    /// Round 16: projects get a new optional field (answers to "set to
+    /// ongoing?") and one colour rule. Counts how many projects get each
+    /// colour, that no project or other record is lost or added by loading
+    /// and saving, and that no project gets stored answers by itself.
+    /// Only counts are printed.
+    @MainActor
+    func testSnapshotRound16ProjectColoursAndPromptField() throws {
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        var toneCounts: [String: Int] = [:]
+        for project in store.projects {
+            toneCounts[store.projectStatusTone(project).rawValue, default: 0] += 1
+        }
+        let toneSummary = AppStatusTone.allCases.map { "\($0.rawValue) \(toneCounts[$0.rawValue] ?? 0)" }.joined(separator: ", ")
+        print("SNAPSHOT: R16 Projektfärger: \(toneSummary)")
+        var applicationToneCounts: [String: Int] = [:]
+        for application in store.applications {
+            applicationToneCounts[store.applicationStatusTone(application).rawValue, default: 0] += 1
+        }
+        let applicationSummary = AppStatusTone.allCases.map { "\($0.rawValue) \(applicationToneCounts[$0.rawValue] ?? 0)" }.joined(separator: ", ")
+        print("SNAPSHOT: R16 Ansökningsfärger: \(applicationSummary)")
+
+        let countsBefore = Self.recordCounts(store)
+        let projectsBefore = Dictionary(store.projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: R16 \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+        let withAnswers = reloaded.projects.filter { !($0.dismissedOngoingPromptKeys ?? []).isEmpty }.count
+        let changedProjects = reloaded.projects.filter { projectsBefore[$0.id] != $0 }.count
+        print("SNAPSHOT: R16 Projekt med sparade svar på frågan om Pågående: \(withAnswers)")
+        print("SNAPSHOT: R16 Projekt som ändrades vid sparning: \(changedProjects)")
+        XCTAssertEqual(withAnswers, 0, "no answers are stored without the user answering")
+    }
 }

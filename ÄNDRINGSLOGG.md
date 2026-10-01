@@ -75,17 +75,31 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
-## Omgång 15 – pågår
+## Omgång 16 – pågår (filter, färger, typsnitt och ord)
 
 | Nr | Område | Ändring | Status |
 |---|---|---|---|
-| F101 | Export, säkerhet | I bilagelistan (bilagor.csv) visas ett fält som börjar med =, +, - eller @ som text i Excel och körs inte som formel. | Pågår |
-| F102 | E-post, säkerhet | E-postlänkar till kontakter och forskare kräver en vanlig adress. Text som "namn@x.se?bcc=..." gav dolda mottagare eller ifylld text i utkastet. | Pågår |
-| F103 | Påminnelser | Anslagspåminnelser kommer på inställd tid även de dagar sommartid börjar eller slutar (de kom en timme fel). "Disponeringstiden har passerat" kommer dagen efter sista dispositionsdagen. Kalenderns påminnelselista sparas innan påminnelserna läggs till, så att två snabba uppdateringar inte lämnar kvar påminnelser för borttagna uppgifter. | Pågår |
-| F104 | Växelkurser | Kurser från tio dagar före det första datumet sparas, så att kurshistoriken inte laddas ner vid varje sparning när det datumet är en helgdag. Bara ett normalt svar från ECB läses in. | Pågår |
-| F105 | Projekt | Utfallskortet räknar inte "Ej sökt" i totalen, så att andelarna går ihop. | Pågår |
-| F106 | Felmeddelanden | En lyckad automatisk sparning tar bara bort sitt eget felmeddelande, inte till exempel ett om en misslyckad säkerhetskopia. | Pågår |
-| F107 | Stabilitet | Ett mycket långt tal (till exempel ett inklistrat kontonummer) räknas inte som belopp och kan inte få appen att krascha. Fönstren som gör PDF av CV och export kör inga skript och öppnar inga andra sidor. Vid Ångra och vid återställning från arkivet sparas arkivet först, så att skärm och databas inte kan visa olika saker om arkivet inte går att spara. | Pågår |
+| F108 | Filter, alla listor | Filter sparas mellan omstarter (beslut 2026-10-01), men en filtrerad lista visar alltid raden "Filtrerad lista: x av y visas" med aktiva filter, "Sparat från förra gången" när filtret kom tillbaka vid start, och "Rensa filter". Tomma listor säger "Inga poster matchar filtren". Valet "behåll filter = av" gäller nu också vid start. | Pågår |
+| F109 | Ansökningar, Kongresser, Undervisning, Doktorander | Årsfiltret täcker som standard alla år och växer med nya år; ett eget val sparas. Det krympte förut till innevarande år vid varje omstart, och nya poster i nya år försvann. | Pågår |
+| F110 | Arkiv | "Ta bort valda" tar bara bort poster som syns; valet rensas när sökningen eller kategorin ändras. | Pågår |
+| F111 | Navigering, nya poster | När du går till en post som ett filter döljer, eller skapar en ny, rensas bara de filter som döljer den. Valet hoppar inte bort från det du redigerar. | Pågår |
+| F112 | Filter, detaljer | Projektfiltret i Ansökningar sparas per projekt och tål namnbyten; Forskares filter "ofullständiga uppgifter" syns; Granskningsuppdrag har knappar för status (Pågående, Försenade, Klara, Avböjda, Utan status) och kategori (beslut 2026-10-01); Publikationer har "Refuserad"; Doktorander använder faktiskt disputationsdatum; Kalendern visar kongresser när Konferenser-kolumnen är dold och "Visa i kalendern" fungerar med filter; Undervisningens programfilter tål språkbyte; Datavyn visar inte "Inga problem" när ett filter döljer dem; sökningen fungerar lika överallt. | Pågår |
+| F113 | Färger | En gemensam färgkälla (beslut 2026-10-01): grönt = klart med positivt resultat, gult = pågår eller väntar, orange = kräver åtgärd snart, rött = negativt eller passerad frist, grått = inget att göra nu, vitt = ingen status än, blekare text = ansökan som inte öppnat. Blått är inte längre en statusfärg. Projekt: grönt när pågående med datainsamling, etiknummer eller beviljade medel; gult när pågående utan dem eller planerat med något av dem; vitt planerat; grått avslutat. Statistiken följer färgvalen och mörkt läge. Läsbar text på alla färgfält, dagens-markering och låssymbol samordnade. | Pågår |
+| F114 | Projekt | När ett planerat projekt får beviljade medel, en påbörjad datainsamling eller ett etiktillstånd (sökt eller beviljat) frågar appen om projektet ska ändras till Pågående (beslut 2026-10-01). "Inte nu" kommer ihåg just den händelsen. | Pågår |
+| F115 | Typsnitt, ord, belopp | Typsnitten följer Inställningar överallt (beslut 2026-10-01). Samma ord för utfall överallt (Beviljat/Granted, Avslag/Declined, Väntar svar/Awaiting decision, Refuserad/Rejected för publikationer). Belopp skrivs kr/mkr på svenska och SEK/MSEK på engelska. ÅÅÅÅ-MM-DD i svenska fält. | Pågår |
+| F116 | Ta bort | Borttagning frågar alltid först, i alla vyer (beslut 2026-10-01), men bara en gång även när posten har kopplingar. | Pågår |
+
+## Omgång 15 – klar 2026-10-01 (#10)
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F101 | Export, säkerhet | I bilagelistan (bilagor.csv) visas ett fält som börjar med =, +, - eller @ som text i Excel och körs inte som formel. | Klar |
+| F102 | E-post, säkerhet | E-postlänkar till kontakter och forskare kräver en vanlig adress. Text som "namn@x.se?bcc=..." gav dolda mottagare eller ifylld text i utkastet. | Klar |
+| F103 | Påminnelser | Anslagspåminnelser kommer på inställd tid även de dagar sommartid börjar eller slutar (de kom en timme fel). "Disponeringstiden har passerat" kommer dagen efter sista dispositionsdagen. Kalenderns påminnelselista sparas innan påminnelserna läggs till, så att två snabba uppdateringar inte lämnar kvar påminnelser för borttagna uppgifter. | Klar |
+| F104 | Växelkurser | Kurser från tio dagar före det första datumet sparas, så att kurshistoriken inte laddas ner vid varje sparning när det datumet är en helgdag. Bara ett normalt svar från ECB läses in. | Klar |
+| F105 | Projekt | Utfallskortet räknar inte "Ej sökt" i totalen, så att andelarna går ihop. | Klar |
+| F106 | Felmeddelanden | En lyckad automatisk sparning tar bara bort sitt eget felmeddelande, inte till exempel ett om en misslyckad säkerhetskopia. | Klar |
+| F107 | Stabilitet | Ett mycket långt tal (till exempel ett inklistrat kontonummer) räknas inte som belopp och kan inte få appen att krascha. Fönstren som gör PDF av CV och export kör inga skript och öppnar inga andra sidor. Vid Ångra och vid återställning från arkivet sparas arkivet först, så att skärm och databas inte kan visa olika saker om arkivet inte går att spara. | Klar |
 
 ## Omgång 14 – klar 2026-10-01 (#9)
 
