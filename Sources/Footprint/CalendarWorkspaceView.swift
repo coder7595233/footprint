@@ -12053,14 +12053,21 @@ private struct CalendarAccommodationSheet: View {
         var normalized = draft
         normalized.normalize()
         var records = store.calendarAccommodationRecords
+        var previousRecord: CalendarAccommodationRecord?
         if let accommodationID,
            let existingIndex = records.firstIndex(where: { $0.id == accommodationID }) {
+            previousRecord = records[existingIndex]
             records[existingIndex] = normalized
         } else {
             records.append(normalized)
         }
         store.autosaveCalendarAccommodationRecords(records)
-        if let organizationID = normalized.congressOrganizationID.trimmedOrNil,
+        // Only when the stay is newly linked to this congress, so saving it
+        // again does not put back a user who removed themselves.
+        let linkIsNew = previousRecord?.congressOrganizationID.trimmedOrNil != normalized.congressOrganizationID.trimmedOrNil
+            || previousRecord?.congressID.trimmedOrNil != normalized.congressID.trimmedOrNil
+        if linkIsNew,
+           let organizationID = normalized.congressOrganizationID.trimmedOrNil,
            let congressID = normalized.congressID.trimmedOrNil {
             store.markCongressAsAttendingIfNeeded(
                 organizationID: organizationID,

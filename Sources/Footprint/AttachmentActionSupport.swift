@@ -18,6 +18,24 @@ enum AttachmentActionError: LocalizedError, Equatable {
     }
 }
 
+/// A name for a temporary copy of an attached PDF: only the last part of the
+/// stored name (no folders, so it cannot be written outside the temporary
+/// folder), safe characters only, and always ending in ".pdf".
+func safeTemporaryPDFFilename(_ stored: String?, fallback: String) -> String {
+    // Split on "/" directly: URL(fileURLWithPath:) turns ".." into the
+    // current folder's name.
+    let lastPart = stored
+        .flatMap { $0.split(separator: "/").last.map(String.init)?.trimmedOrNil }
+        .flatMap { $0 == "." || $0 == ".." ? nil : $0 }
+        ?? fallback
+    let stem = (lastPart as NSString).deletingPathExtension
+    let allowed = stem.unicodeScalars.map { scalar -> String in
+        CharacterSet.alphanumerics.contains(scalar) || " -_.".unicodeScalars.contains(scalar) ? String(scalar) : "_"
+    }.joined().trimmingCharacters(in: CharacterSet(charactersIn: " ."))
+    let fallbackStem = (fallback as NSString).deletingPathExtension
+    return (allowed.isEmpty ? fallbackStem : String(allowed.prefix(120))) + ".pdf"
+}
+
 func loadPDFDataForUserAction(from url: URL) throws -> Data {
     guard url.pathExtension.lowercased() == "pdf" else {
         throw AttachmentActionError.unsupportedPDF
@@ -39,8 +57,18 @@ extension GrantDataStore {
         notice = StoreNotice(message: message, tone: .error)
     }
 
+    /// Opens an attached PDF. Every attachment the app opens is a PDF, and
+    /// the location can come from an imported database, so anything that is
+    /// not a PDF (an app, a script, a web page) is refused instead of being
+    /// handed to macOS to run.
     @discardableResult
     func openFileForUserAction(_ url: URL, failureMessage: String) -> Bool {
+        do {
+            _ = try loadPDFDataForUserAction(from: url)
+        } catch {
+            reportFileActionFailure(failureMessage, error: error)
+            return false
+        }
         guard NSWorkspace.shared.open(url) else {
             reportFileActionFailure(failureMessage, error: AttachmentActionError.fileCouldNotBeOpened)
             return false

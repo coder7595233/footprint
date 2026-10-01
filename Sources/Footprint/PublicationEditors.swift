@@ -999,6 +999,11 @@ struct PublicationEditorView: View {
     @State private var loadedFinalPDFPath: String?
     @State private var exportedFinalPDFURL: URL?
     @State private var suppressDraftAutosave = false
+    /// The author list just loaded from the store. Its change notice comes
+    /// after loading has finished, and must not be taken for an edit: that
+    /// used to remap or clear the corresponding author and CRediT roles of
+    /// the publication merely selected, and save it.
+    @State private var authorNamesLoadedFromStore: [String]?
     @State private var resolvedJournal: PublicationJournal?
     @State private var rankingSnapshot = PublicationEditorRankingSnapshot.empty
     @State private var derivedRefreshTask: DispatchWorkItem?
@@ -1250,6 +1255,10 @@ struct PublicationEditorView: View {
                     handlePublicationTasksChange(newValue)
                 }
                 .onChange(of: draft.authorNames) { oldValue, newValue in
+                    if let loaded = authorNamesLoadedFromStore {
+                        authorNamesLoadedFromStore = nil
+                        if loaded == newValue { return }
+                    }
                     syncAuthorDependentAssignments(previousAuthorNames: oldValue, newAuthorNames: newValue)
                 }
                 .flushPendingAutosaveOnTextEnd(requestImmediatePersist)
@@ -1925,6 +1934,7 @@ struct PublicationEditorView: View {
                 metricDistributionCache: metricDistributionCache
             )
             authorIdentity.reconcileExternal(newValue.authorNames)
+            authorNamesLoadedFromStore = draft.authorNames != newValue.authorNames ? newValue.authorNames : nil
             draft = newValue
             isEditingLocked = newValue.isEditingLocked
             submissionRows = nextSubmissionRows
@@ -1955,6 +1965,17 @@ struct PublicationEditorView: View {
             return
         }
 
+        // The same publication changed elsewhere while text typed here was
+        // not saved yet. Overwriting the draft used to lose that text. It is
+        // merged with the newer version first (the same three-way merge as a
+        // normal save); the merged record then comes back here and is shown.
+        if pendingDraft != oldValue {
+            persist(baseline: oldValue, silently: true)
+            if let merged = store.publication(id: newValue.id), merged != newValue {
+                return
+            }
+        }
+
         autosaveTask?.cancel()
         forcedPersistTask?.cancel()
         submissionRowsSyncTask?.cancel()
@@ -1969,6 +1990,7 @@ struct PublicationEditorView: View {
 
         suppressDraftAutosave = true
         authorIdentity.reconcileExternal(newValue.authorNames)
+        authorNamesLoadedFromStore = draft.authorNames != newValue.authorNames ? newValue.authorNames : nil
         draft = newValue
         isEditingLocked = newValue.isEditingLocked
         submissionRows = nextSubmissionRows
@@ -2626,7 +2648,7 @@ struct PublicationEditorView: View {
             )
             return
         }
-        let filename = finalPDFFilename ?? "publication.pdf"
+        let filename = safeTemporaryPDFFilename(finalPDFFilename, fallback: "publication.pdf")
         let targetURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
             .appendingPathComponent(filename)

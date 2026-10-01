@@ -1002,4 +1002,59 @@ final class SnapshotTrialRunTests: XCTestCase {
         print("SNAPSHOT: R13 Ansökningar vars belopp ändrades vid sparning: \(changedAmounts)")
         XCTAssertEqual(changedAmounts, 0, "saving does not change any amount")
     }
+
+    /// Round 14: old decided records without a decision date keep their
+    /// result, attachment locations outside storage are refused unless they
+    /// are PDFs, and two repairs that ran on every launch run once. Counts
+    /// how many records each change touches; no record may be lost or added.
+    /// Only counts are printed.
+    @MainActor
+    func testSnapshotRound14OldDecisionsAttachmentsAndRepairs() throws {
+        let databaseURL = storageDirectory.appendingPathComponent("footprint.sqlite")
+        let rawStore = try SQLiteDocumentStore(url: databaseURL, createIfMissing: false)
+        let rawApplications = try XCTUnwrap(rawStore.loadData(named: "applications"))
+        let rows = (try JSONSerialization.jsonObject(with: rawApplications) as? [[String: Any]]) ?? []
+        func text(_ row: [String: Any], _ key: String) -> String? {
+            (row[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
+        }
+        let decidedWithoutDate = rows.filter { row in
+            ["Beviljat", "Avslag", "Tillbakadragen"].contains(text(row, "result") ?? "")
+                && ["grantedOn", "deniedOn", "withdrawnOn", "decisionOn"].allSatisfy { text(row, $0) == nil }
+        }
+        print("SNAPSHOT: R14 Ansökningar i databasen: \(rows.count), beslutade utan beslutsdatum: \(decidedWithoutDate.count)")
+
+        let publications = try rawStore.load([PublicationRecord].self, named: "publication_records") ?? []
+        let storedPaths = publications.compactMap(\.finalPDFPath).compactMap(\.trimmedOrNil)
+        let refusedPaths = storedPaths.filter { GrantDataStore.absoluteAttachmentURL(fromStored: $0) == nil }
+        print("SNAPSHOT: R14 Publikationer med sparad PDF-sökväg: \(storedPaths.count), sökvägar som inte längre godtas: \(refusedPaths.count)")
+
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let countsBefore = Self.recordCounts(store)
+        let projectTasksBefore = store.projects.reduce(0) { $0 + $1.projectTasks.count }
+        let congressesBefore = Dictionary(
+            store.organizations.map { ($0.id, $0.congresses) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        print("SNAPSHOT: R14 Låsta projekt: \(store.projects.filter(\.isEditingLocked).count)")
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: R14 \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+        let projectTasksAfter = reloaded.projects.reduce(0) { $0 + $1.projectTasks.count }
+        let congressesChanged = reloaded.organizations.filter { congressesBefore[$0.id] != $0.congresses }.count
+        print("SNAPSHOT: R14 Projektuppgifter: före \(projectTasksBefore), efter \(projectTasksAfter)")
+        print("SNAPSHOT: R14 Organisationer vars kongresser ändrades: \(congressesChanged)")
+
+        _ = reloaded.migrateRecordsIfNeeded()
+        let projectTasksAgain = reloaded.projects.reduce(0) { $0 + $1.projectTasks.count }
+        print("SNAPSHOT: R14 Projektuppgifter efter en till start: \(projectTasksAgain)")
+        XCTAssertEqual(projectTasksAgain, projectTasksAfter, "a second start adds no tasks")
+        XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round14-new-funds-tasks-once" })
+    }
 }

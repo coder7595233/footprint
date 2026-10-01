@@ -3663,7 +3663,7 @@ private struct PublicationAuthorEditorView: View {
             }
             return
         }
-        draft = snapshot
+        replaceDraftKeepingPendingAffiliation(with: snapshot)
         nameVariantRows = Self.editableNameVariantRows(for: snapshot.nameVariantRows)
         ensureTrailingEditorRows()
         lastLocalAutosaveSnapshot = snapshot
@@ -3704,7 +3704,7 @@ private struct PublicationAuthorEditorView: View {
             )
             return
         }
-        draft = snapshot
+        replaceDraftKeepingPendingAffiliation(with: snapshot)
         ensureTrailingEditorRows()
         lastLocalAutosaveSnapshot = snapshot
         store.autosavePublicationAuthor(snapshot, previousName: baseline.name, completePendingSelection: shouldFinalize)
@@ -4208,6 +4208,17 @@ private struct PublicationAuthorEditorView: View {
                 return nil
             }
             return normalized
+        }
+    }
+
+    /// The saved copy leaves out a half-filled new affiliation (for example
+    /// only a city typed so far). Replacing the draft with it used to clear
+    /// that row while the user was filling it in; the row is kept.
+    private func replaceDraftKeepingPendingAffiliation(with snapshot: PublicationAuthor) {
+        let pendingRow = draft.affiliations.first { $0.id == pendingAffiliationRowID }
+        draft = snapshot
+        if let pendingRow, !draft.affiliations.contains(where: { $0.id == pendingRow.id }) {
+            draft.affiliations.append(pendingRow)
         }
     }
 

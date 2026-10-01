@@ -1155,7 +1155,9 @@ struct StatisticsView: View {
         let settings = store.workflowDefaultSettings
         let summaries = grantAmountBucketSummaries(
             applications: filteredGrantApplications,
-            bucket: { settings.amountBucket(for: $0.preferredBudgetAmountValue ?? 0) },
+            // Grouped on the amount in SEK, like the sums; a foreign amount
+            // used to be grouped on its own number (€200 000 as < 250 k).
+            bucket: { settings.amountBucket(for: store.grantStatisticsAmountInSEK(for: $0, amount: $0.preferredBudgetAmountValue)) },
             isGranted: { grantStatus(for: $0) == .granted },
             grantedAmount: { grantStatisticsAmount(for: $0) }
         )
@@ -1753,7 +1755,12 @@ struct StatisticsView: View {
     private func assignmentStatisticsHours(_ assignment: TeachingAssignment, selectedYear: Int?) -> Double {
         assignment.periods.reduce(0) { partial, period in
             guard let startDate = period.from.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) else { return partial }
-            let endDate = period.to.nonEmpty.flatMap(DateParsers.isoDay.date(from:)) ?? Calendar.current.startOfDay(for: Date())
+            let today = Calendar.current.startOfDay(for: Date())
+            let storedEnd = period.to.nonEmpty.flatMap(DateParsers.isoDay.date(from:))
+            // An open-ended period that has not started yet counts nothing
+            // (its start and today used to be swapped, counting this term).
+            if storedEnd == nil, startDate > today { return partial }
+            let endDate = storedEnd ?? today
             let hoursPerTerm = GrantParsing.numericValue(from: period.hoursPerTerm) ?? 0
             guard hoursPerTerm > 0 else { return partial }
             var terms = Set<String>()
@@ -1936,6 +1943,12 @@ struct StatisticsView: View {
             guard let nextMonth = Calendar.current.date(byAdding: .month, value: 1, to: cursor) else { break }
             cursor = nextMonth
         }
+        // Stepping a month at a time from the start day can pass the end
+        // day's month (15 May + 2 months = 15 Jul > 10 Jul); the end's own
+        // term always counts, as in the teaching merits and annual report.
+        let endYear = Calendar.current.component(.year, from: end)
+        let endHalf = Calendar.current.component(.month, from: end) <= 6 ? 1 : 2
+        terms.insert("\(endYear)-\(endHalf)")
     }
 
     private static func integerString(_ value: Double) -> String {

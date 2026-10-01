@@ -572,6 +572,20 @@ struct ProjectDetailView: View {
     private func applyProjectSyncModifiers<V: View>(to view: V) -> some View {
         view
             .onChange(of: project) { oldValue, newValue in
+                if oldValue.id == newValue.id {
+                    // The same project changed elsewhere (undo, a calendar
+                    // task, a data fix) while text typed here was not saved
+                    // yet. Reloading used to throw that text away. The typed
+                    // fields are saved on top of the new version instead,
+                    // and the editor keeps them.
+                    let localDraft = currentProjectDraft(base: oldValue)
+                    if localDraft != oldValue, currentProjectDraft(base: newValue) != newValue {
+                        autosaveTask?.cancel()
+                        forcedPersistTask?.cancel()
+                        persistAutosaveIfNeeded(baseline: newValue)
+                        return
+                    }
+                }
                 autosaveTask?.cancel()
                 forcedPersistTask?.cancel()
                 if oldValue.id != newValue.id {
