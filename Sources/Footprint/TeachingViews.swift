@@ -22,12 +22,51 @@ private struct TeachingAssignmentFilterState: Codable, Equatable {
     var institutionBranches: [String] = []
     var programBranches: [String] = []
     var contextBranchIDs: [String] = []
+    /// Round 16: true while the year range covers every year and widens with
+    /// new years; false once the user narrowed it. Nil in filters saved by
+    /// older versions (decided from the saved range at first use).
+    var yearRangeFollowsAvailable: Bool? = nil
+
+    /// True when something in the saved state hides records.
+    var hasNarrowingFilters: Bool {
+        searchText.trimmedOrNil != nil
+            || !kindRawValues.isEmpty
+            || !statusRawValues.isEmpty
+            || !institutionBranches.isEmpty
+            || !programBranches.isEmpty
+            || !contextBranchIDs.isEmpty
+            || yearRangeFollowsAvailable == false
+    }
+
+    /// The state without the year values the list adjusts by itself while
+    /// the range follows the available years.
+    var userChoiceSignature: TeachingAssignmentFilterState {
+        var copy = self
+        if copy.yearRangeFollowsAvailable != false {
+            copy.minimumYearValue = 0
+            copy.maximumYearValue = 0
+        }
+        return copy
+    }
 }
 
 private enum TeachingAssignmentFilterPersistence {
-    private static let defaultsKey = "TeachingAssignmentsFilterState.v1"
+    /// The old app-wide key. Round 16 stores the filters per account
+    /// (AppRuntime.scopedDefaultsKey) like every other list; the old value is
+    /// copied over once.
+    private static let legacyDefaultsKey = "TeachingAssignmentsFilterState.v1"
+    private static var defaultsKey: String { AppRuntime.scopedDefaultsKey(legacyDefaultsKey) }
+    private static let migrationFlagKey = "TeachingAssignmentsFilterState.v1.MovedToAccountScope"
+    /// Marker for "Sparat från förra gången" (workspace "Teaching").
+    static let restoredMarkerKey = "Teaching.Filter.Assignments"
 
     static func load() -> TeachingAssignmentFilterState {
+        TeachingFilterStorageMigration.migrateIfNeeded(
+            defaults: .standard,
+            legacyKey: legacyDefaultsKey,
+            scopedKey: defaultsKey,
+            migrationFlagKey: migrationFlagKey
+        )
         guard let data = UserDefaults.standard.data(forKey: defaultsKey),
               let state = try? JSONDecoder().decode(TeachingAssignmentFilterState.self, from: data) else {
             return TeachingAssignmentFilterState()
@@ -541,6 +580,7 @@ struct TeachingWorkspaceView: View {
     @State private var searchText: String
     @State private var minimumYearValue: Double
     @State private var maximumYearValue: Double
+    @State private var yearRangeFollowsAvailable: Bool?
     @State private var selectedKindFilters: Set<TeachingAssignmentKind>
     @State private var selectedStatusFilters: Set<TeachingAssignmentStatusKind>
     @State private var selectedInstitutionBranches: Set<String>
@@ -568,6 +608,10 @@ struct TeachingWorkspaceView: View {
         _searchText = State(initialValue: savedFilters.searchText)
         _minimumYearValue = State(initialValue: savedFilters.minimumYearValue)
         _maximumYearValue = State(initialValue: savedFilters.maximumYearValue)
+        _yearRangeFollowsAvailable = State(initialValue: savedFilters.yearRangeFollowsAvailable)
+        if savedFilters.hasNarrowingFilters {
+            RestoredListFilters.markRestored(key: TeachingAssignmentFilterPersistence.restoredMarkerKey)
+        }
         _selectedKindFilters = State(initialValue: Set(savedFilters.kindRawValues.compactMap(TeachingAssignmentKind.init(rawValue:))))
         _selectedStatusFilters = State(initialValue: Set(savedFilters.statusRawValues.compactMap(TeachingAssignmentStatusKind.init(rawValue:))))
         _selectedInstitutionBranches = State(initialValue: Set(savedFilters.institutionBranches))
@@ -638,12 +682,29 @@ struct TeachingWorkspaceView: View {
         yearBounds.lowerBound < yearBounds.upperBound
     }
 
+    /// The years of the assignments, nil when none has a year.
+    private var availableYearBounds: ClosedRange<Double>? {
+        FollowingYearRange.bounds(for: availableYearValues)
+    }
+
+    private var effectiveYearRange: FollowingYearRange {
+        FollowingYearRange(
+            lower: minimumYearValue,
+            upper: maximumYearValue,
+            follows: yearRangeFollowsAvailable
+                ?? FollowingYearRange.legacyFollows(lower: minimumYearValue, upper: maximumYearValue, bounds: availableYearBounds)
+        )
+    }
+
+    private var isYearRangeNarrowed: Bool {
+        effectiveYearRange.isNarrowed
+    }
+
     private var hasActiveFilters: Bool {
         searchText.nonEmpty != nil
             || !selectedKindFilters.isEmpty
             || !selectedStatusFilters.isEmpty
-            || minimumYearValue != yearBounds.lowerBound
-            || maximumYearValue != yearBounds.upperBound
+            || isYearRangeNarrowed
             || !selectedInstitutionBranches.isEmpty
             || !selectedProgramBranches.isEmpty
             || !selectedContextBranchIDs.isEmpty
@@ -658,7 +719,8 @@ struct TeachingWorkspaceView: View {
             statusRawValues: selectedStatusFilters.map(\.rawValue).sorted(),
             institutionBranches: selectedInstitutionBranches.sorted(),
             programBranches: selectedProgramBranches.sorted(),
-            contextBranchIDs: selectedContextBranchIDs.sorted()
+            contextBranchIDs: selectedContextBranchIDs.sorted(),
+            yearRangeFollowsAvailable: yearRangeFollowsAvailable
         )
     }
 
@@ -684,7 +746,7 @@ struct TeachingWorkspaceView: View {
         return store.teachingCourses.filter { course in
             guard course.contextType != .programTrack else { return false }
             let matchesInstitution = selectedInstitutionBranches.isEmpty || selectedInstitutionBranches.contains(store.teachingInstitutionKey(for: course))
-            let matchesProgram = selectedProgramBranches.isEmpty || selectedProgramBranches.contains(course.localizedProgram(language: language))
+            let matchesProgram = selectedProgramBranches.isEmpty || matchesSelectedProgram(course)
             return matchesInstitution && matchesProgram
         }
         .sorted {
@@ -780,10 +842,29 @@ struct TeachingWorkspaceView: View {
         return "\(program) · \(leaf)"
     }
 
+    /// The programme filter compares names in both languages without case or
+    /// accents, so a saved choice survives a language change.
+    private func matchesSelectedProgram(_ course: TeachingCourse) -> Bool {
+        TeachingProgramFilterKeys.matches(
+            selectedProgramBranches,
+            swedish: course.localizedProgram(language: .swedish),
+            english: course.localizedProgram(language: .english)
+        )
+    }
+
     private func pruneTeachingStructureFilters() {
-        let programs = Set(availableProgramBranches)
+        // Nothing loaded yet: keep the saved choice instead of dropping it.
+        guard !store.teachingCourses.isEmpty else { return }
+        let programCourses = store.teachingCourses.filter {
+            selectedInstitutionBranches.isEmpty || selectedInstitutionBranches.contains(store.teachingInstitutionKey(for: $0))
+        }
+        let programNames = programCourses.map {
+            (swedish: $0.localizedProgram(language: .swedish), english: $0.localizedProgram(language: .english))
+        }
+        // Saved names (in either language) become the names shown now;
+        // names that no longer exist are dropped.
+        let nextPrograms = TeachingProgramFilterKeys.remap(selectedProgramBranches, programs: programNames, language: language)
         let contexts = Set(availableContextBranches.map(\.id))
-        let nextPrograms = selectedProgramBranches.filter { programs.contains($0) }
         let nextContexts = selectedContextBranchIDs.filter { contexts.contains($0) }
         if nextPrograms != selectedProgramBranches {
             selectedProgramBranches = nextPrograms
@@ -852,8 +933,13 @@ struct TeachingWorkspaceView: View {
 
     private var teachingSelectionObservationView: some View {
         teachingFilterObservationView
-            .onChange(of: persistedFilterState) { _, state in
+            .onChange(of: persistedFilterState) { oldState, state in
                 TeachingAssignmentFilterPersistence.save(state)
+                // Only a choice by the user ends "kept from last time", not the
+                // year range widening by itself.
+                if oldState.userChoiceSignature != state.userChoiceSignature {
+                    RestoredListFilters.markChanged(key: TeachingAssignmentFilterPersistence.restoredMarkerKey)
+                }
             }
             .onChange(of: assignmentRows.map(\.id)) { _, ids in
                 handleAssignmentRowIDsChange(ids)
@@ -868,6 +954,7 @@ struct TeachingWorkspaceView: View {
             .onChange(of: searchText) { _, _ in scheduleFilterRebuildIfActive() }
             .onChange(of: minimumYearValue) { _, _ in scheduleFilterRebuildIfActive() }
             .onChange(of: maximumYearValue) { _, _ in scheduleFilterRebuildIfActive() }
+            .onChange(of: yearRangeFollowsAvailable) { _, _ in scheduleFilterRebuildIfActive() }
             .onChange(of: selectedKindFilters) { _, _ in scheduleFilterRebuildIfActive() }
             .onChange(of: selectedStatusFilters) { _, _ in scheduleFilterRebuildIfActive() }
             .onChange(of: assignmentSortHistory) { _, _ in scheduleFilterRebuildIfActive() }
@@ -900,6 +987,8 @@ struct TeachingWorkspaceView: View {
                 scheduleRowsRebuildIfActive()
             }
             .onChange(of: store.language) { _, _ in
+                // Programme names are shown in the current language.
+                pruneTeachingStructureFilters()
                 scheduleRowsRebuildIfActive()
             }
     }
@@ -1012,6 +1101,7 @@ struct TeachingWorkspaceView: View {
         let studentLabel = assignmentStudentLabel(assignment)
         let yearValues = yearValues(for: assignment)
 
+        // Years are searchable too ("2024").
         let searchBlob = [
             activityName,
             contextName,
@@ -1019,6 +1109,7 @@ struct TeachingWorkspaceView: View {
             roleLabel,
             studentLabel,
             assignment.comment,
+            yearValues.map { String($0) }.joined(separator: " "),
         ].joined(separator: " ")
         return TeachingAssignmentDirectoryRow(
             assignment: assignment,
@@ -1068,18 +1159,54 @@ struct TeachingWorkspaceView: View {
             ?? assignment.programName
     }
 
+    /// Round 16: the year range follows the available years until the user
+    /// narrows it, so assignments in new years are not hidden; a narrowed
+    /// range is kept, and nothing is clamped while no assignment has a year.
     private func resetYearBoundsIfNeeded() {
-        let bounds = yearBounds
-        if minimumYearValue == 0 && maximumYearValue == 0 {
-            minimumYearValue = bounds.lowerBound
-            maximumYearValue = bounds.upperBound
+        let bounds = availableYearBounds
+        guard let bounds else {
+            if effectiveYearRange.follows {
+                minimumYearValue = yearBounds.lowerBound
+                maximumYearValue = yearBounds.upperBound
+            }
             return
         }
-        minimumYearValue = max(minimumYearValue, bounds.lowerBound)
-        maximumYearValue = min(maximumYearValue, bounds.upperBound)
+        let next = effectiveYearRange.reconciled(to: bounds)
+        minimumYearValue = next.lower
+        maximumYearValue = next.upper
+        yearRangeFollowsAvailable = next.follows
     }
 
-    private func rebuildFilteredAssignmentRows() {
+    private func resetYearRangeToAll() {
+        yearRangeFollowsAvailable = true
+        minimumYearValue = yearBounds.lowerBound
+        maximumYearValue = yearBounds.upperBound
+    }
+
+    private func setUserYearRange(lower: Double, upper: Double) {
+        minimumYearValue = lower
+        maximumYearValue = upper
+        yearRangeFollowsAvailable = FollowingYearRange.userSet(lower: lower, upper: upper, bounds: availableYearBounds).follows
+    }
+
+    private var minimumYearSliderBinding: Binding<Double> {
+        Binding(
+            get: { minimumYearValue },
+            set: { setUserYearRange(lower: $0, upper: maximumYearValue) }
+        )
+    }
+
+    private var maximumYearSliderBinding: Binding<Double> {
+        Binding(
+            get: { maximumYearValue },
+            set: { setUserYearRange(lower: minimumYearValue, upper: $0) }
+        )
+    }
+
+    /// `reconcileSelection` is true after the user changed the search, year,
+    /// type or status filter: a selected assignment those filters now hide is
+    /// replaced by the first visible row. Data changes do not move it.
+    private func rebuildFilteredAssignmentRows(reconcileSelection: Bool = false) {
         filteredAssignmentRows = assignmentRows
             .filter { row in
                 matchesStructureFilter(row.assignment)
@@ -1089,6 +1216,55 @@ struct TeachingWorkspaceView: View {
                     && matchesStatusFilter(row)
             }
             .sorted(using: sortOrder)
+        guard reconcileSelection,
+              let selectedAssignmentID,
+              assignmentRows.contains(where: { $0.id == selectedAssignmentID }) else { return }
+        let next = ListSelectionPolicy.selectionAfterFilterChange(
+            selected: selectedAssignmentID,
+            visibleIDs: filteredAssignmentRows.map(\.id)
+        )
+        if next != selectedAssignmentID {
+            setSelectedAssignmentID(next, resignFirstResponder: false)
+        }
+    }
+
+    /// Direct navigation and new records: clears only the filters that hide
+    /// this assignment. A hiding structure filter is moved to its branch.
+    private func clearFiltersHiding(assignmentID: String) {
+        guard let assignment = store.teachingAssignments.first(where: { $0.id == assignmentID }) else { return }
+        let row = buildAssignmentRow(for: assignment)
+        var changed = false
+        if !matchesSearchFilter(row) {
+            searchText = ""
+            changed = true
+        }
+        if !matchesYearFilter(row) {
+            resetYearRangeToAll()
+            changed = true
+        }
+        if !matchesKindFilter(row) {
+            selectedKindFilters.removeAll()
+            changed = true
+        }
+        if !matchesStatusFilter(row) {
+            selectedStatusFilters.removeAll()
+            changed = true
+        }
+        if !matchesStructureFilter(assignment) {
+            if let context = context(for: assignment) {
+                selectedInstitutionBranches = Set([store.teachingInstitutionKey(for: context)].compactMap(\.trimmedOrNil))
+                selectedProgramBranches = Set([context.localizedProgram(language: language)].compactMap(\.trimmedOrNil))
+                selectedContextBranchIDs = [context.id]
+            } else {
+                selectedInstitutionBranches.removeAll()
+                selectedProgramBranches.removeAll()
+                selectedContextBranchIDs.removeAll()
+            }
+            changed = true
+        }
+        if changed {
+            rebuildFilteredAssignmentRows()
+        }
     }
 
     private func matchesStructureFilter(_ assignment: TeachingAssignment) -> Bool {
@@ -1101,7 +1277,7 @@ struct TeachingWorkspaceView: View {
             return false
         }
         if !selectedProgramBranches.isEmpty,
-           !selectedProgramBranches.contains(context.localizedProgram(language: language)) {
+           !matchesSelectedProgram(context) {
             return false
         }
         if !selectedContextBranchIDs.isEmpty,
@@ -1127,7 +1303,7 @@ struct TeachingWorkspaceView: View {
     private func scheduleFilteredAssignmentRowsRebuild() {
         assignmentFilterRebuildTask?.cancel()
         let task = DispatchWorkItem {
-            rebuildFilteredAssignmentRows()
+            rebuildFilteredAssignmentRows(reconcileSelection: true)
         }
         assignmentFilterRebuildTask = task
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: task)
@@ -1164,10 +1340,15 @@ struct TeachingWorkspaceView: View {
 
             filterBar
 
+            teachingFilteredListBanner
+
             teachingAssignmentList
 
             HStack(spacing: 10) {
-                AppTableHeaderText(text: language.text("Total hours", "Totala timmar"))
+                // The sum covers the visible rows only; say so while filtered.
+                AppTableHeaderText(text: hasActiveFilters
+                    ? language.text("Total hours (filtered)", "Totala timmar (filtrerat)")
+                    : language.text("Total hours", "Totala timmar"))
                 Spacer()
             Text("\(formattedHours(totalDisplayedHours))")
                     .appTypography(.tableHeader)
@@ -1295,8 +1476,8 @@ struct TeachingWorkspaceView: View {
                 HStack(spacing: 12) {
                     AppFilterRangeControl(
                         title: yearRangeText,
-                        lowerValue: $minimumYearValue,
-                        upperValue: $maximumYearValue,
+                        lowerValue: minimumYearSliderBinding,
+                        upperValue: maximumYearSliderBinding,
                         bounds: yearBounds,
                         unavailableText: language.text("Only one year available", "Endast ett år tillgängligt")
                     )
@@ -1308,24 +1489,16 @@ struct TeachingWorkspaceView: View {
                         toggleCurrentTeachingYearFilter()
                     }
 
-                    if minimumYearValue != yearBounds.lowerBound || maximumYearValue != yearBounds.upperBound {
+                    if isYearRangeNarrowed {
                         FilterClearButton {
-                            minimumYearValue = yearBounds.lowerBound
-                            maximumYearValue = yearBounds.upperBound
+                            resetYearRangeToAll()
                         }
                     }
                     Spacer()
                 }
 
                 AppFilterClearAllRow(isVisible: hasActiveFilters) {
-                    searchText = ""
-                    minimumYearValue = yearBounds.lowerBound
-                    maximumYearValue = yearBounds.upperBound
-                    selectedKindFilters.removeAll()
-                    selectedStatusFilters.removeAll()
-                    selectedInstitutionBranches.removeAll()
-                    selectedProgramBranches.removeAll()
-                    selectedContextBranchIDs.removeAll()
+                    clearAllTeachingFilters()
                 }
             }
         }
@@ -1658,10 +1831,9 @@ struct TeachingWorkspaceView: View {
     }
 
     private func matchesYearFilter(_ row: TeachingAssignmentDirectoryRow) -> Bool {
-        let lower = Int(min(minimumYearValue, maximumYearValue))
-        let upper = Int(max(minimumYearValue, maximumYearValue))
-        guard !row.yearValues.isEmpty else { return true }
-        return row.yearValues.contains { $0 >= lower && $0 <= upper }
+        // Assignments without a year are hidden only while the user has
+        // narrowed the range.
+        effectiveYearRange.matches(anyOf: row.yearValues)
     }
 
     private func matchesKindFilter(_ row: TeachingAssignmentDirectoryRow) -> Bool {
@@ -1685,14 +1857,12 @@ struct TeachingWorkspaceView: View {
 
     private func toggleCurrentTeachingYearFilter() {
         if isCurrentTeachingYearFilterActive {
-            minimumYearValue = yearBounds.lowerBound
-            maximumYearValue = yearBounds.upperBound
+            resetYearRangeToAll()
             return
         }
         let current = Double(currentTeachingYear)
         let clamped = min(max(current, yearBounds.lowerBound), yearBounds.upperBound)
-        minimumYearValue = clamped
-        maximumYearValue = clamped
+        setUserYearRange(lower: clamped, upper: clamped)
     }
 
     private func yearValues(for assignment: TeachingAssignment) -> [Int] {
@@ -1737,14 +1907,77 @@ struct TeachingWorkspaceView: View {
         guard !store.shouldRetainListFilters(for: .teaching) else { return }
         guard hasActiveFilters else { return }
         searchText = ""
-        minimumYearValue = yearBounds.lowerBound
-        maximumYearValue = yearBounds.upperBound
+        resetYearRangeToAll()
         selectedKindFilters.removeAll()
         selectedStatusFilters.removeAll()
         selectedInstitutionBranches.removeAll()
         selectedProgramBranches.removeAll()
         selectedContextBranchIDs.removeAll()
         needsFilterRebuildWhenActive = true
+    }
+
+    private func clearAllTeachingFilters() {
+        searchText = ""
+        resetYearRangeToAll()
+        selectedKindFilters.removeAll()
+        selectedStatusFilters.removeAll()
+        selectedInstitutionBranches.removeAll()
+        selectedProgramBranches.removeAll()
+        selectedContextBranchIDs.removeAll()
+        RestoredListFilters.forget(workspace: "Teaching")
+    }
+
+    private var activeTeachingFilterDescriptions: [String] {
+        var parts: [String] = []
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            parts.append(search)
+        }
+        if let statuses = ListFilterLabels.chips(
+            [TeachingAssignmentStatusKind.ongoing, .completed, .none]
+                .filter { selectedStatusFilters.contains($0) }
+                .map(statusFilterLabel(for:))
+        ) {
+            parts.append(statuses)
+        }
+        if let kinds = ListFilterLabels.chips(
+            TeachingAssignmentKind.allCases
+                .filter { selectedKindFilters.contains($0) }
+                .map { $0.displayName(language: language) }
+        ) {
+            parts.append(kinds)
+        }
+        if let institutions = ListFilterLabels.chips(selectedInstitutionBranches.sorted()) {
+            parts.append(institutions)
+        }
+        if let programs = ListFilterLabels.chips(selectedProgramBranches.sorted()) {
+            parts.append(programs)
+        }
+        if let contexts = ListFilterLabels.chips(selectedContextBranchIDs.sorted().map(contextFilterLabel(for:))) {
+            parts.append(contexts)
+        }
+        if isYearRangeNarrowed {
+            parts.append(ListFilterLabels.yearRange(
+                title: language.text("Year", "År"),
+                lower: minimumYearValue,
+                upper: maximumYearValue
+            ))
+        }
+        return parts
+    }
+
+    /// "Filtrerad lista: 12 av 116 visas" above the list while a filter is on.
+    @ViewBuilder
+    private var teachingFilteredListBanner: some View {
+        if hasActiveFilters {
+            AppFilteredListBanner(
+                displayedCount: filteredAssignmentRows.count,
+                totalCount: assignmentRows.count,
+                activeFilters: activeTeachingFilterDescriptions,
+                restoredFromLastSession: RestoredListFilters.wasRestored(workspace: TeachingAssignmentFilterPersistence.restoredMarkerKey),
+                language: language,
+                clearAction: clearAllTeachingFilters
+            )
+        }
     }
 
     private func statusFilterLabel(for status: TeachingAssignmentStatusKind) -> String {
@@ -1793,6 +2026,8 @@ struct TeachingWorkspaceView: View {
                 store.saveTeachingAssignment(updated)
             }
         }
+        // A new assignment must be visible: clear the filters that hide it.
+        clearFiltersHiding(assignmentID: id)
         setSelectedAssignmentID(id, armLock: true)
     }
 
@@ -1815,7 +2050,9 @@ struct TeachingWorkspaceView: View {
 
     private func applyTeachingRouteSelection(_ recordID: String) {
         if store.teachingAssignments.contains(where: { $0.id == recordID }) {
-            setSelectedAssignmentID(selection(for: recordID) ?? recordID, armLock: true)
+            // Round 16: only the filters that hide the target are reset.
+            clearFiltersHiding(assignmentID: recordID)
+            setSelectedAssignmentID(recordID, armLock: true)
             return
         }
         guard let course = store.teachingCourses.first(where: { $0.id == recordID }) else {

@@ -546,6 +546,20 @@ struct DataMaintenanceWorkspaceView: View {
                 TextField(language.text("Filter", "Filtrera"), text: $queryDraft)
                     .appTextInputChrome()
                     .frame(width: 240)
+                    .overlay(alignment: .trailing) {
+                        if !queryDraft.isEmpty {
+                            Button {
+                                clearDataQualitySearch()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.trailing, 6)
+                            .help(language.text("Clear search", "Rensa sökningen"))
+                            .accessibilityLabel(language.text("Clear search", "Rensa sökningen"))
+                        }
+                    }
                 AppMenuSelectionField(
                     selection: $category,
                     options: DataQualityCategory.allCases.map { ($0.title(language: language), $0) },
@@ -600,6 +614,9 @@ struct DataMaintenanceWorkspaceView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    if isDataQualityFilterActive {
+                        dataQualityFilterBanner(language: language)
+                    }
                     ForEach(DataQualitySectionKey.allCases) { key in
                         collapsibleSection(
                             key,
@@ -634,6 +651,12 @@ struct DataMaintenanceWorkspaceView: View {
         }
         .onChange(of: queryDraft) { _, value in
             scheduleDataQualityQueryUpdate(value)
+        }
+        // The archive selection follows what is visible: a search, category
+        // change, restore or deletion drops hidden ids from the selection, also
+        // while the archive section is collapsed.
+        .onChange(of: archivedItems.map(\.id)) { _, ids in
+            selectedArchivedIDs.formIntersection(ids)
         }
         .onChange(of: selectedIssueFilters) { _, _ in
             refreshCachedDiagnosticsIfActive(reason: "filter-change", force: false)
@@ -891,7 +914,85 @@ struct DataMaintenanceWorkspaceView: View {
         let tone: DataQualityStatusTone
     }
 
+    /// A search or a category narrows the lists below.
+    private var isDataQualityFilterActive: Bool {
+        query.trimmedOrNil != nil || category != .all
+    }
+
+    private func clearDataQualitySearch() {
+        pendingQueryUpdateTask?.cancel()
+        pendingQueryUpdateTask = nil
+        queryDraft = ""
+        query = ""
+    }
+
+    private func clearDataQualityFilters() {
+        clearDataQualitySearch()
+        category = .all
+        RestoredListFilters.forget(workspace: "DataQuality")
+    }
+
+    /// Shown and unfiltered counts of the sections the search and category
+    /// narrow; nil for sections they do not affect.
+    private func filteredSectionCounts(_ key: DataQualitySectionKey) -> (shown: Int, total: Int)? {
+        switch key {
+        case .structure:
+            return (structureDiagnostics.count, cachedStructureDiagnostics.count)
+        case .integrity:
+            let total = cachedIntegrityIssues.filter { showHiddenWarnings || !store.isDataQualityWarningHidden($0) }.count
+            return (integrityIssues.count, total)
+        case .missingFields:
+            let total = Set(
+                cachedMissingIssues
+                    .filter { showHiddenWarnings || !store.isDataQualityWarningHidden($0) }
+                    .map(\.recordID)
+            ).count
+            return (Set(missingIssues.map(\.recordID)).count, total)
+        case .duplicates:
+            let total = cachedDuplicateIssues.filter { showHiddenWarnings || !store.isDataQualityWarningHidden($0) }.count
+            return (duplicateIssues.count, total)
+        case .archive:
+            return (archivedItems.count, cachedArchivedItems.count)
+        case .revisions:
+            return (revisionHistory.count, cachedRevisionHistory.count)
+        case .translations, .nameLinks, .doctoralActivityLinks:
+            return nil
+        }
+    }
+
+    @ViewBuilder
+    private func dataQualityFilterBanner(language: AppLanguage) -> some View {
+        let counts = DataQualitySectionKey.allCases.compactMap { filteredSectionCounts($0) }
+        let activeFilters = [
+            ListFilterLabels.search(query, language: language),
+            category == .all ? nil : category.title(language: language),
+        ].compactMap { $0 }
+        let restored = (query.trimmedOrNil != nil && RestoredListFilters.wasRestored(workspace: "DataQuality.Filter.Query"))
+            || (category != .all && RestoredListFilters.wasRestored(workspace: "DataQuality.Filter.Category"))
+        AppFilteredListBanner(
+            displayedCount: counts.reduce(0) { $0 + $1.shown },
+            totalCount: counts.reduce(0) { $0 + $1.total },
+            activeFilters: activeFilters,
+            restoredFromLastSession: restored,
+            language: language,
+            clearAction: clearDataQualityFilters
+        )
+    }
+
     private func sectionSummary(_ key: DataQualitySectionKey, language: AppLanguage) -> DataQualitySectionSummary {
+        // While a search or category is on, a section never reports a green
+        // "No issues": it says how much of it is shown ("3 av 12 (filtrerat)").
+        if isDataQualityFilterActive,
+           let counts = filteredSectionCounts(key),
+           counts.total > 0 {
+            return DataQualitySectionSummary(
+                text: language.text(
+                    "\(counts.shown) of \(counts.total) (filtered)",
+                    "\(counts.shown) av \(counts.total) (filtrerat)"
+                ),
+                tone: filteredSectionTone(key, shownCount: counts.shown)
+            )
+        }
         switch key {
         case .structure:
             let total = structureDiagnostics.count
@@ -951,6 +1052,20 @@ struct DataMaintenanceWorkspaceView: View {
                 text: language.text("\(revisionHistory.count) changes", "\(revisionHistory.count) ändringar"),
                 tone: .info
             )
+        }
+    }
+
+    private func filteredSectionTone(_ key: DataQualitySectionKey, shownCount: Int) -> DataQualityStatusTone {
+        guard shownCount > 0 else { return .info }
+        switch key {
+        case .integrity:
+            return .critical
+        case .structure:
+            return structureDiagnostics.contains { $0.tone != .ok } ? .critical : .info
+        case .missingFields, .duplicates:
+            return .warning
+        case .archive, .revisions, .translations, .nameLinks, .doctoralActivityLinks:
+            return .info
         }
     }
 
@@ -1032,10 +1147,6 @@ struct DataMaintenanceWorkspaceView: View {
                     archiveSelectionToolbar(language: language)
                 }
                 issuesCard(archivedItems.map(DataQualityUnifiedIssue.archive), language: language)
-            }
-            // Restores and deletions must not leave ghost ids in the selection.
-            .onChange(of: archivedItems.map(\.id)) { _, ids in
-                selectedArchivedIDs.formIntersection(ids)
             }
         case .revisions:
             issuesCard(revisionHistory.map(DataQualityUnifiedIssue.revision), language: language)
@@ -1939,34 +2050,42 @@ struct DataMaintenanceWorkspaceView: View {
 
     @ViewBuilder
     private func archiveSelectionToolbar(language: AppLanguage) -> some View {
+        // Only what is selected and visible right now counts: a record hidden
+        // by the search or category is never deleted with "Delete selected".
+        let visibleIDs = archivedItems.map(\.id)
+        let deletableIDs = ArchiveSelectionPolicy.deletableIDs(selected: selectedArchivedIDs, visibleIDs: visibleIDs)
+        let allSelected = ArchiveSelectionPolicy.allVisibleSelected(selected: selectedArchivedIDs, visibleIDs: visibleIDs)
         HStack(spacing: 12) {
             Button(
-                selectedArchivedIDs.count == archivedItems.count
+                allSelected
                     ? language.text("Deselect all", "Avmarkera alla")
                     : language.text("Select all", "Välj alla")
             ) {
-                if selectedArchivedIDs.count == archivedItems.count {
+                if allSelected {
                     selectedArchivedIDs.removeAll()
                 } else {
-                    selectedArchivedIDs = Set(archivedItems.map(\.id))
+                    selectedArchivedIDs = Set(visibleIDs)
                 }
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            if !selectedArchivedIDs.isEmpty {
-                Text(language.text("\(selectedArchivedIDs.count) selected", "\(selectedArchivedIDs.count) valda"))
+            if !deletableIDs.isEmpty {
+                Text(language.text("\(deletableIDs.count) selected", "\(deletableIDs.count) valda"))
                     .appTypography(.secondary)
                     .foregroundStyle(.secondary)
                 DeleteActionButton(
                     title: language.text("Delete selected", "Ta bort valda"),
                     confirmationTitle: language.text(
-                        "Permanently delete \(selectedArchivedIDs.count) archived records?",
-                        "Ta bort \(selectedArchivedIDs.count) arkiverade poster permanent?"
+                        "Permanently delete \(deletableIDs.count) archived records?",
+                        "Ta bort \(deletableIDs.count) arkiverade poster permanent?"
                     ),
                     cancelTitle: language.text("Cancel", "Avbryt")
                 ) {
-                    store.permanentlyDeleteArchivedRecords(ids: selectedArchivedIDs)
-                    selectedArchivedIDs.removeAll()
+                    // Exactly the records the dialog counted, if still visible.
+                    let idsToDelete = deletableIDs.intersection(archivedItems.map(\.id))
+                    guard !idsToDelete.isEmpty else { return }
+                    store.permanentlyDeleteArchivedRecords(ids: idsToDelete)
+                    selectedArchivedIDs.subtract(idsToDelete)
                 }
             }
             Spacer()
@@ -3172,15 +3291,16 @@ private struct NameLinkResearcherPicker: View {
     }
 
     private var matchingOptions: [Option] {
-        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Same search rules as the lists: accents ignored ("Ostergren" finds
+        // "Östergren"), several words must all match, "-word" excludes.
+        let searchQuery = SearchFilterQuery(raw: query)
         var result: [Option] = []
         for author in store.publicationAuthors {
             let title = author.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !title.isEmpty else { continue }
             let variants = author.nameVariants
-            if !needle.isEmpty,
-               !title.localizedCaseInsensitiveContains(needle),
-               !variants.contains(where: { $0.localizedCaseInsensitiveContains(needle) }) {
+            if !searchQuery.isEmpty,
+               !searchQuery.matches(haystack: ([title] + variants).joined(separator: " ")) {
                 continue
             }
             result.append(Option(id: author.id, title: title, detail: variants.prefix(3).joined(separator: ", ")))

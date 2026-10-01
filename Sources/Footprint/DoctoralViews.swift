@@ -31,6 +31,10 @@ struct DoctoralCandidatesWorkspaceView: View {
     @WorkspaceFilterState("DoctoralCandidates.Filter.MaximumAdmissionYear") private var maximumAdmissionYearValue: Double = 0
     @WorkspaceFilterState("DoctoralCandidates.Filter.MinimumDissertationYear") private var minimumDissertationYearValue: Double = 0
     @WorkspaceFilterState("DoctoralCandidates.Filter.MaximumDissertationYear") private var maximumDissertationYearValue: Double = 0
+    // Round 16: the year ranges follow the available years until the user
+    // narrows them (nil = saved by an older version, decided at first use).
+    @WorkspaceFilterState("DoctoralCandidates.Filter.AdmissionYearFollowsRange") private var admissionYearFollowsRange: Bool? = nil
+    @WorkspaceFilterState("DoctoralCandidates.Filter.DissertationYearFollowsRange") private var dissertationYearFollowsRange: Bool? = nil
     @State private var sortHistory = ListSortPersistence.load(
         defaultsKey: "DoctoralCandidatesListSort",
         defaultValue: [
@@ -53,19 +57,24 @@ struct DoctoralCandidatesWorkspaceView: View {
     }
 
     private var searchableCandidates: [DoctoralCandidateRecord] {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return store.doctoralCandidates }
-        let normalizedQuery = PublicationDerivation.normalizedName(query)
-        return store.doctoralCandidates.filter { candidate in
-            let parts = [
-                candidate.candidateName,
-                candidate.institution,
-                candidate.supervisors.map(\.name).joined(separator: " "),
-                candidate.notes,
-            ]
-                .joined(separator: " ")
-            return PublicationDerivation.normalizedName(parts).contains(normalizedQuery)
-        }
+        let searchQuery = SearchFilterQuery(raw: searchText)
+        guard !searchQuery.isEmpty else { return store.doctoralCandidates }
+        return store.doctoralCandidates.filter { matchesDoctoralSearch($0, query: searchQuery) }
+    }
+
+    /// Same search rules as the other lists: accents ignored, every word must
+    /// match, "-word" excludes.
+    private func matchesDoctoralSearch(_ candidate: DoctoralCandidateRecord, query: SearchFilterQuery) -> Bool {
+        guard !query.isEmpty else { return true }
+        let parts = [
+            candidate.candidateName,
+            candidate.doctoralProjectName,
+            candidate.institution,
+            candidate.supervisors.map(\.name).joined(separator: " "),
+            candidate.notes,
+        ]
+            .joined(separator: " ")
+        return query.matches(haystack: parts)
     }
 
     private var filteredCandidates: [DoctoralCandidateRecord] {
@@ -74,6 +83,28 @@ struct DoctoralCandidatesWorkspaceView: View {
                 && matchesDoctoralActiveFilter(candidate)
                 && matchesDoctoralYearFilters(candidate)
         }
+    }
+
+    /// Changes when the user changes a filter (not when data changes).
+    private var doctoralFilterSignature: String {
+        [
+            searchText,
+            showsMainSupervisorCandidates ? "main" : "",
+            showsCoSupervisorCandidates ? "co" : "",
+            showsOnlyActiveCandidates ? "active" : "",
+            admissionYearRange.follows ? "a-all" : "a-\(admissionYearRange.lower)-\(admissionYearRange.upper)",
+            dissertationYearRange.follows ? "d-all" : "d-\(dissertationYearRange.lower)-\(dissertationYearRange.upper)",
+        ].joined(separator: "|")
+    }
+
+    /// Changes when the years in the data change.
+    private var doctoralYearBoundsSignature: String {
+        [admissionYearBoundsIfAny, dissertationYearBoundsIfAny]
+            .map { (bounds: ClosedRange<Double>?) -> String in
+                guard let bounds else { return "none" }
+                return "\(bounds.lowerBound)-\(bounds.upperBound)"
+            }
+            .joined(separator: "|")
     }
 
     private var selectedCandidate: DoctoralCandidateRecord? {
@@ -93,8 +124,36 @@ struct DoctoralCandidatesWorkspaceView: View {
         doctoralYearBounds(for: store.doctoralCandidates.compactMap { doctoralYearValue($0.admissionDate) })
     }
 
+    /// Dissertation year = actual date when there is one, else planned date.
     private var dissertationYearBounds: ClosedRange<Double> {
-        doctoralYearBounds(for: store.doctoralCandidates.compactMap { doctoralYearValue($0.plannedDisputationDate) })
+        doctoralYearBounds(for: store.doctoralCandidates.compactMap { doctoralYearValue($0.effectiveDisputationDate) })
+    }
+
+    /// Nil when no candidate has such a date (then the range is not clamped).
+    private var admissionYearBoundsIfAny: ClosedRange<Double>? {
+        FollowingYearRange.bounds(for: store.doctoralCandidates.compactMap { doctoralYearValue($0.admissionDate) })
+    }
+
+    private var dissertationYearBoundsIfAny: ClosedRange<Double>? {
+        FollowingYearRange.bounds(for: store.doctoralCandidates.compactMap { doctoralYearValue($0.effectiveDisputationDate) })
+    }
+
+    private var admissionYearRange: FollowingYearRange {
+        FollowingYearRange(
+            lower: minimumAdmissionYearValue,
+            upper: maximumAdmissionYearValue,
+            follows: admissionYearFollowsRange
+                ?? FollowingYearRange.legacyFollows(lower: minimumAdmissionYearValue, upper: maximumAdmissionYearValue, bounds: admissionYearBoundsIfAny)
+        )
+    }
+
+    private var dissertationYearRange: FollowingYearRange {
+        FollowingYearRange(
+            lower: minimumDissertationYearValue,
+            upper: maximumDissertationYearValue,
+            follows: dissertationYearFollowsRange
+                ?? FollowingYearRange.legacyFollows(lower: minimumDissertationYearValue, upper: maximumDissertationYearValue, bounds: dissertationYearBoundsIfAny)
+        )
     }
 
     private var hasActiveDoctoralFilters: Bool {
@@ -102,10 +161,8 @@ struct DoctoralCandidatesWorkspaceView: View {
             || showsMainSupervisorCandidates
             || showsCoSupervisorCandidates
             || showsOnlyActiveCandidates
-            || minimumAdmissionYearValue != admissionYearBounds.lowerBound
-            || maximumAdmissionYearValue != admissionYearBounds.upperBound
-            || minimumDissertationYearValue != dissertationYearBounds.lowerBound
-            || maximumDissertationYearValue != dissertationYearBounds.upperBound
+            || admissionYearRange.isNarrowed
+            || dissertationYearRange.isNarrowed
     }
 
     private func doctoralCandidateSortOrder(_ lhs: DoctoralCandidateRecord, _ rhs: DoctoralCandidateRecord) -> Bool {
@@ -124,7 +181,7 @@ struct DoctoralCandidatesWorkspaceView: View {
             case .admissionYear:
                 comparison = doctoralYearText(lhs.admissionDate).localizedStandardCompare(doctoralYearText(rhs.admissionDate))
             case .dissertationYear:
-                comparison = doctoralYearText(lhs.plannedDisputationDate).localizedStandardCompare(doctoralYearText(rhs.plannedDisputationDate))
+                comparison = doctoralYearText(lhs.effectiveDisputationDate).localizedStandardCompare(doctoralYearText(rhs.effectiveDisputationDate))
             case .role:
                 let leftRank = supervisorBucketSortRank(supervisorBucket(for: lhs))
                 let rightRank = supervisorBucketSortRank(supervisorBucket(for: rhs))
@@ -145,11 +202,12 @@ struct DoctoralCandidatesWorkspaceView: View {
                         title: language.text("Doctoral candidates", "Doktorander"),
                         actionTitle: language.text("New doctoral candidate", "Ny doktorand")
                     ) {
-                        let id = store.addDoctoralCandidate()
-                        setSelectedCandidateID(id)
+                        createDoctoralCandidateRevealingIt()
                     }
 
                     doctoralFilters(language: language)
+
+                    doctoralFilteredListBanner(language: language)
 
                     doctoralList(language: language)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -187,6 +245,7 @@ struct DoctoralCandidatesWorkspaceView: View {
         .onAppear {
             resetDoctoralYearBoundsIfNeeded()
             if let route = store.route, route.destination == workspaceDestination {
+                revealCandidateForDirectNavigation(route.recordID)
                 setSelectedCandidateID(route.recordID)
                 store.consumeRoute()
             } else if selectedCandidateID == nil {
@@ -200,8 +259,21 @@ struct DoctoralCandidatesWorkspaceView: View {
         }
         .onChange(of: newRecordTrigger) { _, _ in
             guard isActive else { return }
-            let id = store.addDoctoralCandidate()
-            setSelectedCandidateID(id)
+            createDoctoralCandidateRevealingIt()
+        }
+        // A filter change that hides the selected candidate moves the
+        // selection to the first visible row (data changes do not).
+        .onChange(of: doctoralFilterSignature) { _, _ in
+            let next = ListSelectionPolicy.selectionAfterFilterChange(
+                selected: selectedCandidateID,
+                visibleIDs: displayCandidates.map(\.id)
+            )
+            if next != selectedCandidateID {
+                setSelectedCandidateID(next)
+            }
+        }
+        .onChange(of: doctoralYearBoundsSignature) { _, _ in
+            resetDoctoralYearBoundsIfNeeded()
         }
         .onReceive(
             store.$doctoralCandidates.map { $0.map(\.id) }.removeDuplicates().dropFirst()
@@ -221,12 +293,14 @@ struct DoctoralCandidatesWorkspaceView: View {
         }
         .onChange(of: store.route) { _, route in
             guard isActive, let route, route.destination == workspaceDestination else { return }
+            revealCandidateForDirectNavigation(route.recordID)
             setSelectedCandidateID(route.recordID)
             store.consumeRoute()
         }
         .onChange(of: isActive) { _, active in
             if active {
                 if let route = store.route, route.destination == workspaceDestination {
+                    revealCandidateForDirectNavigation(route.recordID)
                     setSelectedCandidateID(route.recordID)
                     store.consumeRoute()
                 }
@@ -297,29 +371,24 @@ struct DoctoralCandidatesWorkspaceView: View {
                 }
 
                 AppFilterRow(
-                    showsClearButton: minimumAdmissionYearValue != admissionYearBounds.lowerBound
-                        || maximumAdmissionYearValue != admissionYearBounds.upperBound
-                        || minimumDissertationYearValue != dissertationYearBounds.lowerBound
-                        || maximumDissertationYearValue != dissertationYearBounds.upperBound,
+                    showsClearButton: admissionYearRange.isNarrowed || dissertationYearRange.isNarrowed,
                     clearAction: {
-                        minimumAdmissionYearValue = admissionYearBounds.lowerBound
-                        maximumAdmissionYearValue = admissionYearBounds.upperBound
-                        minimumDissertationYearValue = dissertationYearBounds.lowerBound
-                        maximumDissertationYearValue = dissertationYearBounds.upperBound
+                        resetAdmissionYearRangeToAll()
+                        resetDissertationYearRangeToAll()
                     }
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
                         doctoralYearSlider(
                             title: language.text("Admission year", "Antagningsår"),
-                            lower: $minimumAdmissionYearValue,
-                            upper: $maximumAdmissionYearValue,
+                            lower: admissionLowerYearBinding,
+                            upper: admissionUpperYearBinding,
                             bounds: admissionYearBounds,
                             language: language
                         )
                         doctoralYearSlider(
                             title: language.text("Dissertation year", "Disputationsår"),
-                            lower: $minimumDissertationYearValue,
-                            upper: $maximumDissertationYearValue,
+                            lower: dissertationLowerYearBinding,
+                            upper: dissertationUpperYearBinding,
                             bounds: dissertationYearBounds,
                             language: language
                         )
@@ -327,14 +396,7 @@ struct DoctoralCandidatesWorkspaceView: View {
                 }
 
                 AppFilterClearAllRow(isVisible: hasActiveDoctoralFilters) {
-                    searchText = ""
-                    showsMainSupervisorCandidates = false
-                    showsCoSupervisorCandidates = false
-                    showsOnlyActiveCandidates = false
-                    minimumAdmissionYearValue = admissionYearBounds.lowerBound
-                    maximumAdmissionYearValue = admissionYearBounds.upperBound
-                    minimumDissertationYearValue = dissertationYearBounds.lowerBound
-                    maximumDissertationYearValue = dissertationYearBounds.upperBound
+                    clearAllDoctoralFilters()
                 }
             }
         }
@@ -367,23 +429,188 @@ struct DoctoralCandidatesWorkspaceView: View {
         return lower...upper
     }
 
+    /// Round 16: a range that follows the available years widens with new
+    /// years; a narrowed range is kept (clamped into the years that exist);
+    /// nothing is clamped while no candidate has such a date.
     private func resetDoctoralYearBoundsIfNeeded() {
-        let admissionBounds = admissionYearBounds
-        if minimumAdmissionYearValue == 0 && maximumAdmissionYearValue == 0 {
-            minimumAdmissionYearValue = admissionBounds.lowerBound
-            maximumAdmissionYearValue = admissionBounds.upperBound
-        } else {
-            minimumAdmissionYearValue = min(max(minimumAdmissionYearValue, admissionBounds.lowerBound), admissionBounds.upperBound)
-            maximumAdmissionYearValue = min(max(maximumAdmissionYearValue, admissionBounds.lowerBound), admissionBounds.upperBound)
+        let admission = reconciledYearRange(admissionYearRange, bounds: admissionYearBoundsIfAny, fallback: admissionYearBounds)
+        if minimumAdmissionYearValue != admission.lower { minimumAdmissionYearValue = admission.lower }
+        if maximumAdmissionYearValue != admission.upper { maximumAdmissionYearValue = admission.upper }
+        if admissionYearBoundsIfAny != nil, admissionYearFollowsRange != admission.follows {
+            admissionYearFollowsRange = admission.follows
         }
 
-        let dissertationBounds = dissertationYearBounds
-        if minimumDissertationYearValue == 0 && maximumDissertationYearValue == 0 {
-            minimumDissertationYearValue = dissertationBounds.lowerBound
-            maximumDissertationYearValue = dissertationBounds.upperBound
-        } else {
-            minimumDissertationYearValue = min(max(minimumDissertationYearValue, dissertationBounds.lowerBound), dissertationBounds.upperBound)
-            maximumDissertationYearValue = min(max(maximumDissertationYearValue, dissertationBounds.lowerBound), dissertationBounds.upperBound)
+        let dissertation = reconciledYearRange(dissertationYearRange, bounds: dissertationYearBoundsIfAny, fallback: dissertationYearBounds)
+        if minimumDissertationYearValue != dissertation.lower { minimumDissertationYearValue = dissertation.lower }
+        if maximumDissertationYearValue != dissertation.upper { maximumDissertationYearValue = dissertation.upper }
+        if dissertationYearBoundsIfAny != nil, dissertationYearFollowsRange != dissertation.follows {
+            dissertationYearFollowsRange = dissertation.follows
+        }
+    }
+
+    private func reconciledYearRange(
+        _ range: FollowingYearRange,
+        bounds: ClosedRange<Double>?,
+        fallback: ClosedRange<Double>
+    ) -> FollowingYearRange {
+        guard bounds != nil else {
+            // No dates at all: a following range just shows the current year.
+            guard range.follows else { return range }
+            return FollowingYearRange(lower: fallback.lowerBound, upper: fallback.upperBound, follows: true)
+        }
+        return range.reconciled(to: bounds)
+    }
+
+    private var admissionLowerYearBinding: Binding<Double> {
+        Binding(
+            get: { minimumAdmissionYearValue },
+            set: { setUserAdmissionYearRange(lower: $0, upper: maximumAdmissionYearValue) }
+        )
+    }
+
+    private var admissionUpperYearBinding: Binding<Double> {
+        Binding(
+            get: { maximumAdmissionYearValue },
+            set: { setUserAdmissionYearRange(lower: minimumAdmissionYearValue, upper: $0) }
+        )
+    }
+
+    private var dissertationLowerYearBinding: Binding<Double> {
+        Binding(
+            get: { minimumDissertationYearValue },
+            set: { setUserDissertationYearRange(lower: $0, upper: maximumDissertationYearValue) }
+        )
+    }
+
+    private var dissertationUpperYearBinding: Binding<Double> {
+        Binding(
+            get: { maximumDissertationYearValue },
+            set: { setUserDissertationYearRange(lower: minimumDissertationYearValue, upper: $0) }
+        )
+    }
+
+    private func setUserAdmissionYearRange(lower: Double, upper: Double) {
+        minimumAdmissionYearValue = lower
+        maximumAdmissionYearValue = upper
+        admissionYearFollowsRange = FollowingYearRange.userSet(lower: lower, upper: upper, bounds: admissionYearBoundsIfAny).follows
+    }
+
+    private func setUserDissertationYearRange(lower: Double, upper: Double) {
+        minimumDissertationYearValue = lower
+        maximumDissertationYearValue = upper
+        dissertationYearFollowsRange = FollowingYearRange.userSet(lower: lower, upper: upper, bounds: dissertationYearBoundsIfAny).follows
+    }
+
+    private func resetAdmissionYearRangeToAll() {
+        admissionYearFollowsRange = true
+        minimumAdmissionYearValue = admissionYearBounds.lowerBound
+        maximumAdmissionYearValue = admissionYearBounds.upperBound
+    }
+
+    private func resetDissertationYearRangeToAll() {
+        dissertationYearFollowsRange = true
+        minimumDissertationYearValue = dissertationYearBounds.lowerBound
+        maximumDissertationYearValue = dissertationYearBounds.upperBound
+    }
+
+    private func clearAllDoctoralFilters() {
+        searchText = ""
+        showsMainSupervisorCandidates = false
+        showsCoSupervisorCandidates = false
+        showsOnlyActiveCandidates = false
+        resetAdmissionYearRangeToAll()
+        resetDissertationYearRangeToAll()
+        RestoredListFilters.forget(workspace: "DoctoralCandidates")
+    }
+
+    /// Direct navigation: clears only the filters that hide this candidate.
+    private func revealCandidateForDirectNavigation(_ candidateID: String) {
+        guard let candidate = store.doctoralCandidates.first(where: { $0.id == candidateID }) else { return }
+        if !matchesDoctoralSearch(candidate, query: SearchFilterQuery(raw: searchText)) {
+            searchText = ""
+        }
+        if !matchesDoctoralRoleFilter(candidate) {
+            showsMainSupervisorCandidates = false
+            showsCoSupervisorCandidates = false
+        }
+        if !matchesDoctoralActiveFilter(candidate) {
+            showsOnlyActiveCandidates = false
+        }
+        if !admissionYearRange.matches(year: doctoralYearValue(candidate.admissionDate)) {
+            resetAdmissionYearRangeToAll()
+        }
+        if !dissertationYearRange.matches(year: doctoralYearValue(candidate.effectiveDisputationDate)) {
+            resetDissertationYearRangeToAll()
+        }
+    }
+
+    /// A new candidate must be visible: the filters that hide it are cleared.
+    private func createDoctoralCandidateRevealingIt() {
+        let id = store.addDoctoralCandidate()
+        revealCandidateForDirectNavigation(id)
+        setSelectedCandidateID(id)
+    }
+
+    private func activeDoctoralFilterDescriptions(language: AppLanguage) -> [String] {
+        var parts: [String] = []
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            parts.append(search)
+        }
+        var chips: [String] = []
+        if showsMainSupervisorCandidates {
+            chips.append(language.text("Main supervisor", "Huvudhandledare"))
+        }
+        if showsCoSupervisorCandidates {
+            chips.append(language.text("Co-supervisor", "Bihandledare"))
+        }
+        if showsOnlyActiveCandidates {
+            chips.append(language.text("Active", "Aktiva"))
+        }
+        if let chipText = ListFilterLabels.chips(chips) {
+            parts.append(chipText)
+        }
+        if admissionYearRange.isNarrowed {
+            parts.append(ListFilterLabels.yearRange(
+                title: language.text("Admission year", "Antagningsår"),
+                lower: minimumAdmissionYearValue,
+                upper: maximumAdmissionYearValue
+            ))
+        }
+        if dissertationYearRange.isNarrowed {
+            parts.append(ListFilterLabels.yearRange(
+                title: language.text("Dissertation year", "Disputationsår"),
+                lower: minimumDissertationYearValue,
+                upper: maximumDissertationYearValue
+            ))
+        }
+        return parts
+    }
+
+    private func doctoralFilterWasRestored(_ key: String) -> Bool {
+        RestoredListFilters.wasRestored(workspace: "DoctoralCandidates.Filter.\(key)")
+    }
+
+    private var doctoralFiltersWereRestored: Bool {
+        (searchText.trimmedOrNil != nil && doctoralFilterWasRestored("Search"))
+            || (showsMainSupervisorCandidates && doctoralFilterWasRestored("MainSupervisor"))
+            || (showsCoSupervisorCandidates && doctoralFilterWasRestored("CoSupervisor"))
+            || (showsOnlyActiveCandidates && doctoralFilterWasRestored("ActiveOnly"))
+            || (admissionYearRange.isNarrowed && doctoralFilterWasRestored("AdmissionYearFollowsRange"))
+            || (dissertationYearRange.isNarrowed && doctoralFilterWasRestored("DissertationYearFollowsRange"))
+    }
+
+    /// "Filtrerad lista: 12 av 116 visas" above the list while a filter is on.
+    @ViewBuilder
+    private func doctoralFilteredListBanner(language: AppLanguage) -> some View {
+        if hasActiveDoctoralFilters {
+            AppFilteredListBanner(
+                displayedCount: displayCandidates.count,
+                totalCount: store.doctoralCandidates.count,
+                activeFilters: activeDoctoralFilterDescriptions(language: language),
+                restoredFromLastSession: doctoralFiltersWereRestored,
+                language: language,
+                clearAction: clearAllDoctoralFilters
+            )
         }
     }
 
@@ -394,36 +621,18 @@ struct DoctoralCandidatesWorkspaceView: View {
             || (showsCoSupervisorCandidates && bucket == .co)
     }
 
+    /// "Aktiva" leaves out candidates who completed or ended early, and
+    /// those whose (actual or planned) dissertation date has passed.
     private func matchesDoctoralActiveFilter(_ candidate: DoctoralCandidateRecord) -> Bool {
         guard showsOnlyActiveCandidates else { return true }
-        guard let date = DateParsers.isoDay.date(from: candidate.plannedDisputationDate) else { return true }
-        return Calendar.current.startOfDay(for: date) >= Calendar.current.startOfDay(for: Date())
+        return candidate.isActiveDoctoralCandidate()
     }
 
+    /// Candidates without such a date are hidden only while the user has
+    /// narrowed that range.
     private func matchesDoctoralYearFilters(_ candidate: DoctoralCandidateRecord) -> Bool {
-        matchesDoctoralYear(
-            doctoralYearValue(candidate.admissionDate),
-            lower: minimumAdmissionYearValue,
-            upper: maximumAdmissionYearValue,
-            bounds: admissionYearBounds
-        )
-        && matchesDoctoralYear(
-            doctoralYearValue(candidate.plannedDisputationDate),
-            lower: minimumDissertationYearValue,
-            upper: maximumDissertationYearValue,
-            bounds: dissertationYearBounds
-        )
-    }
-
-    private func matchesDoctoralYear(
-        _ year: Int?,
-        lower: Double,
-        upper: Double,
-        bounds: ClosedRange<Double>
-    ) -> Bool {
-        let filterIsFullRange = lower == bounds.lowerBound && upper == bounds.upperBound
-        guard let year else { return filterIsFullRange }
-        return Double(year) >= min(lower, upper) && Double(year) <= max(lower, upper)
+        admissionYearRange.matches(year: doctoralYearValue(candidate.admissionDate))
+            && dissertationYearRange.matches(year: doctoralYearValue(candidate.effectiveDisputationDate))
     }
 
     private func supervisorBucket(for candidate: DoctoralCandidateRecord) -> SupervisorBucket {
@@ -460,7 +669,7 @@ struct DoctoralCandidatesWorkspaceView: View {
             ),
             .dissertationYear: AppListColumnAutoWidth.width(
                 header: language.text("Dissertation year", "Disputationsår"),
-                values: candidates.map { doctoralYearText($0.plannedDisputationDate) }
+                values: candidates.map { doctoralYearText($0.effectiveDisputationDate) }
             ),
         ]
         return auto.reduce(into: [:]) { result, entry in
@@ -517,7 +726,7 @@ struct DoctoralCandidatesWorkspaceView: View {
                             Color.clear.frame(width: handleWidth)
                             doctoralListCell(doctoralYearText(candidate.admissionDate), width: widths[.admissionYear])
                             Color.clear.frame(width: handleWidth)
-                            doctoralListCell(doctoralYearText(candidate.plannedDisputationDate), width: widths[.dissertationYear])
+                            doctoralListCell(doctoralYearText(candidate.effectiveDisputationDate), width: widths[.dissertationYear])
                             Color.clear.frame(width: handleWidth)
                         }
                     }
@@ -566,10 +775,8 @@ struct DoctoralCandidatesWorkspaceView: View {
         showsMainSupervisorCandidates = false
         showsCoSupervisorCandidates = false
         showsOnlyActiveCandidates = false
-        minimumAdmissionYearValue = admissionYearBounds.lowerBound
-        maximumAdmissionYearValue = admissionYearBounds.upperBound
-        minimumDissertationYearValue = dissertationYearBounds.lowerBound
-        maximumDissertationYearValue = dissertationYearBounds.upperBound
+        resetAdmissionYearRangeToAll()
+        resetDissertationYearRangeToAll()
     }
 
     private func doctoralListHeader(_ title: String, width: CGFloat? = nil, column: DoctoralListSortColumn) -> some View {
