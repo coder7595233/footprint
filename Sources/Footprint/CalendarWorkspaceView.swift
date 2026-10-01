@@ -1274,7 +1274,7 @@ private struct CalendarTaskCompletionDateField: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(language.text("Completion date", "Genomförandedatum"))
                 .calendarTypography(.fieldLabel)
-            CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $text)
+            CalendarDateInputField(placeholder: language.datePlaceholder, text: $text)
         }
     }
 }
@@ -4301,17 +4301,18 @@ struct CalendarWorkspaceView: View {
                     if let timeText = event.timeText.nonEmpty {
                         FootprintMetadataChip(title: timeText, systemImage: "clock")
                     }
+                    // Round 16: status facts are passive labels, not selected (clickable-looking) chips.
                     if event.isRolledOverPastDue {
-                        FootprintMetadataChip(title: language.text("Overdue", "Försenad"), systemImage: "exclamationmark.triangle", isSelected: true)
+                        FootprintMetadataChip(title: language.text("Overdue", "Försenad"), systemImage: "exclamationmark.triangle")
                     }
                     if event.isDateUncertain {
-                        FootprintMetadataChip(title: language.text("Uncertain date", "Osäkert datum"), systemImage: "questionmark.circle", isSelected: true)
+                        FootprintMetadataChip(title: language.text("Uncertain date", "Osäkert datum"), systemImage: "questionmark.circle")
                     }
                     if event.isHiddenFromCalendar {
-                        FootprintMetadataChip(title: language.text("Hidden from calendar", "Gömd från kalendern"), systemImage: "eye.slash", isSelected: true)
+                        FootprintMetadataChip(title: language.text("Hidden from calendar", "Gömd från kalendern"), systemImage: "eye.slash")
                     }
                     if event.isCompleted {
-                        FootprintMetadataChip(title: language.text("Completed", "Klar"), systemImage: "checkmark.circle", isSelected: true)
+                        FootprintMetadataChip(title: language.text("Completed", "Klar"), systemImage: "checkmark.circle")
                     }
                     if let place = event.place.nonEmpty {
                         FootprintMetadataChip(title: place, systemImage: "mappin.and.ellipse")
@@ -4372,8 +4373,7 @@ struct CalendarWorkspaceView: View {
                 } label: {
                     Label(calendarEventPrimaryActionTitle(for: event), systemImage: calendarEventPrimaryActionIcon(for: event))
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
             }
             Button(language.text("Close", "Stäng")) {
                 presentedEventDetail = nil
@@ -4636,9 +4636,8 @@ struct CalendarWorkspaceView: View {
             } label: {
                 Label(language.text("Today", "Idag"), systemImage: "sun.max")
             }
-            .buttonStyle(.borderedProminent)
+            .appSaveButtonStyle()
             .controlSize(.regular)
-            .tint(AppPalette.actionSave)
             .help(language.text("Scroll to today", "Gå till idag"))
         }
         .padding(.top, 10)
@@ -5005,8 +5004,7 @@ struct CalendarWorkspaceView: View {
                 .minimumScaleFactor(0.75)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(AppPalette.actionSave)
+        .appSaveButtonStyle()
     }
 
     private var calendarFilterSummaryText: String? {
@@ -9447,7 +9445,7 @@ private struct CalendarProjectOverflowIndicator: View {
 
     var body: some View {
         Text("…")
-            .font(.system(size: 12, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .foregroundStyle(AppPalette.appText.opacity(0.82))
             .lineLimit(1)
             .padding(.horizontal, 8)
@@ -9520,7 +9518,7 @@ private struct CalendarGoToDatePopover: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 AppDateField(
-                    placeholder: language.text("YYYY-MM-DD", "ÅÅÅÅ-MM-DD"),
+                    placeholder: language.datePlaceholder,
                     text: $dateText,
                     width: 132,
                     language: language,
@@ -9530,9 +9528,8 @@ private struct CalendarGoToDatePopover: View {
                 Button(language.text("Go", "Gå")) {
                     submitTypedDate()
                 }
-                .buttonStyle(.borderedProminent)
+                .appSaveButtonStyle()
                 .controlSize(.small)
-                .tint(AppPalette.actionSave)
 
                 Spacer()
 
@@ -9602,14 +9599,14 @@ private struct CalendarGoToDatePopover: View {
     private func monthView(_ month: Int) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(monthTitle(month))
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .foregroundStyle(AppPalette.appText)
                 .lineLimit(1)
 
             LazyVGrid(columns: dayColumns, alignment: .center, spacing: 2) {
                 ForEach(Array(weekdayLabels.enumerated()), id: \.offset) { _, label in
                     Text(label)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                         .frame(width: 20, height: 12)
                 }
@@ -9629,7 +9626,7 @@ private struct CalendarGoToDatePopover: View {
                 selectDate(date)
             } label: {
                 Text(String(calendar.component(.day, from: date)))
-                    .font(.system(size: 12, weight: isSelected(date) ? .semibold : .regular))
+                    .font(appFont(.secondary).weight(isSelected(date) ? .semibold : .regular))
                     .monospacedDigit()
                     .foregroundStyle(dayTextColor(date))
                     .frame(width: 20, height: 17)
@@ -9772,7 +9769,7 @@ private struct CalendarEventCopySheet: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(language.text("Date", "Datum"))
                     .calendarTypography(.fieldLabel)
-                CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $draft.date)
+                CalendarDateInputField(placeholder: language.datePlaceholder, text: $draft.date)
             }
 
             if draft.allowsTimeEditing {
@@ -9985,7 +9982,7 @@ private struct CalendarTodoSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(language.text("Date", "Datum"))
                                 .calendarTypography(.fieldLabel)
-                            CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $deadline)
+                            CalendarDateInputField(placeholder: language.datePlaceholder, text: $deadline)
                         }
 
                         CalendarLinkRowsSection(
@@ -10240,7 +10237,7 @@ struct CalendarProjectTaskSheet: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(language.text("Date", "Datum"))
                                     .calendarTypography(.fieldLabel)
-                                CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $deadline)
+                                CalendarDateInputField(placeholder: language.datePlaceholder, text: $deadline)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -10537,7 +10534,7 @@ struct CalendarPublicationTaskSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(language.text("Date", "Datum"))
                                 .calendarTypography(.fieldLabel)
-                            CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $deadline)
+                            CalendarDateInputField(placeholder: language.datePlaceholder, text: $deadline)
                         }
 
                         VStack(alignment: .leading, spacing: 6) {
@@ -10855,7 +10852,7 @@ private struct CalendarTravelSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(language.text("Date", "Datum"))
                                 .calendarTypography(.fieldLabel)
-                            CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $draft.arrivalDate)
+                            CalendarDateInputField(placeholder: language.datePlaceholder, text: $draft.arrivalDate)
                         }
 
                         VStack(alignment: .leading, spacing: 6) {
@@ -11100,7 +11097,7 @@ private struct CalendarTravelSheet: View {
         let hasValue = text.wrappedValue.trimmedOrNil != nil
         ZStack(alignment: .topTrailing) {
             HStack(spacing: 8) {
-                CalendarDateInputField(placeholder: "YYYY-MM-DD", text: text)
+                CalendarDateInputField(placeholder: language.datePlaceholder, text: text)
             }
             .calendarDateStatusOutline(isUncertain: uncertain.wrappedValue)
             .contextMenu {
@@ -11451,7 +11448,7 @@ private struct CalendarLinkRowRemoveButton: View {
     var body: some View {
         Button(language.text("Remove", "Ta bort"), action: action)
             .buttonStyle(.borderless)
-            .font(.system(size: 11, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .foregroundStyle(AppPalette.actionDelete)
             .help(language.text("Remove this row", "Ta bort raden"))
             .frame(width: Self.width, alignment: .leading)
@@ -11949,7 +11946,7 @@ private struct CalendarAccommodationSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(language.text("Date", "Datum"))
                                 .calendarTypography(.fieldLabel)
-                            CalendarDateInputField(placeholder: "YYYY-MM-DD", text: checkInDateBinding)
+                            CalendarDateInputField(placeholder: language.datePlaceholder, text: checkInDateBinding)
                         }
 
                         VStack(alignment: .leading, spacing: 6) {
@@ -11967,7 +11964,7 @@ private struct CalendarAccommodationSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(language.text("Date", "Datum"))
                                 .calendarTypography(.fieldLabel)
-                            CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $draft.checkOutDate)
+                            CalendarDateInputField(placeholder: language.datePlaceholder, text: $draft.checkOutDate)
                         }
 
                         VStack(alignment: .leading, spacing: 6) {
@@ -12246,7 +12243,7 @@ private struct CalendarMeetingSheet: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(language.text("Date", "Datum"))
                             .calendarTypography(.fieldLabel)
-                        CalendarDateInputField(placeholder: "YYYY-MM-DD", text: $draft.date)
+                        CalendarDateInputField(placeholder: language.datePlaceholder, text: $draft.date)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -12373,8 +12370,7 @@ private struct CalendarMeetingSheet: View {
                         Button(language.text("Copy from project", "Kopiera från projekt")) {
                             copyParticipantsFromProject()
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(AppPalette.actionSave)
+                        .appSaveButtonStyle()
                         .disabled(!selectedProjects.contains { !$0.collaboratorNames.isEmpty })
                         .padding(.top, 26)
                     }

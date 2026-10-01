@@ -172,8 +172,7 @@ struct RecordDocumentPanelContent<Section: RecordDocumentSection>: View where Se
                         Button(language.text("Export to Word", "Exportera till Word")) {
                             exportWordTapped()
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(AppPalette.actionSave)
+                        .appSaveButtonStyle()
 
                         Button(language.text("Export to PDF", "Exportera till PDF")) {
                             exportPDF(html: html)

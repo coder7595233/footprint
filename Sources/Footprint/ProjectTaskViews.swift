@@ -139,7 +139,7 @@ private struct CentralTaskRowEditor: View {
                         .frame(width: 120, alignment: .leading)
                 } else {
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: stringBinding(\.deadline),
                         formatter: DateParsers.canonicalizedDayInput,
                         clearBackgroundInDarkNew: true,

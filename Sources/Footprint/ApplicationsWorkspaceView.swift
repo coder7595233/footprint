@@ -932,7 +932,7 @@ struct ApplicationsView: View {
 
                 HStack(spacing: 12) {
                     Text(language.text("Grant pipeline", "Anslagsflöde"))
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(appFont(.panelTitle))
                         .foregroundStyle(.primary)
 
                     Image(systemName: grantPipelineExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
@@ -1187,10 +1187,12 @@ struct ApplicationsView: View {
     private func sumRangeLabel(language: AppLanguage) -> String {
         let lower = formattedAmountInMillions(min(minimumAmountValue, maximumAmountValue), language: language)
         let upper = max(minimumAmountValue, maximumAmountValue)
+        // Round 16: same units as everywhere else ("mkr" / "MSEK").
+        let millionsUnit = AmountFormatter.millionsUnit(language)
         let upperText = upper >= 20_000_000
-            ? language.text(">20 million SEK", ">20 miljoner SEK")
-            : "\(formattedAmountInMillions(upper, language: language)) \(language.text("million SEK", "miljoner SEK"))"
-        return "\(language.text("SEK", "SEK")): \(lower) – \(upperText)"
+            ? ">20 \(millionsUnit)"
+            : "\(formattedAmountInMillions(upper, language: language)) \(millionsUnit)"
+        return "\(language.text("Amount", "Belopp")): \(lower) – \(upperText)"
     }
 
     private func yearRangeLabel(language: AppLanguage) -> String {
@@ -1332,18 +1334,11 @@ struct ApplicationsView: View {
     }
 
     private func applicationStatusFilterLabel(_ status: String, language: AppLanguage) -> String {
-        switch status {
-        case "Beviljat":
-            return language.text("Awarded", "Beviljade")
-        case "Tillbakadragen":
-            return language.text("Withdrawn", "Tillbakadragna")
-        case "Avslag":
-            return language.text("Declined", "Avslagna")
-        case "Ej sökt":
-            return language.text("Not applied", "Ej sökta")
-        default:
-            return language.localizedStatus(status)
+        // Filter chips act as group headings, so they use the plural wording.
+        if let outcome = ApplicationOutcome(storedValue: status) {
+            return outcome.heading(language)
         }
+        return language.localizedStatus(status)
     }
 
     private func applicationQuickViewIsActive(_ view: QuickApplicationView) -> Bool {
@@ -2127,7 +2122,7 @@ private struct GrantPipelineCurtainPanel: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(lane.title(language: language))
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(appFont(.panelTitle))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
 
@@ -2162,7 +2157,7 @@ private struct GrantPipelineCurtainPanel: View {
         let nonLeadApplicantEntries = laneEntries.filter { !$0.isLeadApplicant }
         if laneEntries.isEmpty {
             Text(language.text("No grants", "Inga anslag"))
-                .font(.system(size: 12))
+                .font(appFont(.secondary))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
         } else if !nonLeadApplicantEntries.isEmpty {
@@ -2188,7 +2183,7 @@ private struct GrantPipelineCurtainPanel: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(entry.title)
-                            .font(.system(size: 12.5, weight: .semibold))
+                            .font(appFont(.body).weight(.semibold))
                             .foregroundStyle(.primary)
                             .lineLimit(2)
                             .truncationMode(.tail)
@@ -2206,7 +2201,7 @@ private struct GrantPipelineCurtainPanel: View {
 
                     HStack(alignment: .center, spacing: 8) {
                         Text(entry.subtitle)
-                            .font(.system(size: 12))
+                            .font(appFont(.secondary))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .truncationMode(.tail)
@@ -2421,9 +2416,8 @@ private struct GrantPipelineCurtainPanel: View {
     }
 
     private func grantPipelineCurrencyLabel(_ value: Double, for application: GrantApplication) -> String {
-        let formatted = store.formattedGrantAmountWithSEKApproximation(value, for: application)
-        guard application.currencyCode == "SEK" else { return formatted }
-        return formatted.replacingOccurrences(of: " SEK", with: " kr")
+        // Round 16: the store formatter already writes "kr" in Swedish and "SEK" in English.
+        store.formattedGrantAmountWithSEKApproximation(value, for: application)
     }
 
     private func grantPipelineDaysUntil(_ date: Date?) -> Int? {
@@ -2481,7 +2475,7 @@ private struct GrantPipelineSectionDivider: View {
                 .fill(AppPalette.subtleBorder.opacity(0.85))
                 .frame(height: 1)
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)

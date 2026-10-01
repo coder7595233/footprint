@@ -72,7 +72,7 @@ struct OrganizationTimelineView: View {
     var body: some View {
         if snapshot.isEmpty {
             Text(language.text("No timed organization processes yet.", "Inga tidsatta organisationsprocesser än."))
-                .font(.system(size: 12))
+                .font(appFont(.secondary))
                 .foregroundStyle(.secondary)
         } else {
             ScrollViewReader { proxy in
@@ -108,7 +108,7 @@ struct OrganizationTimelineView: View {
                 HStack(alignment: .bottom, spacing: 0) {
                     ForEach(years, id: \.self) { year in
                         Text(String(year))
-                            .font(.system(size: 13, weight: .medium))
+                            .font(appFont(.body).weight(.medium))
                             .foregroundStyle(.primary)
                             .frame(width: yearColumnWidth, height: headerHeight, alignment: .bottom)
                     }
@@ -140,7 +140,7 @@ struct OrganizationTimelineView: View {
             ForEach(Array(group.rows.enumerated()), id: \.offset) { rowIndex, row in
                 HStack(alignment: .top, spacing: 0) {
                     Text(rowIndex == 0 ? group.title : "")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(appFont(.secondary).weight(.semibold))
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                         .frame(width: rowLabelWidth - 12, height: rowHeight, alignment: .leading)
@@ -322,7 +322,7 @@ struct OrganizationTimelineView: View {
 
             if width >= 44 {
                 Text(bar.title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(textColor(for: bar))
                     .lineLimit(1)
                     .truncationMode(.tail)

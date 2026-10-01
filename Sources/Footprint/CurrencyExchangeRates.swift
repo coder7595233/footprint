@@ -404,29 +404,29 @@ extension GrantDataStore {
             byCurrency[row.application.currencyCode, default: 0] += row.amount ?? 0
         }
         guard !byCurrency.isEmpty else { return "" }
-        let amounts = byCurrency.keys.sorted().map { CurrencyFormatter.format(byCurrency[$0], code: $0) }
+        let amounts = byCurrency.keys.sorted().map { CurrencyFormatter.format(byCurrency[$0], code: $0, language: language) }
         return language.text("not converted", "ej omräknat") + ": " + amounts.joined(separator: " • ")
     }
 
     func formattedGrantAmountWithSEKApproximation(_ value: Double?, for application: GrantApplication) -> String {
-        let original = CurrencyFormatter.format(value, code: application.currency)
+        let original = CurrencyFormatter.format(value, code: application.currency, language: language)
         guard value != nil,
               application.currencyCode != "SEK",
               let approximateSEK = approximateSEKValue(value, for: application) else {
             return original
         }
-        return "\(original) (≈ \(CurrencyFormatter.format(approximateSEK, code: "SEK")))"
+        return "\(original) (≈ \(CurrencyFormatter.format(approximateSEK, code: "SEK", language: language)))"
     }
 
     func formattedApproximateSEKAmount(_ value: Double?, for application: GrantApplication) -> String {
-        guard let value else { return "N/A" }
+        guard let value else { return AmountFormatter.missing }
         if application.currencyCode == "SEK" {
-            return CurrencyFormatter.format(value, code: "SEK")
+            return CurrencyFormatter.format(value, code: "SEK", language: language)
         }
         guard let approximateSEK = approximateSEKValue(value, for: application) else {
-            return CurrencyFormatter.format(value, code: application.currency)
+            return CurrencyFormatter.format(value, code: application.currency, language: language)
         }
-        return "≈ \(CurrencyFormatter.format(approximateSEK, code: "SEK"))"
+        return "≈ \(CurrencyFormatter.format(approximateSEK, code: "SEK", language: language))"
     }
 
     func currencyConversionHelpText(
@@ -451,7 +451,7 @@ extension GrantDataStore {
         }
 
         let rate = formattedExchangeRateFactor(quote.factorToSEK, language: language)
-        let total = CurrencyFormatter.format(quote.convertingToSEK(value), code: "SEK")
+        let total = CurrencyFormatter.format(quote.convertingToSEK(value), code: "SEK", language: language)
         if language == .swedish {
             return """
             Valutakurs: 1 \(code) ≈ \(rate) SEK
@@ -493,7 +493,7 @@ extension GrantDataStore {
             return formattedOriginalCurrencySummary(rows) + " (" + language.text("not converted", "ej omräknat") + ")"
         }
 
-        let formatted = CurrencyFormatter.format(total, code: "SEK")
+        let formatted = CurrencyFormatter.format(total, code: "SEK", language: language)
         let suffix = unconvertedAmountSuffix(for: unconvertedRows.map { ($0.application, Optional($0.amount)) })
         return (hasConvertedCurrency ? "≈ \(formatted)" : formatted) + suffix
     }
@@ -501,7 +501,7 @@ extension GrantDataStore {
     private func formattedOriginalCurrencySummary(_ rows: [(application: GrantApplication, amount: Double)]) -> String {
         let grouped = Dictionary(grouping: rows, by: { $0.application.currencyCode })
         return grouped.keys.sorted().map { currency in
-            CurrencyFormatter.format(grouped[currency]?.map(\.amount).reduce(0, +), code: currency)
+            CurrencyFormatter.format(grouped[currency]?.map(\.amount).reduce(0, +), code: currency, language: language)
         }
         .joined(separator: " • ")
     }

@@ -252,12 +252,12 @@ struct DoctoralRecordHeroView: View {
                     .appTypography(.body)
                     .foregroundStyle(AppPalette.appText)
             } else {
-                Text(doctoralStatisticsNumber(grantedTotal / 1_000_000, language: language) + " mkr")
+                Text(doctoralStatisticsNumber(grantedTotal / 1_000_000, language: language) + " " + AmountFormatter.millionsUnit(language))
                     .font(appFont(.body).weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(AppPalette.appText)
                 Text(language.text(
-                    "\(granted.count) awarded of \(applications.count)",
+                    "\(granted.count) granted of \(applications.count)",
                     "\(granted.count) beviljade av \(applications.count)"
                 ))
                 .appTypography(.secondary)
@@ -1280,7 +1280,7 @@ struct DoctoralMilestoneSetupSheet: View {
                     "Set the three key dates — they draw the timeline at the top of the page. All of them can be changed later by clicking the milestones.",
                     "Ange de tre nyckeldatumen — de ritar tidslinjen högst upp på sidan. Alla går att ändra senare genom att klicka på milstolparna."
                 ))
-                .font(.system(size: 12.5))
+                .font(appFont(.body))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             }
@@ -1290,8 +1290,7 @@ struct DoctoralMilestoneSetupSheet: View {
             HStack {
                 Spacer()
                 Button(language.text("Done", "Klar"), action: onDone)
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppPalette.actionSave)
+                    .appSaveButtonStyle()
                     .keyboardShortcut(.defaultAction)
             }
         }
@@ -1302,11 +1301,11 @@ struct DoctoralMilestoneSetupSheet: View {
     private func setupRow(_ title: String, date: Binding<String>) -> some View {
         HStack(spacing: 12) {
             Text(title)
-                .font(.system(size: 12.5, weight: .semibold))
+                .font(appFont(.body).weight(.semibold))
                 .frame(width: 170, alignment: .leading)
-            TextField("YYYY-MM-DD", text: date)
+            TextField(language.datePlaceholder, text: date)
                 .textFieldStyle(.roundedBorder)
-                .font(.system(size: 12.5))
+                .font(appFont(.body))
                 .monospacedDigit()
                 .frame(width: 130)
                 .onSubmit {

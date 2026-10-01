@@ -1089,7 +1089,7 @@ struct DataMaintenanceWorkspaceView: View {
                             .appTypography(.secondary)
                             .lineLimit(1)
                         Text(issueCountText(for: filter, language: language))
-                            .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                            .font(appFont(.secondary).weight(.semibold).monospaced())
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -1215,7 +1215,7 @@ struct DataMaintenanceWorkspaceView: View {
                     .lineLimit(1)
                 Spacer(minLength: 6)
                 Text(isSelected ? issueCountText(for: filter, language: language) : "–")
-                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .font(appFont(.secondary).weight(.semibold).monospaced())
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 10)
@@ -1660,7 +1660,7 @@ struct DataMaintenanceWorkspaceView: View {
         // F23: text instead of icons.
         Button(action: action) {
             Text(help)
-                .font(.system(size: 11, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .frame(height: 22)
         }
         .buttonStyle(.borderless)
@@ -2005,7 +2005,7 @@ struct DataMaintenanceWorkspaceView: View {
                 } else {
                     ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                         Text(line)
-                            .font(.system(size: 12, weight: .regular, design: .monospaced))
+                            .font(appFont(.secondary).monospaced())
                             .foregroundStyle(.primary)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -2162,10 +2162,10 @@ struct DataMaintenanceWorkspaceView: View {
                                                 .foregroundStyle(.secondary)
                                             Spacer(minLength: 8)
                                             Text(detail.value)
-                                                .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                                                .font(appFont(.secondary).weight(.semibold).monospaced())
                                                 .foregroundStyle(.primary)
                                         }
-                                        .font(.system(size: 12))
+                                        .font(appFont(.secondary))
                                     }
                                 }
                                 .padding(.top, 4)
@@ -2173,7 +2173,7 @@ struct DataMaintenanceWorkspaceView: View {
                         }
                         Spacer()
                         Text(item.value)
-                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                            .font(appFont(.body).weight(.semibold).monospaced())
                             .foregroundStyle(.secondary)
                     }
                     .padding(14)
@@ -2279,7 +2279,7 @@ struct DataMaintenanceWorkspaceView: View {
                         Text(language.text("No missing fields", "Inga saknade fält"))
                     }
                 }
-                .font(.system(size: 12))
+                .font(appFont(.secondary))
                 .foregroundStyle(.secondary)
             }
         }
@@ -2602,8 +2602,7 @@ private struct DuplicateMergeAssistantSheet: View {
                         onClose()
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
                 .disabled(canonicalRecordID.isEmpty || duplicateEntries.isEmpty)
             }
         }
@@ -2856,7 +2855,7 @@ private struct TranslationFixRow: View {
 
             Button(action: toggleHidden) {
                 Text(hideTitle)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .frame(height: 22)
             }
             .buttonStyle(.borderless)
@@ -3035,7 +3034,7 @@ private struct NameLinkRow: View {
                 showsResearcherPicker = true
             } label: {
                 Text(language.text("Link to…", "Koppla till…"))
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .frame(height: 22)
             }
             .buttonStyle(.borderless)
@@ -3059,7 +3058,7 @@ private struct NameLinkRow: View {
                 _ = store.createResearcher(forUnlinkedName: entry.name)
             } label: {
                 Text(language.text("New researcher", "Ny forskare"))
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .frame(height: 22)
             }
             .buttonStyle(.borderless)
@@ -3070,7 +3069,7 @@ private struct NameLinkRow: View {
 
             Button(action: toggleHidden) {
                 Text(hideTitle)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .frame(height: 22)
             }
             .buttonStyle(.borderless)
@@ -3360,7 +3359,7 @@ private struct DoctoralActivityLinkRow: View {
 
             Button(action: link) {
                 Text(language.text("Link", "Koppla"))
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .frame(height: 22)
             }
             .buttonStyle(.borderless)
@@ -3371,7 +3370,7 @@ private struct DoctoralActivityLinkRow: View {
 
             Button(action: toggleHidden) {
                 Text(hideTitle)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .frame(height: 22)
             }
             .buttonStyle(.borderless)

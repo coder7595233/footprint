@@ -4156,9 +4156,9 @@ let editableDropdownTranslationDefinitions: [DropdownTranslationDefinition] = [
     .init(key: "projectReminder.annualMeetingDate", sectionEn: "Project reminders", sectionSv: "Projektpåminnelser", labelEn: "Annual meeting date", labelSv: "Årsmötesdatum", defaultEn: "Annual meeting date", defaultSv: "Årsmötesdatum"),
 
     .init(key: "applicationStatus.toApply", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "To apply", labelSv: "Att söka", defaultEn: "To apply", defaultSv: "Att söka"),
-    .init(key: "applicationStatus.awaitingResponse", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Awaiting response", labelSv: "Väntar svar", defaultEn: "Awaiting response", defaultSv: "Väntar svar"),
-    .init(key: "applicationStatus.awarded", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Awarded", labelSv: "Beviljad", defaultEn: "Awarded", defaultSv: "Beviljad"),
-    .init(key: "applicationStatus.declined", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Declined", labelSv: "Avslagen", defaultEn: "Declined", defaultSv: "Avslagen"),
+    .init(key: "applicationStatus.awaitingResponse", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Awaiting decision", labelSv: "Väntar svar", defaultEn: "Awaiting decision", defaultSv: "Väntar svar"),
+    .init(key: "applicationStatus.awarded", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Granted", labelSv: "Beviljat", defaultEn: "Granted", defaultSv: "Beviljat"),
+    .init(key: "applicationStatus.declined", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Declined", labelSv: "Avslag", defaultEn: "Declined", defaultSv: "Avslag"),
     .init(key: "applicationStatus.withdrawn", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Withdrawn", labelSv: "Tillbakadragen", defaultEn: "Withdrawn", defaultSv: "Tillbakadragen"),
     .init(key: "applicationStatus.unknown", sectionEn: "Applications", sectionSv: "Ansökningar", labelEn: "Unknown", labelSv: "Okänd", defaultEn: "Unknown", defaultSv: "Okänd"),
 
@@ -4950,11 +4950,11 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable, Sendable {
         case "Att söka":
             return fixedDropdownText("applicationStatus.toApply", language: self, english: "To apply", swedish: "Att söka")
         case "Väntar svar":
-            return fixedDropdownText("applicationStatus.awaitingResponse", language: self, english: "Awaiting response", swedish: "Väntar svar")
+            return fixedDropdownText("applicationStatus.awaitingResponse", language: self, english: "Awaiting decision", swedish: "Väntar svar")
         case "Beviljat":
-            return fixedDropdownText("applicationStatus.awarded", language: self, english: "Awarded", swedish: "Beviljad")
+            return fixedDropdownText("applicationStatus.awarded", language: self, english: "Granted", swedish: "Beviljat")
         case "Avslag":
-            return fixedDropdownText("applicationStatus.declined", language: self, english: "Declined", swedish: "Avslagen")
+            return fixedDropdownText("applicationStatus.declined", language: self, english: "Declined", swedish: "Avslag")
         case "Tillbakadragen":
             return fixedDropdownText("applicationStatus.withdrawn", language: self, english: "Withdrawn", swedish: "Tillbakadragen")
         case "Ej sökt":

@@ -845,7 +845,7 @@ struct ApplicationEditorView: View {
                                                 width: 190,
                                                 content: AnyView(
                                                     CommitDateFieldWithTodayButton(
-                                                        placeholder: "YYYY-MM-DD",
+                                                        placeholder: language.datePlaceholder,
                                                         text: optionalBinding(\.receivedRepaymentDueOn),
                                                         formatter: normalizeSalaryDateInput,
                                                         updatesContinuously: false,
@@ -859,7 +859,7 @@ struct ApplicationEditorView: View {
                                                 width: 150,
                                                 content: AnyView(
                                                     CommitDateFieldWithTodayButton(
-                                                        placeholder: "YYYY-MM-DD",
+                                                        placeholder: language.datePlaceholder,
                                                         text: optionalBinding(\.receivedRepaidOn),
                                                         formatter: normalizeSalaryDateInput,
                                                         updatesContinuously: false,
@@ -1151,7 +1151,7 @@ struct ApplicationEditorView: View {
         } else {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(appFont(.tableHeader))
                     .padding(.bottom, 2)
                 Text(language.text("There are no previous grants.", "Inga tidigare anslag finns."))
                     .font(appFont(.body))
@@ -1204,13 +1204,13 @@ struct ApplicationEditorView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     if draft.isEditingLocked {
                         Text(draft.localizedGrantName(language: language).trimmedOrNil ?? language.text("Grant title", "Anslagstitel"))
-                            .font(.system(size: 24, weight: .bold))
+                            .font(appFont(.pageTitle))
                             .foregroundStyle(AppPalette.appText)
                     } else {
                         AppInlineTitleTextField(
                             placeholder: language.text("Grant title", "Anslagstitel"),
                             text: localizedGrantNameBinding,
-                            font: .systemFont(ofSize: 24, weight: .bold),
+                            font: appNSFont(.pageTitle),
                             minHeight: 30
                         )
                         .undoRevealPulse(
@@ -1830,7 +1830,7 @@ struct ApplicationEditorView: View {
 
     private func inlineTrashButton(action: @escaping () -> Void) -> some View {
         AppIconDeleteButton(
-            title: "Ta bort",
+            title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
             action: action
@@ -2284,7 +2284,7 @@ struct ApplicationEditorView: View {
         )
         let cofundingText: String? = breakdown.cofundingAmount >= 0.5
             ? language.text("Co-funding needed: ", "Behov av samfinansiering: ")
-                + CurrencyFormatter.format(breakdown.cofundingAmount, code: "SEK")
+                + CurrencyFormatter.format(breakdown.cofundingAmount, code: "SEK", language: language)
             : nil
         return OverheadRuleSummaryLine(text: text, cofundingText: cofundingText)
     }
@@ -2352,7 +2352,7 @@ struct ApplicationEditorView: View {
                 .frame(width: 130)
                 if draft.cofundingDecision != nil {
                     AppDateField(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: Binding(
                             get: { draft.cofundingDecisionOn ?? "" },
                             set: { draft.cofundingDecisionOn = $0.trimmedOrNil }
@@ -2494,7 +2494,7 @@ struct ApplicationEditorView: View {
                 ApproximateAmountMetric(
                     id: "total",
                     label: language.text("Total", "Totalt"),
-                    value: draft.approximateAmountValue.map { CurrencyFormatter.format($0, code: "SEK") } ?? "—",
+                    value: draft.approximateAmountValue.map { CurrencyFormatter.format($0, code: "SEK", language: language) } ?? "—",
                     emphasized: true
                 )
             ]
@@ -2514,7 +2514,7 @@ struct ApplicationEditorView: View {
             ApproximateAmountMetric(
                 id: String(row.year),
                 label: String(row.year),
-                value: CurrencyFormatter.format(row.amount, code: "SEK"),
+                value: CurrencyFormatter.format(row.amount, code: "SEK", language: language),
                 emphasized: false
             )
         }
@@ -2523,7 +2523,7 @@ struct ApplicationEditorView: View {
             ApproximateAmountMetric(
                 id: "total",
                 label: language.text("Total", "Totalt"),
-                value: CurrencyFormatter.format(approximateAmountBreakdown.totalAmount, code: "SEK"),
+                value: CurrencyFormatter.format(approximateAmountBreakdown.totalAmount, code: "SEK", language: language),
                 emphasized: true
             )
         ]
@@ -2549,7 +2549,7 @@ struct ApplicationEditorView: View {
             ForEach(sortedConsumptionPeriodIDs, id: \.self) { id in
                 HStack(spacing: 10) {
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: consumptionPeriodFieldBinding(for: id, keyPath: \.from),
                         formatter: normalizeSalaryDateInput,
                         updatesContinuously: false,
@@ -2557,7 +2557,7 @@ struct ApplicationEditorView: View {
                     )
 
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: consumptionPeriodFieldBinding(for: id, keyPath: \.to),
                         formatter: normalizeSalaryDateInput,
                         updatesContinuously: false,
@@ -2713,11 +2713,11 @@ private enum ApplicationDecisionChoice: CaseIterable {
     func title(language: AppLanguage) -> String {
         switch self {
         case .granted:
-            return language.text("Granted", "Beviljad")
+            return ApplicationOutcome.granted.label(language)
         case .denied:
-            return language.text("Declined", "Avslagen")
+            return ApplicationOutcome.declined.label(language)
         case .withdrawn:
-            return language.text("Withdrawn", "Tillbakadragen")
+            return ApplicationOutcome.withdrawn.label(language)
         }
     }
 
@@ -3686,7 +3686,7 @@ struct AppTimelineDateEditor: View {
         VStack(spacing: 4) {
             if isReadOnly {
                 Text(text.wrappedValue.trimmedOrNil ?? "–")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(appFont(.body).weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(mutedColor ?? AppPalette.appText)
                     .textSelection(.enabled)
@@ -3695,7 +3695,7 @@ struct AppTimelineDateEditor: View {
                     .help(isIllogical ? language.text("Illogical date combination", "Ologisk datumkombination") : "")
             } else {
                 CommitFormattingTextField(
-                    placeholder: "YYYY-MM-DD",
+                    placeholder: language.datePlaceholder,
                     text: Binding(
                         get: { text.wrappedValue },
                         set: { newValue in
@@ -3790,11 +3790,11 @@ private enum ApplicationGrantStatisticsOutcome: String, CaseIterable, Identifiab
     func title(language: AppLanguage) -> String {
         switch self {
         case .granted:
-            return language.text("Accepted", "Beviljade")
+            return ApplicationOutcome.granted.heading(language)
         case .rejected:
-            return language.text("Rejected", "Avslagna")
+            return ApplicationOutcome.declined.heading(language)
         case .waiting:
-            return language.text("Pending", "Väntar")
+            return ApplicationOutcome.awaitingDecision.heading(language)
         }
     }
 }
@@ -3865,7 +3865,7 @@ private struct ApplicationGrantStatisticsView: View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 14) {
                 Text(language.text("Earlier outcomes for this grant context", "Tidigare utfall för anslagets kontext"))
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
 
                 ApplicationGrantStatisticsCard(
@@ -3991,17 +3991,17 @@ private struct ApplicationGrantStatisticsCard: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(appFont(.statTitle))
                     .foregroundStyle(AppPalette.appText)
                 Text(subtitle)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
 
             if rows.isEmpty {
                 Text(emptyText)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
                     .padding(.vertical, 4)
             } else {
@@ -4009,7 +4009,7 @@ private struct ApplicationGrantStatisticsCard: View {
 
                 VStack(alignment: .leading, spacing: 7) {
                     Text(listTitle)
-                        .font(.system(size: 12, weight: .bold))
+                        .font(appFont(.fieldLabel))
                         .foregroundStyle(AppPalette.appText)
 
                     ForEach(rows.prefix(10)) { row in
@@ -4018,7 +4018,7 @@ private struct ApplicationGrantStatisticsCard: View {
 
                     if rows.count > 10 {
                         Text(language.text("+ \(rows.count - 10) more", "+ \(rows.count - 10) till"))
-                            .font(.system(size: 12, weight: .medium))
+                            .font(appFont(.secondary).weight(.medium))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -4066,11 +4066,11 @@ private struct ApplicationGrantStatisticsApplicationRow: View {
         } trailing: {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(row.outcome.title(language: language))
-                    .font(.system(size: 12, weight: .bold))
+                    .font(appFont(.fieldLabel))
                     .foregroundStyle(row.outcome.tint)
                     .lineLimit(1)
                 Text(row.amountText)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -4086,7 +4086,7 @@ private struct ApplicationGrantStatisticsProjectsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.system(size: 16, weight: .bold))
+                .font(appFont(.statTitle))
                 .foregroundStyle(AppPalette.appText)
 
             ForEach(projects.prefix(12)) { project in
@@ -4097,7 +4097,7 @@ private struct ApplicationGrantStatisticsProjectsCard: View {
                     EmptyView()
                 } trailing: {
                     Text(project.latestYear)
-                        .font(.system(size: 12, weight: .bold))
+                        .font(appFont(.fieldLabel))
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }

@@ -1713,7 +1713,7 @@ private struct CongressDetailPane: View {
 
                             if linkedContributions.isEmpty {
                                 Text(language.text("No abstracts linked to this congress yet.", "Inga abstract är kopplade till den här kongressen ännu."))
-                                    .font(.system(size: 12))
+                                    .font(appFont(.secondary))
                                     .foregroundStyle(.secondary)
                             } else {
                                 VStack(alignment: .leading, spacing: 0) {
@@ -1888,6 +1888,7 @@ private struct CongressDetailPane: View {
                     AppDestructiveActionButton(
                         title: language.text("Delete", "Ta bort"),
                         help: language.text("Delete congress", "Ta bort kongress")
+                        // No cancelTitle: requestDeleteCongress() shows its own alert.
                     ) {
                         requestDeleteCongress()
                     }
@@ -2256,7 +2257,7 @@ private struct CongressDetailPane: View {
                     Image(systemName: "person")
                         .foregroundStyle(.secondary)
                     Text(name)
-                        .font(.system(size: 12.5, weight: .medium))
+                        .font(appFont(.body).weight(.medium))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                 }
@@ -2270,7 +2271,7 @@ private struct CongressDetailPane: View {
                 Image(systemName: "person")
                     .foregroundStyle(.secondary)
                 Text(name)
-                    .font(.system(size: 12.5, weight: .medium))
+                    .font(appFont(.body).weight(.medium))
                     .lineLimit(1)
             }
             .frame(width: width, alignment: .leading)
@@ -2313,7 +2314,7 @@ private struct CongressDetailPane: View {
 
                         if visibleTravelFlights.isEmpty {
                             Text(language.text("No travel rows added yet.", "Inga resor tillagda ännu."))
-                                .font(.system(size: 12))
+                                .font(appFont(.secondary))
                                 .foregroundStyle(.secondary)
                         } else {
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -2341,7 +2342,7 @@ private struct CongressDetailPane: View {
                     HStack(alignment: .top, spacing: 12) {
                         if !isEditingLocked || hasVisibleCongressFeeData {
                             VStack(alignment: .leading, spacing: isEditingLocked ? 2 : 6) {
-                                AppFieldAlignedTableHeaderText(text: language.text("Congress fee (SEK)", "Kongressavgift (SEK)"))
+                                AppFieldAlignedTableHeaderText(text: language.text("Congress fee (SEK)", "Kongressavgift (kr)"))
                                 if isEditingLocked {
                                     if draft.congressFeeSEK.trimmedOrNil != nil {
                                         lockedCongressValueText(draft.congressFeeSEK)
@@ -2370,7 +2371,7 @@ private struct CongressDetailPane: View {
                                     ForEach(draft.fundingApplicationIDs, id: \.self) { applicationID in
                                         HStack(spacing: 8) {
                                             Text(fundingApplicationLabel(forID: applicationID))
-                                                .font(.system(size: 12))
+                                                .font(appFont(.secondary))
                                                 .lineLimit(1)
                                             Spacer()
                                             if let application = store.application(id: applicationID) {
@@ -2450,7 +2451,7 @@ private struct CongressDetailPane: View {
 
             if visibleTravelHotels.isEmpty {
                 Text(language.text("No hotel rows added yet.", "Inga hotellrader tillagda ännu."))
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -2585,7 +2586,7 @@ private struct CongressDetailPane: View {
 
     private func flightDateField(text: Binding<String>) -> some View {
         CommitDateFieldWithTodayButton(
-            placeholder: language.text("YYYY-MM-DD", "ÅÅÅÅ-MM-DD"),
+            placeholder: language.datePlaceholder,
             text: text,
             formatter: DateParsers.canonicalizedDayInput,
             updatesContinuously: false,
@@ -2708,7 +2709,7 @@ private struct CongressDetailPane: View {
 
     private func hotelDateField(text: Binding<String>) -> some View {
         CommitDateFieldWithTodayButton(
-            placeholder: language.text("YYYY-MM-DD", "ÅÅÅÅ-MM-DD"),
+            placeholder: language.datePlaceholder,
             text: text,
             formatter: DateParsers.canonicalizedDayInput,
             updatesContinuously: false,
@@ -2800,17 +2801,17 @@ private struct CongressDetailPane: View {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(contribution.localizedTitle(language: language).nonEmpty ?? contribution.displayTitle)
-                        .font(.system(size: 12.5, weight: .semibold))
+                        .font(appFont(.body).weight(.semibold))
                         .foregroundStyle(AppPalette.appText)
                         .lineLimit(1)
                     Text([contribution.localizedName(language: language).nonEmpty, contribution.localizedProjectName(language: language).nonEmpty].compactMap { $0 }.joined(separator: " - "))
-                        .font(.system(size: 12))
+                        .font(appFont(.secondary))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
                 Spacer()
                 Text(contributionDateText(contribution))
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
                 CongressMiniBadge(
                     text: contribution.effectiveStatus.displayName(language: language),
@@ -2925,7 +2926,7 @@ private struct CongressDetailPane: View {
                         ZStack(alignment: .topTrailing) {
                             let hasDate = value.trimmedOrNil != nil
                             CommitDateFieldWithTodayButton(
-                                placeholder: language.text("YYYY-MM-DD", "ÅÅÅÅ-MM-DD"),
+                                placeholder: language.datePlaceholder,
                                 text: text,
                                 formatter: DateParsers.canonicalizedDayInput,
                                 updatesContinuously: false,
@@ -3006,7 +3007,7 @@ private struct CongressDetailPane: View {
         VStack(alignment: .leading, spacing: 6) {
             AppFieldLabelText(text: title)
             CommitDateFieldWithTodayButton(
-                placeholder: language.text("YYYY-MM-DD", "ÅÅÅÅ-MM-DD"),
+                placeholder: language.datePlaceholder,
                 text: text,
                 formatter: DateParsers.canonicalizedDayInput,
                 updatesContinuously: false,
@@ -3835,7 +3836,7 @@ private struct CongressMiniMapView: View {
         VStack(alignment: .leading, spacing: 0) {
             if query.isEmpty {
                 Text(language.text("Add venue, city, or country to show a map.", "Lägg till plats, ort eller land för att visa karta."))
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: mapHeight)
                     .background(AppPalette.secondaryCardSurface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))

@@ -15,14 +15,14 @@ struct OrganizationAssociationSection: View {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(language.text("Member from", "Medlem från"))
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(appFont(.tableHeader))
                     AppYearField(text: $membershipFrom, language: language, width: 120)
                 }
                 .frame(width: 120, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(language.text("Member to", "Medlem till"))
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(appFont(.tableHeader))
                     AppYearField(text: $membershipTo, language: language, width: 120)
                 }
                 .frame(width: 120, alignment: .leading)

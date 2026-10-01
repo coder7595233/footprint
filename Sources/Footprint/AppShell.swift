@@ -2340,7 +2340,7 @@ struct RenewedRailTabButton: View {
                     .appReminderCountBadge(reminderBadgeCount, inset: -6, help: reminderBadgeHelp)
                 if isExpanded {
                     Text(title)
-                        .font(.system(size: 15, weight: isSelected ? .semibold : .medium))
+                        .font(appFont(.panelTitle).weight(isSelected ? .semibold : .medium))
                         .lineLimit(1)
                     if let badgeCount, badgeCount > 0 {
                         NavigationIssueBadge(count: badgeCount)
@@ -2502,10 +2502,10 @@ private struct CleanShellUnderlineToggleButton: View {
                 if let iconText = option.iconText {
                     HStack(spacing: 6) {
                         Text(iconText)
-                            .font(.system(size: 15, weight: option.isSelected ? .semibold : .medium))
+                            .font(appFont(.panelTitle).weight(option.isSelected ? .semibold : .medium))
                         if isExpanded, showsTitleInExpandedNavigation, let title = option.title {
                             Text(title)
-                                .font(.system(size: 16, weight: option.isSelected ? .semibold : .medium))
+                                .font(appFont(.panelTitle).weight(option.isSelected ? .semibold : .medium))
                                 .lineLimit(1)
                         }
                     }
@@ -2527,12 +2527,12 @@ private struct CleanShellUnderlineToggleButton: View {
                 } else if let title = option.title {
                     if isExpanded {
                         Text(title)
-                            .font(.system(size: 16, weight: option.isSelected ? .semibold : .medium))
+                            .font(appFont(.panelTitle).weight(option.isSelected ? .semibold : .medium))
                             .foregroundStyle(AppPalette.appText)
                             .lineLimit(1)
                     } else if let first = title.first {
                         Text(String(first))
-                            .font(.system(size: 16, weight: option.isSelected ? .semibold : .medium))
+                            .font(appFont(.panelTitle).weight(option.isSelected ? .semibold : .medium))
                             .foregroundStyle(AppPalette.appText)
                     }
                 }
@@ -2580,7 +2580,7 @@ private struct ClipboardPreviewOverlay: View {
     var body: some View {
         VStack {
             Text(text)
-                .font(.system(size: 14, weight: .medium))
+                .font(appFont(.panelTitle).weight(.medium))
                 .foregroundStyle(Color.black)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: 560, alignment: .leading)
@@ -2671,10 +2671,10 @@ private struct FooterStatusBar: View {
     }
 
     private func timeText(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        formatter.dateStyle = .none
-        return formatter.string(from: date)
+        // Round 16: 24-hour time; earlier days also show the ISO date.
+        Calendar.current.isDateInToday(date)
+            ? AppTimestampFormatter.time(date)
+            : AppTimestampFormatter.dateAndTime(date)
     }
 
     private var modeAccentColor: Color {

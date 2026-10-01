@@ -1006,7 +1006,7 @@ private struct DoctoralCandidateDetailView: View {
                 HStack(spacing: 10) {
                     if draft.isEditingLocked {
                         Text(draft.candidateName.trimmedOrNil ?? language.text("Doctoral candidate", "Doktorand"))
-                            .font(.system(size: 24, weight: .bold))
+                            .font(appFont(.pageTitle))
                             .foregroundStyle(AppPalette.appText)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
@@ -1024,7 +1024,7 @@ private struct DoctoralCandidateDetailView: View {
                             usesTransparentFieldStyle: false,
                             showsSuggestionsWithoutQuery: true,
                             appliesChrome: false,
-                            textFont: NSFont.systemFont(ofSize: 24, weight: .bold)
+                            textFont: appNSFont(.pageTitle)
                         )
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -1033,7 +1033,7 @@ private struct DoctoralCandidateDetailView: View {
                             NSWorkspace.shared.open(eISPURL)
                         } label: {
                             Label("eISP", systemImage: "link")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(appFont(.secondary).weight(.semibold))
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(AppPalette.linkAction)
@@ -1045,7 +1045,7 @@ private struct DoctoralCandidateDetailView: View {
                             store.openRoute(for: candidateAuthor)
                         } label: {
                             Label(language.text("Person card", "Personkort"), systemImage: "person.crop.rectangle")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(appFont(.secondary).weight(.semibold))
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(AppPalette.linkAction)
@@ -1057,12 +1057,15 @@ private struct DoctoralCandidateDetailView: View {
                     doctoralEditorLockButton(language: language)
 
                     if !draft.isEditingLocked {
-                        Button(role: .destructive) {
+                        // Round 16: ask before deleting, like the other record views.
+                        DeleteActionButton(
+                            title: language.text("Delete", "Ta bort"),
+                            confirmationTitle: language.text("Delete doctoral candidate?", "Ta bort doktorand?"),
+                            confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras."),
+                            cancelTitle: language.text("Cancel", "Avbryt")
+                        ) {
                             store.deleteDoctoralCandidate(id: draft.id)
-                        } label: {
-                            Label(language.text("Delete", "Ta bort"), systemImage: "trash")
                         }
-                        .appDeleteButtonStyle()
                     }
                 }
 
@@ -1192,7 +1195,7 @@ private struct DoctoralCandidateDetailView: View {
                                 Spacer(minLength: 8)
                                 if !rowIsPlaceholder {
                                     Text(supervisorStatusText(rowStatus))
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(appFont(.secondary).weight(.medium))
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
                                         .frame(width: 176, alignment: .trailing)
@@ -1299,7 +1302,7 @@ private struct DoctoralCandidateDetailView: View {
                                             AppTableHeaderText(text: language.text("Activity hours", "Aktivitetstimmar"))
                                         }
                                         Text(supervisionCalendarActivityHoursText(for: period))
-                                            .font(.system(size: 12.5, weight: .medium))
+                                            .font(appFont(.body).weight(.medium))
                                             .foregroundStyle(supervisionCalendarActivityMinutesByPeriodID[period.id, default: 0] > 0 ? AppPalette.appText : .secondary)
                                             .frame(height: AppPalette.fieldMinHeight, alignment: .center)
                                     }
@@ -1309,7 +1312,7 @@ private struct DoctoralCandidateDetailView: View {
                                             AppTableHeaderText(text: language.text("Total so far", "Summa hittills"))
                                         }
                                         Text(supervisionAccruedHoursText(for: period))
-                                            .font(.system(size: 12.5, weight: .medium))
+                                            .font(appFont(.body).weight(.medium))
                                             .foregroundStyle((period.accruedSupervisionHours() ?? 0) > 0 ? AppPalette.appText : .secondary)
                                             .frame(height: AppPalette.fieldMinHeight, alignment: .center)
                                     }
@@ -1333,7 +1336,7 @@ private struct DoctoralCandidateDetailView: View {
                         }
                         if let totalText = supervisionAccruedTotalText {
                             Text(totalText)
-                                .font(.system(size: 12.5, weight: .semibold))
+                                .font(appFont(.body).weight(.semibold))
                                 .foregroundStyle(AppPalette.appText)
                         }
                     }
@@ -1379,11 +1382,11 @@ private struct DoctoralCandidateDetailView: View {
                         if !draft.isEditingLocked {
                             if draft.candidateName.trimmedOrNil == nil {
                                 Text(language.text("Enter the doctoral candidate name to choose matching publications.", "Fyll i doktorandens namn för att kunna välja matchande publikationer."))
-                                    .font(.system(size: 12))
+                                    .font(appFont(.secondary))
                                     .foregroundStyle(.secondary)
                             } else if eligiblePublicationChoices.isEmpty {
                                 Text(language.text("No publications with this doctoral candidate in the author list were found.", "Inga publikationer med denna doktorand i författarlistan hittades."))
-                                    .font(.system(size: 12))
+                                    .font(appFont(.secondary))
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -1419,7 +1422,7 @@ private struct DoctoralCandidateDetailView: View {
                                         DoctoralPublicationStatusBadge(status: publication.statusLabel, language: language)
                                             .frame(width: 112, alignment: .leading)
                                         Text(publication.title)
-                                            .font(.system(size: 13))
+                                            .font(appFont(.body))
                                             .foregroundStyle(.primary)
                                             .lineLimit(1)
                                             .truncationMode(.tail)
@@ -1476,15 +1479,15 @@ private struct DoctoralCandidateDetailView: View {
                                 HStack(spacing: 10) {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(row.congress.title)
-                                            .font(.system(size: 13, weight: .medium))
+                                            .font(appFont(.body).weight(.medium))
                                             .foregroundStyle(AppPalette.appText)
                                         Text(congressSubtitle(row))
-                                            .font(.system(size: 12))
+                                            .font(appFont(.secondary))
                                             .foregroundStyle(.secondary)
                                     }
                                     Spacer(minLength: 0)
                                     Text(congressDateText(row.congress))
-                                        .font(.system(size: 12))
+                                        .font(appFont(.secondary))
                                         .foregroundStyle(.secondary)
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 12, weight: .semibold))
@@ -1724,7 +1727,7 @@ private struct DoctoralCandidateDetailView: View {
                                 doctoralDocumentDisplayLabel(document),
                                 systemImage: "doc.richtext"
                             )
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(appFont(.secondary).weight(.semibold))
                             .lineLimit(1)
                             .truncationMode(.middle)
                         }
@@ -1748,7 +1751,7 @@ private struct DoctoralCandidateDetailView: View {
 
             if visibleDocumentRows.isEmpty {
                 Text(language.text("No documents uploaded.", "Inga dokument uppladdade."))
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
             }
         }
@@ -1838,13 +1841,13 @@ private struct DoctoralCandidateDetailView: View {
 
             if visibleCourseRows.isEmpty {
                 Text(language.text("No courses added.", "Inga kurser tillagda."))
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
             }
 
             if !visibleCourseRows.isEmpty {
                 Text(doctoralCourseCreditsSummary)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.top, 2)

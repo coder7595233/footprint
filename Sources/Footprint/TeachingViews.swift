@@ -1155,7 +1155,7 @@ struct TeachingWorkspaceView: View {
                     }
                 } label: {
                     Text(language.text("New", "Nytt"))
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(appFont(.body).weight(.semibold))
                 }
                 .menuStyle(.borderedButton)
                 .controlSize(.regular)
@@ -2160,7 +2160,7 @@ private struct TeachingAssignmentDetailView: View {
     }
 
     private var activityFieldAccessory: some View {
-        teachingManagementButton {
+        teachingManagementButton(language: language) {
             createActivityOptionFromCurrentDraft()
         }
         .help(language.text("Add teaching assignment option", "Lägg till undervisningsuppdrag"))
@@ -2218,7 +2218,7 @@ private struct TeachingAssignmentDetailView: View {
                                 TeachingLabeledField(
                                     title: language.text("Type", "Typ"),
                                     accessory: {
-                                        teachingManagementButton {
+                                        teachingManagementButton(language: language) {
                                             showingKindManager = true
                                         }
                                         .popover(isPresented: $showingKindManager, arrowEdge: .bottom) {
@@ -2247,7 +2247,7 @@ private struct TeachingAssignmentDetailView: View {
                                 TeachingLabeledField(
                                     title: language.text("Merit report categorization", "Kategorisering för meritrapport"),
                                     accessory: {
-                                        teachingManagementButton {
+                                        teachingManagementButton(language: language) {
                                             showingReportCategoryManager = true
                                         }
                                         .popover(isPresented: $showingReportCategoryManager, arrowEdge: .bottom) {
@@ -2353,7 +2353,7 @@ private struct TeachingAssignmentDetailView: View {
                                 TeachingLabeledField(
                                     title: language.text("Type", "Typ"),
                                     accessory: {
-                                        teachingManagementButton {
+                                        teachingManagementButton(language: language) {
                                             showingKindManager = true
                                         }
                                         .popover(isPresented: $showingKindManager, arrowEdge: .bottom) {
@@ -2382,7 +2382,7 @@ private struct TeachingAssignmentDetailView: View {
                                 TeachingLabeledField(
                                     title: language.text("Merit report categorization", "Kategorisering för meritrapport"),
                                     accessory: {
-                                        teachingManagementButton {
+                                        teachingManagementButton(language: language) {
                                             showingReportCategoryManager = true
                                         }
                                         .popover(isPresented: $showingReportCategoryManager, arrowEdge: .bottom) {
@@ -2422,7 +2422,7 @@ private struct TeachingAssignmentDetailView: View {
                         TeachingLabeledField(
                             title: language.text("Role", "Roll"),
                             accessory: {
-                                teachingManagementButton {
+                                teachingManagementButton(language: language) {
                                     showingRoleManager = true
                                 }
                                 .popover(isPresented: $showingRoleManager, arrowEdge: .bottom) {
@@ -3345,8 +3345,8 @@ private typealias TeachingPanel<Content: View> = AppWorkspacePanel<Content>
 private typealias TeachingLabeledField<Content: View, Accessory: View> = AppLabeledField<Content, Accessory>
 
 @MainActor
-private func teachingManagementButton(action: @escaping () -> Void) -> some View {
-    AppIconAddButton(title: "Lägg till", action: action)
+private func teachingManagementButton(language: AppLanguage, action: @escaping () -> Void) -> some View {
+    AppIconAddButton(title: language.text("Add", "Lägg till"), action: action)
 }
 
 private struct TeachingAssignmentKindsPopover: View {
@@ -4049,7 +4049,7 @@ private struct TeachingDateField: View {
     var body: some View {
         AppLabeledField(title: showsTitle ? (title ?? "") : "", width: width, fillsAvailableWidth: false) {
             AppDateField(
-                placeholder: "YYYY-MM-DD",
+                placeholder: language.datePlaceholder,
                 text: text,
                 width: 104,
                 showsTodayButton: true,
