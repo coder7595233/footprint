@@ -297,8 +297,10 @@ struct ProjectGrantTimelineView: View, @preconcurrency Equatable {
             Button(action: {
                 openPublicationAction(marker.publicationID)
             }) {
-                Text("📄")
-                    .font(.system(size: 14))
+                // Round 17: the Publications tab symbol instead of an emoji.
+                Image(systemName: AppTab.publications.symbolName)
+                    .font(.system(size: 12))
+                    .foregroundStyle(AppPalette.appText)
                     .frame(width: 20, height: 20)
                     .contentShape(Rectangle())
             }

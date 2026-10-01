@@ -414,11 +414,10 @@ struct StatisticsView: View {
 
     private func statisticsDeferredPlaceholder(language: AppLanguage) -> some View {
         HStack(spacing: 8) {
-            ProgressView()
-                .controlSize(.small)
-            Text(language.text("Loading statistics...", "Laddar statistik..."))
-                .appTypography(.secondary)
-                .foregroundStyle(.secondary)
+            AppLoadingLabel(
+                language: language,
+                title: language.text("Loading statistics…", "Laddar statistik…")
+            )
             Spacer()
         }
         .frame(maxWidth: .infinity, minHeight: 96, alignment: .leading)
@@ -1167,7 +1166,7 @@ struct StatisticsView: View {
         return [
             StatisticsHeatRow(key: "applications", title: language.text("Applications", "Ansökningar"), values: applicationCounts + [applicationCounts.reduce(0, +)], formatter: { Self.groupedIntegerString($0) }, palette: .blue),
             StatisticsHeatRow(key: "granted", title: ApplicationOutcome.granted.heading(language), values: grantedCounts + [grantedCounts.reduce(0, +)], formatter: { Self.groupedIntegerString($0) }, palette: .green),
-            StatisticsHeatRow(key: "grantedAmount", title: language.text("Granted (MSEK)", "Beviljat (mkr)"), values: grantedSums + [grantedSums.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .green),
+            StatisticsHeatRow(key: "grantedAmount", title: language.text("Granted (MSEK)", "Beviljat (mkr)"), values: grantedSums + [grantedSums.reduce(0, +)], formatter: { AmountFormatter.decimal($0, language: language) }, palette: .green),
         ]
     }
 
@@ -1504,14 +1503,14 @@ struct StatisticsView: View {
         let totalAmount = matching
             .map(grantStatisticsAmount(for:))
             .reduce(0, +)
-        let totalAmountText = groupedDecimal2String(totalAmount / 1_000_000, language: store.language) + " " + AmountFormatter.millionsUnit(store.language)
+        let totalAmountText = AmountFormatter.millions(totalAmount, language: store.language)
 
         let items = matching.map { application in
             StatisticsDrilldownItem(
                 id: application.id,
                 title: store.localizedGrantName(for: application, language: language).nonEmpty ?? language.text("Untitled grant", "Namnlöst anslag"),
                 subtitle: [store.organizationLabel(for: application, language: language), application.statsYear, language.localizedStatus(application.resultLabel)].filter { !$0.isEmpty }.joined(separator: " · "),
-                detail: groupedDecimal2String(grantStatisticsAmount(for: application) / 1_000_000, language: store.language) + " " + AmountFormatter.millionsUnit(store.language),
+                detail: AmountFormatter.millions(grantStatisticsAmount(for: application), language: store.language),
                 recordID: application.id,
                 destination: .applications
             )

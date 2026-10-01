@@ -1346,11 +1346,8 @@ private func calendarLinkedSecondaryText(
     language: AppLanguage,
     calendar: Calendar
 ) -> String {
-    let formatter = DateFormatter()
-    formatter.calendar = calendar
-    formatter.locale = calendar.locale
-    formatter.dateFormat = "d MMM yyyy"
-    let dateText = formatter.string(from: displayDate).capitalized
+    // Round 17: shared format; Swedish months stay lowercase ("1 okt. 2026").
+    let dateText = AppTimestampFormatter.dayMonthYear(displayDate, locale: calendar.locale, calendar: calendar)
     if let timeText = timeText.trimmedOrNil {
         return "\(dateText) (\(timeText))"
     }

@@ -16,7 +16,12 @@ enum StatisticsEditorialStyle {
     static var paletteOrange: Color { AppPalette.statusFill(.warning) }
     /// Blue is a category colour here (not a status): Settings' neutral colour.
     static var paletteBlue: Color { AppPalette.vividBlue }
-    static let palettePurple = Color(hex: 0xC9B8E8)
+    /// Round 17: follows light/dark mode. The light value is unchanged
+    /// (#C9B8E8); dark mode uses a deeper purple that keeps light text readable.
+    static let palettePurple = dynamicColor(
+        light: NSColor(srgbRed: 201.0 / 255.0, green: 184.0 / 255.0, blue: 232.0 / 255.0, alpha: 1),
+        dark: NSColor(srgbRed: 91.0 / 255.0, green: 74.0 / 255.0, blue: 134.0 / 255.0, alpha: 1)
+    )
 }
 
 private extension Color {

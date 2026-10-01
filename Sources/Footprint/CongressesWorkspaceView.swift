@@ -861,7 +861,8 @@ struct CongressesWorkspaceView: View {
     private func congressListRowBackground(row: CongressWorkspaceRow, isSelected: Bool) -> some View {
         AppListRowBackground(
             isSelected: isSelected,
-            toneFill: row.statusTone == .neutral ? nil : row.statusTone.fill
+            toneFill: row.statusTone == .neutral ? nil : row.statusTone.fill,
+            isLocked: row.congress.isEditingLocked
         )
     }
 
@@ -1765,9 +1766,7 @@ private struct CongressDetailPane: View {
                             }
 
                             if linkedContributions.isEmpty {
-                                Text(language.text("No abstracts linked to this congress yet.", "Inga abstract är kopplade till den här kongressen ännu."))
-                                    .font(appFont(.secondary))
-                                    .foregroundStyle(.secondary)
+                                AppCompactEmptyListLabel(title: language.text("No abstracts linked to this congress yet", "Inga abstract är kopplade till den här kongressen ännu"))
                             } else {
                                 VStack(alignment: .leading, spacing: 0) {
                                     ForEach(linkedContributions) { contribution in
@@ -2215,7 +2214,9 @@ private struct CongressDetailPane: View {
                                     participantLinkButton(for: name, width: participantLinkColumnWidth)
                                     AppInlineDeleteButton(
                                         title: language.text("Delete participant", "Ta bort deltagare"),
-                                        width: participantTrashColumnWidth
+                                        width: participantTrashColumnWidth,
+                                        cancelTitle: language.text("Cancel", "Avbryt"),
+                                        confirmationTitle: language.text("Delete participant?", "Ta bort deltagaren?")
                                     ) {
                                         removeParticipant(named: name)
                                     }
@@ -2366,9 +2367,7 @@ private struct CongressDetailPane: View {
                         }
 
                         if visibleTravelFlights.isEmpty {
-                            Text(language.text("No travel rows added yet.", "Inga resor tillagda ännu."))
-                                .font(appFont(.secondary))
-                                .foregroundStyle(.secondary)
+                            AppCompactEmptyListLabel(title: language.text("No travel rows added yet", "Inga resor tillagda ännu"))
                         } else {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 VStack(alignment: .leading, spacing: isEditingLocked ? 1 : 6) {
@@ -2439,7 +2438,9 @@ private struct CongressDetailPane: View {
                                             }
                                             if !isEditingLocked {
                                                 AppInlineDeleteButton(
-                                                    title: language.text("Remove funding application", "Ta bort finansieringsansökan")
+                                                    title: language.text("Remove funding application", "Ta bort finansieringsansökan"),
+                                                    cancelTitle: language.text("Cancel", "Avbryt"),
+                                                    confirmationTitle: language.text("Remove funding application?", "Ta bort finansieringsansökan?")
                                                 ) {
                                                     draft.fundingApplicationIDs.removeAll { $0 == applicationID }
                                                     scheduleAutosave()
@@ -2503,9 +2504,7 @@ private struct CongressDetailPane: View {
             }
 
             if visibleTravelHotels.isEmpty {
-                Text(language.text("No hotel rows added yet.", "Inga hotellrader tillagda ännu."))
-                    .font(appFont(.secondary))
-                    .foregroundStyle(.secondary)
+                AppCompactEmptyListLabel(title: language.text("No hotel rows added yet", "Inga hotellrader tillagda ännu"))
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: isEditingLocked ? 1 : 6) {
@@ -2573,7 +2572,9 @@ private struct CongressDetailPane: View {
             if !isEditingLocked {
                 AppInlineDeleteButton(
                     title: language.text("Remove travel row", "Ta bort reserad"),
-                    width: 24
+                    width: 24,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Remove travel row?", "Ta bort reseraden?")
                 ) {
                     removeCalendarTravelRecordIfLinked(flightID)
                     draft.travelFlights.removeAll { $0.id == flightID }
@@ -2704,7 +2705,9 @@ private struct CongressDetailPane: View {
             if !isEditingLocked {
                 AppInlineDeleteButton(
                     title: language.text("Remove hotel row", "Ta bort hotellrad"),
-                    width: 24
+                    width: 24,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Remove hotel row?", "Ta bort hotellraden?")
                 ) {
                     removeCalendarAccommodationRecordIfLinked(hotelID)
                     draft.travelHotels.removeAll { $0.id == hotelID }
@@ -3017,7 +3020,7 @@ private struct CongressDetailPane: View {
 
                             if uncertain.wrappedValue {
                                 Text("?")
-                                    .font(.system(size: 12, weight: .bold))
+                                    .font(appBadgeFont())
                                     .foregroundStyle(AppPalette.statusText(.warning))
                                     .padding(.horizontal, 5)
                                     .padding(.vertical, 2)

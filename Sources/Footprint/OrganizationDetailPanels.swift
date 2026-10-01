@@ -199,9 +199,7 @@ private struct OrganizationCompactGrantStatsRow: View {
 
     var body: some View {
         if segments.isEmpty {
-            Text(language.text("No submitted, declined or granted applications yet.", "Inga ansökta, avslagna eller beviljade anslag än."))
-                .font(appFont(.secondary))
-                .foregroundStyle(.secondary)
+            AppCompactEmptyListLabel(title: language.text("No submitted, declined or granted applications yet", "Inga ansökta, avslagna eller beviljade anslag än"))
         } else {
             HStack(spacing: 8) {
                 ForEach(segments) { segment in
@@ -1025,7 +1023,9 @@ struct OrganizationOverheadRuleSection: View {
                 percentField(text: exceptionApprovedMaxBinding(exceptionID: exceptionID), placeholder: "100")
                 AppIconDeleteButton(
                     title: language.text("Delete exception", "Ta bort undantaget"),
-                    width: deleteActionWidth
+                    width: deleteActionWidth,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Delete exception?", "Ta bort undantaget?")
                 ) {
                     removeException(exceptionID: exceptionID)
                 }

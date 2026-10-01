@@ -197,15 +197,15 @@ struct DataExchangeExportCenterView: View {
         ) {
             HStack {
                 Text(category.displayName(language))
-                    .font(.body.weight(.medium))
+                    .font(appFont(.body).weight(.medium))
                 Spacer()
                 if automaticallyIncludedCategories.contains(category) {
                     Text(language.text("Required dependency", "Nödvändigt beroende"))
-                        .font(.caption)
+                        .font(appFont(.secondary))
                         .foregroundStyle(.secondary)
                 }
                 Text(countText(for: category, language: language))
-                    .font(.subheadline)
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
             }
         }
@@ -280,7 +280,7 @@ private struct ExportStepIndicator: View {
             ForEach(Array(steps.enumerated()), id: \.offset) { index, title in
                 HStack(spacing: 7) {
                     Text("\(index + 1)")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(appBadgeFont())
                         .foregroundStyle(index <= activeIndex ? AppPalette.activeTabText : .secondary)
                         .frame(width: 20, height: 20)
                         .background(

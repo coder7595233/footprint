@@ -160,7 +160,7 @@ extension GrantDataStore {
             notice = StoreNotice(
                 message: language.text(
                     "Selective import is unavailable while the database could not be loaded. Restore a full backup instead.",
-                    "Selektiv import är inte tillgänglig när databasen inte kunde läsas in. Återställ en fullständig backup i stället."
+                    "Selektiv import är inte tillgänglig när databasen inte kunde läsas in. Återställ en fullständig säkerhetskopia i stället."
                 ),
                 tone: .error
             )
@@ -267,7 +267,7 @@ extension GrantDataStore {
                 self.notice = StoreNotice(
                     message: language.text(
                         "Imported selected data after creating a verified safety backup.",
-                        "Importerade valda data efter att en verifierad säkerhetsbackup skapats."
+                        "Importerade valda data efter att en verifierad säkerhetskopia skapats."
                     ),
                     tone: .success
                 )

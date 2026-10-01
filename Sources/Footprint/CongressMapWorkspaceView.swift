@@ -1005,11 +1005,10 @@ struct CongressMapWorkspaceView: View {
                 Spacer(minLength: 0)
 
                 if geocodingLocationCount > 0 {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(language.text("Placing locations", "Placerar platser"))
-                        .font(appFont(.body).weight(.medium))
-                        .foregroundStyle(.secondary)
+                    AppLoadingLabel(
+                        language: language,
+                        title: language.text("Placing locations…", "Placerar platser…")
+                    )
                 }
             }
 
@@ -1085,7 +1084,7 @@ struct CongressMapWorkspaceView: View {
                     .font(appFont(.panelTitle))
                 Spacer()
                 Text("\(rows.count)")
-                    .font(appFont(.secondary).weight(.bold))
+                    .font(appBadgeFont())
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 16)
@@ -1420,7 +1419,7 @@ struct CongressMapWorkspaceView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
                         Text(row.title)
                             .font(appFont(.body).weight(.semibold))
-                            .foregroundStyle(.black)
+                            .foregroundStyle(AppPalette.appText)
                             .fixedSize(horizontal: false, vertical: true)
                         if let url = normalizedWebLinkURL(row.link) {
                             Button { NSWorkspace.shared.open(url) } label: {
@@ -1437,7 +1436,7 @@ struct CongressMapWorkspaceView: View {
                         Text(row.dateText)
                             .font(appFont(.secondary).weight(.medium))
                             .monospacedDigit()
-                            .foregroundStyle(Color.black.opacity(0.82))
+                            .foregroundStyle(AppPalette.appText.opacity(0.82))
                         calendarLink(
                             for: row,
                             date: row.startDate,
@@ -1468,7 +1467,7 @@ struct CongressMapWorkspaceView: View {
             if let placeText = row.placeText.nonEmpty {
                 Text(placeText)
                     .font(appFont(.body))
-                    .foregroundStyle(Color.black.opacity(0.74))
+                    .foregroundStyle(AppPalette.appText.opacity(0.74))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -1476,7 +1475,7 @@ struct CongressMapWorkspaceView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
                     Text(row.organizationName)
                         .font(appFont(.body))
-                        .foregroundStyle(Color.black.opacity(0.74))
+                        .foregroundStyle(AppPalette.appText.opacity(0.74))
                         .fixedSize(horizontal: false, vertical: true)
                     Button {
                         store.route = AppRoute(recordID: row.organizationID, destination: .organizations)
@@ -1496,7 +1495,7 @@ struct CongressMapWorkspaceView: View {
                         HStack(alignment: .firstTextBaseline, spacing: 5) {
                             Text(deadline.text)
                                 .font(appFont(.secondary).weight(.medium))
-                                .foregroundStyle(Color.black.opacity(0.86))
+                                .foregroundStyle(AppPalette.appText.opacity(0.86))
                             calendarLink(
                                 for: row,
                                 date: deadline.date,
@@ -1511,7 +1510,7 @@ struct CongressMapWorkspaceView: View {
             if let timeZoneDifferenceText = timeZoneDifferenceText(for: row) {
                 Text(timeZoneDifferenceText)
                     .font(appFont(.secondary).weight(.medium))
-                    .foregroundStyle(Color.black.opacity(0.68))
+                    .foregroundStyle(AppPalette.appText.opacity(0.68))
                     .padding(.top, 2)
             }
 
@@ -1519,8 +1518,9 @@ struct CongressMapWorkspaceView: View {
         .padding(12)
         .frame(width: 360, alignment: .leading)
         .background(
+            // Round 17: theme surface instead of fixed white (dark mode).
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Color.white.opacity(0.9))
+                .fill(AppPalette.cardSurface.opacity(0.96))
                 .shadow(color: Color.black.opacity(0.18), radius: 12, x: 0, y: 6)
         )
         .overlay(
@@ -3151,12 +3151,13 @@ private final class CongressMapNativeLabelPill: NSView {
         layer?.cornerRadius = 7
         layer?.borderWidth = 0.8
         titleField.font = Self.titleFont
-        titleField.textColor = .black
+        // Round 17: theme text colours (dynamic), so the pill reads in dark mode.
+        titleField.textColor = NSColor(AppPalette.appText)
         titleField.lineBreakMode = .byWordWrapping
         titleField.maximumNumberOfLines = 0
         titleField.alignment = .left
         dateField.font = Self.dateFont
-        dateField.textColor = NSColor.black.withAlphaComponent(0.82)
+        dateField.textColor = NSColor(AppPalette.appText).withAlphaComponent(0.82)
         dateField.lineBreakMode = .byClipping
         dateField.maximumNumberOfLines = 1
         dateField.alignment = .left
@@ -3195,11 +3196,27 @@ private final class CongressMapNativeLabelPill: NSView {
             width: measurement.contentWidth,
             height: measurement.titleHeight
         )
-        layer?.backgroundColor = NSColor.white.withAlphaComponent(0.9).cgColor
-        layer?.borderColor = accentColor.withAlphaComponent(0.95).cgColor
+        pillAccentColor = accentColor
+        applySurfaceColors()
         layer?.borderWidth = 2
         toolTip = "\(title)\n\(date)"
         return measurement.size
+    }
+
+    private var pillAccentColor: NSColor = .systemBlue
+
+    /// Round 17: resolves the theme surface for the view's own appearance
+    /// (layer colours do not follow dark mode by themselves).
+    private func applySurfaceColors() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            self.layer?.backgroundColor = NSColor(AppPalette.cardSurface).withAlphaComponent(0.96).cgColor
+            self.layer?.borderColor = self.pillAccentColor.withAlphaComponent(0.95).cgColor
+        }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applySurfaceColors()
     }
 
     static func measuredSize(
@@ -4754,7 +4771,7 @@ private struct CongressMapAdaptiveCalloutLabel: View {
             Spacer(minLength: 4)
 
             Text("\(count)")
-                .font(.system(size: 13, weight: .bold))
+                .font(appBadgeFont())
                 .monospacedDigit()
                 .foregroundStyle(AppPalette.appText)
                 .padding(.horizontal, 8)
@@ -4857,7 +4874,7 @@ private struct CongressMapAdaptiveCalloutLabel: View {
 
     private var daysRemainingBox: some View {
         Text(daysRemainingText)
-            .font(appFont(.secondary).weight(.bold))
+            .font(appBadgeFont())
             .foregroundStyle(AppPalette.appText)
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)

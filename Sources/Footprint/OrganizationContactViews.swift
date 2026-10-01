@@ -63,7 +63,9 @@ struct OrganizationContactPersonsSection: View {
                 if !contacts[index].isEmpty {
                     AppIconDeleteButton(
                         title: language.text("Delete", "Ta bort"),
-                        width: contactActionWidth
+                        width: contactActionWidth,
+                        cancelTitle: language.text("Cancel", "Avbryt"),
+                        confirmationTitle: language.text("Delete contact?", "Ta bort kontakten?")
                     ) {
                         removeContact(contactID: contactID)
                     }

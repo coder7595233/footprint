@@ -3268,14 +3268,15 @@ private struct SalaryCalculatorSalaryMatrixSection: View {
                                     Color.clear
                                         .frame(width: valueColumnWidth, height: rowHeight)
                                 } else {
-                                    Button(role: .destructive) {
+                                    AppRowDeleteIconButton(
+                                        title: language.text("Delete period", "Ta bort period"),
+                                        cancelTitle: language.text("Cancel", "Avbryt"),
+                                        confirmationTitle: language.text("Delete period?", "Ta bort period?"),
+                                        width: valueColumnWidth,
+                                        height: rowHeight
+                                    ) {
                                         deletePeriod(id: period.id)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .foregroundStyle(AppPalette.actionDelete)
-                                            .frame(width: valueColumnWidth, height: rowHeight, alignment: .center)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
                         }
@@ -3426,14 +3427,15 @@ private struct SalaryCalculatorSharedCostMatrixSection: View {
                                     Color.clear
                                         .frame(width: columnWidth, height: rowHeight)
                                 } else {
-                                    Button(role: .destructive) {
+                                    AppRowDeleteIconButton(
+                                        title: language.text("Delete period", "Ta bort period"),
+                                        cancelTitle: language.text("Cancel", "Avbryt"),
+                                        confirmationTitle: language.text("Delete period?", "Ta bort period?"),
+                                        width: columnWidth,
+                                        height: rowHeight
+                                    ) {
                                         deletePeriod(id: period.id)
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .foregroundStyle(AppPalette.actionDelete)
-                                            .frame(width: columnWidth, height: rowHeight, alignment: .center)
                                     }
-                                    .buttonStyle(.plain)
                                 }
                             }
                         }

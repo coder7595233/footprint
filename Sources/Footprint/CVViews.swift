@@ -19,6 +19,8 @@ private struct CVListRow: Identifiable {
     let reviewCategory: CVReviewCategory?
     /// Raw values of ExpertAssignmentStatusKey (expert-assignment chips).
     let reviewStatusKeys: Set<String>
+    /// Round 17: locked records show the same lock glyph as other lists.
+    let isLocked: Bool
 
     init(
         id: String,
@@ -35,7 +37,8 @@ private struct CVListRow: Identifiable {
         normalizedSearchBlob: String,
         reviewWorkflowStatus: CVReviewWorkflowStatus? = nil,
         reviewCategory: CVReviewCategory? = nil,
-        reviewStatusKeys: Set<String> = []
+        reviewStatusKeys: Set<String> = [],
+        isLocked: Bool = false
     ) {
         self.id = id
         self.kind = kind
@@ -52,6 +55,7 @@ private struct CVListRow: Identifiable {
         self.reviewWorkflowStatus = reviewWorkflowStatus
         self.reviewCategory = reviewCategory
         self.reviewStatusKeys = reviewStatusKeys
+        self.isLocked = isLocked
     }
 }
 
@@ -357,7 +361,8 @@ struct DisseminationWorkspaceView: View {
                         $0.comment,
                         authorNames,
                     ].joined(separator: " ")
-                )
+                ),
+                isLocked: $0.isEditingLocked
             )
         }
     }
@@ -685,6 +690,12 @@ struct DisseminationWorkspaceView: View {
                 StatusIndicatorListRowBackground(fill: fill)
             }
         }
+        .overlay(alignment: .trailing) {
+            if row.isLocked {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
+            }
+        }
     }
 
     private func disseminationDateShadeFill(for row: CVListRow) -> Color {
@@ -937,7 +948,8 @@ struct ExpertAssignmentsWorkspaceView: View {
                     ].joined(separator: " ")),
                     reviewWorkflowStatus: workflowStatus,
                     reviewCategory: category,
-                    reviewStatusKeys: Set(ExpertAssignmentStatusKey.keys(for: $0).map(\.rawValue))
+                    reviewStatusKeys: Set(ExpertAssignmentStatusKey.keys(for: $0).map(\.rawValue)),
+                    isLocked: $0.isEditingLocked
                 )
             }
     }
@@ -1398,6 +1410,12 @@ struct ExpertAssignmentsWorkspaceView: View {
                 StatusIndicatorListRowBackground(fill: fill)
             } else {
                 Color.clear
+            }
+        }
+        .overlay(alignment: .trailing) {
+            if row.isLocked {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
             }
         }
     }
@@ -2086,9 +2104,7 @@ struct CVConferenceContributionDetailView: View {
                                         if isEditingLocked {
                                             lockedContributorsContent
                                         } else if draft.contributorNames.isEmpty {
-                                            Text(language.text("No contributors added yet", "Inga medverkande tillagda ännu"))
-                                                .appTypography(.secondary)
-                                                .foregroundStyle(.secondary)
+                                            AppCompactEmptyListLabel(title: language.text("No contributors added yet", "Inga medverkande tillagda ännu"))
                                         } else {
                                             editableContributorsContent
                                         }
@@ -2314,7 +2330,9 @@ struct CVConferenceContributionDetailView: View {
                 contributorLinkButton(for: name, width: contributorLinkColumnWidth)
                 AppInlineDeleteButton(
                     title: language.text("Delete contributor", "Ta bort medverkande"),
-                    width: contributorTrashColumnWidth
+                    width: contributorTrashColumnWidth,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Delete contributor?", "Ta bort medverkande?")
                 ) {
                     removeContributor(at: index)
                 }
@@ -3515,7 +3533,9 @@ private struct CVMediaAppearanceDetailView: View {
                                             Text(languageName(item))
                                             Spacer()
                                             AppIconDeleteButton(
-                                                title: language.text("Delete language", "Ta bort språk")
+                                                title: language.text("Delete language", "Ta bort språk"),
+                                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                                confirmationTitle: language.text("Delete language?", "Ta bort språket?")
                                             ) {
                                                 guard draft.languages.indices.contains(index) else { return }
                                                 draft.languages.remove(at: index)
@@ -3880,7 +3900,9 @@ private struct CVMediaAppearanceDetailView: View {
 
                             AppInlineDeleteButton(
                                 title: language.text("Delete researcher", "Ta bort forskare"),
-                                width: 28
+                                width: 28,
+                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                confirmationTitle: language.text("Remove researcher from this item?", "Ta bort forskaren härifrån?")
                             ) {
                                 draft.authorIDs.removeAll { $0 == authorID }
                                 mediaAuthorEditingTextByID[authorID] = nil

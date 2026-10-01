@@ -824,20 +824,22 @@ struct AppPDFAttachmentControl: View {
     @ViewBuilder
     private func removeButton(action: @escaping () -> Void) -> some View {
         switch style {
+        // Round 17: both looks use the shared delete buttons and ask first.
         case .compact:
-            Button(role: .destructive, action: action) {
-                Image(systemName: "xmark.circle")
-                    .foregroundStyle(AppPalette.actionDelete)
-            }
-            .buttonStyle(.borderless)
-            .help(resolvedRemoveTitle)
-            .accessibilityLabel(resolvedRemoveTitle)
+            AppRowDeleteIconButton(
+                title: resolvedRemoveTitle,
+                cancelTitle: language.text("Cancel", "Avbryt"),
+                confirmationTitle: resolvedRemoveTitle + "?",
+                action: action
+            )
         case .prominent:
-            Button(role: .destructive, action: action) {
-                Label(language.text("Remove", "Ta bort"), systemImage: "trash")
-            }
-            .appDeleteButtonStyle()
-            .help(resolvedRemoveTitle)
+            AppDestructiveActionButton(
+                title: language.text("Remove", "Ta bort"),
+                help: resolvedRemoveTitle,
+                cancelTitle: language.text("Cancel", "Avbryt"),
+                confirmationTitle: resolvedRemoveTitle + "?",
+                action: action
+            )
         }
     }
 }
@@ -1718,6 +1720,25 @@ struct AppCompactEmptyListLabel: View {
     }
 }
 
+/// Round 17: the one small loading indicator: a spinner with a short label
+/// ("Laddar…" / "Loading…" unless a more specific text is given).
+struct AppLoadingLabel: View {
+    let language: AppLanguage
+    var title: String? = nil
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .controlSize(.small)
+            Text(title ?? language.text("Loading…", "Laddar…"))
+                .appTypography(.secondary)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 struct AppCompactListSectionLabel: View {
     let title: String
 
@@ -1986,11 +2007,11 @@ struct AppInlineDataQualityPanel: View {
             }
             .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .fill(containsCriticalIssue ? AppPalette.statusFill(.negative).opacity(0.16) : AppPalette.pillSurface.opacity(0.58))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .stroke((containsCriticalIssue ? AppPalette.statusText(.negative) : AppPalette.statusText(.warning)).opacity(0.42), lineWidth: 1)
             )
         }
@@ -2154,7 +2175,7 @@ struct AppOutcomeBars: View {
                     .frame(height: 10)
 
                     Text("\(item.count) (\(Int((fraction * 100).rounded())) %)")
-                        .font(appFont(.secondary).weight(.bold))
+                        .font(appBadgeFont())
                         .monospacedDigit()
                         .foregroundStyle(AppPalette.appText)
                         .frame(width: countWidth, alignment: .trailing)
@@ -2365,6 +2386,8 @@ struct FootprintDialogActions: View {
     }
 }
 
+/// Round 17: kept as a name for existing callers, but it is now the same
+/// button as `AppDestructiveActionButton` (one look, and it always asks).
 struct DeleteActionButton: View {
     let title: String
     var systemImage = "trash"
@@ -2374,15 +2397,52 @@ struct DeleteActionButton: View {
     let cancelTitle: String
     let action: () -> Void
 
+    var body: some View {
+        AppDestructiveActionButton(
+            title: title,
+            systemImage: systemImage,
+            cancelTitle: cancelTitle,
+            confirmationTitle: confirmationTitle,
+            confirmationMessage: confirmationMessage,
+            action: action
+        )
+    }
+}
+
+/// Round 17: the one trash icon for rows inside lists, tables and editors:
+/// neutral (secondary) colour, no bezel, and it always asks before it
+/// removes anything. When the store shows its own linked-object warning
+/// (`storeAsksFirst` returns true) the icon skips its own question so the
+/// user is asked exactly once.
+struct AppRowDeleteIconButton: View {
+    let title: String
+    // No default: an English "Cancel" would leak into the Swedish UI.
+    let cancelTitle: String
+    var confirmationTitle: String? = nil
+    var confirmationMessage: String? = nil
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    let action: () -> Void
+    var storeAsksFirst: (() -> Bool)? = nil
+
     @State private var showsConfirmation = false
 
     var body: some View {
         Button(role: .destructive) {
-            showsConfirmation = true
+            if storeAsksFirst?() == true {
+                action()
+            } else {
+                showsConfirmation = true
+            }
         } label: {
-            Label(title, systemImage: systemImage)
+            Image(systemName: "trash")
+                .foregroundStyle(.secondary)
+                .frame(width: width, height: height, alignment: .center)
+                .contentShape(Rectangle())
         }
-        .appDeleteButtonStyle()
+        .buttonStyle(.borderless)
+        .help(title)
+        .accessibilityLabel(title)
         .confirmationDialog(
             confirmationTitle ?? title,
             isPresented: $showsConfirmation,
@@ -2444,24 +2504,45 @@ struct AppDestructiveActionButton: View {
     }
 }
 
+/// Round 17: same look as `AppRowDeleteIconButton` (neutral trash icon, no
+/// bezel). With a cancel title it asks before it deletes; every caller in the
+/// app passes one.
 struct AppIconDeleteButton: View {
     let title: String
     var systemImage = "trash"
     var font: Font = .system(size: 13, weight: .semibold)
     var width: CGFloat? = nil
+    var cancelTitle: String? = nil
+    var confirmationTitle: String? = nil
     var action: () -> Void
 
+    @State private var showsConfirmation = false
+
     var body: some View {
-        Button(role: .destructive, action: action) {
+        Button(role: .destructive) {
+            if cancelTitle == nil {
+                action()
+            } else {
+                showsConfirmation = true
+            }
+        } label: {
             Image(systemName: systemImage)
                 .font(font)
-                .foregroundStyle(AppPalette.actionDelete)
+                .foregroundStyle(.secondary)
                 .frame(width: width, alignment: .center)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)
-        .foregroundStyle(AppPalette.actionDelete)
         .help(title)
         .accessibilityLabel(title)
+        .confirmationDialog(
+            confirmationTitle ?? title,
+            isPresented: $showsConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(title, role: .destructive, action: action)
+            Button(cancelTitle ?? "", role: .cancel) {}
+        }
     }
 }
 
@@ -2469,11 +2550,20 @@ struct AppInlineDeleteButton: View {
     let title: String
     var font: Font = .system(size: 13, weight: .semibold)
     var width: CGFloat? = nil
+    var cancelTitle: String? = nil
+    var confirmationTitle: String? = nil
     var action: () -> Void
 
     var body: some View {
-        AppIconDeleteButton(title: title, font: font, width: width, action: action)
-            .accessibilityLabel(title)
+        AppIconDeleteButton(
+            title: title,
+            font: font,
+            width: width,
+            cancelTitle: cancelTitle,
+            confirmationTitle: confirmationTitle,
+            action: action
+        )
+        .accessibilityLabel(title)
     }
 }
 

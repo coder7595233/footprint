@@ -703,14 +703,14 @@ private struct ContributorStatisticsTableSection: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .fill(AppPalette.fieldSurface)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .stroke(AppPalette.subtleBorder, lineWidth: 1)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
         }
     }
 
@@ -809,11 +809,11 @@ private struct ContributorStatisticsSummarySection: View {
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .fill(AppPalette.fieldSurface)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(AppPalette.subtleBorder.opacity(0.8), lineWidth: 1)
                     )
                 }
@@ -988,9 +988,9 @@ private struct CalendarActivityDistributionSection: View {
                                 if fitsInside {
                                     VStack(spacing: 0) {
                                         Text(entry.label)
-                                            .font(appFont(.secondary).weight(.semibold))
+                                            .font(appBadgeFont())
                                         Text("\(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))")
-                                            .font(appFont(.secondary).weight(.bold))
+                                            .font(appBadgeFont())
                                     }
                                     .foregroundStyle(entry.foreground)
                                     .lineLimit(1)
@@ -1003,8 +1003,8 @@ private struct CalendarActivityDistributionSection: View {
                         .help("\(entry.label): \(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))")
                     }
                 }
-                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).stroke(AppPalette.subtleBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous).stroke(AppPalette.subtleBorder, lineWidth: 1))
                     .onAppear { barWidth = geometry.size.width }
                     .onChange(of: geometry.size.width) { _, newWidth in barWidth = newWidth }
                 }
@@ -1162,7 +1162,7 @@ private struct CalendarMeetingStatisticsMeetingRow: View {
 
     private var calendarMeetingStatisticsSeparator: some View {
         Text("•")
-            .font(.system(size: 12, weight: .semibold))
+            .font(appFont(.secondary))
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: true, vertical: false)
     }
@@ -1183,7 +1183,7 @@ private struct ContributorCompositionBarSection: View {
 
             VStack(alignment: .leading, spacing: 7) {
             GeometryReader { geometry in
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .fill(AppPalette.fieldSurface)
                     .overlay {
                         HStack(spacing: 0) {
@@ -1198,9 +1198,9 @@ private struct ContributorCompositionBarSection: View {
                                         if fitsInside {
                                             VStack(spacing: 0) {
                                                 Text(entry.label)
-                                                    .font(appFont(.secondary).weight(.semibold))
+                                                    .font(appBadgeFont())
                                                 Text(contributorCompositionSegmentLabel(count: entry.count, percentage: entry.percentage))
-                                                    .font(appFont(.secondary).weight(.bold))
+                                                    .font(appBadgeFont())
                                             }
                                             .foregroundStyle(entry.foregroundColor)
                                             .lineLimit(1)
@@ -1211,10 +1211,10 @@ private struct ContributorCompositionBarSection: View {
                                     }
                             }
                         }
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
                     }
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(AppPalette.subtleBorder, lineWidth: 1)
                     )
                     .onAppear { barWidth = geometry.size.width }
@@ -1444,10 +1444,8 @@ private func calendarMeetingStatisticsMeetingHelpText(
 }
 
 private func calendarMeetingStatisticsDateText(_ date: Date, language: AppLanguage) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: language == .swedish ? "sv_SE" : "en_US")
-    formatter.dateFormat = "d MMM yyyy"
-    return formatter.string(from: date).capitalized
+    // Round 17: shared format; Swedish months stay lowercase ("1 okt. 2026").
+    AppTimestampFormatter.dayMonthYear(date, language: language)
 }
 
 private func calendarActivityDistributionEntries(
@@ -1533,7 +1531,7 @@ private struct InlineStatisticsSurfaceModifier: ViewModifier {
         content
             .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .fill(
                         dynamicColor(
                             light: NSColor(calibratedWhite: 0.0, alpha: 0.03),
@@ -1543,14 +1541,14 @@ private struct InlineStatisticsSurfaceModifier: ViewModifier {
                     .overlay(
                         // Approximated inner shadow: a blurred stroke nudged
                         // downward and masked to the shape.
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(Color.black.opacity(0.10), lineWidth: 1.5)
                             .blur(radius: 1.4)
                             .offset(y: 1)
-                            .mask(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            .mask(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(AppPalette.subtleBorder.opacity(0.6), lineWidth: 1)
                     )
             )
