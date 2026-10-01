@@ -75,6 +75,15 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
+## Omgång 17 – pågår (rättningar efter omgång 16, färger och utseende)
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F117 | Filter, alla listor | "Sparat från förra gången" visas bara direkt efter start och är nu grå (beslut 2026-10-01). "Behåll filter = av" gäller vid start i alla listor. Tidskrifter och Kalendern visar filterraden. Detaljrutan visar aldrig en post som filtret döljer. Tomma listor säger att filtret döljer posterna och har "Rensa filter". Antalet visas en gång och den gamla rensa-knappen är borta. | Pågår |
+| F118 | Filter, detaljer | Ansökningar har knappen "Övriga" för ovanliga statusar. Poster utan årtal visas när alla år är valda och döljs, med antal, när intervallet smalnas av. Doktorander har två rader: roll (någon av) och "Ej disputerade". Forskarnas organisationsfilter tål namnbyte och språkbyte. Genvägen till Publikationer visar både publicerade och accepterade. Datakvalitet minns valda ärendetyper. Samma filterord överallt. Snabbare sökning i långa listor. | Pågår |
+| F119 | Färger | Tidslinjer: större cirklar, tunnare och ljusare kanter, och linjen tonar mellan två cirklars färger (beslut 2026-10-01). Försenade uppgifter och kalenderns prickar har samma röd-orange färg. Orange är orange överallt. Tillbakadragna ansökningar är grå och räknas inte som avslag. Förbrukade anslag är blekare gröna. Kongresser har en färgregel i lista, karta och detalj. Spara-knappen är blå i båda lägena. Dagens datum är rött överallt. Tidskriftsdiagrammets linjer är blå och Norska listans punkter färgas efter nivå. Kalenderns diagram följer färgerna i Inställningar. Ikoner har tydligare färger. Blått används för det som saknar status. | Pågår |
+| F120 | Utseende och ord | En sorts ta bort-knapp som alltid frågar en gång. Hänglås i fler listor. Samma ikon för samma sak. Gemensamma knappstilar, typsnitt (statistiken behåller sitt eget) och hörnrundning. Paneler fungerar i mörkt läge. "Säkerhetskopia" och "förinställning" på svenska, "…" och små bokstäver i månader. Excel-kolumnen för beviljat är i kr. Gemensamma tomma lägen och laddningstexter. Oanvända färger borttagna. | Pågår |
+
 ## Omgång 16 – pågår (filter, färger, typsnitt och ord)
 
 | Nr | Område | Ändring | Status |
