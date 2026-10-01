@@ -4030,13 +4030,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func mailtoURL(for email: String) -> URL? {
-        let rawEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !rawEmail.isEmpty else { return nil }
-        let compactEmail = rawEmail.replacingOccurrences(of: " ", with: "")
-        guard let encoded = compactEmail.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            return nil
-        }
-        return URL(string: "mailto:\(encoded)")
+        singleRecipientMailtoURL(email)
     }
 
     private func affiliationBinding(_ index: Int, _ keyPath: WritableKeyPath<PublicationAffiliation, String>) -> Binding<String> {

@@ -156,7 +156,8 @@ final class GrantRemindersAndAmountGroupsTests: XCTestCase {
         XCTAssertTrue(granted.isGranted)
         let schedules = Self.schedule(granted)
         XCTAssertEqual(schedules.map(\.kind), [.dispositionEndingSoon, .dispositionEnded, .repaymentOverdue])
-        XCTAssertEqual(schedules.map(Self.day), ["2028-09-30", "2028-12-31", "2029-03-01"])
+        // Round 15: "has ended" comes the day after the last disposition day.
+        XCTAssertEqual(schedules.map(Self.day), ["2028-09-30", "2029-01-01", "2029-03-01"])
 
         var noLead = CalendarReminderSettings.standard
         noLead.grantDispositionEndLeadMonths = 0

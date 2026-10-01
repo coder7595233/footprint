@@ -224,11 +224,23 @@ final class HTMLPDFExportCoordinator: NSObject, ObservableObject, WKNavigationDe
         self.completion = completion
 
         let config = WKWebViewConfiguration()
+        // The page is the app's own HTML: scripts inside it are never needed.
+        config.defaultWebpagePreferences.allowsContentJavaScript = false
         let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 794, height: 1123), configuration: config)
         webView.setValue(false, forKey: "drawsBackground")
         webView.navigationDelegate = self
         self.webView = webView
         webView.loadHTMLString(html, baseURL: nil)
+    }
+
+    /// Only the app's own page loads; any other navigation is stopped.
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
+    ) {
+        let url = navigationAction.request.url
+        decisionHandler(url == nil || url?.scheme == "about" ? .allow : .cancel)
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
@@ -267,6 +279,9 @@ struct HTMLPreviewWebView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
+        // Scripts in the page are off; the app's own scroll script still
+        // runs (it is injected by the app, not part of the page).
+        config.defaultWebpagePreferences.allowsContentJavaScript = false
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.setValue(false, forKey: "drawsBackground")
         webView.navigationDelegate = context.coordinator

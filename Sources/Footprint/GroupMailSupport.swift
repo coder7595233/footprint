@@ -7,6 +7,23 @@ private let groupMailAddressExpression = try! NSRegularExpression(
     options: [.caseInsensitive]
 )
 
+/// A mail link to one stored e-mail address. The address must be a plain
+/// address (name@domain.se); text like "a@b.se?bcc=..." used to add hidden
+/// recipients or a prefilled body to the draft, and gives no link now.
+func singleRecipientMailtoURL(_ rawValue: String) -> URL? {
+    let compact = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        .replacingOccurrences(of: " ", with: "")
+    let range = NSRange(compact.startIndex..<compact.endIndex, in: compact)
+    guard !compact.isEmpty,
+          let match = groupMailAddressExpression.firstMatch(in: compact, range: range),
+          match.range == range
+    else { return nil }
+    var components = URLComponents()
+    components.scheme = "mailto"
+    components.path = compact
+    return safeExternalURL(components.url)
+}
+
 func extractedGroupMailAddresses(from rawValue: String) -> [String] {
     let range = NSRange(rawValue.startIndex..<rawValue.endIndex, in: rawValue)
     return groupMailAddressExpression.matches(in: rawValue, range: range).compactMap { match in

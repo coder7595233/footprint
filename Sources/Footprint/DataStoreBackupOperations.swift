@@ -84,8 +84,10 @@ extension GrantDataStore {
         do {
             let scope = try restoreArchivedEnvelope(envelope)
             refreshState(for: scope)
-            try persist(persistenceSet(for: scope), includeBackup: false)
+            // Archive first (see restoreSnapshotAndArchivedRecords): a failed
+            // archive write then leaves nothing half saved.
             try saveArchivedRecords(updatedArchived)
+            try persist(persistenceSet(for: scope), includeBackup: false)
             enqueuePeriodicBackupSnapshotIfNeeded(now: Date())
             registerArchiveUndo(
                 snapshot: previousSnapshot,

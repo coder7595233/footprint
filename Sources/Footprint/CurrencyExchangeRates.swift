@@ -119,7 +119,16 @@ struct CurrencyExchangeRateCache: Codable, Hashable, Sendable {
 
     static func parsedECBHistoricalXML(_ data: Data, firstApplicationDate: String?, fetchedAt: Date = Date()) throws -> CurrencyExchangeRateCache {
         let parser = XMLParser(data: data)
-        let delegate = ECBHistoricalRatesXMLParserDelegate(firstApplicationDate: firstApplicationDate)
+        // Keep ten days before the first date as well. When that date was a
+        // weekend or holiday, the oldest kept rate came after it, so a rate
+        // "on or before" it was missing and every autosave downloaded the
+        // whole history again.
+        let keepFrom = firstApplicationDate
+            .flatMap { DateParsers.isoDay.date(from: $0) }
+            .flatMap { Calendar(identifier: .gregorian).date(byAdding: .day, value: -10, to: $0) }
+            .map { DateParsers.isoDay.string(from: $0) }
+            ?? firstApplicationDate
+        let delegate = ECBHistoricalRatesXMLParserDelegate(firstApplicationDate: keepFrom)
         parser.delegate = delegate
         guard parser.parse() else {
             throw parser.parserError ?? CurrencyExchangeRateError.invalidXML
@@ -305,6 +314,10 @@ extension GrantDataStore {
 
             do {
                 let (data, response) = try await Self.currencyExchangeRateSession.data(from: url)
+                // Only a normal answer is read; an error page is not parsed as rates.
+                guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                    throw CurrencyExchangeRateError.noHistoricalRates
+                }
                 let declaredLength = response.expectedContentLength
                 guard declaredLength <= Int64(Self.currencyExchangeRateMaximumResponseBytes),
                       data.count <= Self.currencyExchangeRateMaximumResponseBytes else {
