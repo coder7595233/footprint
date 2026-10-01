@@ -930,8 +930,7 @@ struct SettingsWorkspaceView: View {
                 Button(language.text("Choose folder…", "Välj mapp…")) {
                     chooseExportDirectory()
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
 
                 Button(language.text("Use Downloads", "Använd Hämtade filer")) {
                     store.setExportDirectory(nil)
@@ -1064,8 +1063,7 @@ struct SettingsWorkspaceView: View {
                 Button(language.text("Open active data folder", "Öppna aktiv datamapp")) {
                     NSWorkspace.shared.open(store.storageDirectoryURL)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
 
                 Button(language.text("Open backups folder", "Öppna backupmapp")) {
                     NSWorkspace.shared.open(store.backupsDirectoryURL)
@@ -1083,8 +1081,7 @@ struct SettingsWorkspaceView: View {
                     refreshPerformanceDiagnosticsStatus()
                     performanceDiagnosticsSummaryText = store.performanceDiagnosticsSummary()
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
             }
 
             SettingsEffectNote(language.text(
@@ -1109,8 +1106,7 @@ struct SettingsWorkspaceView: View {
                 Button(language.text("Create snapshot now", "Skapa snapshot nu")) {
                     createManualBackupSnapshot()
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
 
                 Button(language.text("Reload", "Ladda om")) {
                     reloadBackupCenterState()
@@ -1224,8 +1220,8 @@ struct SettingsWorkspaceView: View {
             Text(language.text("List filter memory", "Listfiltrens minne"))
                 .appTypography(.sectionTitle)
             Text(language.text(
-                "Choose which views should keep their current list filters when you switch to another view.",
-                "Välj vilka vyer som ska behålla sina aktuella listfilter när du växlar till en annan vy."
+                "Choose which views keep their list filters. Kept filters stay when you switch views and also until the next time you open the app. A filtered list always says so above the list, shows how many records are visible and has a Clear filters button.",
+                "Välj vilka vyer som ska behålla sina listfilter. Filter som behålls finns kvar när du växlar vy och även till nästa gång du öppnar appen. En filtrerad lista säger alltid det ovanför listan, visar hur många poster som syns och har knappen Rensa filter."
             ))
             .appTypography(.secondary)
             .foregroundStyle(.secondary)
@@ -1239,8 +1235,8 @@ struct SettingsWorkspaceView: View {
                         }
                         .appCheckboxStyle()
                         SettingsEffectNote(language.text(
-                            "Affects: the filters in the \(key.title(language: language)) list. On: they are kept when you leave the view and come back. Off: they are cleared when you leave the view.",
-                            "Påverkar: filtren i listan \(key.title(language: language)). På: de finns kvar när du lämnar vyn och kommer tillbaka. Av: de nollställs när du lämnar vyn."
+                            "Affects: the filters in the \(key.title(language: language)) list. On: they are kept when you leave the view and between sessions, and the list shows that it is filtered. Off: they are cleared when you leave the view.",
+                            "Påverkar: filtren i listan \(key.title(language: language)). På: de finns kvar när du lämnar vyn och mellan gångerna du använder appen, och listan visar att den är filtrerad. Av: de nollställs när du lämnar vyn."
                         ))
                     }
                 }
@@ -1592,8 +1588,7 @@ struct SettingsWorkspaceView: View {
                         appChromeScheme = scheme
                         scheduleAutosave()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppPalette.actionSave)
+                    .appSaveButtonStyle()
                 } else {
                     Button(language.text("Use", "Använd")) {
                         appChromeScheme = scheme
@@ -1787,8 +1782,7 @@ struct SettingsWorkspaceView: View {
                     Label(updateTitle, systemImage: "arrow.triangle.2.circlepath")
                         .lineLimit(1)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -2143,8 +2137,7 @@ struct SettingsWorkspaceView: View {
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(AppPalette.actionSave)
+                        .appSaveButtonStyle()
                         .disabled(!hasSelectedPreset)
                         .frame(maxWidth: 260)
                     }
@@ -2205,8 +2198,7 @@ struct SettingsWorkspaceView: View {
                     Label(updateTitle, systemImage: "arrow.triangle.2.circlepath")
                         .lineLimit(1)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionSave)
+                .appSaveButtonStyle()
                 .disabled(!hasSelectedPreset)
             }
 
@@ -2313,8 +2305,7 @@ struct SettingsWorkspaceView: View {
                         Label(updateTitle, systemImage: "arrow.triangle.2.circlepath")
                             .lineLimit(1)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppPalette.actionSave)
+                    .appSaveButtonStyle()
                     .disabled(!hasSelectedPreset)
                 }
 
@@ -3730,8 +3721,7 @@ struct SettingsWorkspaceView: View {
                             Button(language.text("Move activities and delete category", "Flytta aktiviteterna och ta bort kategorin")) {
                                 confirmPendingCalendarMeetingCategoryDeletionTransfer()
                             }
-                            .buttonStyle(.borderedProminent)
-                            .tint(AppPalette.actionSave)
+                            .appSaveButtonStyle()
                         }
                     }
                     .padding(14)
@@ -4566,10 +4556,8 @@ struct SettingsWorkspaceView: View {
     }
 
     private func backupSnapshotDateText(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        // Round 16: ISO date and 24-hour time, whatever the system locale.
+        AppTimestampFormatter.dateAndTime(date)
     }
 
     /// The items grouped by where they are used ("Teaching · participant

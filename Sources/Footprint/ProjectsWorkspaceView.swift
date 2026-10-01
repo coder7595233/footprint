@@ -52,7 +52,9 @@ struct ProjectsWorkspaceView: View {
         func title(language: AppLanguage) -> String {
             switch self {
             case .ongoingOnly:
-                return language.text("Ongoing only", "Bara pågående")
+                // Round 16: it also keeps planned projects, so the label
+                // says what it does: completed ones are hidden.
+                return language.text("Not completed", "Ej avslutade")
             case .includeCompleted:
                 return language.text("Include completed", "Även avslutade")
             }
@@ -84,6 +86,10 @@ struct ProjectsWorkspaceView: View {
     @WorkspaceFilterState("Projects.Filter.Completion") private var projectCompletionFilter: ProjectCompletionFilter = .includeCompleted
     @State private var projectSnapshots: [ProjectRowSnapshot] = []
     @State private var needsSnapshotRefreshWhenActive = false
+    /// Round 16: a new or routed project that must be shown even if a filter
+    /// would hide it; handled as soon as its row exists.
+    @State private var pendingRevealProjectID: String?
+    @State private var hasAppliedLaunchFilterPolicy = false
 
     init(store: GrantDataStore, newRecordTrigger: Int, isActive: Bool) {
         self.store = store
@@ -115,35 +121,74 @@ struct ProjectsWorkspaceView: View {
             || projectLeaderFilter != .all
     }
 
+    /// The current filter choices, so a chip can ask "would this match
+    /// anything?" with one setting changed.
+    private struct ProjectFilterSettings {
+        var searchQuery: SearchFilterQuery
+        var researcherKey: String
+        var ownOngoing: Bool
+        var remainingFunds: Bool
+        var activeTasks: Bool
+        var completion: ProjectCompletionFilter
+        var leader: ProjectLeaderFilter
+    }
+
+    private var currentProjectFilterSettings: ProjectFilterSettings {
+        ProjectFilterSettings(
+            searchQuery: SearchFilterQuery(raw: searchText),
+            researcherKey: normalizedSearchFilterText(projectResearcherFilter),
+            ownOngoing: showsOnlyOwnOngoingProjects,
+            remainingFunds: showsOnlyProjectsWithRemainingFunds,
+            activeTasks: showsOnlyProjectsWithActiveTasks,
+            completion: projectCompletionFilter,
+            leader: projectLeaderFilter
+        )
+    }
+
+    private func projectMatchesLeader(_ row: ProjectDirectoryRow, _ leader: ProjectLeaderFilter) -> Bool {
+        switch leader {
+        case .all:
+            return true
+        case .you:
+            return row.isLedByCurrentUser
+        case .others:
+            return !row.isLedByCurrentUser
+        }
+    }
+
+    /// Round 16: the researcher menu matches like the search (case and
+    /// accents ignored).
+    private func projectMatchesResearcher(_ row: ProjectDirectoryRow, researcherKey: String) -> Bool {
+        researcherKey.isEmpty || row.collaboratorNames.contains { normalizedSearchFilterText($0) == researcherKey }
+    }
+
+    private func projectMatches(_ row: ProjectDirectoryRow, _ settings: ProjectFilterSettings) -> Bool {
+        projectMatchesLeader(row, settings.leader)
+            && (settings.completion == .includeCompleted || row.status != .completed)
+            && projectMatchesResearcher(row, researcherKey: settings.researcherKey)
+            && (!settings.ownOngoing || row.isLedByCurrentUser && row.status == .ongoing)
+            && (!settings.remainingFunds || row.hasRemainingGrantedFunds)
+            && (!settings.activeTasks || row.hasActiveTasks)
+            && (settings.searchQuery.isEmpty || settings.searchQuery.matches(normalizedHaystack: row.normalizedSearchBlob))
+    }
+
+    private var allProjectRows: [ProjectDirectoryRow] {
+        projectSnapshots.map(projectRow(for:))
+    }
+
     private var filteredProjects: [ProjectDirectoryRow] {
-        projectSnapshots
-            .map(projectRow(for:))
-            .filter { row in
-                let matchesLeader: Bool
-                switch projectLeaderFilter {
-                case .all:
-                    matchesLeader = true
-                case .you:
-                    matchesLeader = row.isLedByCurrentUser
-                case .others:
-                    matchesLeader = !row.isLedByCurrentUser
-                }
-                let matchesCompletion = projectCompletionFilter == .includeCompleted || row.status != .completed
-                let matchesResearcher = projectResearcherFilter.isEmpty || row.collaboratorNames.contains(projectResearcherFilter)
-                let matchesOwnOngoing = !showsOnlyOwnOngoingProjects || row.isLedByCurrentUser && row.status == .ongoing
-                let matchesRemainingFunds = !showsOnlyProjectsWithRemainingFunds || row.hasRemainingGrantedFunds
-                let matchesActiveTasks = !showsOnlyProjectsWithActiveTasks || row.hasActiveTasks
-                let searchQuery = SearchFilterQuery(raw: searchText)
-                let matchesSearch = searchQuery.isEmpty || searchQuery.matches(normalizedHaystack: row.normalizedSearchBlob)
-                return matchesLeader
-                    && matchesCompletion
-                    && matchesResearcher
-                    && matchesOwnOngoing
-                    && matchesRemainingFunds
-                    && matchesActiveTasks
-                    && matchesSearch
-            }
+        let settings = currentProjectFilterSettings
+        return allProjectRows
+            .filter { projectMatches($0, settings) }
             .sorted(using: projectSortOrder(from: projectSortHistory))
+    }
+
+    /// Round 16: a chip that would leave the list empty is shown disabled
+    /// (it stays usable while it is on, so it can be switched off).
+    private func projectFilterHasMatches(in rows: [ProjectDirectoryRow], _ change: (inout ProjectFilterSettings) -> Void) -> Bool {
+        var settings = currentProjectFilterSettings
+        change(&settings)
+        return rows.contains { projectMatches($0, settings) }
     }
 
     private var projectResearcherOptions: [String] {
@@ -171,13 +216,16 @@ struct ProjectsWorkspaceView: View {
                         isActive ? "yes" : "no"
                     )
                 )
+                applyLaunchFilterPolicyIfNeeded()
                 if isActive {
                     refreshProjectSnapshots()
                     if let route = store.route, route.destination == .projects {
-                        setSelectedProjectID(route.recordID, armLock: true)
+                        openRoutedProject(route.recordID)
                         store.consumeRoute()
                     } else if selectedProjectID == nil {
-                        setSelectedProjectID(store.lastSelectedRecordID(for: .projects) ?? filteredProjects.first?.id)
+                        // Round 16: the remembered project only when the
+                        // filters show it.
+                        setSelectedProjectID(rememberedVisibleProjectID() ?? filteredProjects.first?.id)
                     } else {
                         ensureSelectedProjectMatchesFilters()
                     }
@@ -196,10 +244,7 @@ struct ProjectsWorkspaceView: View {
                     return
                 }
                 refreshProjectSnapshots()
-                let ids = filteredProjects.map(\.id)
-                if !ids.contains(selectedProjectID ?? "") {
-                    setSelectedProjectID(ids.first)
-                }
+                ensureSelectedProjectMatchesFilters()
             }
             .onChange(of: store.route) { _, route in
                 guard let route, route.destination == .projects else { return }
@@ -212,7 +257,7 @@ struct ProjectsWorkspaceView: View {
                     )
                     return
                 }
-                setSelectedProjectID(route.recordID, armLock: true)
+                openRoutedProject(route.recordID)
                 store.consumeRoute()
             }
             .onChange(of: selectedProjectID) { _, id in
@@ -221,7 +266,7 @@ struct ProjectsWorkspaceView: View {
             }
             .onChange(of: newRecordTrigger) { _, _ in
                 guard isActive else { return }
-                setSelectedProjectID(store.addProject(), armLock: true)
+                createNewProject()
             }
             .onChange(of: isActive) { _, active in
                 store.appendPerformanceDiagnostic(
@@ -238,16 +283,13 @@ struct ProjectsWorkspaceView: View {
                 if needsSnapshotRefreshWhenActive {
                     refreshProjectSnapshots()
                     needsSnapshotRefreshWhenActive = false
-                    let ids = filteredProjects.map(\.id)
-                    if !ids.contains(selectedProjectID ?? "") {
-                        setSelectedProjectID(ids.first)
-                    }
+                    ensureSelectedProjectMatchesFilters()
                 }
                 if let route = store.route, route.destination == .projects {
-                    setSelectedProjectID(route.recordID, armLock: true)
+                    openRoutedProject(route.recordID)
                     store.consumeRoute()
                 } else if selectedProjectID == nil {
-                    setSelectedProjectID(store.lastSelectedRecordID(for: .projects) ?? filteredProjects.first?.id)
+                    setSelectedProjectID(rememberedVisibleProjectID() ?? filteredProjects.first?.id)
                 }
             }
         } detail: {
@@ -287,10 +329,25 @@ struct ProjectsWorkspaceView: View {
                         }
                     }
                 )
-            } else {
+            } else if store.projects.isEmpty {
                 AppWorkspaceEmptyStateView(
                     title: language.text("No projects yet", "Inga projekt ännu"),
                     subtitle: language.text("Add a project to track its totals and related applications.", "Lägg till ett projekt för att följa totaler och relaterade ansökningar."),
+                    kind: .projects
+                )
+            } else if hasActiveProjectFilters && filteredProjects.isEmpty {
+                // Round 16: projects exist but the filters hide them all.
+                AppWorkspaceEmptyStateView(
+                    title: language.text("No records match the filters", "Inga poster matchar filtren"),
+                    subtitle: language.text("Try a broader search or clear the filters.", "Prova en bredare sökning eller rensa filtren."),
+                    kind: .projects,
+                    actionTitle: language.text("Clear filters", "Rensa filter"),
+                    action: clearAllProjectFilters
+                )
+            } else {
+                AppWorkspaceEmptyStateView(
+                    title: language.text("No project selected", "Inget projekt valt"),
+                    subtitle: language.text("Select a project in the list.", "Välj ett projekt i listan."),
                     kind: .projects
                 )
             }
@@ -305,6 +362,76 @@ struct ProjectsWorkspaceView: View {
 
     private func refreshProjectSnapshots() {
         projectSnapshots = store.projectRowSnapshots()
+        validateResearcherFilter()
+        revealPendingProjectIfPossible()
+    }
+
+    /// Round 16: the one way to add a project (menu command and button). The
+    /// new project is selected with the lock armed, and only the filters that
+    /// would hide it are cleared.
+    private func createNewProject() {
+        let newID = store.addProject()
+        pendingRevealProjectID = newID
+        refreshProjectSnapshots()
+        setSelectedProjectID(newID, armLock: true)
+    }
+
+    /// Round 16: a routed project is shown even when the filters hide it, by
+    /// clearing only the filters that hide it.
+    private func openRoutedProject(_ projectID: String) {
+        pendingRevealProjectID = projectID
+        revealPendingProjectIfPossible()
+        setSelectedProjectID(projectID, armLock: true)
+    }
+
+    private func revealPendingProjectIfPossible() {
+        guard let pendingID = pendingRevealProjectID,
+              let snapshot = projectSnapshots.first(where: { $0.id == pendingID }) else { return }
+        pendingRevealProjectID = nil
+        resetFiltersHiding(projectRow(for: snapshot))
+    }
+
+    private func resetFiltersHiding(_ row: ProjectDirectoryRow) {
+        let settings = currentProjectFilterSettings
+        if !settings.searchQuery.isEmpty && !settings.searchQuery.matches(normalizedHaystack: row.normalizedSearchBlob) {
+            searchText = ""
+        }
+        if !projectMatchesResearcher(row, researcherKey: settings.researcherKey) {
+            projectResearcherFilter = ""
+        }
+        if settings.ownOngoing && !(row.isLedByCurrentUser && row.status == .ongoing) {
+            showsOnlyOwnOngoingProjects = false
+        }
+        if settings.remainingFunds && !row.hasRemainingGrantedFunds {
+            showsOnlyProjectsWithRemainingFunds = false
+        }
+        if settings.activeTasks && !row.hasActiveTasks {
+            showsOnlyProjectsWithActiveTasks = false
+        }
+        if settings.completion != .includeCompleted && row.status == .completed {
+            projectCompletionFilter = .includeCompleted
+        }
+        if !projectMatchesLeader(row, settings.leader) {
+            projectLeaderFilter = .all
+        }
+    }
+
+    /// Round 16: a researcher saved earlier must exist in the menu, otherwise
+    /// the filter would be on while the menu says "All researchers".
+    private func validateResearcherFilter() {
+        guard projectResearcherFilter.nonEmpty != nil else { return }
+        // Not loaded yet: keep the saved choice until there are rows.
+        guard !projectSnapshots.isEmpty else { return }
+        let match = ListFilterTextMatch.matchingOption(for: projectResearcherFilter, in: projectResearcherOptions)
+        if match != projectResearcherFilter {
+            projectResearcherFilter = match ?? ""
+        }
+    }
+
+    private func rememberedVisibleProjectID() -> String? {
+        guard let rememberedID = store.lastSelectedRecordID(for: .projects),
+              filteredProjects.contains(where: { $0.id == rememberedID }) else { return nil }
+        return rememberedID
     }
 
     private func handleProjectSelectionCandidate(_ newValue: String?) {
@@ -369,12 +496,15 @@ struct ProjectsWorkspaceView: View {
             hasDataCollection: project.hasDataCollection,
             hasActiveTasks: project.hasActiveTasks,
             collaboratorNames: project.collaboratorNames,
-            collaboratorFlags: project.collaboratorFlags
+            collaboratorFlags: project.collaboratorFlags,
+            statusTone: project.statusTone,
+            isEditingLocked: project.isEditingLocked
         )
     }
 
     @ViewBuilder
     private func projectsSidebar(language: AppLanguage) -> some View {
+        let allRows = allProjectRows
         let rows = filteredProjects
         let orderedProjectIDs = rows.map(\.id)
 
@@ -383,19 +513,32 @@ struct ProjectsWorkspaceView: View {
                 title: language.text("Projects", "Projekt"),
                 actionTitle: language.text("New project", "Nytt projekt")
             ) {
-                setSelectedProjectID(store.addProject(), armLock: true)
+                createNewProject()
             }
 
-            projectFilters(language: language)
+            projectFilters(language: language, allRows: allRows)
+
+            if hasActiveProjectFilters {
+                AppFilteredListBanner(
+                    displayedCount: rows.count,
+                    totalCount: projectSnapshots.count,
+                    activeFilters: activeProjectFilterDescriptions(language: language),
+                    restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Projects"),
+                    language: language,
+                    clearAction: clearAllProjectFilters
+                )
+            }
 
             projectsTable(rows: rows, language: language)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-            ListCountFootnote(
-                displayedCount: rows.count,
-                totalCount: projectSnapshots.count,
-                language: language
-            )
+            if !hasActiveProjectFilters {
+                ListCountFootnote(
+                    displayedCount: rows.count,
+                    totalCount: projectSnapshots.count,
+                    language: language
+                )
+            }
         }
         .appListKeyboardNavigation(
             store: store,
@@ -411,10 +554,8 @@ struct ProjectsWorkspaceView: View {
         .onChange(of: searchText) { _, _ in
             ensureSelectedProjectMatchesFilters()
         }
-        .onChange(of: projectResearcherFilter) { _, newValue in
-            if !newValue.isEmpty && !projectResearcherOptions.contains(newValue) {
-                projectResearcherFilter = ""
-            }
+        .onChange(of: projectResearcherFilter) { _, _ in
+            validateResearcherFilter()
             ensureSelectedProjectMatchesFilters()
         }
         .onChange(of: projectCompletionFilter) { _, _ in
@@ -432,15 +573,20 @@ struct ProjectsWorkspaceView: View {
     }
 
     private func ensureSelectedProjectMatchesFilters() {
+        // Round 16: a project that was just created or opened keeps the
+        // selection while it is locked (its filters are cleared separately).
+        if let lockedID = projectSelectionCoordinator.lockedID,
+           selectedProjectID == lockedID,
+           store.projects.contains(where: { $0.id == lockedID }) {
+            return
+        }
         let ids = filteredProjects.map(\.id)
         if !ids.contains(selectedProjectID ?? "") {
             setSelectedProjectID(ids.first, resignFirstResponder: false)
         }
     }
 
-    private func clearProjectFiltersForDeactivationIfNeeded() {
-        guard !store.shouldRetainListFilters(for: .projects) else { return }
-        guard hasActiveProjectFilters else { return }
+    private func resetProjectFilters() {
         searchText = ""
         projectResearcherFilter = ""
         showsOnlyOwnOngoingProjects = false
@@ -450,7 +596,54 @@ struct ProjectsWorkspaceView: View {
         projectLeaderFilter = .all
     }
 
-    private func projectFilters(language: AppLanguage) -> some View {
+    /// Round 16: clears every filter of this list (banner, empty list).
+    private func clearAllProjectFilters() {
+        resetProjectFilters()
+        RestoredListFilters.forget(workspace: "Projects")
+    }
+
+    private func clearProjectFiltersForDeactivationIfNeeded() {
+        guard !store.shouldRetainListFilters(for: .projects) else { return }
+        guard hasActiveProjectFilters else { return }
+        clearAllProjectFilters()
+    }
+
+    /// Round 16: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared when the list is first shown.
+    private func applyLaunchFilterPolicyIfNeeded() {
+        guard !hasAppliedLaunchFilterPolicy else { return }
+        hasAppliedLaunchFilterPolicy = true
+        guard !store.shouldRetainListFilters(for: .projects) else { return }
+        clearAllProjectFilters()
+    }
+
+    private func activeProjectFilterDescriptions(language: AppLanguage) -> [String] {
+        var descriptions: [String] = []
+        if let search = searchText.nonEmpty {
+            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        }
+        if let researcher = projectResearcherFilter.nonEmpty {
+            descriptions.append(language.text("Researcher \(researcher)", "Forskare \(researcher)"))
+        }
+        if showsOnlyOwnOngoingProjects {
+            descriptions.append(language.text("Own ongoing", "Egna pågående"))
+        }
+        if showsOnlyProjectsWithRemainingFunds {
+            descriptions.append(language.text("Remaining funds", "Kvarvarande medel"))
+        }
+        if showsOnlyProjectsWithActiveTasks {
+            descriptions.append(language.text("Active tasks", "Aktiva uppgifter"))
+        }
+        if projectCompletionFilter != .includeCompleted {
+            descriptions.append(projectCompletionFilter.title(language: language))
+        }
+        if projectLeaderFilter != .all {
+            descriptions.append(projectLeaderFilter.title(language: language))
+        }
+        return descriptions
+    }
+
+    private func projectFilters(language: AppLanguage, allRows: [ProjectDirectoryRow]) -> some View {
         AppFilterCard {
             VStack(alignment: .leading, spacing: 8) {
                 AppFilterRow(
@@ -484,19 +677,22 @@ struct ProjectsWorkspaceView: View {
                 ) {
                     AppFilterChip(
                         label: language.text("Own ongoing", "Egna pågående"),
-                        isSelected: showsOnlyOwnOngoingProjects
+                        isSelected: showsOnlyOwnOngoingProjects,
+                        isEnabled: showsOnlyOwnOngoingProjects || projectFilterHasMatches(in: allRows) { $0.ownOngoing = true }
                     ) {
                         showsOnlyOwnOngoingProjects.toggle()
                     }
                     AppFilterChip(
                         label: language.text("Remaining funds", "Kvarvarande medel"),
-                        isSelected: showsOnlyProjectsWithRemainingFunds
+                        isSelected: showsOnlyProjectsWithRemainingFunds,
+                        isEnabled: showsOnlyProjectsWithRemainingFunds || projectFilterHasMatches(in: allRows) { $0.remainingFunds = true }
                     ) {
                         showsOnlyProjectsWithRemainingFunds.toggle()
                     }
                     AppFilterChip(
                         label: language.text("Active tasks", "Aktiva uppgifter"),
-                        isSelected: showsOnlyProjectsWithActiveTasks
+                        isSelected: showsOnlyProjectsWithActiveTasks,
+                        isEnabled: showsOnlyProjectsWithActiveTasks || projectFilterHasMatches(in: allRows) { $0.activeTasks = true }
                     ) {
                         showsOnlyProjectsWithActiveTasks.toggle()
                     }
@@ -509,7 +705,8 @@ struct ProjectsWorkspaceView: View {
                     ForEach(ProjectCompletionFilter.allCases) { filter in
                         AppFilterChip(
                             label: filter.title(language: language),
-                            isSelected: projectCompletionFilter == filter
+                            isSelected: projectCompletionFilter == filter,
+                            isEnabled: projectCompletionFilter == filter || projectFilterHasMatches(in: allRows) { $0.completion = filter }
                         ) {
                             projectCompletionFilter = filter
                         }
@@ -523,22 +720,14 @@ struct ProjectsWorkspaceView: View {
                     ForEach(ProjectLeaderFilter.allCases) { filter in
                         AppFilterChip(
                             label: projectLeaderFilterLabel(filter, language: language),
-                            isSelected: projectLeaderFilter == filter
+                            isSelected: projectLeaderFilter == filter,
+                            isEnabled: projectLeaderFilter == filter || projectFilterHasMatches(in: allRows) { $0.leader = filter }
                         ) {
                             projectLeaderFilter = filter
                         }
                     }
                 }
-
-                AppFilterClearAllRow(isVisible: hasActiveProjectFilters) {
-                    searchText = ""
-                    projectResearcherFilter = ""
-                    showsOnlyOwnOngoingProjects = false
-                    showsOnlyProjectsWithRemainingFunds = false
-                    showsOnlyProjectsWithActiveTasks = false
-                    projectCompletionFilter = .includeCompleted
-                    projectLeaderFilter = .all
-                }
+                // Round 16: "clear all" now lives in the filtered-list banner.
             }
         }
     }
@@ -712,18 +901,14 @@ struct ProjectsWorkspaceView: View {
     private func projectListRowBackground(for row: ProjectDirectoryRow) -> some View {
         AppListRowBackground(
             isSelected: row.id == selectedProjectID,
-            toneFill: projectStatusShadeColor(for: row)
+            toneFill: projectStatusShadeColor(for: row),
+            isLocked: row.isEditingLocked
         )
     }
 
-    private func projectStatusShadeColor(for row: ProjectDirectoryRow) -> Color {
-        if row.status == .completed {
-            return AppPalette.shadeRed
-        }
-        if row.status == .ongoing && row.hasDataCollection {
-            return AppPalette.shadeGreen
-        }
-        return AppPalette.shadeYellow
+    private func projectStatusShadeColor(for row: ProjectDirectoryRow) -> Color? {
+        // Round 16: the shared project rule (completed grey, not red).
+        AppPalette.statusRowFill(row.statusTone)
     }
 
     private func projectLeaderLabel(for row: ProjectDirectoryRow, language: AppLanguage) -> String {
@@ -738,7 +923,7 @@ struct ProjectsWorkspaceView: View {
     }
 
     private func projectGrantedLabel(for row: ProjectDirectoryRow) -> String {
-        row.isLedByCurrentUser ? CurrencyFormatter.format(row.grantedAmount) : "–"
+        row.isLedByCurrentUser ? CurrencyFormatter.format(row.grantedAmount, language: store.language) : AmountFormatter.missing
     }
 
 }
@@ -757,6 +942,8 @@ struct ProjectDirectoryRow: Identifiable {
     let hasActiveTasks: Bool
     let collaboratorNames: [String]
     let collaboratorFlags: [String]
+    var statusTone: AppStatusTone = .none
+    var isEditingLocked: Bool = false
 
     var sortTitle: String { title }
     var sortLeaderName: String { leaderName }
@@ -775,7 +962,7 @@ struct ProjectCollaboratorFlagsView: View {
         HStack(spacing: 3) {
             ForEach(flags, id: \.self) { flag in
                 Text(flag)
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
             }
         }
     }

@@ -88,6 +88,7 @@ struct PublicationsWorkspaceView: View {
         case inPreparation
         case submitted
         case publishedAccepted
+        case rejected
 
         var id: String { rawValue }
 
@@ -99,6 +100,8 @@ struct PublicationsWorkspaceView: View {
                 return [PublicationStatus.submitted.rawValue]
             case .publishedAccepted:
                 return [PublicationStatus.published.rawValue, PublicationStatus.accepted.rawValue]
+            case .rejected:
+                return [PublicationStatus.rejected.rawValue]
             }
         }
 
@@ -110,6 +113,8 @@ struct PublicationsWorkspaceView: View {
                 return PublicationStatus.submitted.displayName(language: language)
             case .publishedAccepted:
                 return language.text("Published/accepted", "Publicerad/accepterad")
+            case .rejected:
+                return PublicationStatus.rejected.displayName(language: language)
             }
         }
     }
@@ -265,7 +270,7 @@ struct PublicationsWorkspaceView: View {
                                     .appTypography(.pageTitle)
                                 Spacer()
                                 Button(language.text("New publication", "Ny publikation")) {
-                                    selectedPublicationID = store.addPublication()
+                                    createPublicationRevealingIt()
                                 }
                                 .appAddButtonStyle()
                             }
@@ -286,6 +291,8 @@ struct PublicationsWorkspaceView: View {
                                     publicationFilterMatrix(language: language)
                                 }
                             }
+
+                            publicationFilteredListBanner(language: language)
 
                             publicationTable(language: language)
 
@@ -417,7 +424,7 @@ struct PublicationsWorkspaceView: View {
                         }
                         .onChange(of: newRecordTrigger) { _, _ in
                             guard isActive else { return }
-                            setSelectedPublicationID(store.addPublication(), armLock: true)
+                            createPublicationRevealingIt()
                         }
                         .onChange(of: isActive) { _, active in
                             if active {
@@ -560,7 +567,7 @@ struct PublicationsWorkspaceView: View {
 
                     Image(systemName: publicationPipelineExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Color(red: 0.33, green: 0.33, blue: 0.36))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 0)
@@ -640,7 +647,15 @@ struct PublicationsWorkspaceView: View {
         filteredPublicationRows = rows
         lastPublicationSearchQuery = searchQuery
         lastPublicationNonSearchFilterSignature = nonSearchSignature
-        if selectedPublicationID == nil {
+        // A filter change that hides the selected publication moves the
+        // selection to the first visible row. Data changes ("rows") do not,
+        // so editing a publication out of the filter does not jump away.
+        if reason != "rows",
+           let selectedPublicationID,
+           !rows.contains(where: { $0.id == selectedPublicationID }),
+           publicationRows.contains(where: { $0.id == selectedPublicationID }) {
+            setSelectedPublicationID(rows.first?.id, resignFirstResponder: false)
+        } else if selectedPublicationID == nil {
             setSelectedPublicationID(rows.first?.id, resignFirstResponder: false)
         } else if store.publication(id: selectedPublicationID) == nil {
             setSelectedPublicationID(rows.first?.id, resignFirstResponder: false)
@@ -983,6 +998,12 @@ struct PublicationsWorkspaceView: View {
                 ) {
                     toggleStatusFilterOption(.publishedAccepted)
                 }
+                AppFilterChip(
+                    label: PublicationStatusFilterOption.rejected.displayName(language: language),
+                    isSelected: isStatusFilterOptionSelected(.rejected)
+                ) {
+                    toggleStatusFilterOption(.rejected)
+                }
             }
 
             AppFilterRow(
@@ -1072,6 +1093,8 @@ struct PublicationsWorkspaceView: View {
         return lead && publication.independence == "Yes" && publication.phdStage == "After"
     }
 
+    // The type chips store their own raw values ("original"/"other"); the
+    // presets used to write publication type names that no chip matched.
     private func applyPresetIfNeeded() {
         guard let preset else { return }
         switch preset {
@@ -1081,22 +1104,86 @@ struct PublicationsWorkspaceView: View {
             showsOnlyIndependentLeadAfterPhD = false
         case .originalPublished:
             selectedStatusFilters = [PublicationStatus.published.rawValue]
-            selectedTypeFilters = ["Original", "Brief report"]
+            selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
             showsOnlyIndependentLeadAfterPhD = false
         case .originalSubmitted:
             selectedStatusFilters = [PublicationStatus.submitted.rawValue]
-            selectedTypeFilters = ["Original", "Brief report"]
+            selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
             showsOnlyIndependentLeadAfterPhD = false
         case .originalPublishedIndependentLeadAfterPhD:
             selectedStatusFilters = [PublicationStatus.published.rawValue]
-            selectedTypeFilters = ["Original", "Brief report"]
+            selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
             showsOnlyIndependentLeadAfterPhD = true
         case .originalSubmittedIndependentLeadAfterPhD:
             selectedStatusFilters = [PublicationStatus.submitted.rawValue]
-            selectedTypeFilters = ["Original", "Brief report"]
+            selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
             showsOnlyIndependentLeadAfterPhD = true
         }
         self.preset = nil
+    }
+
+    /// A new publication has no title, type or status yet, so most filters
+    /// would hide it; they are cleared so the new record is visible.
+    private func createPublicationRevealingIt() {
+        if hasActivePublicationFilters {
+            resetFiltersForDirectNavigation()
+            rebuildFilteredPublicationRows()
+        }
+        setSelectedPublicationID(store.addPublication(), armLock: true)
+    }
+
+    private func activePublicationFilterDescriptions(language: AppLanguage) -> [String] {
+        var parts: [String] = []
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            parts.append(search)
+        }
+        if let statuses = ListFilterLabels.chips(
+            PublicationStatusFilterOption.allCases
+                .filter(isStatusFilterOptionSelected)
+                .map { $0.displayName(language: language) }
+        ) {
+            parts.append(statuses)
+        }
+        if let types = ListFilterLabels.chips(
+            PublicationTypeFilterOption.allCases
+                .filter { selectedTypeFilters.contains($0.rawValue) }
+                .map { $0.displayName(language: language) }
+        ) {
+            parts.append(types)
+        }
+        if showsOnlyIndependentLeadAfterPhD {
+            parts.append(language.text("Independent lead after PhD", "Oberoende efter disputation"))
+        }
+        var peerReview: [String] = []
+        if selectedPeerReviewFilters.contains("peer") {
+            peerReview.append(language.text("Peer reviewed", "Expertgranskad"))
+        }
+        if selectedPeerReviewFilters.contains("nonPeer") {
+            peerReview.append(language.text("Not peer reviewed", "Ej expertgranskad"))
+        }
+        if let peer = ListFilterLabels.chips(peerReview) {
+            parts.append(peer)
+        }
+        return parts
+    }
+
+    /// "Filtrerad lista: 12 av 116 visas" above the list while a filter is on.
+    @ViewBuilder
+    private func publicationFilteredListBanner(language: AppLanguage) -> some View {
+        if hasActivePublicationFilters {
+            AppFilteredListBanner(
+                displayedCount: filteredPublicationRows.count,
+                totalCount: store.publications.count,
+                activeFilters: activePublicationFilterDescriptions(language: language),
+                restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Publications.Filter"),
+                language: language,
+                clearAction: {
+                    resetFiltersForDirectNavigation()
+                    rebuildFilteredPublicationRows()
+                    RestoredListFilters.forget(workspace: "Publications")
+                }
+            )
+        }
     }
 
     private func resetFiltersForDirectNavigation() {
@@ -1336,20 +1423,18 @@ struct PublicationsWorkspaceView: View {
                 Color.clear
             }
         }
+        .overlay(alignment: .trailing) {
+            if row.publication?.isEditingLocked == true {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
+            }
+        }
     }
 
     private func publicationListStatusFill(for row: PublicationListRow) -> Color? {
         guard row.sourceKind == .publication else { return nil }
-        switch PublicationStatus.fromStored(row.statusLabel) {
-        case .published, .accepted:
-            return AppPalette.vividGreen
-        case .submitted:
-            return AppPalette.vividYellow
-        case .rejected:
-            return AppPalette.vividRed
-        case .planned, .inPreparation:
-            return nil
-        }
+        // Round 16: the shared publication tones (accepted waits = yellow).
+        return AppPalette.statusRowFill(AppStatusTones.publication(storedStatus: row.statusLabel))
     }
 
     private func rebuildPublicationRows() {
@@ -1425,9 +1510,29 @@ struct PublicationsWorkspaceView: View {
             publication.geography,
             publication.isPeerReviewed ? "1" : "0",
             publication.doi,
+            publication.pmid,
             publication.projectName ?? "",
             publication.statusTimeline.map { "\($0.status)|\($0.journal)|\($0.date ?? "")" }.joined(separator: "|"),
         ].joined(separator: "||")
+    }
+
+    /// Status words for search in both languages. Plain strings: the row
+    /// builder runs off the main thread, away from the translation registry.
+    nonisolated private static func publicationStatusSearchTerms(_ status: PublicationStatus) -> String {
+        switch status {
+        case .planned:
+            return "Planned Planerad"
+        case .inPreparation:
+            return "In preparation Under arbete"
+        case .submitted:
+            return "Submitted Inskickad"
+        case .accepted:
+            return "Accepted Accepterad"
+        case .rejected:
+            return "Rejected Refuserad"
+        case .published:
+            return "Published Publicerad"
+        }
     }
 
     nonisolated private static func normalizedJournalLookupKey(_ name: String) -> String {
@@ -1470,11 +1575,16 @@ struct PublicationsWorkspaceView: View {
             ?? journalsByKey[normalizedJournalLookupKey(publication.journal)]
         let jifMetric = journal?.preferredMetric(for: [.clarivateScieJIF, .clarivateEsciJIF], publicationYear: publication.yearValue)
         let norwegianMetric = journal?.preferredMetric(for: [.norwegianList], publicationYear: publication.yearValue)
+        // Year, DOI, PMID and status (both languages) are searchable too.
         let searchBlob = [
             publication.title,
             publication.journal,
             publication.authorNames.joined(separator: " "),
             publication.projectName ?? "",
+            publication.year,
+            publication.doi,
+            publication.pmid,
+            publicationStatusSearchTerms(PublicationStatus.fromStored(publication.statusLabel)),
         ].joined(separator: " ")
         return PublicationListRow(
             id: publication.id,
@@ -1531,8 +1641,8 @@ private struct PublicationPipelineCurtainPanel: View {
     @State private var measuredContentHeight: CGFloat = 0
 
     private var language: AppLanguage { store.language }
-    private var neutralStepColor: Color { Color(red: 0.33, green: 0.33, blue: 0.36) }
-    private var neutralStepLineColor: Color { Color(red: 0.58, green: 0.58, blue: 0.60) }
+    private var neutralStepColor: Color { Color.secondary }
+    private var neutralStepLineColor: Color { Color.secondary }
     private var effectiveMaxHeight: CGFloat { max(maxHeight, 0) }
     private var usesDarkAppearance: Bool { currentVisualModePreference()?.usesDarkAppearance == true }
     private var curtainChromeBackground: LinearGradient {
@@ -1860,13 +1970,14 @@ private struct PublicationPipelineCurtainPanel: View {
         }
 
         let days = max(Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: date), to: Calendar.current.startOfDay(for: Date())).day ?? 0, 0)
+        // Round 16: long waits need a follow-up (orange); never green.
         if days >= 90 {
-            return (AppPalette.semanticOnColor, AppPalette.vividRed)
+            return (AppPalette.statusOnFill, AppPalette.statusFill(.warning))
         }
         if days >= 30 {
-            return (AppPalette.semanticOnColor, AppPalette.vividYellow)
+            return (AppPalette.statusOnFill, AppPalette.statusFill(.pending))
         }
-        return (AppPalette.semanticOnColor, AppPalette.vividGreen)
+        return (Color.primary, AppPalette.subtleBorder.opacity(0.45))
     }
 }
 

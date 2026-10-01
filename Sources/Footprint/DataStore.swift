@@ -739,6 +739,8 @@ final class GrantDataStore: ObservableObject {
     /// The application whose "Sökt eller inte sökt?" question is shown
     /// (from the calendar or a notification). Nil when no question is open.
     @Published var pendingAppliedQuestionApplicationID: String?
+    /// Round 16: the open "Ska projektet ändras till Pågående?" question.
+    @Published var pendingOngoingQuestion: ProjectOngoingQuestion?
     @Published var pendingCongressRoute: AppRoute?
     @Published var pendingCongressRouteToken: UUID?
     @Published var pendingCalendarOpenRequest: CalendarOpenRequest?
@@ -4909,6 +4911,7 @@ final class GrantDataStore: ObservableObject {
             notice = StoreNotice(message: successMessage, tone: .success)
             loadError = nil
             refreshCurrencyExchangeRatesIfNeeded()
+            evaluateOngoingQuestion(previousApplication: previous, application: normalized)
         } catch {
             restoreSnapshotWithoutUndo(previousSnapshot)
             persistenceStatus.isSaving = false
@@ -4948,6 +4951,7 @@ final class GrantDataStore: ObservableObject {
                 previousStates: previousStates
             )
             refreshCurrencyExchangeRatesIfNeeded()
+            evaluateOngoingQuestion(previousApplication: previous, application: normalized)
         } catch {
             applications[index] = previous
             projects = previousProjects
@@ -6832,7 +6836,7 @@ final class GrantDataStore: ObservableObject {
             [],
             [language.text("Applications and funding", "Ansökningar och finansiering")],
             [language.text("Granted applications", "Beviljade ansökningar"), "\(grantedApplications.count)", language.text("Granted amount (SEK)", "Beviljat belopp (SEK)"), "\(Int(grantedSEK.rounded()))"],
-            [language.text("Awaiting decision", "Väntar beslut"), "\(applications.filter { $0.resultLabel == "Väntar svar" }.count)", language.text("Other applications", "Övriga ansökningar"), "\(applications.count - grantedApplications.count - applications.filter { $0.resultLabel == "Väntar svar" }.count)"],
+            [ApplicationOutcome.awaitingDecision.heading(language), "\(applications.filter { $0.resultLabel == "Väntar svar" }.count)", language.text("Other applications", "Övriga ansökningar"), "\(applications.count - grantedApplications.count - applications.filter { $0.resultLabel == "Väntar svar" }.count)"],
             [],
             [language.text("Publications", "Publikationer")],
             [language.text("Published", "Publicerade"), "\(publishedCount)", language.text("In progress", "Pågående"), "\(activePublicationCount)"],
@@ -7593,7 +7597,7 @@ final class GrantDataStore: ObservableObject {
         case .accepted:
             return language.text("Accepted", "Accepterad")
         case .rejected:
-            return language.text("Rejected", "Avvisad")
+            return PublicationOutcomeWording.rejectedLabel(language)
         case .published:
             return language.text("Published", "Publicerad")
         }
@@ -10877,9 +10881,9 @@ final class GrantDataStore: ObservableObject {
         let grantYears = Array(Set(applications.map(\.statsYear))).sorted()
         let grantRows = [[
             language.text("Year", "År"),
-            language.text("Awarded", "Beviljade"),
-            language.text("Pending decision", "Väntar beslut"),
-            language.text("Declined", "Avslagna"),
+            ApplicationOutcome.granted.heading(language),
+            ApplicationOutcome.awaitingDecision.heading(language),
+            ApplicationOutcome.declined.heading(language),
             language.text("Granted sum (kSEK)", "Summa beviljat (tkr)"),
         ]] + grantYears.map { year in
             let awarded = applications.filter { $0.statsYear == year && $0.resultLabel == "Beviljat" }
@@ -14802,6 +14806,13 @@ final class GrantDataStore: ObservableObject {
             draft.nameEn = draft.nameSv
         }
         let oldValue = projects[index].nameSv
+        let projectBeforeSave = projects[index]
+        defer {
+            // Round 16: ask "Ska projektet ändras till Pågående?" for new events.
+            if let saved = project(id: projectBeforeSave.id), saved != projectBeforeSave {
+                evaluateOngoingQuestion(previous: projectBeforeSave, current: saved)
+            }
+        }
 
         performUndoableChange(
             actionName: language.text("Edit project", "Redigera projekt"),
@@ -14851,7 +14862,8 @@ final class GrantDataStore: ObservableObject {
                 excluding: oldValue,
                 within: projects,
                 isArchived: draft.projectStatus == .completed,
-                isEditingLocked: draft.isEditingLocked
+                isEditingLocked: draft.isEditingLocked,
+                dismissedOngoingPromptKeys: ProjectOngoingPrompt.mergedDismissedKeys(previousProject, draft)
             )
             projects[index] = updated
             propagateProjectRename(from: oldValue, to: updated)
@@ -14912,7 +14924,8 @@ final class GrantDataStore: ObservableObject {
                 excluding: oldValue,
                 within: projects,
                 isArchived: draft.projectStatus == .completed,
-                isEditingLocked: draft.isEditingLocked
+                isEditingLocked: draft.isEditingLocked,
+                dismissedOngoingPromptKeys: ProjectOngoingPrompt.mergedDismissedKeys(previousProject, draft)
             )
             let pendingSelectionAffectedSet: PersistenceSet = completePendingSelection
                 ? pendingSelectionPersistenceSet(for: .project, entityID: updated.id)
@@ -14950,6 +14963,7 @@ final class GrantDataStore: ObservableObject {
                 actionName: language.text("Edit project", "Redigera projekt"),
                 previousStates: previousStates
             )
+            evaluateOngoingQuestion(previous: previousProject, current: updated)
         } catch {
             projects[index] = previousProject
             applications = previousApplications
@@ -18495,7 +18509,7 @@ final class GrantDataStore: ObservableObject {
                 }.count
             ),
             DataQualitySummaryItem(
-                title: language.text("Accepted grants without last disposition date", "Beviljade anslag utan sista disponering"),
+                title: language.text("Granted applications without last disposition date", "Beviljade anslag utan sista disponering"),
                 count: applications.filter { $0.isGranted && $0.lastDispositionDate == nil }.count
             ),
             DataQualitySummaryItem(
@@ -19985,6 +19999,12 @@ final class GrantDataStore: ObservableObject {
         }
     }
 
+    /// Round 16: true when deleting this researcher shows the linked-object
+    /// warning, so the view does not ask a second time.
+    func publicationAuthorDeletionShowsImpactWarning(id: String) -> Bool {
+        deletionImpactDetailsForPublicationAuthor(id: id).contains { !$0.isEmpty }
+    }
+
     func deletePublicationAuthor(id: String) {
         let details = deletionImpactDetailsForPublicationAuthor(id: id)
         if requestDeletionConfirmationIfNeeded(
@@ -20343,6 +20363,13 @@ final class GrantDataStore: ObservableObject {
             persistenceStatus.isSaving = false
             loadError = error.localizedDescription
         }
+    }
+
+    /// Round 16: true when deleting this journal shows the linked-object
+    /// warning, so the view does not ask a second time.
+    func publicationJournalDeletionShowsImpactWarning(id: String) -> Bool {
+        let name = publicationJournals.first(where: { $0.id == id })?.name
+        return deletionImpactDetailsForPublicationJournal(id: id, name: name).contains { !$0.isEmpty }
     }
 
     func deletePublicationJournal(id: String) {
@@ -25179,7 +25206,8 @@ final class GrantDataStore: ObservableObject {
         excluding excludedValue: String,
         within list: [ProjectRecord],
         isArchived: Bool = false,
-        isEditingLocked: Bool = false
+        isEditingLocked: Bool = false,
+        dismissedOngoingPromptKeys: [String]? = nil
     ) -> ProjectRecord {
         let trimmedSv = nameSv.trimmedOrNil ?? fallback
         let trimmedEn = nameEn.trimmedOrNil ?? trimmedSv
@@ -25233,7 +25261,8 @@ final class GrantDataStore: ObservableObject {
             projectTasks: linkedProjectTasks,
             suppressedSeedProjectTaskComments: normalizedSuppressedSeedProjectTaskComments,
             isArchived: isArchived,
-            isEditingLocked: isEditingLocked
+            isEditingLocked: isEditingLocked,
+            dismissedOngoingPromptKeys: dismissedOngoingPromptKeys
         )
     }
 
@@ -25626,6 +25655,8 @@ final class GrantDataStore: ObservableObject {
                 grantNameLabel,
                 application.grantCategory,
                 application.resultLabel,
+                // Round 16: the status names in both languages are searchable.
+                ApplicationStatusCanonical.searchLabels(for: application.resultLabel).joined(separator: " "),
                 projectDisplayLabel,
                 application.applicationManager,
                 application.managerReason,
@@ -25698,7 +25729,8 @@ final class GrantDataStore: ObservableObject {
                 sortProject: projectDisplayLabel,
                 sortAppliedCaseNumber: application.sortAppliedCaseNumber,
                 sortMaximumAmount: grantStatisticsAmountInSEK(for: application, amount: application.preferredBudgetAmountValue),
-                normalizedSearchBlob: normalizedSearchFilterText(searchBlob)
+                normalizedSearchBlob: normalizedSearchFilterText(searchBlob),
+                isEditingLocked: application.isEditingLocked
             )
         }
 
@@ -25962,6 +25994,8 @@ final class GrantDataStore: ObservableObject {
                     && (effectiveRemainingGrantedAmountValue(for: application) ?? 0) > 0
             }
             let hasActiveTasks = project.projectTasks.contains { !$0.isEmpty && !$0.isCompleted }
+            let hasProgress = AppStatusTones.projectHasOwnProgress(project)
+                || applications.contains { $0.isGranted && applicationBelongs($0, to: project) }
             return ProjectRowSnapshot(
                 id: project.id,
                 title: title,
@@ -25977,7 +26011,9 @@ final class GrantDataStore: ObservableObject {
                 status: project.projectStatus,
                 hasDataCollection: project.hasDataCollection,
                 hasActiveTasks: hasActiveTasks,
-                isLedByCurrentUser: isLedByCurrentUser
+                isLedByCurrentUser: isLedByCurrentUser,
+                statusTone: AppStatusTones.project(status: project.projectStatus, hasProgress: hasProgress),
+                isEditingLocked: project.isEditingLocked
             )
         }
 
@@ -27766,7 +27802,7 @@ final class GrantDataStore: ObservableObject {
             let grantTitle = localizedGrantTitle ?? language.text("Untitled grant", "Namnlöst anslag")
             let projectTitle = application.projectType?.nonEmpty
             let grantProviderTitle = application.organization.nonEmpty
-            let amount = organizationTimelineGrantAmountText(for: application, status: status)
+            let amount = organizationTimelineGrantAmountText(for: application, status: status, language: language)
             let title = ([projectTitle, grantProviderTitle, amount] as [String?])
                 .compactMap { $0?.nonEmpty }
                 .joined(separator: " · ")
@@ -28037,7 +28073,8 @@ final class GrantDataStore: ObservableObject {
 
     nonisolated private static func organizationTimelineGrantAmountText(
         for application: GrantApplication,
-        status: OrganizationTimelineSnapshot.GrantStatus
+        status: OrganizationTimelineSnapshot.GrantStatus,
+        language: AppLanguage
     ) -> String? {
         let amount: Double?
         switch status {
@@ -28049,7 +28086,7 @@ final class GrantDataStore: ObservableObject {
             amount = application.preferredBudgetAmountValue
         }
         guard let amount else { return nil }
-        return CurrencyFormatter.format(amount, code: application.currency)
+        return CurrencyFormatter.format(amount, code: application.currency, language: language)
     }
 
     nonisolated private static func organizationTimelineGrantHasUncertainOutline(
@@ -28178,7 +28215,7 @@ final class GrantDataStore: ObservableObject {
     ) -> String? {
         guard let trimmed = rawValue.trimmedOrNil else { return nil }
         let amount = GrantParsing.numericValue(from: trimmed)
-            .map { CurrencyFormatter.format($0, code: "SEK") }
+            .map { CurrencyFormatter.format($0, code: "SEK", language: language) }
             ?? trimmed
         return "\(amount)/\(language.text("month", "mån"))"
     }
@@ -28219,7 +28256,8 @@ final class GrantDataStore: ObservableObject {
                 for: application,
                 organizationLabels: organizationLabels,
                 effectiveRemainingAmount: effectiveRemainingAmountsByApplicationID[application.id],
-                isGranted: isGranted
+                isGranted: isGranted,
+                language: language
             )
             return ProjectTimelineSnapshot.GrantBar(
                 applicationID: application.id,
@@ -28356,15 +28394,16 @@ final class GrantDataStore: ObservableObject {
         for application: GrantApplication,
         organizationLabels: [String: String],
         effectiveRemainingAmount: Double? = nil,
-        isGranted: Bool
+        isGranted: Bool,
+        language: AppLanguage
     ) -> String {
         let organization = Self.organizationLabel(for: application, in: organizationLabels)?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
             ?? application.organization.nonEmpty
             ?? ""
-        let amount = CurrencyFormatter.format(isGranted ? application.grantedAmountValue : application.appliedAmountValue, code: application.currency)
+        let amount = CurrencyFormatter.format(isGranted ? application.grantedAmountValue : application.appliedAmountValue, code: application.currency, language: language)
         if isGranted {
-            let remaining = CurrencyFormatter.format(effectiveRemainingAmount ?? application.remainingGrantedAmountValue, code: application.currency)
-            return "\(organization), \(amount), \(remaining) kvar"
+            let remaining = CurrencyFormatter.format(effectiveRemainingAmount ?? application.remainingGrantedAmountValue, code: application.currency, language: language)
+            return "\(organization), \(amount), \(remaining) \(language.text("left", "kvar"))"
         }
         return "\(organization), \(amount)"
     }
@@ -29040,10 +29079,16 @@ enum CurrencyFormatter {
         return formatter
     }()
 
-    static func format(_ value: Double?, code: String? = "SEK") -> String {
-        guard let value else { return "N/A" }
+    /// Round 16: a missing amount shows a dash instead of "N/A". With a
+    /// language, Swedish kronor are written "kr" in Swedish and "SEK" in
+    /// English (see `AmountFormatter`); without one the code is kept as is.
+    static func format(_ value: Double?, code: String? = "SEK", language: AppLanguage? = nil) -> String {
+        guard let value else { return AmountFormatter.missing }
         let amount = decimal.string(from: NSNumber(value: value)) ?? String(Int(value))
         if let code = code?.trimmedOrNil {
+            if let language {
+                return "\(amount) \(AmountFormatter.unit(forCurrencyCode: code, language: language))"
+            }
             return "\(amount) \(code)"
         }
         return amount

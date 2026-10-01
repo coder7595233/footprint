@@ -214,7 +214,7 @@ struct OrganizationUnitsSection: View {
                     searchText = ""
                 }
                 .buttonStyle(.borderless)
-                .font(.system(size: 11, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
             }
             Spacer(minLength: 0)
             Button(language.text("Add unit", "Lägg till enhet")) {
@@ -265,14 +265,14 @@ struct OrganizationUnitsSection: View {
         return HStack(spacing: 4) {
             disclosureButton(unitID: unitID, hasChildren: hasChildren, isOpen: isOpen)
             Text(treeTitle(for: row.unit))
-                .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                .font(appFont(.secondary).weight(isSelected ? .semibold : .regular))
                 .foregroundStyle(AppPalette.appText)
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 6)
             if usageCount > 0 {
                 Text("\(usageCount)")
-                    .font(.system(size: 11))
+                    .font(appFont(.secondary))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .help(usageText(usageCount))
@@ -714,7 +714,7 @@ private struct OrganizationUnitEditorPane: View {
                 requestRemoval()
             }
             .buttonStyle(.borderless)
-            .font(.system(size: 12, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .foregroundStyle(AppPalette.actionDelete)
             .help(language.text(
                 "Asks first. You can undo the removal.",
@@ -742,7 +742,7 @@ private struct OrganizationUnitEditorPane: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .font(.system(size: 12, weight: .semibold))
+        .font(appFont(.secondary).weight(.semibold))
         .help(language.text(
             "Move the unit (with the units below it) to another place in the tree.",
             "Flytta enheten (med underenheterna) till en annan plats i trädet."
@@ -867,7 +867,7 @@ private struct OrganizationUnitRowEditor: View {
                 if !unit.hasValidDateRange {
                     Text(language.text("Ends before it starts", "Slutar innan den börjar"))
                         .appTypography(.secondary)
-                        .foregroundStyle(AppPalette.chartRed)
+                        .foregroundStyle(AppPalette.statusText(.negative))
                 }
                 Spacer(minLength: 0)
             }
@@ -965,7 +965,7 @@ private struct OrganizationUnitRowEditor: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .font(.system(size: 12, weight: .semibold))
+        .font(appFont(.secondary).weight(.semibold))
         .help(language.text(
             "Choices for this unit: add a unit below it, move it, or remove it (only when no researcher row uses it).",
             "Val för enheten: lägg till en underenhet, flytta den eller ta bort den (bara när ingen rad hos forskarna använder den)."
@@ -1103,7 +1103,7 @@ struct OrganizationUnitPickerMenu: View {
                 .truncationMode(.tail)
         }
         .menuStyle(.borderlessButton)
-        .font(.system(size: 12, weight: .semibold))
+        .font(appFont(.secondary).weight(.semibold))
         .frame(width: width, alignment: .leading)
         .frame(minHeight: AppPalette.fieldMinHeight)
         .disabled(organization == nil)
@@ -1155,7 +1155,7 @@ struct ResearcherPublicationAddressPanel: View {
                                 copyToPasteboard(line)
                             }
                             .buttonStyle(.borderless)
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(appFont(.secondary).weight(.semibold))
                             .help(language.text("Copy this address line", "Kopiera den här adressraden"))
                         }
                     }

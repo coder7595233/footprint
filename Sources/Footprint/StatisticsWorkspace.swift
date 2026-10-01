@@ -235,7 +235,7 @@ struct StatisticsView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .frame(width: 16, height: 16)
                 Text(metric.title(language: language))
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                    .font(appFont(.body).weight(isSelected ? .semibold : .medium))
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 if isSelected {
@@ -430,7 +430,7 @@ struct StatisticsView: View {
     private func teachingVisibleThroughYearControl(language: AppLanguage) -> some View {
         HStack(alignment: .center, spacing: 10) {
             Text(language.text("Show through", "Visa till och med"))
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(AppPalette.appText.opacity(0.86))
             Slider(
                 value: teachingVisibleThroughYearSliderBinding,
@@ -440,7 +440,7 @@ struct StatisticsView: View {
             .frame(minWidth: 120, maxWidth: .infinity)
             .layoutPriority(1)
             Text(String(effectiveTeachingVisibleThroughYear))
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(AppPalette.appText)
                 .frame(width: 44, alignment: .center)
@@ -547,9 +547,9 @@ struct StatisticsView: View {
                     firstColumnWidth: 150,
                     valueColumnWidth: compactStatsValueColumnWidth,
                     legend: [
-                        (language.text("Awarded", "Beviljade"), .green),
-                        (language.text("Pending decision", "Väntar beslut"), .yellow),
-                        (language.text("Declined", "Avslagna"), .red),
+                        (ApplicationOutcome.granted.heading(language), .green),
+                        (ApplicationOutcome.awaitingDecision.heading(language), .yellow),
+                        (ApplicationOutcome.declined.heading(language), .red),
                     ],
                     onCellTap: { rowKey, columnIndex in
                         drilldownSelection = StatisticsDrilldownSelection(kind: .grantCount, rowKey: rowKey, columnIndex: columnIndex)
@@ -564,9 +564,9 @@ struct StatisticsView: View {
                     firstColumnWidth: 150,
                     valueColumnWidth: compactStatsValueColumnWidth,
                     legend: [
-                        (language.text("Awarded", "Beviljade"), .green),
-                        (language.text("Pending decision", "Väntar beslut"), .yellow),
-                        (language.text("Declined", "Avslagna"), .red),
+                        (ApplicationOutcome.granted.heading(language), .green),
+                        (ApplicationOutcome.awaitingDecision.heading(language), .yellow),
+                        (ApplicationOutcome.declined.heading(language), .red),
                     ],
                     onCellTap: { rowKey, columnIndex in
                         drilldownSelection = StatisticsDrilldownSelection(kind: .grantAmount, rowKey: rowKey, columnIndex: columnIndex)
@@ -676,7 +676,7 @@ struct StatisticsView: View {
                         (language.text("Other teaching", "Övrig undervisning"), .yellow),
                     ],
                     futureDividerColumnIndex: teachingFutureDividerIndex,
-                    futureDividerColor: Color(red: 0.98, green: 0.08, blue: 0.08),
+                    futureDividerColor: AppPalette.todayMarker,
                     futureDividerWidth: 3,
                     onCellTap: { rowKey, columnIndex in
                         drilldownSelection = StatisticsDrilldownSelection(kind: .teachingHours, rowKey: rowKey, columnIndex: columnIndex)
@@ -1009,9 +1009,9 @@ struct StatisticsView: View {
         let grandTotal = totals.reduce(0, +)
 
         return [
-            StatisticsHeatRow(key: "waiting", title: language.text("Pending decision", "Väntar beslut"), values: waiting + [waitingTotal], formatter: { Self.groupedIntegerString($0) }, palette: .yellow),
-            StatisticsHeatRow(key: "granted", title: language.text("Awarded", "Beviljade"), values: granted + [grantedTotal], formatter: { Self.groupedIntegerString($0) }, palette: .green),
-            StatisticsHeatRow(key: "rejected", title: language.text("Declined", "Avslagna"), values: rejected + [rejectedTotal], formatter: { Self.groupedIntegerString($0) }, palette: .red),
+            StatisticsHeatRow(key: "waiting", title: ApplicationOutcome.awaitingDecision.heading(language), values: waiting + [waitingTotal], formatter: { Self.groupedIntegerString($0) }, palette: .yellow),
+            StatisticsHeatRow(key: "granted", title: ApplicationOutcome.granted.heading(language), values: granted + [grantedTotal], formatter: { Self.groupedIntegerString($0) }, palette: .green),
+            StatisticsHeatRow(key: "rejected", title: ApplicationOutcome.declined.heading(language), values: rejected + [rejectedTotal], formatter: { Self.groupedIntegerString($0) }, palette: .red),
             StatisticsHeatRow(key: "total", title: language.text("Total", "Totalt"), values: totals + [grandTotal], formatter: { Self.groupedIntegerString($0) }, palette: .blue, dividerAbove: true),
         ]
     }
@@ -1135,9 +1135,9 @@ struct StatisticsView: View {
         }
 
         return [
-            StatisticsHeatRow(key: "granted", title: language.text("Awarded", "Beviljade"), values: granted + [granted.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .green),
-            StatisticsHeatRow(key: "waiting", title: language.text("Pending decision", "Väntar beslut"), values: waiting + [waiting.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .yellow),
-            StatisticsHeatRow(key: "rejected", title: language.text("Declined", "Avslagna"), values: rejected + [rejected.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .red),
+            StatisticsHeatRow(key: "granted", title: ApplicationOutcome.granted.heading(language), values: granted + [granted.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .green),
+            StatisticsHeatRow(key: "waiting", title: ApplicationOutcome.awaitingDecision.heading(language), values: waiting + [waiting.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .yellow),
+            StatisticsHeatRow(key: "rejected", title: ApplicationOutcome.declined.heading(language), values: rejected + [rejected.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .red),
             StatisticsHeatRow(key: "total", title: language.text("Total", "Totalt"), values: totals + [totals.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .blue, dividerAbove: true),
         ]
     }
@@ -1166,8 +1166,8 @@ struct StatisticsView: View {
         let grantedSums = summaries.map { $0.grantedAmount / 1_000_000 }
         return [
             StatisticsHeatRow(key: "applications", title: language.text("Applications", "Ansökningar"), values: applicationCounts + [applicationCounts.reduce(0, +)], formatter: { Self.groupedIntegerString($0) }, palette: .blue),
-            StatisticsHeatRow(key: "granted", title: language.text("Awarded", "Beviljade"), values: grantedCounts + [grantedCounts.reduce(0, +)], formatter: { Self.groupedIntegerString($0) }, palette: .green),
-            StatisticsHeatRow(key: "grantedAmount", title: language.text("Awarded (MSEK)", "Beviljat (mkr)"), values: grantedSums + [grantedSums.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .green),
+            StatisticsHeatRow(key: "granted", title: ApplicationOutcome.granted.heading(language), values: grantedCounts + [grantedCounts.reduce(0, +)], formatter: { Self.groupedIntegerString($0) }, palette: .green),
+            StatisticsHeatRow(key: "grantedAmount", title: language.text("Granted (MSEK)", "Beviljat (mkr)"), values: grantedSums + [grantedSums.reduce(0, +)], formatter: { groupedDecimal2String($0, language: language) }, palette: .green),
         ]
     }
 
@@ -1490,22 +1490,28 @@ struct StatisticsView: View {
             .filter { application in
                 (selectedYear == nil || application.statsYear == selectedYear) && grantMatchesRowKey(application, rowKey: selection.rowKey)
             }
+            // Organization first, then name. The old `a < b && c < d` was not a
+            // valid ordering and could shuffle rows between redraws.
             .sorted {
-                $0.organization.localizedStandardCompare($1.organization) == .orderedAscending &&
-                $0.grantName.localizedStandardCompare($1.grantName) == .orderedAscending
+                statisticsDrilldownOrganizationThenNameOrder(
+                    lhsOrganization: $0.organization,
+                    lhsName: $0.grantName,
+                    rhsOrganization: $1.organization,
+                    rhsName: $1.grantName
+                )
             }
 
         let totalAmount = matching
             .map(grantStatisticsAmount(for:))
             .reduce(0, +)
-        let totalAmountText = groupedDecimal2String(totalAmount / 1_000_000, language: store.language) + " mkr"
+        let totalAmountText = groupedDecimal2String(totalAmount / 1_000_000, language: store.language) + " " + AmountFormatter.millionsUnit(store.language)
 
         let items = matching.map { application in
             StatisticsDrilldownItem(
                 id: application.id,
                 title: store.localizedGrantName(for: application, language: language).nonEmpty ?? language.text("Untitled grant", "Namnlöst anslag"),
-                subtitle: [store.organizationLabel(for: application, language: language), application.statsYear, application.resultLabel].filter { !$0.isEmpty }.joined(separator: " · "),
-                detail: groupedDecimal2String(grantStatisticsAmount(for: application) / 1_000_000, language: store.language) + " mkr",
+                subtitle: [store.organizationLabel(for: application, language: language), application.statsYear, language.localizedStatus(application.resultLabel)].filter { !$0.isEmpty }.joined(separator: " · "),
+                detail: groupedDecimal2String(grantStatisticsAmount(for: application) / 1_000_000, language: store.language) + " " + AmountFormatter.millionsUnit(store.language),
                 recordID: application.id,
                 destination: .applications
             )
@@ -1810,9 +1816,9 @@ struct StatisticsView: View {
 
     private func grantRowLabel(for rowKey: String, language: AppLanguage) -> String {
         switch rowKey {
-        case "waiting": return language.text("Pending decision", "Väntar beslut")
-        case "granted": return language.text("Awarded", "Beviljade")
-        case "rejected": return language.text("Declined", "Avslagna")
+        case "waiting": return ApplicationOutcome.awaitingDecision.heading(language)
+        case "granted": return ApplicationOutcome.granted.heading(language)
+        case "rejected": return ApplicationOutcome.declined.heading(language)
         case "total": return language.text("Total", "Totalt")
         default: return rowKey
         }
@@ -2198,37 +2204,48 @@ private enum StatisticsTint: Equatable {
         self = Int(normalized, radix: 16).map(StatisticsTint.custom) ?? .blue
     }
 
-    // The five named tints are the app palette (deadline-proximity colors):
-    // green #B6D8A6, yellow #F1E08C, orange/red #F0926C, blue #A1D1E6, with
-    // the palette's shade variants as bottom colors.
+    // Round 16: the named tints are the shared status colours (green done,
+    // yellow pending, orange warning, red negative), so charts follow dark
+    // mode and the colours chosen in Settings. Blue is a category colour
+    // (Settings' neutral colour), not a status.
+    private var statusTone: AppStatusTone? {
+        switch self {
+        case .green: return .done
+        case .yellow: return .pending
+        case .orange: return .warning
+        case .red: return .negative
+        case .blue, .custom: return nil
+        }
+    }
+
     var bottomColor: Color {
+        if let tone = statusTone {
+            return Color(nsColor: NSColor(name: nil) { _ in
+                let dark = AppAppearanceRegistry.usesDarkPalette()
+                return AppPalette.statusFillNSColor(tone, dark: dark).withAlphaComponent(dark ? 0.34 : 0.55)
+            })
+        }
         let usesDarkPalette = AppAppearanceRegistry.usesDarkPalette()
         switch self {
-        case .green:
-            return usesDarkPalette ? Color(hex: 0xB6D8A6).opacity(0.34) : Color(hex: 0xADDDC6)
-        case .yellow:
-            return usesDarkPalette ? Color(hex: 0xF1E08C).opacity(0.34) : Color(hex: 0xFFEFBD)
-        case .orange, .red:
-            return usesDarkPalette ? Color(hex: 0xF0926C).opacity(0.34) : Color(hex: 0xF1BB93)
-        case .blue:
-            return usesDarkPalette ? Color(hex: 0xA1D1E6).opacity(0.34) : Color(hex: 0xB5DBED)
         case let .custom(hex):
             return Color(hex: hex).opacity(usesDarkPalette ? 0.34 : 0.24)
+        default:
+            return Color(nsColor: NSColor(name: nil) { _ in
+                let dark = AppAppearanceRegistry.usesDarkPalette()
+                return AppAppearanceRegistry.semanticColor(.neutral, shaded: true, useDarkPalette: dark).withAlphaComponent(dark ? 0.34 : 1)
+            })
         }
     }
 
     var topColor: Color {
+        if let tone = statusTone {
+            return AppPalette.statusFill(tone)
+        }
         switch self {
-        case .green:
-            return Color(hex: 0xB6D8A6)
-        case .yellow:
-            return Color(hex: 0xF1E08C)
-        case .orange, .red:
-            return Color(hex: 0xF0926C)
-        case .blue:
-            return Color(hex: 0xA1D1E6)
         case let .custom(hex):
             return Color(hex: hex).opacity(0.82)
+        default:
+            return AppPalette.vividBlue
         }
     }
 
@@ -2274,7 +2291,7 @@ private func statisticsRowBottomRule(isTotal: Bool) -> some View {
 /// Small-caps-styled gray column header (years, "Totalt").
 private func statisticsColumnHeaderText(_ title: String) -> some View {
     Text(title)
-        .font(.system(size: 11, weight: .semibold))
+        .font(appFont(.tableHeader))
         .tracking(0.4)
         .foregroundStyle(.secondary)
         .lineLimit(1)
@@ -2403,7 +2420,7 @@ private struct StatisticsStackedChartTableCard: View {
                         .frame(width: firstColumnWidth, height: dividerHeight)
                 }
                 Text(row.title)
-                    .font(.system(size: 13, weight: row.isTotal ? .semibold : .regular))
+                    .font(appFont(.body).weight(row.isTotal ? .semibold : .regular))
                     .foregroundStyle(AppPalette.appText)
                     .frame(width: firstColumnWidth, height: rowHeight, alignment: .leading)
                     .lineLimit(1)
@@ -2425,7 +2442,7 @@ private struct StatisticsStackedChartTableCard: View {
                 VStack(spacing: 5) {
                     if showsChartTotals {
                         Text(entry.totalText)
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(appFont(.body))
                             .monospacedDigit()
                             .foregroundStyle(.primary)
                     }
@@ -2485,7 +2502,7 @@ private struct StatisticsStackedChartTableCard: View {
                 let isEmpty = row.emptyValueIndexes.contains(cell.id)
                 let isTotalColumn = cell.id == row.values.count - 1
                 Text(isEmpty ? "–" : row.formatter(cell.value))
-                    .font(.system(size: 13, weight: row.isTotal || isTotalColumn ? .semibold : .regular))
+                    .font(appFont(.body).weight(row.isTotal || isTotalColumn ? .semibold : .regular))
                     .monospacedDigit()
                     .foregroundStyle(AppPalette.appText)
                     .frame(width: valueColumnWidth, height: 28)
@@ -2595,7 +2612,7 @@ private struct StatisticsDrilldownCard: View {
                                 Spacer(minLength: 8)
                                 if let detail = item.detail?.nonEmpty {
                                     Text(detail)
-                                        .font(.system(size: 13, weight: .medium))
+                                        .font(appFont(.body).weight(.medium))
                                         .foregroundStyle(.secondary)
                                         .multilineTextAlignment(.trailing)
                                 }
@@ -2719,7 +2736,7 @@ private struct StatisticsHeatTableCard: View {
                 VStack(alignment: .leading, spacing: chartMetricSpacing) {
                     ForEach(Array(chartRows.enumerated()), id: \.offset) { _, row in
                         Text(row.title)
-                            .font(.system(size: 13, weight: .regular))
+                            .font(appFont(.body))
                             .foregroundStyle(AppPalette.appText)
                             .frame(width: firstColumnWidth, height: chartMetricHeight, alignment: .leading)
                             .lineLimit(1)
@@ -2742,7 +2759,7 @@ private struct StatisticsHeatTableCard: View {
                         .frame(width: firstColumnWidth, height: dividerHeight)
                 }
                 Text(row.title)
-                    .font(.system(size: 13, weight: row.isTotal ? .semibold : .regular))
+                    .font(appFont(.body).weight(row.isTotal ? .semibold : .regular))
                     .foregroundStyle(AppPalette.appText)
                     .frame(width: firstColumnWidth, height: rowHeight, alignment: .leading)
                     .lineLimit(1)
@@ -2788,7 +2805,7 @@ private struct StatisticsHeatTableCard: View {
                 let barHeight = isChartColumn ? chartBarHeight(for: cell.value, maxValue: maxValue) : 0
                 VStack(spacing: 5) {
                     Text(isChartColumn ? (isEmpty ? "–" : row.formatter(cell.value)) : "")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(appFont(.body).weight(.semibold))
                         .monospacedDigit()
                         .foregroundStyle(.primary)
                         .lineLimit(1)
@@ -2821,7 +2838,7 @@ private struct StatisticsHeatTableCard: View {
             let isEmpty = row.emptyValueIndexes.contains(cell.id)
             let isTotalColumn = cell.id == row.values.count - 1
             Text(isEmpty ? "–" : row.formatter(cell.value))
-                .font(.system(size: 13, weight: row.isTotal || isTotalColumn ? .semibold : .regular))
+                .font(appFont(.body).weight(row.isTotal || isTotalColumn ? .semibold : .regular))
                 .monospacedDigit()
                 .foregroundStyle(AppPalette.appText)
                 .frame(width: widthForColumn(cell.id), height: 28)
@@ -2876,7 +2893,7 @@ private struct StatisticsLegend: View {
                             .fill(item.1.fillColor())
                             .frame(width: 10, height: 10)
                         Text(item.0)
-                            .font(.system(size: 12, weight: .regular))
+                            .font(appFont(.secondary))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .fixedSize(horizontal: true, vertical: false)

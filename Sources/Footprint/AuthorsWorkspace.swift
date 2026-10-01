@@ -281,11 +281,13 @@ struct PublicationAuthorsView: View {
                         title: language.text("Researchers", "Forskare"),
                         actionTitle: language.text("New researcher", "Ny forskare")
                     ) {
-                        setSelectedAuthorID(store.addPublicationAuthor(), armLock: true)
+                        createAuthorRevealingIt()
                     }
                     .frame(minHeight: 42)
 
                     authorFilterBar(language: language)
+
+                    authorFilteredListBanner(language: language)
 
                     authorResultsTable(language: language)
 
@@ -419,7 +421,7 @@ struct PublicationAuthorsView: View {
             }
             .onChange(of: newRecordTrigger) { _, _ in
                 guard isActive else { return }
-                setSelectedAuthorID(store.addPublicationAuthor(), armLock: true)
+                createAuthorRevealingIt()
             }
             .onChange(of: isActive) { _, active in
                 if active {
@@ -632,18 +634,88 @@ struct PublicationAuthorsView: View {
                     )
                 }
 
+                // The incomplete-data filter is chosen in the app menu and
+                // stored with the document; shown here so it is never invisible.
+                if let incompleteTitle = store.personIncompleteDataFilter.activeFilterTitle(language: language) {
+                    AppActiveFilterChip(
+                        title: incompleteTitle,
+                        systemImage: "exclamationmark.circle",
+                        clearTitle: language.text("Remove filter: \(incompleteTitle)", "Ta bort filtret: \(incompleteTitle)"),
+                        clearAction: { store.setPersonIncompleteDataFilter(.none) }
+                    )
+                }
+
                 AppFilterClearAllRow(isVisible: hasActiveAuthorFilters) {
-                    searchText = ""
-                    organizationFilters.removeAll()
-                    countryFilters.removeAll()
-                    showsOnlyCurrentUserAuthor = false
-                    showsOnlyActiveAuthors = false
-                    showsOnlyAuthorsWithPublications = false
-                    if store.personIncompleteDataFilter != .none {
-                        store.setPersonIncompleteDataFilter(.none)
-                    }
+                    clearAllAuthorFilters()
                 }
             }
+        }
+    }
+
+    /// A new researcher has no name, organization or activity yet, so those
+    /// filters would hide it at once; they are cleared so it stays visible.
+    /// The incomplete-data filter is kept (a new record always matches it).
+    private func createAuthorRevealingIt() {
+        searchText = ""
+        organizationFilters.removeAll()
+        countryFilters.removeAll()
+        showsOnlyCurrentUserAuthor = false
+        showsOnlyActiveAuthors = false
+        showsOnlyAuthorsWithPublications = false
+        setSelectedAuthorID(store.addPublicationAuthor(), armLock: true)
+    }
+
+    private func clearAllAuthorFilters() {
+        searchText = ""
+        organizationFilters.removeAll()
+        countryFilters.removeAll()
+        showsOnlyCurrentUserAuthor = false
+        showsOnlyActiveAuthors = false
+        showsOnlyAuthorsWithPublications = false
+        if store.personIncompleteDataFilter != .none {
+            store.setPersonIncompleteDataFilter(.none)
+        }
+        RestoredListFilters.forget(workspace: "Researchers")
+    }
+
+    private func activeAuthorFilterDescriptions(language: AppLanguage) -> [String] {
+        var parts: [String] = []
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            parts.append(search)
+        }
+        if showsOnlyCurrentUserAuthor {
+            parts.append(language.text("You", "Du"))
+        }
+        if showsOnlyActiveAuthors {
+            parts.append(language.text("Active", "Aktiva"))
+        }
+        if showsOnlyAuthorsWithPublications {
+            parts.append(language.text("Has publications", "Har publikationer"))
+        }
+        if let organizations = ListFilterLabels.chips(organizationFilters.sorted()) {
+            parts.append(organizations)
+        }
+        if let countries = ListFilterLabels.chips(countryFilters.sorted().map { language.localizedCountry($0) }) {
+            parts.append(countries)
+        }
+        if let incompleteTitle = store.personIncompleteDataFilter.activeFilterTitle(language: language) {
+            parts.append(incompleteTitle)
+        }
+        return parts
+    }
+
+    /// "Filtrerad lista: 12 av 116 visas" above the list while a filter is on.
+    @ViewBuilder
+    private func authorFilteredListBanner(language: AppLanguage) -> some View {
+        if hasActiveAuthorFilters {
+            AppFilteredListBanner(
+                displayedCount: filteredAuthorRows.count,
+                totalCount: store.coauthors.count,
+                activeFilters: activeAuthorFilterDescriptions(language: language),
+                restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Researchers.Filter"),
+                language: language,
+                clearAction: clearAllAuthorFilters
+            )
         }
     }
 
@@ -1140,7 +1212,7 @@ private struct PublicationAuthorDetailHostView: View {
             AppWorkspaceEmptyStateView(
                 title: language.text("No researchers found", "Inga forskare hittades"),
                 subtitle: language.text("Add or search for a researcher.", "Lägg till eller sök fram en forskare."),
-                kind: .publications,
+                kind: .researchers,
                 fillsBackground: true
             )
         }
@@ -1230,7 +1302,8 @@ private struct PublicationAuthorLinkedAbstractRow: Identifiable, Equatable {
 }
 
 private func authorLinkedAbstractStatusFill(for contribution: CVConferenceContribution) -> Color? {
-    contribution.isRejected ? AppPalette.shadeRed : nil
+    // Round 16: the shared conference contribution tones.
+    AppPalette.statusRowFill(AppStatusTones.conferenceContribution(AppConferenceContributionBadgeStatus(contribution: contribution)))
 }
 
 private func authorLinkedAbstractStatusHelp(
@@ -2949,7 +3022,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func authorHeader(language: AppLanguage) -> some View {
-        let titleFont = NSFont.systemFont(ofSize: 24, weight: .bold)
+        let titleFont = appNSFont(.pageTitle)
         let firstNameWidth = authorTitleFieldWidth(
             text: draft.firstName,
             placeholder: language.text("First name", "Förnamn"),
@@ -3023,9 +3096,15 @@ private struct PublicationAuthorEditorView: View {
                     )
             }
             Spacer()
-            AppDestructiveActionButton(title: language.text("Delete", "Ta bort")) {
-                store.deletePublicationAuthor(id: author.id)
-            }
+            AppDestructiveActionButton(
+                title: language.text("Delete", "Ta bort"),
+                help: language.text("Delete researcher", "Ta bort forskare"),
+                cancelTitle: language.text("Cancel", "Avbryt"),
+                confirmationTitle: language.text("Delete researcher?", "Ta bort forskare?"),
+                confirmationMessage: language.text("The deletion can be undone.", "Borttagningen kan ångras."),
+                action: { store.deletePublicationAuthor(id: author.id) },
+                storeAsksFirst: { store.publicationAuthorDeletionShowsImpactWarning(id: author.id) }
+            )
         }
         .frame(minHeight: 34, alignment: .top)
     }
@@ -3053,7 +3132,7 @@ private struct PublicationAuthorEditorView: View {
                     addNameVariantRow(isFormerName: true)
                 }
                 .buttonStyle(.borderless)
-                .font(.system(size: 11, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 Spacer(minLength: 0)
             }
             ForEach(formerNameIndices, id: \.self) { index in
@@ -3065,7 +3144,7 @@ private struct PublicationAuthorEditorView: View {
                     addNameVariantRow(isFormerName: false)
                 }
                 .buttonStyle(.borderless)
-                .font(.system(size: 11, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 Spacer(minLength: 0)
             }
             ForEach(spellingIndices, id: \.self) { index in
@@ -3136,7 +3215,7 @@ private struct PublicationAuthorEditorView: View {
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .help(language.text(
                     "Choices for this name: move it between former names and spellings, make it the current name, or replace it with the current name in all records (asks first; can be undone).",
                     "Val för detta namn: flytta mellan tidigare namn och stavningar, gör till aktuellt namn, eller ersätt med aktuellt namn i alla poster (frågar först; går att ångra)."
@@ -3210,7 +3289,7 @@ private struct PublicationAuthorEditorView: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(AppPalette.chartRed)
+                    .foregroundStyle(AppPalette.statusText(.warning))
                 VStack(alignment: .leading, spacing: 4) {
                     Text(language.text("Possible existing researcher", "Möjlig befintlig forskare"))
                         .appTypography(.tableHeader)
@@ -3372,7 +3451,7 @@ private struct PublicationAuthorEditorView: View {
                 }
                 .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "homeAddress"))
                 compactField(language.text("Date of birth", "Födelsedatum"), width: 120) {
-                    PlainDateField(text: binding(\.birthDate))
+                    PlainDateField(text: binding(\.birthDate), language: language)
                 }
                 .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "birthDate"))
             }
@@ -3494,14 +3573,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func projectBadgeColor(for status: ProjectLifecycleStatus) -> Color {
-        switch status {
-        case .planned:
-            return AppPalette.vividYellow
-        case .ongoing:
-            return AppPalette.vividGreen
-        case .completed:
-            return AppPalette.chartRed
-        }
+        AppPalette.statusCapsuleFill(AppStatusTones.project(status: status, hasProgress: false))
     }
 
     private func applicationsPanel(language: AppLanguage) -> some View {
@@ -3599,19 +3671,7 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func applicationStatusColor(for application: GrantApplication) -> Color {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return store.isEffectivelyFullySpent(application)
-                ? AppPalette.vividGreen.opacity(0.72)
-                : AppPalette.vividGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.vividRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.vividYellow
-        }
-        return dynamicColor(light: NSColor(calibratedRed: 0.95, green: 0.95, blue: 0.95, alpha: 1), dark: NSColor(calibratedRed: 0.24, green: 0.24, blue: 0.24, alpha: 1))
+        AppPalette.statusCapsuleFill(store.applicationStatusTone(application))
     }
 
     private func dispositionStatus(for application: GrantApplication) -> String {
@@ -3632,11 +3692,8 @@ private struct PublicationAuthorEditorView: View {
     }
 
     private func dispositionStatusColor(for application: GrantApplication) -> Color {
-        guard let deadline = application.lastDispositionDate ?? application.receivedUsageTo.flatMap({ DateParsers.isoDay.date(from: $0) }) else {
-            return .secondary
-        }
-        let months = Calendar.current.dateComponents([.month], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: deadline)).month ?? 0
-        return months < 12 ? AppPalette.chartRed : AppPalette.dispositionPositiveText
+        // Round 16: shared disposition thresholds, readable text colours.
+        AppPalette.dispositionDeadlineText(application.dispositionDeadlineDate)
     }
 
     private func persist(completePendingSelection: Bool = false) {
@@ -4385,7 +4442,7 @@ private struct AuthorLinkedProjectsPanel: View, Equatable {
                             store.openRoute(for: project.project)
                         }) {
                             AppLinkedStatusRow(
-                                fill: projectStatusShadeColor(for: project.project.projectStatus),
+                                fill: projectStatusShadeColor(for: project.project),
                                 help: project.project.projectStatus.displayName(language: language)
                             ) {
                                 Text(project.label)
@@ -4404,15 +4461,9 @@ private struct AuthorLinkedProjectsPanel: View, Equatable {
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
-    private func projectStatusShadeColor(for status: ProjectLifecycleStatus) -> Color {
-        switch status {
-        case .planned:
-            return AppPalette.shadeYellow
-        case .ongoing:
-            return AppPalette.shadeGreen
-        case .completed:
-            return AppPalette.shadeRed
-        }
+    private func projectStatusShadeColor(for project: ProjectRecord) -> Color? {
+        // Round 16: the shared project rule (completed grey).
+        AppPalette.statusRowFill(store.projectStatusTone(project))
     }
 }
 
@@ -4453,7 +4504,7 @@ private struct AuthorProjectRelationInspectorPanel: View, Equatable {
                             systemImage: relation.countsAsResearchProject ? "checkmark.circle.fill" : "info.circle"
                         )
                         .appTypography(.tableHeader)
-                        .foregroundStyle(relation.countsAsResearchProject ? AppPalette.vividGreen : .secondary)
+                        .foregroundStyle(relation.countsAsResearchProject ? AppPalette.statusText(.done) : .secondary)
                         .labelStyle(.titleAndIcon)
                         .lineLimit(1)
                     }
@@ -4507,17 +4558,7 @@ private struct AuthorLinkedApplicationsPanel: View, Equatable {
     }
 
     private func applicationStatusShadeColor(for application: GrantApplication) -> Color? {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return AppPalette.shadeGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.shadeRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.shadeYellow
-        }
-        return nil
+        AppPalette.statusRowFill(store.applicationStatusTone(application))
     }
 
     private func applicationAmountText(for application: GrantApplication) -> String {
@@ -4570,15 +4611,8 @@ private struct AuthorLinkedPublicationsPanel: View, Equatable {
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
-    private func publicationStatusShadeColor(for status: PublicationStatus) -> Color {
-        switch status {
-        case .published, .accepted:
-            return AppPalette.shadeGreen
-        case .submitted, .planned, .inPreparation:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        }
+    private func publicationStatusShadeColor(for status: PublicationStatus) -> Color? {
+        AppPalette.statusRowFill(AppStatusTones.publication(status))
     }
 }
 
@@ -4695,16 +4729,9 @@ private struct AuthorLinkedDoctoralCandidatesPanel: View, Equatable {
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
-    private func doctoralStatusShadeColor(for candidate: DoctoralCandidateRecord) -> Color {
-        if doctoralMilestoneOutcome(candidate.plannedDisputationOutcomeRaw) == .endedBefore ||
-            doctoralMilestoneOutcome(candidate.halftimeOutcomeRaw) == .endedBefore {
-            return AppPalette.shadeRed
-        }
-        if doctoralMilestoneOutcome(candidate.plannedDisputationOutcomeRaw) == .completed ||
-            doctoralDateIsPastOrToday(candidate.disputationDate) {
-            return AppPalette.shadeGreen
-        }
-        return AppPalette.shadeYellow
+    private func doctoralStatusShadeColor(for candidate: DoctoralCandidateRecord) -> Color? {
+        // Round 16: the shared doctoral phases (ended early grey).
+        AppPalette.statusRowFill(AppStatusTones.doctoral(AppStatusTones.doctoralPhase(candidate)))
     }
 
     private func doctoralStatusText(for candidate: DoctoralCandidateRecord) -> String {
@@ -5079,13 +5106,15 @@ private struct PlainDateField: View {
     @Binding var text: String
     var isDisabled: Bool = false
     var isIllogical: Bool = false
+    var language: AppLanguage = .swedish
 
     var body: some View {
         AppDateField(
-            placeholder: "YYYY-MM-DD",
+            placeholder: language.datePlaceholder,
             text: $text,
             width: 104,
-            state: isIllogical ? .invalid("Ologisk datumkombination") : .normal,
+            language: language,
+            state: isIllogical ? .invalid(language.text("Illogical date combination", "Ologisk datumkombination")) : .normal,
             isDisabled: isDisabled,
             horizontalPadding: 8,
             verticalPadding: 4

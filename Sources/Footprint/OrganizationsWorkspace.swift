@@ -46,6 +46,13 @@ struct OrganizationsDirectoryView: View {
     @State private var organizationRowsBuildGeneration = 0
     @State private var organizationRowsSignature = ""
     @State private var needsOrganizationRowsRefreshWhenActive = false
+    /// Round 16: false until the first list build has finished, so the
+    /// empty-list message is not shown while rows are still loading.
+    @State private var hasBuiltOrganizationRows = false
+    /// Round 16: a new or routed organization that must be shown even if a
+    /// filter would hide it; handled as soon as its row exists.
+    @State private var pendingRevealOrganizationID: String?
+    @State private var hasAppliedLaunchFilterPolicy = false
 
     private var organizationSelectionBinding: Binding<String?> {
         Binding(
@@ -103,13 +110,15 @@ struct OrganizationsDirectoryView: View {
                         isActive ? "yes" : "no"
                     )
                 )
+                applyLaunchFilterPolicyIfNeeded()
                 if isActive {
-                    rebuildOrganizationRows()
                     if let route = store.route,
                        route.destination == workspaceDestination {
-                        setSelectedOrganizationID(route.recordID, armLock: true)
+                        openRoutedOrganization(route.recordID)
                         store.consumeRoute()
-                    } else if selectedOrganizationID == nil {
+                    }
+                    rebuildOrganizationRows()
+                    if selectedOrganizationID == nil {
                         setSelectedOrganizationID(
                             store.lastSelectedRecordID(for: workspaceDestination)
                                 ?? filteredOrganizationRowsCache.first?.id
@@ -124,6 +133,7 @@ struct OrganizationsDirectoryView: View {
                     needsOrganizationRowsRefreshWhenActive = true
                     return
                 }
+                revealPendingOrganizationIfPossible()
                 rebuildOrganizationRows()
                 let ids = store.organizationRowSnapshots().map(\.id)
                 if !ids.contains(selectedOrganizationID ?? "") {
@@ -163,7 +173,7 @@ struct OrganizationsDirectoryView: View {
                     )
                     return
                 }
-                setSelectedOrganizationID(route.recordID, armLock: true)
+                openRoutedOrganization(route.recordID)
                 store.consumeRoute()
             }
             .onChange(of: selectedOrganizationID) { _, id in
@@ -180,12 +190,12 @@ struct OrganizationsDirectoryView: View {
             }
             .onChange(of: newRecordTrigger) { _, _ in
                 guard isActive else { return }
-                setSelectedOrganizationID(store.addOrganization(), armLock: true)
+                createNewOrganization()
             }
             .onReceive(NotificationCenter.default.publisher(for: .footprintOpenSalaryCalculator)) { notification in
                 guard isActive else { return }
                 guard let organizationID = notification.object as? String else { return }
-                setSelectedOrganizationID(organizationID, armLock: true)
+                openRoutedOrganization(organizationID)
                 requestedSalaryCalculatorOrganizationID = organizationID
             }
             .onChange(of: isActive) { _, active in
@@ -202,14 +212,15 @@ struct OrganizationsDirectoryView: View {
                     clearOrganizationFiltersForDeactivationIfNeeded()
                     return
                 }
+                if let route = store.route, route.destination == workspaceDestination {
+                    openRoutedOrganization(route.recordID)
+                    store.consumeRoute()
+                }
                 if needsOrganizationRowsRefreshWhenActive {
                     rebuildOrganizationRows()
                     needsOrganizationRowsRefreshWhenActive = false
                 }
-                if let route = store.route, route.destination == workspaceDestination {
-                    setSelectedOrganizationID(route.recordID, armLock: true)
-                    store.consumeRoute()
-                } else if selectedOrganizationID == nil {
+                if selectedOrganizationID == nil {
                     setSelectedOrganizationID(
                         store.lastSelectedRecordID(for: workspaceDestination)
                             ?? filteredOrganizationRowsCache.first?.id
@@ -283,10 +294,29 @@ struct OrganizationsDirectoryView: View {
                         self.pendingSelectionStartedAt = nil
                     }
                 )
-            } else {
+            } else if !hasBuiltOrganizationRows {
+                // Round 16: still loading; no "No organizations yet" flash.
+                Color.clear
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if store.organizations.isEmpty {
                 AppWorkspaceEmptyStateView(
                     title: language.text("No organizations yet", "Inga organisationer ännu"),
                     subtitle: language.text("Add an organization to use it in applications.", "Lägg till en organisation för att kunna använda den i ansökningar."),
+                    kind: .organizations
+                )
+            } else if hasActiveOrganizationFilters && filteredOrganizationRowsCache.isEmpty {
+                // Round 16: organizations exist but the filters hide them all.
+                AppWorkspaceEmptyStateView(
+                    title: language.text("No records match the filters", "Inga poster matchar filtren"),
+                    subtitle: language.text("Try a broader search or clear the filters.", "Prova en bredare sökning eller rensa filtren."),
+                    kind: .organizations,
+                    actionTitle: language.text("Clear filters", "Rensa filter"),
+                    action: clearAllOrganizationFilters
+                )
+            } else {
+                AppWorkspaceEmptyStateView(
+                    title: language.text("No organization selected", "Ingen organisation vald"),
+                    subtitle: language.text("Select an organization in the list.", "Välj en organisation i listan."),
                     kind: .organizations
                 )
             }
@@ -402,28 +432,39 @@ struct OrganizationsDirectoryView: View {
                             )
                         )
                     }
-
-                    AppFilterClearAllRow(isVisible: hasActiveOrganizationFilters) {
-                        clearOrganizationFilters()
-                    }
+                    // Round 16: "clear all" now lives in the filtered-list
+                    // banner above the list.
                 }
+            }
+
+            if hasActiveOrganizationFilters {
+                AppFilteredListBanner(
+                    displayedCount: filteredOrganizationRowsCache.count,
+                    totalCount: store.organizations.count,
+                    activeFilters: activeOrganizationFilterDescriptions(language: language),
+                    restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Organizations"),
+                    language: language,
+                    clearAction: clearAllOrganizationFilters
+                )
             }
 
             organizationList(rows: filteredOrganizationRowsCache, language: language, contentWidth: contentWidth)
                 .frame(maxHeight: .infinity, alignment: .topLeading)
 
-            ListCountFootnote(
-                displayedCount: filteredOrganizationRowsCache.count,
-                totalCount: store.organizations.count,
-                language: language
-            )
+            if !hasActiveOrganizationFilters {
+                ListCountFootnote(
+                    displayedCount: filteredOrganizationRowsCache.count,
+                    totalCount: store.organizations.count,
+                    language: language
+                )
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func newOrganizationButton(language: AppLanguage) -> some View {
         Button(language.text("New organization", "Ny organisation")) {
-            setSelectedOrganizationID(store.addOrganization(), armLock: true)
+            createNewOrganization()
         }
         .appAddButtonStyle()
         .lineLimit(1)
@@ -681,6 +722,8 @@ struct OrganizationsDirectoryView: View {
             guard generation == organizationRowsBuildGeneration else { return }
             filteredOrganizationRowsCache = rows
             organizationRowsSignature = signature
+            hasBuiltOrganizationRows = true
+            reconcileOrganizationSelection(with: rows)
             store.appendPerformanceDiagnostic(
                 String(
                     format: "organizations-list-rebuild mode=%@ rows=%ld source_rows=%ld ms=%.2f",
@@ -843,11 +886,105 @@ struct OrganizationsDirectoryView: View {
         onlyLinkedOrganizations = false
     }
 
+    /// Round 16: clears every filter of this list (banner, empty list).
+    private func clearAllOrganizationFilters() {
+        clearOrganizationFilters()
+        RestoredListFilters.forget(workspace: "Organizations")
+    }
+
     private func clearOrganizationFiltersForDeactivationIfNeeded() {
         guard !store.shouldRetainListFilters(for: .organizations) else { return }
         guard hasActiveOrganizationFilters else { return }
-        clearOrganizationFilters()
+        clearAllOrganizationFilters()
         needsOrganizationRowsRefreshWhenActive = true
+    }
+
+    /// Round 16: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared when the list is first shown.
+    private func applyLaunchFilterPolicyIfNeeded() {
+        guard !hasAppliedLaunchFilterPolicy else { return }
+        hasAppliedLaunchFilterPolicy = true
+        guard !store.shouldRetainListFilters(for: .organizations) else { return }
+        clearAllOrganizationFilters()
+    }
+
+    private func activeOrganizationFilterDescriptions(language: AppLanguage) -> [String] {
+        var descriptions: [String] = []
+        if let search = organizationSearchText.nonEmpty {
+            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        }
+        if !selectedCategoryFilters.isEmpty {
+            descriptions.append(
+                categoryOptions
+                    .filter { selectedCategoryFilters.contains($0) }
+                    .map { organizationCategoryFilterLabel($0, language: language) }
+                    .joined(separator: ", ")
+            )
+        }
+        if !selectedRoleFilters.isEmpty {
+            descriptions.append(
+                (firstOrganizationRoleFilterRow + secondOrganizationRoleFilterRow)
+                    .filter { selectedRoleFilters.contains($0) }
+                    .map { localizedOrganizationRole($0, language: language) }
+                    .joined(separator: ", ")
+            )
+        }
+        if onlyLinkedOrganizations {
+            descriptions.append(language.text("Linked records only", "Med kopplingar"))
+        }
+        return descriptions
+    }
+
+    /// Round 16: the one way to add an organization (menu command and
+    /// button); the filters that would hide it are cleared.
+    private func createNewOrganization() {
+        let newID = store.addOrganization()
+        pendingRevealOrganizationID = newID
+        revealPendingOrganizationIfPossible()
+        setSelectedOrganizationID(newID, armLock: true)
+    }
+
+    /// Round 16: a routed organization is shown even when the filters hide
+    /// it, by clearing only the filters that hide it.
+    private func openRoutedOrganization(_ organizationID: String) {
+        pendingRevealOrganizationID = organizationID
+        revealPendingOrganizationIfPossible()
+        setSelectedOrganizationID(organizationID, armLock: true)
+    }
+
+    private func revealPendingOrganizationIfPossible() {
+        guard let pendingID = pendingRevealOrganizationID,
+              let snapshot = store.organizationRowSnapshots().first(where: { $0.id == pendingID }) else { return }
+        pendingRevealOrganizationID = nil
+        if organizationSearchText.nonEmpty != nil,
+           !Self.matchesOrganizationSearch(snapshot, searchText: organizationSearchText, language: store.language) {
+            organizationSearchText = ""
+        }
+        if !selectedCategoryFilters.isEmpty && !selectedCategoryFilters.contains(snapshot.category) {
+            selectedCategoryFilters.removeAll()
+        }
+        if !selectedRoleFilters.isEmpty && Set(snapshot.roles).isDisjoint(with: selectedRoleFilters) {
+            selectedRoleFilters.removeAll()
+        }
+        if onlyLinkedOrganizations && !snapshot.hasLinkedRecords {
+            onlyLinkedOrganizations = false
+        }
+    }
+
+    /// Round 16: after the list is rebuilt (filters changed, data changed)
+    /// the selection must be a row in the list, except a record that was
+    /// just created or opened and is still waiting for its row.
+    private func reconcileOrganizationSelection(with rows: [OrganizationDirectoryRow]) {
+        if let selectedOrganizationID {
+            if rows.contains(where: { $0.id == selectedOrganizationID }) { return }
+            if pendingRevealOrganizationID == selectedOrganizationID { return }
+            if organizationSelectionCoordinator.lockedID == selectedOrganizationID { return }
+        }
+        let rememberedID = store.lastSelectedRecordID(for: workspaceDestination)
+        let nextID = rows.first(where: { $0.id == rememberedID })?.id ?? rows.first?.id
+        if nextID != selectedOrganizationID {
+            setSelectedOrganizationID(nextID)
+        }
     }
 
     private func organizationRoleSymbolName(_ role: OrganizationRole) -> String {
@@ -1776,7 +1913,7 @@ private struct LocalizedOptionDetailView: View {
                             .fixedSize(horizontal: true, vertical: false)
 
                             Toggle(
-                                language.text("Hide declined grants", "Dölj nekade anslag"),
+                                language.text("Hide declined applications", "Dölj avslagna anslag"),
                                 isOn: $hideRejectedOrganizationTimelineGrants
                             )
                             .appCheckboxStyle()
@@ -1832,17 +1969,17 @@ private struct LocalizedOptionDetailView: View {
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(congress.title.nonEmpty ?? language.text("Congress", "Kongress"))
-                                        .font(.system(size: 12.5, weight: .semibold))
+                                        .font(appFont(.body).weight(.semibold))
                                         .foregroundStyle(AppPalette.appText)
                                         .lineLimit(1)
                                     Text(organizationCongressPlaceText(congress).nonEmpty ?? option.displayName(for: language))
-                                        .font(.system(size: 12))
+                                        .font(appFont(.secondary))
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
                                 }
                                 Spacer()
                                 Text(organizationCongressDateText(congress))
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(appFont(.secondary).weight(.medium))
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                                 if CongressesWorkspaceView.congressCurrentUserParticipates(
@@ -1850,13 +1987,13 @@ private struct LocalizedOptionDetailView: View {
                                     currentUserAuthor: store.currentUserAuthor()
                                 ) {
                                     Text(language.text("Attend", "Medverkar"))
-                                        .font(.system(size: 12, weight: .semibold))
+                                        .font(appFont(.secondary).weight(.semibold))
                                         .padding(.horizontal, 7)
                                         .padding(.vertical, 3)
-                                        .background(AppPalette.shadeGreen, in: Capsule(style: .continuous))
+                                        .background(AppPalette.statusFill(.done), in: Capsule(style: .continuous))
                                         .overlay(
                                             Capsule(style: .continuous)
-                                                .stroke(AppPalette.vividGreen.opacity(0.75), lineWidth: 1)
+                                                .stroke(AppPalette.statusText(.done).opacity(0.45), lineWidth: 1)
                                         )
                                 }
                             }
@@ -2512,7 +2649,7 @@ private struct LocalizedOptionDetailView: View {
                     "Ett giltigt födelsedatum krävs innan åldersberoende löne- och semesterkostnader kan beräknas."
                 ))
                 .appTypography(.body)
-                .foregroundStyle(AppPalette.vividRed)
+                .foregroundStyle(AppPalette.statusText(.negative))
                 .accessibilityLabel(language.text(
                     "Salary calculation unavailable: date of birth is missing or invalid.",
                     "Lönekalkylen är inte tillgänglig: födelsedatum saknas eller är ogiltigt."
@@ -3033,7 +3170,7 @@ private struct SalaryCalculatorSalaryMatrixSection: View {
                             let isPlaceholder = Self.isEmpty(period)
                             VStack(alignment: .leading, spacing: 6) {
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.from),
                                     formatter: normalizeSalaryDateInput,
                                     width: dateColumnWidth,
@@ -3042,7 +3179,7 @@ private struct SalaryCalculatorSalaryMatrixSection: View {
                                 )
 
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.to),
                                     formatter: normalizeSalaryDateInput,
                                     width: dateColumnWidth,
@@ -3194,7 +3331,7 @@ private struct SalaryCalculatorSharedCostMatrixSection: View {
                             let isPlaceholder = Self.isEmpty(period)
                             VStack(alignment: .leading, spacing: 6) {
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.from),
                                     formatter: normalizeSalaryDateInput,
                                     width: columnWidth,
@@ -3203,7 +3340,7 @@ private struct SalaryCalculatorSharedCostMatrixSection: View {
                                 )
 
                                 CommitDateFieldWithTodayButton(
-                                    placeholder: "YYYY-MM-DD",
+                                    placeholder: language.datePlaceholder,
                                     text: binding(for: index, keyPath: \.to),
                                     formatter: normalizeSalaryDateInput,
                                     width: columnWidth,
@@ -3399,19 +3536,19 @@ private struct SalaryCalculatorResultsSection: View {
                             }
                         }
                         valueRow { row in
-                            CurrencyFormatter.format(row.totalAnnualCost)
+                            CurrencyFormatter.format(row.totalAnnualCost, language: language)
                         }
                         valueRow { row in
-                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost) : "—"
+                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost, language: language) : AmountFormatter.missing
                         }
                         valueRow { row in
-                            CurrencyFormatter.format(row.totalAnnualCost / 12)
+                            CurrencyFormatter.format(row.totalAnnualCost / 12, language: language)
                         }
                         valueRow { row in
-                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost / 12) : "—"
+                            row.annualSelectedCost > 0 ? CurrencyFormatter.format(row.annualSelectedCost / 12, language: language) : AmountFormatter.missing
                         }
                         valueRow { row in
-                            row.totalSelectedCost > 0 ? CurrencyFormatter.format(row.totalSelectedCost) : "—"
+                            row.totalSelectedCost > 0 ? CurrencyFormatter.format(row.totalSelectedCost, language: language) : AmountFormatter.missing
                         }
                         Color.clear
                             .frame(width: 1, height: 1)
@@ -3453,7 +3590,7 @@ private struct SalaryCalculatorResultsSection: View {
         HStack(spacing: 14) {
             ForEach(rows) { row in
                 Text(value(row))
-                    .font(.system(size: 13, weight: .regular))
+                    .font(appFont(.body))
                     .frame(width: 120, alignment: .leading)
             }
         }

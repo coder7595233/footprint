@@ -274,7 +274,7 @@ struct ProjectDetailView: View {
 
                                 if isEditingLocked {
                                     Text(localizedShortName.trimmedOrNil ?? language.text("Project", "Projekt"))
-                                        .font(.system(size: 24, weight: .bold))
+                                        .font(appFont(.pageTitle))
                                         .foregroundStyle(AppPalette.appText)
                                         .lineLimit(1)
                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -282,7 +282,7 @@ struct ProjectDetailView: View {
 
                                     if let fullName = localizedFullName.trimmedOrNil {
                                         Text(fullName)
-                                            .font(.system(size: 13, weight: .medium))
+                                            .font(appFont(.body).weight(.medium))
                                             .foregroundStyle(AppPalette.appText)
                                             .lineLimit(1)
                                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -291,7 +291,7 @@ struct ProjectDetailView: View {
                                     AppInlineTitleTextField(
                                         placeholder: language.text("Short name", "Kortnamn"),
                                         text: language == .swedish ? $editorState.nameSv : $editorState.nameEn,
-                                        font: .systemFont(ofSize: 24, weight: .bold),
+                                        font: appNSFont(.pageTitle),
                                         minHeight: 30
                                     )
                                     .lineLimit(1)
@@ -301,7 +301,7 @@ struct ProjectDetailView: View {
                                     AppInlineTitleTextField(
                                         placeholder: language.text("Full name", "Fullständigt namn"),
                                         text: language == .swedish ? $editorState.fullNameSv : $editorState.fullNameEn,
-                                        font: .systemFont(ofSize: 13, weight: .medium),
+                                        font: appNSFont(.body),
                                         textColor: .secondaryLabelColor,
                                         minHeight: 18
                                     )
@@ -634,7 +634,8 @@ struct ProjectDetailView: View {
                     amount: store.effectiveRemainingGrantedAmountValue(for: application)
                 )
             },
-            code: "SEK"
+            code: "SEK",
+            language: store.language
         ) + store.unconvertedAmountSuffix(
             for: applications.map { ($0, store.effectiveRemainingGrantedAmountValue(for: $0)) }
         )
@@ -648,7 +649,7 @@ struct ProjectDetailView: View {
 
     private func dispositionStatus(for application: GrantApplication) -> String {
         if store.isEffectivelyFullySpent(application) {
-            return store.language.text("0 remaining to dispose", "0 SEK kvar att disponera")
+            return store.language.text("0 SEK remaining to dispose", "0 kr kvar att disponera")
         }
         let remaining = store.formattedGrantAmountWithSEKApproximation(store.effectiveRemainingGrantedAmountValue(for: application), for: application)
         guard let deadline = application.lastDispositionDate ?? application.receivedUsageTo.flatMap({ DateParsers.isoDay.date(from: $0) }) else {
@@ -664,11 +665,11 @@ struct ProjectDetailView: View {
     }
 
     private func dispositionStatusColor(for application: GrantApplication) -> Color {
-        guard let deadline = application.lastDispositionDate ?? application.receivedUsageTo.flatMap({ DateParsers.isoDay.date(from: $0) }) else {
+        // Round 16: shared disposition thresholds, readable text colours.
+        if store.isEffectivelyFullySpent(application) {
             return .secondary
         }
-        let months = Calendar.current.dateComponents([.month], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: deadline)).month ?? 0
-        return months < 12 ? AppPalette.dispositionWarningText : AppPalette.dispositionPositiveText
+        return AppPalette.dispositionDeadlineText(application.dispositionDeadlineDate)
     }
 
     private func nonGrantedWorklist(from applications: [GrantApplication]) -> [GrantApplication] {
@@ -688,20 +689,7 @@ struct ProjectDetailView: View {
     }
 
     private func publicationStatusTone(for publication: PublicationRecord) -> BadgeTone {
-        switch PublicationStatus.fromStored(publication.statusLabel) {
-        case .published:
-            return .positive
-        case .accepted:
-            return .positive
-        case .rejected:
-            return .negative
-        case .submitted:
-            return .pending
-        case .planned:
-            return .pending
-        case .inPreparation:
-            return .outline
-        }
+        BadgeTone(AppStatusTones.publication(storedStatus: publication.statusLabel))
     }
 
     @ViewBuilder
@@ -761,7 +749,7 @@ struct ProjectDetailView: View {
                 Divider().frame(height: 34)
                 ExportIconSegment(
                     systemImage: "banknote",
-                    title: "Funding",
+                    title: language.text("Funding", "Finansiering"),
                     help: language.text(
                         "Copy the funding statement, largest funding first — hover for language",
                         "Kopiera funding statement, största funding först — hovra för språk"
@@ -824,7 +812,7 @@ struct ProjectDetailView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .font(.system(size: 12))
+        .font(appFont(.secondary))
     }
 
     private func projectTimelineLegend(language: AppLanguage) -> some View {
@@ -835,11 +823,11 @@ struct ProjectDetailView: View {
             )
             timelineLegendItem(
                 color: [AppPalette.timelineBarEnd, AppPalette.timelineBarStart],
-                text: language.text("Awarded grants", "Beviljade anslag")
+                text: language.text("Granted applications", "Beviljade anslag")
             )
             timelineLegendItem(
                 color: [AppPalette.timelinePendingBarEnd, AppPalette.timelinePendingBarStart],
-                text: language.text("Pending grants", "Sökta ej besvarade anslag")
+                text: language.text("Applications awaiting decision", "Ansökningar som väntar svar")
             )
             HStack(spacing: 6) {
                 Text("📄")
@@ -929,17 +917,17 @@ struct ProjectDetailView: View {
     }
 
     private func timelineStatusColor(for application: GrantApplication) -> Color {
-        application.isGranted ? dispositionStatusColor(for: application) : AppPalette.dispositionPositiveText
+        application.isGranted ? dispositionStatusColor(for: application) : AppPalette.statusText(.pending)
     }
 
     @ViewBuilder
     private func grantedApplicationsPanel(language: AppLanguage) -> some View {
-        DetailGroup(title: language.text("Accepted grants", "Beviljade anslag"), showsSurface: false) {
+        DetailGroup(title: language.text("Granted applications", "Beviljade anslag"), showsSurface: false) {
             VStack(alignment: .leading, spacing: 8) {
                 if activeApplicationListFilter == .granted {
                     HStack(spacing: 8) {
-                        Text(language.text("Filtered: Awarded", "Filtrerat: Beviljade"))
-                            .font(.system(size: 12, weight: .semibold))
+                        Text(language.text("Filtered: ", "Filtrerat: ") + ApplicationOutcome.granted.heading(language))
+                            .font(appFont(.secondary).weight(.semibold))
                             .foregroundStyle(.secondary)
                         Button(language.text("Show all", "Visa alla")) {
                             activeApplicationListFilter = .all
@@ -959,12 +947,12 @@ struct ProjectDetailView: View {
                                         .truncationMode(.tail)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     Text(dispositionStatus(for: application))
-                                        .font(.system(size: 12, weight: .medium))
+                                        .font(appFont(.secondary).weight(.medium))
                                         .foregroundStyle(dispositionStatusColor(for: application))
                                         .lineLimit(2)
                                 }
                                 Text(language.localizedStatus(application.resultLabel))
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(appFont(.secondary).weight(.semibold))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
                                     .background(
@@ -988,7 +976,7 @@ struct ProjectDetailView: View {
                 if activeApplicationListFilter != .all {
                     HStack(spacing: 8) {
                         Text(filteredApplicationsLabel(language: language))
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(appFont(.secondary).weight(.semibold))
                             .foregroundStyle(.secondary)
                         Button(language.text("Show all", "Visa alla")) {
                             activeApplicationListFilter = .all
@@ -1031,11 +1019,11 @@ struct ProjectDetailView: View {
         case .all:
             return ""
         case .awaiting:
-            return language.text("Filtered: Awaiting response", "Filtrerat: Väntar svar")
+            return language.text("Filtered: ", "Filtrerat: ") + ApplicationOutcome.awaitingDecision.heading(language)
         case .rejected:
-            return language.text("Filtered: Declined", "Filtrerat: Avslagna")
+            return language.text("Filtered: ", "Filtrerat: ") + ApplicationOutcome.declined.heading(language)
         case .granted:
-            return language.text("Filtered: Awarded", "Filtrerat: Beviljade")
+            return language.text("Filtered: ", "Filtrerat: ") + ApplicationOutcome.granted.heading(language)
         }
     }
 
@@ -1219,7 +1207,7 @@ struct ProjectDetailView: View {
                 "No linked events or tasks have a protocol yet.",
                 "Inga kopplade händelser eller uppgifter har något protokoll ännu."
             ))
-            .font(.system(size: 13))
+            .font(appFont(.body))
             .foregroundStyle(.secondary)
         } else {
             VStack(alignment: .leading, spacing: 16) {
@@ -1227,7 +1215,7 @@ struct ProjectDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text([entry.dateText.nonEmpty, entry.title.nonEmpty].compactMap { $0 }.joined(separator: " – "))
-                                .font(.system(size: 14, weight: .bold))
+                                .font(appFont(.panelTitle).weight(.bold))
                             Button {
                                 store.openProtocolEntryEditor(entry.source)
                             } label: {
@@ -1239,11 +1227,11 @@ struct ProjectDetailView: View {
                         if !entry.participantNames.isEmpty {
                             (Text(language.text("Participants: ", "Deltagare: ")).bold()
                                 + Text(entry.participantNames.joined(separator: ", ")))
-                                .font(.system(size: 12))
+                                .font(appFont(.secondary))
                         }
                         ForEach(entry.linkedRecordLines, id: \.self) { line in
                             Text(line)
-                                .font(.system(size: 12))
+                                .font(appFont(.secondary))
                                 .foregroundStyle(.secondary)
                         }
                         projectProtocolRichTextView(entry.protocolText)
@@ -1267,19 +1255,19 @@ struct ProjectDetailView: View {
                     let prefix = ProtocolMarkup.bulletPrefix(forLevel: level)
                     HStack(alignment: .firstTextBaseline, spacing: 0) {
                         Text(String(prefix.trimmingCharacters(in: .whitespaces)))
-                            .font(.system(size: 13))
+                            .font(appFont(.body))
                             .frame(width: 14, alignment: .leading)
                         projectProtocolRunsText(paragraph, droppingPrefix: prefix)
-                            .font(.system(size: 13))
+                            .font(appFont(.body))
                     }
                     .padding(.leading, CGFloat(level - 1) * 14)
                 } else if plainText.isEmpty {
                     // Deliberately empty paragraph — keep the blank line.
                     Text(verbatim: " ")
-                        .font(.system(size: 13))
+                        .font(appFont(.body))
                 } else {
                     projectProtocolRunsText(paragraph, droppingPrefix: nil)
-                        .font(.system(size: 13))
+                        .font(appFont(.body))
                 }
             }
         }
@@ -1311,56 +1299,21 @@ struct ProjectDetailView: View {
         return result
     }
 
+    // Round 16: the shared status tones.
     private func projectApplicationStatusColor(for application: GrantApplication) -> Color {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return store.isEffectivelyFullySpent(application)
-                ? AppPalette.vividGreen.opacity(0.72)
-                : AppPalette.vividGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.vividRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.vividYellow
-        }
-        return dynamicColor(light: NSColor(calibratedRed: 0.95, green: 0.95, blue: 0.95, alpha: 1), dark: NSColor(calibratedRed: 0.24, green: 0.24, blue: 0.24, alpha: 1))
+        AppPalette.statusCapsuleFill(store.applicationStatusTone(application))
     }
 
     private func projectApplicationStatusShadeColor(for application: GrantApplication) -> Color? {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return AppPalette.shadeGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.shadeRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.shadeYellow
-        }
-        return nil
+        AppPalette.statusRowFill(store.applicationStatusTone(application))
     }
 
-    private func projectPublicationStatusShadeColor(for status: PublicationStatus) -> Color {
-        switch status {
-        case .published, .accepted:
-            return AppPalette.shadeGreen
-        case .submitted, .planned, .inPreparation:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        }
+    private func projectPublicationStatusShadeColor(for status: PublicationStatus) -> Color? {
+        AppPalette.statusRowFill(AppStatusTones.publication(status))
     }
 
-    private func projectContributionStatusShadeColor(for status: CVConferenceContributionStatus) -> Color {
-        switch status {
-        case .presented, .accepted:
-            return AppPalette.shadeGreen
-        case .planned:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        }
+    private func projectContributionStatusShadeColor(for status: CVConferenceContributionStatus) -> Color? {
+        AppPalette.statusRowFill(AppStatusTones.conferenceContribution(status))
     }
 
     private func projectPublicationSortOrder(_ lhs: PublicationRecord, _ rhs: PublicationRecord) -> Bool {
@@ -1939,7 +1892,7 @@ struct ProjectDetailView: View {
 
     private func inlineTrashButton(action: @escaping () -> Void) -> some View {
         AppIconDeleteButton(
-            title: "Ta bort",
+            title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
             action: action
@@ -2044,11 +1997,11 @@ enum GrantOutcomeSegmentKind: CaseIterable {
     func title(language: AppLanguage) -> String {
         switch self {
         case .rejected:
-            return language.text("Declined", "Nekade")
+            return ApplicationOutcome.declined.heading(language)
         case .waiting:
-            return language.text("Awaiting response", "Väntar svar")
+            return ApplicationOutcome.awaitingDecision.heading(language)
         case .granted:
-            return language.text("Awarded", "Beviljade")
+            return ApplicationOutcome.granted.heading(language)
         }
     }
 
@@ -2125,11 +2078,11 @@ private struct GrantOutcomeDistributionSnapshot {
             let rows = applications.filter { $0[keyPath: keyPath] != nil }
             guard !rows.isEmpty else { return "—" }
             if amountValue != nil {
-                return CurrencyFormatter.format(rows.reduce(0) { $0 + resolvedAmount($1, $1[keyPath: keyPath]) }, code: "SEK")
+                return CurrencyFormatter.format(rows.reduce(0) { $0 + resolvedAmount($1, $1[keyPath: keyPath]) }, code: "SEK", language: language)
             }
             let grouped = Dictionary(grouping: rows, by: { $0.currency ?? "SEK" })
             return grouped.keys.sorted().map { currency in
-                CurrencyFormatter.format(grouped[currency]?.compactMap { $0[keyPath: keyPath] }.reduce(0, +), code: currency)
+                CurrencyFormatter.format(grouped[currency]?.compactMap { $0[keyPath: keyPath] }.reduce(0, +), code: currency, language: language)
             }.joined(separator: " • ")
         }
 
@@ -2148,11 +2101,11 @@ private struct GrantOutcomeDistributionSnapshot {
             guard !rows.isEmpty else { return nil }
             let text: String
             if amountValue != nil {
-                text = CurrencyFormatter.format(rows.reduce(0) { $0 + resolvedAmount($1, resolvedRemainingAmount($1)) }, code: "SEK")
+                text = CurrencyFormatter.format(rows.reduce(0) { $0 + resolvedAmount($1, resolvedRemainingAmount($1)) }, code: "SEK", language: language)
             } else {
                 let grouped = Dictionary(grouping: rows, by: { $0.currency ?? "SEK" })
                 text = grouped.keys.sorted().map { currency in
-                    CurrencyFormatter.format(grouped[currency]?.compactMap { resolvedRemainingAmount($0) }.reduce(0, +), code: currency)
+                    CurrencyFormatter.format(grouped[currency]?.compactMap { resolvedRemainingAmount($0) }.reduce(0, +), code: currency, language: language)
                 }.joined(separator: " • ")
             }
             return language.text("Of which \(text) remains.", "Varav \(text) kvarvarande medel.")
@@ -2348,7 +2301,7 @@ struct GrantOutcomeDistributionCard: View {
     private func segmentLabel(_ segment: GrantOutcomeDistributionSegment) -> some View {
         if compactAmountOnly {
             Text("\(segment.amountText) (\(segment.percentageText))")
-                .font(.system(size: 11, weight: .bold))
+                .font(appFont(.secondary).weight(.bold))
                 .foregroundStyle(AppPalette.semanticOnColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
@@ -2356,13 +2309,13 @@ struct GrantOutcomeDistributionCard: View {
         } else {
             VStack(alignment: .center, spacing: 0) {
                 Text(segment.kind.title(language: language))
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(AppPalette.semanticOnColor.opacity(0.92))
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .center)
 
                 Text("\(segment.amountText) (\(segment.percentageText))")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(appFont(.secondary).weight(.bold))
                     .foregroundStyle(AppPalette.semanticOnColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)
@@ -2370,7 +2323,7 @@ struct GrantOutcomeDistributionCard: View {
 
                 if showsFooter {
                     Text(footerText(for: segment))
-                        .font(.system(size: 11, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(AppPalette.semanticOnColor.opacity(0.92))
                         .lineLimit(1)
                         .minimumScaleFactor(0.92)

@@ -72,7 +72,7 @@ struct OrganizationTimelineView: View {
     var body: some View {
         if snapshot.isEmpty {
             Text(language.text("No timed organization processes yet.", "Inga tidsatta organisationsprocesser än."))
-                .font(.system(size: 12))
+                .font(appFont(.secondary))
                 .foregroundStyle(.secondary)
         } else {
             ScrollViewReader { proxy in
@@ -108,7 +108,7 @@ struct OrganizationTimelineView: View {
                 HStack(alignment: .bottom, spacing: 0) {
                     ForEach(years, id: \.self) { year in
                         Text(String(year))
-                            .font(.system(size: 13, weight: .medium))
+                            .font(appFont(.body).weight(.medium))
                             .foregroundStyle(.primary)
                             .frame(width: yearColumnWidth, height: headerHeight, alignment: .bottom)
                     }
@@ -140,7 +140,7 @@ struct OrganizationTimelineView: View {
             ForEach(Array(group.rows.enumerated()), id: \.offset) { rowIndex, row in
                 HStack(alignment: .top, spacing: 0) {
                     Text(rowIndex == 0 ? group.title : "")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(appFont(.secondary).weight(.semibold))
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                         .frame(width: rowLabelWidth - 12, height: rowHeight, alignment: .leading)
@@ -154,7 +154,7 @@ struct OrganizationTimelineView: View {
 
                         if let todayMarkerX {
                             Rectangle()
-                                .fill(Color(red: 0.98, green: 0.08, blue: 0.08))
+                                .fill(AppPalette.todayMarker)
                                 .frame(width: markerWidth, height: rowHeight)
                                 .offset(x: todayMarkerX - markerWidth / 2)
                         }
@@ -322,7 +322,7 @@ struct OrganizationTimelineView: View {
 
             if width >= 44 {
                 Text(bar.title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(textColor(for: bar))
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -350,7 +350,7 @@ struct OrganizationTimelineView: View {
             let overlayWidth = max(overlayEndX - overlayStartX, 0)
 
             if overlayStartDate < visibleBarEnd, overlayWidth > 0 {
-                StripedTimelineOverlay(color: AppPalette.vividRed, lineWidth: 2, spacing: 8)
+                StripedTimelineOverlay(color: AppPalette.statusText(.inactive), lineWidth: 2, spacing: 8)
                     .frame(width: overlayWidth, height: barHeight)
                     .offset(x: overlayStartX)
                     .allowsHitTesting(false)
@@ -407,7 +407,8 @@ struct OrganizationTimelineView: View {
         case .rejected:
             return [AppPalette.statsCardDeclinedStart, AppPalette.statsCardDeclinedEnd]
         case .toApply:
-            return [AppPalette.secondaryCardSurface, AppPalette.shadeBlue]
+            // Round 16: no status yet = no colour (blue is not a status).
+            return [AppPalette.secondaryCardSurface, AppPalette.secondaryCardSurface]
         }
     }
 
@@ -445,7 +446,7 @@ struct OrganizationTimelineView: View {
         case .grantProviderGrant(.toApply), .fundManagerGrant(.toApply):
             return AppPalette.appText
         default:
-            return AppPalette.semanticOnColor
+            return AppPalette.statusOnFill
         }
     }
 
@@ -461,7 +462,7 @@ struct OrganizationTimelineView: View {
         case .congressAbstractDeadline:
             return AppPalette.shadeBlue
         case .congressLateAbstractDeadline:
-            return Color(red: 0.98, green: 0.08, blue: 0.08)
+            return AppPalette.statusText(.negative)
         }
     }
 

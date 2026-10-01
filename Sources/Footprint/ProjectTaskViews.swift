@@ -102,8 +102,9 @@ private struct CentralTaskRowEditor: View {
     /// week, safe shade for completed tasks, and no indicator further out.
     private var statusStripeColor: Color? {
         guard let task else { return nil }
+        // Round 16: shared task tones (done green, overdue orange).
         if task.isCompleted {
-            return AppPalette.shadeGreen
+            return AppPalette.statusFill(AppStatusTones.task(isCompleted: true, isOverdue: false))
         }
         guard let deadlineText = task.deadline.trimmedOrNil,
               let deadlineDay = DateParsers.isoDay.date(from: deadlineText) else {
@@ -112,12 +113,12 @@ private struct CentralTaskRowEditor: View {
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
         if deadlineDay < todayStart {
-            return AppPalette.shadeRed
+            return AppPalette.statusFill(AppStatusTones.task(isCompleted: false, isOverdue: true))
         }
         // Settings > Calendar: "due soon" this many days ahead (default 7).
         if let weekAhead = calendar.date(byAdding: .day, value: store.calendarReminderSettings.taskDueSoonDays, to: todayStart),
            deadlineDay <= weekAhead {
-            return AppPalette.shadeYellow
+            return AppPalette.statusFill(.pending)
         }
         return nil
     }
@@ -139,7 +140,7 @@ private struct CentralTaskRowEditor: View {
                         .frame(width: 120, alignment: .leading)
                 } else {
                     CommitDateFieldWithTodayButton(
-                        placeholder: "YYYY-MM-DD",
+                        placeholder: language.datePlaceholder,
                         text: stringBinding(\.deadline),
                         formatter: DateParsers.canonicalizedDayInput,
                         clearBackgroundInDarkNew: true,

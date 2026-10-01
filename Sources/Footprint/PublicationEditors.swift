@@ -802,7 +802,7 @@ struct ExportIconSegment: View {
             .frame(height: 20)
 
             Text(title)
-                .font(.system(size: 10))
+                .font(appFont(.secondary))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
@@ -1528,7 +1528,7 @@ struct PublicationEditorView: View {
                                 compactField(language.text("Registration date", "Registreringsdatum"), width: 174) {
                                     HStack(spacing: 8) {
                                         publicationSurfaceTextField(
-                                            "YYYY-MM-DD",
+                                            language.datePlaceholder,
                                             text: binding(\.reviewRegistrationDate),
                                             formatter: DateParsers.canonicalizedDayInput,
                                             state: AppFieldValidators.optionalDate(draft.reviewRegistrationDate, language: language).state,
@@ -1656,7 +1656,7 @@ struct PublicationEditorView: View {
 	                                if shouldShowPublicationFieldInCurrentLockState(bibliographyPublishedDateValue) {
 	                                    compactField(language.text("Publication date", "Publiceringsdatum"), width: 108) {
 	                                    publicationSurfaceTextField(
-	                                        "YYYY-MM-DD",
+	                                        language.datePlaceholder,
 	                                        text: bibliographyPublishedDateBinding(),
 	                                        formatter: DateParsers.canonicalizedDayInput,
 	                                        state: AppFieldValidators.optionalDate(bibliographyPublishedDateValue, language: language).state,
@@ -1667,7 +1667,7 @@ struct PublicationEditorView: View {
 	                                if shouldShowPublicationFieldInCurrentLockState(draft.epubDate) {
 	                                    compactField(language.text("Epub date", "Epub-datum"), width: 100) {
 	                                    publicationSurfaceTextField(
-                                        "YYYY-MM-DD",
+                                        language.datePlaceholder,
                                         text: binding(\.epubDate),
                                         formatter: DateParsers.canonicalizedDayInput,
                                         updatesContinuously: false
@@ -2099,7 +2099,7 @@ struct PublicationEditorView: View {
                         Divider().frame(height: 34)
                         ExportIconSegment(
                             systemImage: "banknote",
-                            title: "Funding",
+                            title: language.text("Funding", "Finansiering"),
                             help: language.text(
                                 "Copy the funding statement, largest funding first — hover for language",
                                 "Kopiera funding statement, största funding först — hovra för språk"
@@ -2461,7 +2461,7 @@ struct PublicationEditorView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         if let label = finalPDFDisplayLabel ?? finalPDFFilename {
                             Text(label)
-                                .font(.system(size: 12, weight: .medium))
+                                .font(appFont(.secondary).weight(.medium))
                                 .foregroundStyle(.primary)
                                 .lineLimit(4)
                                 .frame(maxWidth: 220, alignment: .leading)
@@ -3774,13 +3774,13 @@ private func publicationSurfaceTextField(
 
     private func submissionStatusMarkerStatus(for row: PublicationSubmissionEditorRow) -> (color: Color, help: String)? {
         if row.hasAcceptedOrPublishedDate {
-            return (AppPalette.shadeGreen, language.text("Accepted", "Accepterad"))
+            return (AppPalette.statusFill(.done), language.text("Accepted", "Accepterad"))
         }
         if row.hasRejectedDate {
-            return (AppPalette.shadeRed, language.text("Rejected", "Refuserad"))
+            return (AppPalette.statusFill(.negative), language.text("Rejected", "Refuserad"))
         }
         if row.submittedDate?.trimmedOrNil != nil {
-            return (AppPalette.shadeYellow, language.text("Submitted", "Inskickad"))
+            return (AppPalette.statusFill(.pending), language.text("Submitted", "Inskickad"))
         }
         return nil
     }
@@ -4124,7 +4124,7 @@ private struct OptionalDateField: View {
                 }
             } else {
                 AppDateField(
-                    placeholder: "YYYY-MM-DD",
+                    placeholder: language.datePlaceholder,
                     text: dateString,
                     width: fieldWidth,
                     height: minHeight,
@@ -4321,9 +4321,9 @@ private struct PublicationCreditRolesSheet: View {
                         Picker("", selection: roleCellSelectionBinding(for: authorName, role: role)) {
                             Text("–").tag(CreditCellSelection.none)
                             Text("X").tag(CreditCellSelection.x)
-                            Text("lead").tag(CreditCellSelection.lead)
-                            Text("equal").tag(CreditCellSelection.equal)
-                            Text("sup.").tag(CreditCellSelection.supporting)
+                            Text(creditLeadLabel).tag(CreditCellSelection.lead)
+                            Text(creditEqualLabel).tag(CreditCellSelection.equal)
+                            Text(creditSupportingLabel).tag(CreditCellSelection.supporting)
                         }
                         .labelsHidden()
                         .pickerStyle(.menu)
@@ -4370,6 +4370,11 @@ private struct PublicationCreditRolesSheet: View {
         )
     }
 
+    // Round 16: CRediT degree words follow the interface language.
+    private var creditLeadLabel: String { language.text("lead", "ledande") }
+    private var creditEqualLabel: String { language.text("equal", "lika") }
+    private var creditSupportingLabel: String { language.text("sup.", "stödj.") }
+
     private func roleColumnWidth(for role: PublicationCreditRole) -> CGFloat {
         let font = NSFont.systemFont(ofSize: 12, weight: .semibold)
         let textWidth = ceil((role.shortLabel as NSString).size(withAttributes: [.font: font]).width)
@@ -4377,7 +4382,9 @@ private struct PublicationCreditRolesSheet: View {
         let angle = CGFloat.pi / 3
         let horizontalFootprint = abs(cos(angle)) * textWidth + abs(sin(angle)) * textHeight
         let pickerFont = NSFont.systemFont(ofSize: 13, weight: .regular)
-        let pickerTextWidth = ceil(("equal" as NSString).size(withAttributes: [.font: pickerFont]).width)
+        let pickerTextWidth = [creditLeadLabel, creditEqualLabel, creditSupportingLabel]
+            .map { ceil(($0 as NSString).size(withAttributes: [.font: pickerFont]).width) }
+            .max() ?? 0
         let pickerWidth = pickerTextWidth + 36
         return max(pickerWidth, ceil(horizontalFootprint) + 8)
     }
@@ -4584,7 +4591,7 @@ private struct PublicationCreditRoleHeaderCell: View {
         ZStack(alignment: .bottomLeading) {
             Color.clear
             Text(role.shortLabel)
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .fixedSize()
                 .rotationEffect(.degrees(-60), anchor: .bottomLeading)
                 .offset(x: width / 2, y: -2)

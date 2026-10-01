@@ -117,10 +117,34 @@ func collapsingWhitespaceRuns(_ value: String) -> String {
 
 func normalizedSearchFilterText(_ value: String) -> String {
     collapsingWhitespaceRuns(
-        value
+        canonicalizingSearchDashes(value)
             .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
             .lowercased()
     )
+}
+
+/// Round 16: the searched text gets the same dash handling as the query, so
+/// "COVID–19" (en dash) is found by typing "COVID-19" and the other way round.
+private func canonicalizingSearchDashes(_ value: String) -> String {
+    // ASCII fast path: this runs for every row of every list.
+    guard value.unicodeScalars.contains(where: { $0.value > 0x7F && isNonASCIISearchDash($0) }) else {
+        return value
+    }
+    let hyphen = Unicode.Scalar(UInt8(0x2D))
+    var scalars = String.UnicodeScalarView()
+    for scalar in value.unicodeScalars {
+        scalars.append(isNonASCIISearchDash(scalar) ? hyphen : scalar)
+    }
+    return String(scalars)
+}
+
+private func isNonASCIISearchDash(_ scalar: Unicode.Scalar) -> Bool {
+    switch scalar.value {
+    case 0x2010, 0x2011, 0x2012, 0x2013, 0x2014, 0x2015, 0x2212, 0xFE58, 0xFE63, 0xFF0D:
+        return true
+    default:
+        return false
+    }
 }
 
 private func normalizedSearchFilterToken(_ value: String, stripLeadingDash: Bool) -> String {

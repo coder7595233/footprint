@@ -1270,9 +1270,9 @@ enum AppPalette {
     static var statisticsRed: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.negative, shaded: false)) }
     static var statisticsBlue: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.neutral, shaded: false)) }
 
-    static var deadlineWarningLong: Color { vividYellow }
+    static var deadlineWarningLong: Color { statusFill(.pending) }
 
-    static var deadlineWarningShort: Color { vividRed }
+    static var deadlineWarningShort: Color { statusFill(.warning) }
 
     static var deadlineNeutral: Color { shadeBlue }
 
@@ -1320,12 +1320,13 @@ enum AppPalette {
         Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false))
     }
 
+    // Round 16: text colours (the pale fills were unreadable as text).
     static var dispositionPositiveText: Color {
-        Color(nsColor: AppAppearanceRegistry.semanticColor(.positive, shaded: false))
+        statusText(.done)
     }
 
     static var dispositionWarningText: Color {
-        Color(nsColor: AppAppearanceRegistry.semanticColor(.negative, shaded: false))
+        statusText(.negative)
     }
 
     static var statsCardPendingStart: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }

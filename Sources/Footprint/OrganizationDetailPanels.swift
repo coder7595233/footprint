@@ -13,14 +13,14 @@ struct OrganizationDetailHeader: View {
                 AppInlineTitleTextField(
                     placeholder: language == .swedish ? language.text("Swedish name", "Svenskt namn") : language.text("English name", "Engelskt namn"),
                     text: language == .swedish ? $nameSv : $nameEn,
-                    font: .systemFont(ofSize: 24, weight: .bold),
+                    font: appNSFont(.pageTitle),
                     minHeight: 30
                 )
 
                 AppInlineTitleTextField(
                     placeholder: language == .swedish ? language.text("English name", "Engelskt namn") : language.text("Swedish name", "Svenskt namn"),
                     text: language == .swedish ? $nameEn : $nameSv,
-                    font: .systemFont(ofSize: 13, weight: .medium),
+                    font: appNSFont(.body),
                     textColor: .secondaryLabelColor,
                     minHeight: 18
                 )
@@ -84,7 +84,7 @@ struct OrganizationGrantDashboardPanel: View {
                     if let scopeLabel {
                         HStack(spacing: 8) {
                             Text(language.text("Scope:", "Nivå:"))
-                                .font(.system(size: 14, weight: .bold))
+                                .font(appFont(.panelTitle).weight(.bold))
                             Text(scopeLabel)
                                 .foregroundStyle(.secondary)
                             Spacer()
@@ -199,15 +199,15 @@ private struct OrganizationCompactGrantStatsRow: View {
 
     var body: some View {
         if segments.isEmpty {
-            Text(language.text("No submitted, declined or awarded grants yet.", "Inga ansökta, nekade eller beviljade anslag än."))
-                .font(.system(size: 12))
+            Text(language.text("No submitted, declined or granted applications yet.", "Inga ansökta, avslagna eller beviljade anslag än."))
+                .font(appFont(.secondary))
                 .foregroundStyle(.secondary)
         } else {
             HStack(spacing: 8) {
                 ForEach(segments) { segment in
                     Button(action: { segmentTapAction(segment.kind) }) {
                         Text(segment.text)
-                            .font(.system(size: 13, weight: .bold))
+                            .font(appFont(.body).weight(.bold))
                             .foregroundStyle(AppPalette.semanticOnColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.82)
@@ -246,7 +246,7 @@ private struct OrganizationCompactGrantStatsRow: View {
     }
 
     private func segmentText(amount: Double, percentage: Int) -> String {
-        "\(CurrencyFormatter.format(amount, code: "SEK")) (\(percentage) %)"
+        "\(CurrencyFormatter.format(amount, code: "SEK", language: language)) (\(percentage) %)"
     }
 
     private func hoverText(
@@ -291,7 +291,7 @@ private struct OrganizationCompactGrantStatsRow: View {
                 amount: store.effectiveRemainingGrantedAmountValue(for: $1)
             )
         }
-        let amount = CurrencyFormatter.format(total, code: "SEK")
+        let amount = CurrencyFormatter.format(total, code: "SEK", language: language)
             + store.unconvertedAmountSuffix(for: rows.map { ($0, store.effectiveRemainingGrantedAmountValue(for: $0)) })
         return language.text("Of which \(amount) remains.", "Varav \(amount) kvarvarande medel.")
     }
@@ -417,7 +417,7 @@ private struct OrganizationCompactGrantApplicationsTable: View {
             tableText(row.amountText, width: amountWidth, alignment: .trailing, weight: .semibold)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .font(.system(size: 12))
+        .font(appFont(.secondary))
         .padding(.horizontal, 10)
         .padding(.vertical, 3)
         .contentShape(Rectangle())
@@ -465,7 +465,7 @@ private struct OrganizationCompactGrantApplicationsTable: View {
         weight: Font.Weight = .regular
     ) -> some View {
         Text(text)
-            .font(.system(size: 12, weight: weight))
+            .font(appFont(.secondary).weight(weight))
             .foregroundStyle(AppPalette.appText)
             .lineLimit(1)
             .truncationMode(.tail)
@@ -629,41 +629,9 @@ private struct OrganizationCompactGrantApplicationsTable: View {
     }
 
     private func statusBadgeColors(for application: GrantApplication) -> (foreground: Color, background: Color, stroke: Color) {
-        if application.isToApplyStatus {
-            return (
-                foreground: AppPalette.appText,
-                background: AppPalette.fieldSurface,
-                stroke: AppPalette.border
-            )
-        }
-
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return (
-                foreground: AppPalette.semanticOnColor,
-                background: AppPalette.vividGreen,
-                stroke: AppPalette.vividGreen.opacity(0.78)
-            )
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return (
-                foreground: AppPalette.semanticOnColor,
-                background: AppPalette.vividRed,
-                stroke: AppPalette.vividRed.opacity(0.78)
-            )
-        }
-        if status == "Väntar svar" {
-            return (
-                foreground: AppPalette.semanticOnColor,
-                background: AppPalette.vividYellow,
-                stroke: AppPalette.vividYellow.opacity(0.82)
-            )
-        }
-        return (
-            foreground: AppPalette.semanticOnColor,
-            background: AppPalette.vividYellow,
-            stroke: AppPalette.vividYellow.opacity(0.82)
-        )
+        // Round 16: the shared application status tones.
+        let colors = AppBadgeColors.status(store.applicationStatusTone(application))
+        return (foreground: colors.foreground, background: colors.background, stroke: colors.stroke)
     }
 }
 
@@ -786,7 +754,7 @@ struct OrganizationLinkedResearchersPanel: View {
             tableText("\(row.grantCount)", width: grantCountWidth, alignment: .trailing, weight: .semibold)
             tableText("\(row.publicationCount)", width: publicationCountWidth, alignment: .trailing, weight: .semibold)
         }
-        .font(.system(size: 12))
+        .font(appFont(.secondary))
         .padding(.horizontal, 8)
         .padding(.vertical, 3)
         .contentShape(Rectangle())
@@ -814,7 +782,7 @@ struct OrganizationLinkedResearchersPanel: View {
         weight: Font.Weight = .regular
     ) -> some View {
         Text(text)
-            .font(.system(size: 12, weight: weight))
+            .font(appFont(.secondary).weight(weight))
             .foregroundStyle(AppPalette.appText)
             .lineLimit(1)
             .truncationMode(.tail)

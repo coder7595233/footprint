@@ -33,7 +33,7 @@ struct DoctoralRecordHeroView: View {
     @State private var activeActivityGroupID: String?
     @State private var plotWidth: CGFloat = 0
 
-    private static let todayMarkerColor = Color(red: 0.98, green: 0.08, blue: 0.08)
+    private static var todayMarkerColor: Color { AppPalette.todayMarker }
     private static let laneLabelWidth: CGFloat = 100
     private static let yearLabelHeight: CGFloat = 24
     /// Years visible at a time; the rest is reached by scrolling sideways.
@@ -252,12 +252,12 @@ struct DoctoralRecordHeroView: View {
                     .appTypography(.body)
                     .foregroundStyle(AppPalette.appText)
             } else {
-                Text(doctoralStatisticsNumber(grantedTotal / 1_000_000, language: language) + " mkr")
+                Text(doctoralStatisticsNumber(grantedTotal / 1_000_000, language: language) + " " + AmountFormatter.millionsUnit(language))
                     .font(appFont(.body).weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(AppPalette.appText)
                 Text(language.text(
-                    "\(granted.count) awarded of \(applications.count)",
+                    "\(granted.count) granted of \(applications.count)",
                     "\(granted.count) beviljade av \(applications.count)"
                 ))
                 .appTypography(.secondary)
@@ -720,7 +720,7 @@ struct DoctoralRecordHeroView: View {
                     .overlay(alignment: .leading) {
                         if block.needsConfirmation {
                             Rectangle()
-                                .fill(AppPalette.vividRed)
+                                .fill(AppPalette.statusFill(.warning))
                                 .frame(width: 3)
                         }
                     }
@@ -777,10 +777,12 @@ struct DoctoralRecordHeroView: View {
             ZStack {
                 if isDone || isEndedBefore {
                     Circle()
-                        .fill(isEndedBefore ? AppPalette.vividRed : AppPalette.vividGreen)
+                        // Round 16: ended early is grey, completed green; the
+                        // glyph uses the readable on-fill colour.
+                        .fill(AppPalette.statusFill(isEndedBefore ? .inactive : .done))
                     Image(systemName: isEndedBefore ? "xmark" : "checkmark")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppPalette.statusOnFill)
                 } else {
                     Circle()
                         .fill(AppPalette.detailPanelSurface)
@@ -1280,7 +1282,7 @@ struct DoctoralMilestoneSetupSheet: View {
                     "Set the three key dates — they draw the timeline at the top of the page. All of them can be changed later by clicking the milestones.",
                     "Ange de tre nyckeldatumen — de ritar tidslinjen högst upp på sidan. Alla går att ändra senare genom att klicka på milstolparna."
                 ))
-                .font(.system(size: 12.5))
+                .font(appFont(.body))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             }
@@ -1290,8 +1292,7 @@ struct DoctoralMilestoneSetupSheet: View {
             HStack {
                 Spacer()
                 Button(language.text("Done", "Klar"), action: onDone)
-                    .buttonStyle(.borderedProminent)
-                    .tint(AppPalette.actionSave)
+                    .appSaveButtonStyle()
                     .keyboardShortcut(.defaultAction)
             }
         }
@@ -1302,11 +1303,11 @@ struct DoctoralMilestoneSetupSheet: View {
     private func setupRow(_ title: String, date: Binding<String>) -> some View {
         HStack(spacing: 12) {
             Text(title)
-                .font(.system(size: 12.5, weight: .semibold))
+                .font(appFont(.body).weight(.semibold))
                 .frame(width: 170, alignment: .leading)
-            TextField("YYYY-MM-DD", text: date)
+            TextField(language.datePlaceholder, text: date)
                 .textFieldStyle(.roundedBorder)
-                .font(.system(size: 12.5))
+                .font(appFont(.body))
                 .monospacedDigit()
                 .frame(width: 130)
                 .onSubmit {

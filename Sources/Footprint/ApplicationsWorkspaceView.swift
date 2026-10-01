@@ -34,6 +34,7 @@ enum ApplicationRoleFilter: String, Codable, Hashable {
 struct ApplicationsView: View {
     private struct FilterCacheKey: Hashable {
         let generation: Int
+        let dayKey: String
         let nonSearchSignature: String
         let includedTerms: [String]
         let excludedTerms: [String]
@@ -80,12 +81,20 @@ struct ApplicationsView: View {
     let newRecordTrigger: Int
     @WorkspaceFilterState("Applications.Filter.Search") private var searchText = ""
     @WorkspaceFilterState("Applications.Filter.Status") private var selectedStatusFilters: Set<String> = []
+    /// Round 16: project ids (or the written name of a project without a
+    /// record), not names, so a renamed project keeps matching.
     @WorkspaceFilterState("Applications.Filter.Projects") private var selectedProjectFilters: Set<String> = []
     @WorkspaceFilterState("Applications.Filter.Role") private var applicationRoleFilter: ApplicationRoleFilter = .all
-    @WorkspaceFilterState("Applications.Filter.ActiveFirst") private var prioritizesActiveApplications = false
+    /// Round 16: no longer stored. Nothing in the app switches it on, so a
+    /// value left from an old version could only change the order unseen.
+    @State private var prioritizesActiveApplications = false
     @WorkspaceFilterState("Applications.Filter.FutureOnly") private var showsOnlyFutureApplications = false
     @WorkspaceFilterState("Applications.Filter.MinimumYear") private var minimumYearValue: Double = 0
     @WorkspaceFilterState("Applications.Filter.MaximumYear") private var maximumYearValue: Double = 0
+    /// Round 16: the year range covers all years and grows with new ones
+    /// until the user narrows it (see ListYearRangeFilter).
+    @WorkspaceFilterState("Applications.Filter.FollowsRange") private var yearFilterFollowsLatestYear = true
+    @WorkspaceFilterState("Applications.Filter.FollowsRangeStart") private var yearFilterFollowsEarliestYear = true
     @WorkspaceFilterState("Applications.Filter.MinimumAmount") private var minimumAmountValue: Double = 0
     @WorkspaceFilterState("Applications.Filter.MaximumAmount") private var maximumAmountValue: Double = 20_000_000
     @State private var sortHistory = ListSortPersistence.load(
@@ -115,6 +124,13 @@ struct ApplicationsView: View {
     @State private var nonSearchFilteredRowsCache: [String: [ApplicationRowSnapshot]] = [:]
     @State private var filteredRowsCache: [FilterCacheKey: [ApplicationRowSnapshot]] = [:]
     @State private var grantPipelineExpanded = false
+    /// Round 16: part of the filter cache key, so "Find new" is recomputed
+    /// after midnight.
+    @State private var applicationsDayKey = ApplicationsView.currentDayKey()
+    /// Round 16: a new or routed record that must be shown even if a filter
+    /// would hide it; handled as soon as its row exists.
+    @State private var pendingRevealApplicationID: String?
+    @State private var hasAppliedLaunchFilterPolicy = false
 
     init(
         store: GrantDataStore,
@@ -190,37 +206,100 @@ struct ApplicationsView: View {
             .joined(separator: "|")
     }
 
+    /// Round 16: the menu's entries are project ids (or the written name of a
+    /// project that has no record); the label shows the current name.
     private var projectOptions: [String] {
-        store.projectTypes
+        var seen = Set<String>()
+        return store.projectTypes.compactMap { name -> String? in
+            let key = store.project(named: name)?.id ?? name
+            return seen.insert(key).inserted ? key : nil
+        }
     }
 
-    private var yearValues: [Int] {
-        Array(Set(applicationRows.map(\.applicationYear))).sorted()
+    private func projectFilterLabel(_ key: String, language: AppLanguage) -> String {
+        guard let project = store.project(id: key) else { return key }
+        return language == .swedish
+            ? (project.nameSv.nonEmpty ?? project.nameEn)
+            : (project.nameEn.nonEmpty ?? project.nameSv)
     }
 
+    private var applicationProjectFilterForSelection: ApplicationProjectFilter {
+        let projects = store.projects
+        var namesByProjectID: [String: [String]] = [:]
+        for project in projects where selectedProjectFilters.contains(project.id) {
+            namesByProjectID[project.id] = [project.nameSv, project.nameEn]
+        }
+        return ApplicationProjectFilterKeys.filter(
+            selectedKeys: selectedProjectFilters,
+            knownProjectIDs: Set(projects.map(\.id)),
+            namesByProjectID: namesByProjectID
+        )
+    }
+
+    /// Old versions stored project names; they become ids here, and entries
+    /// that match nothing any more are dropped instead of hiding everything.
+    private func migrateProjectFilterKeysIfNeeded() {
+        guard !selectedProjectFilters.isEmpty else { return }
+        let projects = store.projects
+        // Not loaded yet: dropping entries now would lose a valid filter.
+        guard !projects.isEmpty || !applicationRows.isEmpty else { return }
+        let migrated = ApplicationProjectFilterKeys.migrated(
+            selectedProjectFilters,
+            knownProjectIDs: Set(projects.map(\.id)),
+            projectIDForName: { store.project(named: $0)?.id },
+            writtenNames: Set(store.projectTypes)
+        )
+        if migrated != selectedProjectFilters {
+            selectedProjectFilters = migrated
+        }
+    }
+
+    /// The years present, or nil while there are no rows yet.
+    private var availableYearBounds: ClosedRange<Double>? {
+        ListYearRangeFilter.bounds(forYears: applicationRows.map(\.applicationYear))
+    }
+
+    /// The slider's bounds (the current year while there are no rows).
     private var yearBounds: ClosedRange<Double> {
-        let years = yearValues
+        if let bounds = availableYearBounds {
+            return bounds
+        }
         let fallbackYear = Double(Calendar.current.component(.year, from: Date()))
-        let lower = Double(years.first ?? Int(fallbackYear))
-        let upper = Double(years.last ?? Int(fallbackYear))
-        return lower...upper
+        return fallbackYear...fallbackYear
+    }
+
+    private var yearRangeFilter: ListYearRangeFilter {
+        ListYearRangeFilter(
+            lower: minimumYearValue,
+            upper: maximumYearValue,
+            followsLower: yearFilterFollowsEarliestYear,
+            followsUpper: yearFilterFollowsLatestYear
+        )
+    }
+
+    private var yearFilterIsNarrowed: Bool {
+        yearRangeFilter.isNarrowed(within: availableYearBounds)
+    }
+
+    private var amountFilterIsActive: Bool {
+        minimumAmountValue != 0 || maximumAmountValue != 20_000_000
     }
 
     private var hasActiveApplicationFilters: Bool {
         searchText.nonEmpty != nil
             || !selectedStatusFilters.isEmpty
             || !selectedProjectFilters.isEmpty
-            || minimumYearValue != yearBounds.lowerBound
-            || maximumYearValue != yearBounds.upperBound
-            || minimumAmountValue != 0
-            || maximumAmountValue != 20_000_000
+            || yearFilterIsNarrowed
+            || amountFilterIsActive
             || preset != nil
             || applicationRoleFilter != .all
             || showsOnlyFutureApplications
     }
 
     private var nonSearchMatchingApplications: [ApplicationRowSnapshot] {
-        let projectFilter = store.applicationProjectFilter(selectedProjects: selectedProjectFilters)
+        let projectFilter = applicationProjectFilterForSelection
+        let yearRange = yearRangeFilter
+        let checksYear = yearRange.isNarrowed(within: availableYearBounds)
         return applicationRows.filter { application in
             let matchesCurrentUserRole = applicationMatchesCurrentUserFirstApplicantFilter(
                 application,
@@ -229,12 +308,10 @@ struct ApplicationsView: View {
             let matchesStatus = matchesStatusFilter(application.resultLabel)
             let matchesFuture = matchesFutureApplicationFilter(application)
             let matchesProject = projectFilter.matches(projectID: application.projectID, projectName: application.projectName)
-            let applicationYear = Double(application.applicationYear)
-            let matchesYear = applicationYear >= min(minimumYearValue, maximumYearValue) && applicationYear <= max(minimumYearValue, maximumYearValue)
-            let amount = application.budgetAmount
-            let lowerAmount = min(minimumAmountValue, maximumAmountValue)
-            let upperAmount = max(minimumAmountValue, maximumAmountValue)
-            let matchesSum = amount >= lowerAmount && (upperAmount >= 20_000_000 || amount <= upperAmount)
+            // A range that is not narrowed shows every year, also one that
+            // arrived after the range was last fitted.
+            let matchesYear = !checksYear || yearRange.contains(year: application.applicationYear)
+            let matchesSum = matchesAmountFilter(application)
             return matchesCurrentUserRole
                 && matchesStatus
                 && matchesFuture
@@ -242,6 +319,13 @@ struct ApplicationsView: View {
                 && matchesYear
                 && matchesSum
         }
+    }
+
+    private func matchesAmountFilter(_ application: ApplicationRowSnapshot) -> Bool {
+        let amount = application.budgetAmount
+        let lowerAmount = min(minimumAmountValue, maximumAmountValue)
+        let upperAmount = max(minimumAmountValue, maximumAmountValue)
+        return amount >= lowerAmount && (upperAmount >= 20_000_000 || amount <= upperAmount)
     }
 
     private var applicationSelectionBinding: Binding<String?> {
@@ -321,6 +405,7 @@ struct ApplicationsView: View {
             .onChange(of: selectedApplicationID) { _, id in handleSelectedApplicationIDChange(id) }
             .onDisappear { handleApplicationsDisappear() }
             .onChange(of: newRecordTrigger) { _, _ in handleNewApplicationTrigger() }
+            .task(id: applicationsDayKey) { await refreshApplicationsDayKeyAtNextDay() }
         } detail: {
             applicationDetailContent(language: language)
         }
@@ -367,17 +452,40 @@ struct ApplicationsView: View {
                 title: language.text("No applications match the current filters", "Inga ansökningar matchar filtret"),
                 subtitle: language.text("Try a broader search or reset the filters.", "Prova en bredare sökning eller återställ filtren."),
                 kind: .applications,
-                actionTitle: language.text("Reset filters", "Återställ filter"),
-                action: {
-                    resetFiltersToDefault()
-                    rebuildFilteredApplications()
-                }
+                actionTitle: language.text("Clear filters", "Rensa filter"),
+                action: clearAllApplicationFilters
             )
+        }
+    }
+
+    private static func currentDayKey() -> String {
+        DateParsers.isoDay.string(from: Calendar.current.startOfDay(for: Date()))
+    }
+
+    private func refreshApplicationsDayKeyIfNeeded() {
+        let key = Self.currentDayKey()
+        guard key != applicationsDayKey else { return }
+        applicationsDayKey = key
+    }
+
+    /// Round 16: wakes just after midnight so "Find new" drops calls that
+    /// closed yesterday without waiting for another change.
+    private func refreshApplicationsDayKeyAtNextDay() async {
+        let calendar = Calendar.current
+        let now = Date()
+        let nextDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now.addingTimeInterval(86_400)
+        let seconds = max(1, nextDay.timeIntervalSince(now) + 5)
+        try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+        guard !Task.isCancelled else { return }
+        await MainActor.run {
+            refreshApplicationsDayKeyIfNeeded()
         }
     }
 
     private func handleApplicationsAppear() {
         applicationsViewHasAppeared = true
+        applyLaunchFilterPolicyIfNeeded()
+        refreshApplicationsDayKeyIfNeeded()
         store.appendPerformanceDiagnostic(
             String(
                 format: "applications-view-onAppear active=%@ pending=%@ route=%@ selected=%@",
@@ -388,15 +496,21 @@ struct ApplicationsView: View {
             )
         )
         if isActive {
-            ensureFilterRangesInitialized()
+            // Round 16: rows first, so the saved year range is fitted to the
+            // years present and not to an empty list (current year only).
             refreshApplicationRows()
+            ensureFilterRangesInitialized()
+            migrateProjectFilterKeysIfNeeded()
             rebuildFilteredApplications()
             if let pendingDirectSelectionID {
                 consumePendingDirectSelection(pendingDirectSelectionID)
             } else if let route = store.route, route.destination == .applications {
                 applyDirectApplicationRoute(route.recordID)
                 consumeApplicationRouteIfSelectionMatches(route.recordID)
-            } else if selectedApplicationID == nil {
+            } else if selectedApplicationID == nil
+                        || !filteredApplicationRows.contains(where: { rowMatchesSelection(row: $0, selectionID: selectedApplicationID ?? "") }) {
+                // Round 16: a remembered record that the filters hide is not
+                // shown as if it were in the list.
                 let candidateIDs = filteredApplicationRows.map(\.selectionID)
                 let fallbackID = preferredInitialApplicationSelection(from: candidateIDs)
                 store.appendPerformanceDiagnostic(
@@ -424,8 +538,10 @@ struct ApplicationsView: View {
             needsFilteredRebuildWhenActive = true
             return
         }
-        ensureFilterRangesInitialized()
         refreshApplicationRows()
+        ensureFilterRangesInitialized()
+        migrateProjectFilterKeysIfNeeded()
+        revealPendingApplicationIfPossible()
         rebuildFilteredApplications()
     }
 
@@ -506,9 +622,11 @@ struct ApplicationsView: View {
             )
         )
         if active {
+            refreshApplicationsDayKeyIfNeeded()
             if needsApplicationRowsRefreshWhenActive {
-                ensureFilterRangesInitialized()
                 refreshApplicationRows()
+                ensureFilterRangesInitialized()
+                migrateProjectFilterKeysIfNeeded()
                 needsApplicationRowsRefreshWhenActive = false
             }
             if needsFilteredRebuildWhenActive {
@@ -574,8 +692,58 @@ struct ApplicationsView: View {
 
     private func handleNewApplicationTrigger() {
         guard isActive else { return }
-        applicationRoleFilter = .all
-        setSelectedApplicationID(store.addApplication(), armLock: true)
+        createNewApplication()
+    }
+
+    /// Round 16: the one way to add a call (menu command and button). The new
+    /// record is selected with the selection lock armed, and only the filters
+    /// that would hide it are cleared, now or as soon as its row exists.
+    private func createNewApplication() {
+        let newID = store.addApplication()
+        pendingRevealApplicationID = newID
+        refreshApplicationRows()
+        ensureFilterRangesInitialized()
+        revealPendingApplicationIfPossible()
+        rebuildFilteredApplications()
+        let resolvedID = applicationRows.first(where: { rowMatchesSelection(row: $0, selectionID: newID) })?.selectionID ?? newID
+        setSelectedApplicationID(resolvedID, armLock: true)
+    }
+
+    /// Clears the filters that hide the pending record once its row exists.
+    private func revealPendingApplicationIfPossible() {
+        guard let pendingID = pendingRevealApplicationID,
+              let row = applicationRows.first(where: { rowMatchesSelection(row: $0, selectionID: pendingID) }) else { return }
+        pendingRevealApplicationID = nil
+        resetFiltersHiding(row)
+    }
+
+    /// Round 16 (Congresses model): direct navigation clears only the filters
+    /// that hide the target, and nothing when it is already in the list.
+    private func resetFiltersHiding(_ row: ApplicationRowSnapshot) {
+        preset = nil
+        if let search = searchText.nonEmpty,
+           !SearchFilterQuery(raw: search).matches(normalizedHaystack: row.normalizedSearchBlob) {
+            searchText = ""
+        }
+        if !matchesStatusFilter(row.resultLabel) {
+            selectedStatusFilters.removeAll()
+        }
+        if !matchesFutureApplicationFilter(row) {
+            showsOnlyFutureApplications = false
+        }
+        if !applicationMatchesCurrentUserFirstApplicantFilter(row, roleFilter: applicationRoleFilter) {
+            applicationRoleFilter = .all
+        }
+        if !applicationProjectFilterForSelection.matches(projectID: row.projectID, projectName: row.projectName) {
+            selectedProjectFilters.removeAll()
+        }
+        if yearFilterIsNarrowed && !yearRangeFilter.contains(year: row.applicationYear) {
+            resetYearRange()
+        }
+        if !matchesAmountFilter(row) {
+            minimumAmountValue = 0
+            maximumAmountValue = 20_000_000
+        }
     }
 
     private func applicationsSidebarContent(language: AppLanguage) -> some View {
@@ -584,8 +752,7 @@ struct ApplicationsView: View {
                 title: language.text("Calls and grants", "Utlysningar och anslag"),
                 actionTitle: language.text("New call", "Ny utlysning")
             ) {
-                applicationRoleFilter = .all
-                selectedApplicationID = store.addApplication()
+                createNewApplication()
             }
 
             AppFilterCard {
@@ -604,25 +771,93 @@ struct ApplicationsView: View {
                     applicationStatusFilterRow(language: language)
                     applicationRangeFilterRow(language: language)
                     applicationProjectFilterRow(language: language)
-
-                    AppFilterClearAllRow(isVisible: hasActiveApplicationFilters) {
-                        resetFiltersToDefault()
-                        rebuildFilteredApplications()
-                    }
+                    // Round 16: "clear all" now lives in the filtered-list
+                    // banner above the list.
                 }
             }
 
             activeApplicationFilterStrip(language: language)
+            if hasActiveApplicationFilters {
+                AppFilteredListBanner(
+                    displayedCount: filteredApplicationRows.count,
+                    totalCount: applicationRows.count,
+                    activeFilters: activeApplicationFilterDescriptions(language: language),
+                    restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Applications"),
+                    language: language,
+                    clearAction: clearAllApplicationFilters
+                )
+            }
             applicationResultsTable(language: language)
-            applicationListCountFootnote(language: language)
+            if !hasActiveApplicationFilters {
+                applicationListCountFootnote(language: language)
+            }
         }
+    }
+
+    /// Short descriptions of the active filters for the filtered-list banner.
+    private func activeApplicationFilterDescriptions(language: AppLanguage) -> [String] {
+        var descriptions: [String] = []
+        if let search = searchText.nonEmpty {
+            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        }
+        if applicationRoleFilter != .all {
+            descriptions.append(applicationRoleFilter == .currentUserFirst
+                ? language.text("Only own", "Endast egna")
+                : language.text("Only others", "Endast andras"))
+        }
+        if showsOnlyFutureApplications {
+            descriptions.append(language.text("Future grants", "Framtida anslag"))
+        }
+        if !selectedStatusFilters.isEmpty {
+            descriptions.append(
+                ApplicationStatusCanonical.all
+                    .filter { selectedStatusFilters.contains($0) }
+                    .map { applicationStatusFilterLabel($0, language: language) }
+                    .joined(separator: ", ")
+            )
+        }
+        if !selectedProjectFilters.isEmpty {
+            descriptions.append(
+                "\(language.text("Project", "Projekt")) "
+                    + selectedProjectFilters.map { projectFilterLabel($0, language: language) }.sorted().joined(separator: ", ")
+            )
+        }
+        if yearFilterIsNarrowed {
+            descriptions.append(yearRangeLabel(language: language))
+        }
+        if amountFilterIsActive {
+            descriptions.append(sumRangeLabel(language: language))
+        }
+        return descriptions
+    }
+
+    /// Round 16: clears every filter of this list (banner, empty list).
+    private func clearAllApplicationFilters() {
+        resetFiltersToDefault()
+        RestoredListFilters.forget(workspace: "Applications")
+        rebuildFilteredApplications()
+    }
+
+    /// Round 16: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared when the list is first shown, not only when
+    /// the user leaves it.
+    private func applyLaunchFilterPolicyIfNeeded() {
+        guard !hasAppliedLaunchFilterPolicy else { return }
+        hasAppliedLaunchFilterPolicy = true
+        guard !store.shouldRetainListFilters(for: .applications) else { return }
+        resetFiltersToDefault()
+        RestoredListFilters.forget(workspace: "Applications")
     }
 
     private func applicationQuickFilterRow(language: AppLanguage) -> some View {
         AppFilterRow(
             showsClearButton: !selectedStatusFilters.isEmpty || applicationRoleFilter != .all || showsOnlyFutureApplications,
             clearAction: {
-                resetFiltersToDefault()
+                // Round 16: clears only what this row sets (status, role,
+                // future); search, project, year and amount stay.
+                selectedStatusFilters.removeAll()
+                applicationRoleFilter = .all
+                showsOnlyFutureApplications = false
                 rebuildFilteredApplications()
             }
         ) {
@@ -657,10 +892,9 @@ struct ApplicationsView: View {
                 bounds: yearBounds
             )
 
-            if minimumYearValue != yearBounds.lowerBound || maximumYearValue != yearBounds.upperBound {
+            if yearFilterIsNarrowed {
                 FilterClearButton {
-                    minimumYearValue = yearBounds.lowerBound
-                    maximumYearValue = yearBounds.upperBound
+                    resetYearRange()
                 }
                 .padding(.bottom, 2)
             }
@@ -673,7 +907,7 @@ struct ApplicationsView: View {
                 step: 100_000
             )
 
-            if minimumAmountValue != 0 || maximumAmountValue != 20_000_000 {
+            if amountFilterIsActive {
                 FilterClearButton {
                     minimumAmountValue = 0
                     maximumAmountValue = 20_000_000
@@ -698,12 +932,12 @@ struct ApplicationsView: View {
 
                 HStack(spacing: 12) {
                     Text(language.text("Grant pipeline", "Anslagsflöde"))
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(appFont(.panelTitle))
                         .foregroundStyle(.primary)
 
                     Image(systemName: grantPipelineExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Color(red: 0.33, green: 0.33, blue: 0.36))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 0)
@@ -759,9 +993,12 @@ struct ApplicationsView: View {
     }
 
     private func openApplicationFromPipeline(_ applicationID: String) {
-        resetFiltersForDirectNavigation()
+        refreshApplicationRows()
+        ensureFilterRangesInitialized()
+        resetFiltersForDirectNavigation(toRevealRecordID: applicationID)
         rebuildFilteredApplications()
-        setSelectedApplicationID(applicationID, armLock: true)
+        let resolvedID = filteredApplicationRows.first(where: { rowMatchesSelection(row: $0, selectionID: applicationID) })?.selectionID ?? applicationID
+        setSelectedApplicationID(resolvedID, armLock: true)
         collapseGrantPipeline()
     }
 
@@ -797,15 +1034,16 @@ struct ApplicationsView: View {
         self.preset = nil
     }
 
-    private func resetFiltersForDirectNavigation() {
-        searchText = ""
-        selectedStatusFilters.removeAll()
-        selectedProjectFilters.removeAll()
-        resetNumericFilters()
-        applicationRoleFilter = .all
+    /// Round 16: clears only the filters that hide the target (all filters
+    /// stay when it is already in the list). A target whose row is not built
+    /// yet is handled when the rows arrive.
+    private func resetFiltersForDirectNavigation(toRevealRecordID recordID: String) {
         prioritizesActiveApplications = false
-        showsOnlyFutureApplications = false
-        preset = nil
+        if let row = applicationRows.first(where: { rowMatchesSelection(row: $0, selectionID: recordID) }) {
+            resetFiltersHiding(row)
+        } else {
+            pendingRevealApplicationID = recordID
+        }
     }
 
     private func resetFiltersToDefault() {
@@ -820,17 +1058,34 @@ struct ApplicationsView: View {
     }
 
     private func resetNumericFilters() {
-        let bounds = yearBounds
-        minimumYearValue = bounds.lowerBound
-        maximumYearValue = bounds.upperBound
+        resetYearRange()
         minimumAmountValue = 0
         maximumAmountValue = 20_000_000
+    }
+
+    /// Back to all years, following new ones again.
+    private func resetYearRange() {
+        if let bounds = availableYearBounds {
+            applyYearRange(.full(bounds))
+        } else {
+            applyYearRange(ListYearRangeFilter(lower: 0, upper: 0, followsLower: true, followsUpper: true))
+        }
+    }
+
+    /// Writes only what changed, so an unchanged saved filter keeps its
+    /// "kept from last time" mark.
+    private func applyYearRange(_ range: ListYearRangeFilter) {
+        if minimumYearValue != range.lower { minimumYearValue = range.lower }
+        if maximumYearValue != range.upper { maximumYearValue = range.upper }
+        if yearFilterFollowsEarliestYear != range.followsLower { yearFilterFollowsEarliestYear = range.followsLower }
+        if yearFilterFollowsLatestYear != range.followsUpper { yearFilterFollowsLatestYear = range.followsUpper }
     }
 
     private func clearApplicationFiltersForDeactivationIfNeeded() {
         guard !store.shouldRetainListFilters(for: .applications) else { return }
         guard hasActiveApplicationFilters else { return }
         resetFiltersToDefault()
+        RestoredListFilters.forget(workspace: "Applications")
         filteredRowsCache.removeAll()
         nonSearchFilteredRowsCache.removeAll()
         needsFilteredRebuildWhenActive = true
@@ -840,7 +1095,8 @@ struct ApplicationsView: View {
         Binding(
             get: { minimumYearValue },
             set: { newValue in
-                minimumYearValue = min(newValue, maximumYearValue)
+                // Round 16: a knob on the outermost year follows new years.
+                applyYearRange(.userEdited(lower: min(newValue, maximumYearValue), upper: maximumYearValue, within: yearBounds))
             }
         )
     }
@@ -849,7 +1105,7 @@ struct ApplicationsView: View {
         Binding(
             get: { maximumYearValue },
             set: { newValue in
-                maximumYearValue = max(newValue, minimumYearValue)
+                applyYearRange(.userEdited(lower: minimumYearValue, upper: max(newValue, minimumYearValue), within: yearBounds))
             }
         )
     }
@@ -872,20 +1128,27 @@ struct ApplicationsView: View {
         )
     }
 
+    /// Round 16: fits the saved year range to the years present. Never runs
+    /// against an empty list (that collapsed the range to the current year),
+    /// and a range that follows the latest year grows with new years.
     private func ensureFilterRangesInitialized() {
-        let bounds = yearBounds
-        if minimumYearValue == 0 && maximumYearValue == 0 {
-            minimumYearValue = bounds.lowerBound
-            maximumYearValue = bounds.upperBound
-        } else {
-            minimumYearValue = min(max(minimumYearValue, bounds.lowerBound), bounds.upperBound)
-            maximumYearValue = min(max(maximumYearValue, bounds.lowerBound), bounds.upperBound)
+        let bounds = availableYearBounds
+        guard bounds != nil else { return }
+        let resolved = yearRangeFilter.resolved(within: bounds)
+        applyYearRange(resolved)
+        if !resolved.isNarrowed(within: bounds) {
+            // A range covering every year is no filter, so it must not make
+            // the list say "kept from last time".
+            for key in ["MinimumYear", "MaximumYear", "FollowsRange", "FollowsRangeStart"] {
+                RestoredListFilters.markChanged(key: "Applications.Filter.\(key)")
+            }
         }
     }
 
+    /// Round 16: one status mapping for chips, row colours and ordering, so
+    /// older words ("Beviljad", "Avslagen") count as granted and declined.
     private func normalizedStatus(_ result: String?) -> String {
-        let trimmed = result?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmed.isEmpty ? "Att söka" : trimmed
+        ApplicationStatusCanonical.canonical(result)
     }
 
     private func toggleStatusFilter(_ status: String) {
@@ -924,10 +1187,12 @@ struct ApplicationsView: View {
     private func sumRangeLabel(language: AppLanguage) -> String {
         let lower = formattedAmountInMillions(min(minimumAmountValue, maximumAmountValue), language: language)
         let upper = max(minimumAmountValue, maximumAmountValue)
+        // Round 16: same units as everywhere else ("mkr" / "MSEK").
+        let millionsUnit = AmountFormatter.millionsUnit(language)
         let upperText = upper >= 20_000_000
-            ? language.text(">20 million SEK", ">20 miljoner SEK")
-            : "\(formattedAmountInMillions(upper, language: language)) \(language.text("million SEK", "miljoner SEK"))"
-        return "\(language.text("SEK", "SEK")): \(lower) – \(upperText)"
+            ? ">20 \(millionsUnit)"
+            : "\(formattedAmountInMillions(upper, language: language)) \(millionsUnit)"
+        return "\(language.text("Amount", "Belopp")): \(lower) – \(upperText)"
     }
 
     private func yearRangeLabel(language: AppLanguage) -> String {
@@ -942,11 +1207,14 @@ struct ApplicationsView: View {
             selectedProjectFilters.sorted().joined(separator: "|"),
             String(format: "%.0f", minimumYearValue),
             String(format: "%.0f", maximumYearValue),
+            yearFilterFollowsEarliestYear ? "from-first" : "from-chosen",
+            yearFilterFollowsLatestYear ? "to-latest" : "to-chosen",
             String(format: "%.0f", minimumAmountValue),
             String(format: "%.0f", maximumAmountValue),
             applicationRoleFilter.rawValue,
             prioritizesActiveApplications ? "active-first" : "plain-sort",
             showsOnlyFutureApplications ? "future-only" : "all-dates",
+            applicationsDayKey,
             String(applicationRowsAppliedGeneration),
             sortSignature
         ].joined(separator: "||")
@@ -1000,22 +1268,19 @@ struct ApplicationsView: View {
                     }
                     ForEach(selectedProjectFilters.sorted(), id: \.self) { project in
                         AppActiveFilterChip(
-                            title: store.projectLabel(for: project, language: language),
+                            title: projectFilterLabel(project, language: language),
                             systemImage: "folder",
                             clearAction: { selectedProjectFilters.remove(project) }
                         )
                     }
-                    if minimumYearValue != yearBounds.lowerBound || maximumYearValue != yearBounds.upperBound {
+                    if yearFilterIsNarrowed {
                         AppActiveFilterChip(
                             title: yearRangeLabel(language: language),
                             systemImage: "calendar",
-                            clearAction: {
-                                minimumYearValue = yearBounds.lowerBound
-                                maximumYearValue = yearBounds.upperBound
-                            }
+                            clearAction: { resetYearRange() }
                         )
                     }
-                    if minimumAmountValue != 0 || maximumAmountValue != 20_000_000 {
+                    if amountFilterIsActive {
                         AppActiveFilterChip(
                             title: sumRangeLabel(language: language),
                             systemImage: "banknote",
@@ -1025,11 +1290,7 @@ struct ApplicationsView: View {
                             }
                         )
                     }
-                    AppFilterResetButton(
-                        help: language.text("Reset all filters", "Återställ alla filter")
-                    ) {
-                        resetFiltersToDefault()
-                    }
+                    // Round 16: "reset all" is the banner's "Rensa filter".
                 }
                 .padding(.vertical, 1)
             }
@@ -1050,12 +1311,9 @@ struct ApplicationsView: View {
             showsClearButton: !selectedStatusFilters.isEmpty,
             clearAction: { selectedStatusFilters.removeAll() }
         ) {
-            applicationStatusFilterBox("Att söka", language: language)
-            applicationStatusFilterBox("Väntar svar", language: language)
-            applicationStatusFilterBox("Beviljat", language: language)
-            applicationStatusFilterBox("Tillbakadragen", language: language)
-            applicationStatusFilterBox("Avslag", language: language)
-            applicationStatusFilterBox("Ej sökt", language: language)
+            ForEach(ApplicationStatusCanonical.all, id: \.self) { status in
+                applicationStatusFilterBox(status, language: language)
+            }
         }
     }
 
@@ -1069,25 +1327,18 @@ struct ApplicationsView: View {
                 emptyLabel: language.text("All projects", "Alla projekt"),
                 options: projectOptions,
                 selectedOptions: $selectedProjectFilters,
-                display: { store.projectLabel(for: $0, language: language) }
+                display: { projectFilterLabel($0, language: language) }
             )
             .frame(width: 260)
         }
     }
 
     private func applicationStatusFilterLabel(_ status: String, language: AppLanguage) -> String {
-        switch status {
-        case "Beviljat":
-            return language.text("Awarded", "Beviljade")
-        case "Tillbakadragen":
-            return language.text("Withdrawn", "Tillbakadragna")
-        case "Avslag":
-            return language.text("Declined", "Avslagna")
-        case "Ej sökt":
-            return language.text("Not applied", "Ej sökta")
-        default:
-            return language.localizedStatus(status)
+        // Filter chips act as group headings, so they use the plural wording.
+        if let outcome = ApplicationOutcome(storedValue: status) {
+            return outcome.heading(language)
         }
+        return language.localizedStatus(status)
     }
 
     private func applicationQuickViewIsActive(_ view: QuickApplicationView) -> Bool {
@@ -1123,10 +1374,7 @@ struct ApplicationsView: View {
     }
 
     private var numericFiltersAreDefault: Bool {
-        minimumYearValue == yearBounds.lowerBound
-            && maximumYearValue == yearBounds.upperBound
-            && minimumAmountValue == 0
-            && maximumAmountValue == 20_000_000
+        !yearFilterIsNarrowed && !amountFilterIsActive
     }
 
     private func applicationResultsTable(language: AppLanguage) -> some View {
@@ -1305,29 +1553,14 @@ struct ApplicationsView: View {
     private func applicationListRowBackground(for row: ApplicationRowSnapshot) -> some View {
         AppListRowBackground(
             isSelected: row.selectionID == selectedApplicationID,
-            toneFill: applicationRowToneFillColor(for: row)
+            toneFill: applicationRowToneFillColor(for: row),
+            isLocked: row.isEditingLocked
         )
     }
 
     private func applicationRowToneFillColor(for row: ApplicationRowSnapshot) -> Color? {
-        if row.isFullySpent {
-            return AppPalette.shadeGreen
-        }
-
-        let result = normalizedStatus(row.resultLabel)
-        if result == "Ej sökt" {
-            return nil
-        }
-        if result == "Beviljat" {
-            return AppPalette.shadeGreen
-        }
-        if result.localizedCaseInsensitiveContains("Avslag") || result == "Tillbakadragen" {
-            return AppPalette.shadeRed
-        }
-        if result == "Att söka" {
-            return nil
-        }
-        return AppPalette.shadeYellow
+        // Round 16: the shared application status tones.
+        AppPalette.statusRowFill(AppStatusTones.application(row))
     }
 
     private func rowMatchesSelection(row: ApplicationRowSnapshot, selectionID: String) -> Bool {
@@ -1400,6 +1633,7 @@ struct ApplicationsView: View {
         let nonSearchSignature = applicationFilterSignature
         let exactCacheKey = FilterCacheKey(
             generation: applicationRowsAppliedGeneration,
+            dayKey: applicationsDayKey,
             nonSearchSignature: nonSearchSignature,
             includedTerms: searchQuery.includedTerms,
             excludedTerms: searchQuery.excludedTerms
@@ -1518,8 +1752,9 @@ struct ApplicationsView: View {
             isApplyingDirectApplicationRoute = false
             return
         }
-        resetFiltersForDirectNavigation()
         refreshApplicationRows()
+        ensureFilterRangesInitialized()
+        resetFiltersForDirectNavigation(toRevealRecordID: recordID)
         let resetDuration = (CFAbsoluteTimeGetCurrent() - routeStartedAt) * 1000
         store.appendPerformanceDiagnostic(
             String(
@@ -1741,8 +1976,8 @@ private struct GrantPipelineCurtainPanel: View {
     @State private var measuredContentHeight: CGFloat = 0
 
     private var language: AppLanguage { store.language }
-    private var neutralStepColor: Color { Color(red: 0.33, green: 0.33, blue: 0.36) }
-    private var neutralStepLineColor: Color { Color(red: 0.58, green: 0.58, blue: 0.60) }
+    private var neutralStepColor: Color { Color.secondary }
+    private var neutralStepLineColor: Color { Color.secondary }
     private var effectiveMaxHeight: CGFloat { max(maxHeight, 0) }
     private var usesDarkAppearance: Bool { currentVisualModePreference()?.usesDarkAppearance == true }
     private var curtainChromeBackground: LinearGradient {
@@ -1872,7 +2107,7 @@ private struct GrantPipelineCurtainPanel: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(lane.title(language: language))
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(appFont(.panelTitle))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
 
@@ -1907,7 +2142,7 @@ private struct GrantPipelineCurtainPanel: View {
         let nonLeadApplicantEntries = laneEntries.filter { !$0.isLeadApplicant }
         if laneEntries.isEmpty {
             Text(language.text("No grants", "Inga anslag"))
-                .font(.system(size: 12))
+                .font(appFont(.secondary))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
         } else if !nonLeadApplicantEntries.isEmpty {
@@ -1933,7 +2168,7 @@ private struct GrantPipelineCurtainPanel: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(entry.title)
-                            .font(.system(size: 12.5, weight: .semibold))
+                            .font(appFont(.body).weight(.semibold))
                             .foregroundStyle(.primary)
                             .lineLimit(2)
                             .truncationMode(.tail)
@@ -1951,7 +2186,7 @@ private struct GrantPipelineCurtainPanel: View {
 
                     HStack(alignment: .center, spacing: 8) {
                         Text(entry.subtitle)
-                            .font(.system(size: 12))
+                            .font(appFont(.secondary))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .truncationMode(.tail)
@@ -1961,8 +2196,8 @@ private struct GrantPipelineCurtainPanel: View {
                         AppToneBadge(
                             text: entry.badgeText,
                             size: .compact,
-                            foreground: grantPipelineBadgeStyle(for: entry.badgeDate).foreground,
-                            background: grantPipelineBadgeStyle(for: entry.badgeDate).background,
+                            foreground: grantPipelineBadgeStyle(for: entry).foreground,
+                            background: grantPipelineBadgeStyle(for: entry).background,
                             stroke: AppPalette.subtleBorder,
                             horizontalPadding: 8,
                             verticalPadding: 4
@@ -2166,9 +2401,8 @@ private struct GrantPipelineCurtainPanel: View {
     }
 
     private func grantPipelineCurrencyLabel(_ value: Double, for application: GrantApplication) -> String {
-        let formatted = store.formattedGrantAmountWithSEKApproximation(value, for: application)
-        guard application.currencyCode == "SEK" else { return formatted }
-        return formatted.replacingOccurrences(of: " SEK", with: " kr")
+        // Round 16: the store formatter already writes "kr" in Swedish and "SEK" in English.
+        store.formattedGrantAmountWithSEKApproximation(value, for: application)
     }
 
     private func grantPipelineDaysUntil(_ date: Date?) -> Int? {
@@ -2186,18 +2420,27 @@ private struct GrantPipelineCurtainPanel: View {
             ?? application.receivedUsageTo.flatMap(DateParsers.isoDay.date(from:))
     }
 
-    private func grantPipelineBadgeStyle(for date: Date?) -> (foreground: Color, background: Color) {
-        guard let days = grantPipelineDaysUntil(date) else {
+    private func grantPipelineBadgeStyle(for entry: GrantPipelineCurtainEntry) -> (foreground: Color, background: Color) {
+        // Round 16: closing dates and last disposition dates use the shared
+        // deadline thresholds; a decision date is waiting for someone else.
+        let tone: AppStatusTone
+        if let date = entry.badgeDate {
+            switch entry.lane {
+            case .toApply:
+                let passed = Calendar.current.startOfDay(for: date) < Calendar.current.startOfDay(for: Date())
+                tone = passed ? .warning : AppStatusTones.closingDeadline(date)
+            case .pendingSoon, .pendingYear:
+                tone = .pending
+            case .grantedRemaining:
+                tone = AppStatusTones.dispositionDeadline(date)
+            }
+        } else {
+            tone = .none
+        }
+        guard tone.hasFill else {
             return (Color.primary, AppPalette.subtleBorder.opacity(0.45))
         }
-
-        if days < 30 {
-            return (AppPalette.semanticOnColor, AppPalette.vividRed)
-        }
-        if days < 90 {
-            return (AppPalette.semanticOnColor, AppPalette.vividYellow)
-        }
-        return (AppPalette.semanticOnColor, AppPalette.vividGreen)
+        return (AppPalette.statusOnFill, AppPalette.statusFill(tone))
     }
 }
 
@@ -2226,7 +2469,7 @@ private struct GrantPipelineSectionDivider: View {
                 .fill(AppPalette.subtleBorder.opacity(0.85))
                 .frame(height: 1)
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(appFont(.secondary).weight(.semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)

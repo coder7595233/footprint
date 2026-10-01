@@ -75,8 +75,11 @@ struct AppTableHeaderText: View {
     let text: String
 
     var body: some View {
+        // Round 16: table headers use the table-header role; the leading
+        // padding keeps them aligned with the field text below.
         Text(text)
-            .appTypography(.fieldLabel)
+            .font(appFont(.tableHeader))
+            .padding(.leading, AppPalette.fieldHorizontalPadding)
             .foregroundStyle(AppPalette.appText)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
@@ -604,7 +607,7 @@ struct AppInlineTitleTextField: View {
     let placeholder: String
     let text: Binding<String>
     var formatter: (String) -> String = { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-    var font: NSFont = .systemFont(ofSize: 24, weight: .bold)
+    var font: NSFont = appNSFont(.pageTitle)
     var textColor: NSColor = .labelColor
     var placeholderColor: NSColor? = .secondaryLabelColor
     var minHeight: CGFloat = 30
@@ -1034,7 +1037,7 @@ struct AppBadgeText: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: size.fontSize, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .foregroundStyle(foreground)
             .lineLimit(1)
             .minimumScaleFactor(0.82)
@@ -1090,11 +1093,20 @@ struct AppTextPill: View {
     }
 }
 
+/// Round 16: the one red count badge (issues in the navigation, reminders on
+/// rows and icons). Red status fill with the readable on-fill text colour.
 struct AppCountBadge: View {
+    enum Size {
+        case regular
+        /// Small badge laid over icons and list rows.
+        case small
+    }
+
     let count: Int
     var maximumVisibleCount = 99
-    var foreground: Color = .white
-    var background: Color = AppPalette.vividRed
+    var size: Size = .regular
+    var foreground: Color = AppPalette.statusOnFill
+    var background: Color = AppPalette.statusFill(.negative)
     var stroke: Color = AppPalette.border.opacity(0.35)
 
     private var label: String {
@@ -1102,17 +1114,30 @@ struct AppCountBadge: View {
     }
 
     var body: some View {
-        AppToneBadge(
-            text: label,
-            size: .compact,
-            foreground: foreground,
-            background: background,
-            stroke: stroke,
-            horizontalPadding: 6,
-            verticalPadding: 2
-        )
-        .fixedSize()
-        .accessibilityLabel(label)
+        switch size {
+        case .regular:
+            AppToneBadge(
+                text: label,
+                size: .compact,
+                foreground: foreground,
+                background: background,
+                stroke: stroke,
+                horizontalPadding: 6,
+                verticalPadding: 2
+            )
+            .fixedSize()
+            .accessibilityLabel(label)
+        case .small:
+            Text(label)
+                .font(.system(size: 9, weight: .bold, design: .rounded))
+                .foregroundStyle(foreground)
+                .lineLimit(1)
+                .frame(minWidth: 15, minHeight: 15)
+                .padding(.horizontal, count >= 10 ? 2 : 0)
+                .background(Capsule().fill(background))
+                .overlay(Capsule().stroke(stroke, lineWidth: 1))
+                .fixedSize()
+        }
     }
 }
 
@@ -1126,7 +1151,7 @@ struct AppInlineLinkLabel: View {
 
     var body: some View {
         Label(title, systemImage: systemImage)
-            .font(.system(size: fontSize, weight: weight))
+            .font(appFont(fontSize < 12.5 ? .secondary : .body).weight(weight))
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .fixedSize(horizontal: fixedSize, vertical: false)
@@ -1247,7 +1272,7 @@ struct AppTimelineStrip<ID: Hashable, NodeContent: View>: View {
                         path.move(to: CGPoint(x: markerX, y: 0))
                         path.addLine(to: CGPoint(x: markerX, y: markerCenterY * 2))
                     }
-                    .stroke(AppPalette.vividRed, lineWidth: 3)
+                    .stroke(AppPalette.todayMarker, lineWidth: 3)
                 }
 
                 ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
@@ -1536,7 +1561,7 @@ struct AppEditorLockButton: View {
         Button(action: action) {
             Image(systemName: isLocked ? "lock.fill" : "lock.open")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(isLocked ? AppPalette.actionDelete : AppPalette.linkAction)
+                .foregroundStyle(isLocked ? AppPalette.statusText(.inactive) : AppPalette.linkAction) // Round 16: not the delete red
                 .frame(width: 30, height: 30)
                 .contentShape(Rectangle())
         }

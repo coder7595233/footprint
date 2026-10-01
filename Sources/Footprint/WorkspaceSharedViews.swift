@@ -124,16 +124,8 @@ struct AppReminderCountBadge: View {
     var help: String? = nil
 
     var body: some View {
-        Text(count > 99 ? "99+" : "\(count)")
-            .font(.system(size: 9, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
-            .lineLimit(1)
-            .frame(minWidth: 15, minHeight: 15)
-            .padding(.horizontal, count >= 10 ? 2 : 0)
-            // #D50000 clears WCAG AA for the 9 pt white label; the previous
-            // brighter red sat just below 4.5:1.
-            .background(Capsule().fill(Color(red: 0.84, green: 0.0, blue: 0.0)))
-            .overlay(Capsule().stroke(Color.white.opacity(0.92), lineWidth: 1))
+        // Round 16: the same red badge as every other count badge.
+        AppCountBadge(count: count, size: .small)
             .help(help ?? "")
             .accessibilityLabel(help ?? "\(count)")
     }
@@ -254,7 +246,7 @@ struct AppFilterChip: View {
                     .minimumScaleFactor(0.82)
                     .truncationMode(.tail)
             }
-            .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
+            .font(appFont(.secondary).weight(isSelected ? .semibold : .medium))
             .foregroundStyle(isEnabled ? (isSelected ? AppPalette.appText : .primary) : .secondary)
             .padding(.horizontal, 10)
             .frame(minHeight: 28, alignment: .leading)
@@ -303,7 +295,7 @@ struct AppEmptyStateView: View {
 
                 if isCompact {
                     Text(title)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 } else {
@@ -319,9 +311,8 @@ struct AppEmptyStateView: View {
 
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
-                        .buttonStyle(.borderedProminent)
+                        .appSaveButtonStyle()
                         .controlSize(.regular)
-                        .tint(AppPalette.actionSave)
                 }
             }
             .frame(maxWidth: isCompact ? 320 : 440)
@@ -351,25 +342,42 @@ enum AppWorkspaceEmptyStateKind {
     case cv
     case teaching
     case congresses
+    case researchers
+    case journals
+    case expertAssignments
+    case dissemination
+    case doctoralCandidates
 
+    /// Round 16: the same symbol as the workspace in the navigation and the
+    /// command palette (`AppTab.symbolName`).
     var systemImage: String {
         switch self {
         case .generic:
             return "tray"
         case .applications:
-            return "doc.text"
+            return AppTab.applications.symbolName
         case .organizations:
-            return "building.2"
+            return AppTab.organizations.symbolName
         case .projects:
-            return "folder"
+            return AppTab.projects.symbolName
         case .publications:
-            return "books.vertical"
+            return AppTab.publications.symbolName
         case .cv:
-            return "doc.text"
+            return AppTab.cv.symbolName
         case .teaching:
-            return "graduationcap"
+            return AppTab.teaching.symbolName
         case .congresses:
-            return "mappin.and.ellipse"
+            return AppTab.congresses.symbolName
+        case .researchers:
+            return AppTab.coauthors.symbolName
+        case .journals:
+            return AppTab.journals.symbolName
+        case .expertAssignments:
+            return AppTab.expertAssignments.symbolName
+        case .dissemination:
+            return AppTab.dissemination.symbolName
+        case .doctoralCandidates:
+            return AppTab.doctoralCandidates.symbolName
         }
     }
 }
@@ -454,7 +462,7 @@ enum AppLinkDestinationKind {
     var systemImage: String {
         switch self {
         case .app:
-            return "arrow.up.right.square"
+            return "arrow.right.circle" // Round 16: in-app, not "open externally"
         case .web:
             return "link"
         case .pdf:
@@ -486,7 +494,7 @@ struct AppLinkDestinationLabel: View {
     var body: some View {
         if usesTitle {
             Label(kind.title(language: language), systemImage: kind.systemImage)
-                .font(.system(size: fontSize, weight: weight))
+                .font(appFont(fontSize < 12.5 ? .secondary : .body).weight(weight))
                 .labelStyle(.titleAndIcon)
                 .lineLimit(1)
                 .fixedSize(horizontal: fixedSize, vertical: false)
@@ -494,7 +502,7 @@ struct AppLinkDestinationLabel: View {
                 .help(kind.helpTitle(language: language))
         } else {
             Label(kind.title(language: language), systemImage: kind.systemImage)
-                .font(.system(size: fontSize, weight: weight))
+                .font(appFont(fontSize < 12.5 ? .secondary : .body).weight(weight))
                 .labelStyle(.iconOnly)
                 .lineLimit(1)
                 .fixedSize(horizontal: fixedSize, vertical: false)
@@ -685,7 +693,7 @@ struct AppPDFAttachmentControl: View {
 
             if showsFilename {
                 Text(displayName)
-                    .font(.system(size: style == .compact ? 12 : 13, weight: style == .compact ? .regular : .medium))
+                    .font(style == .compact ? appFont(.secondary) : appFont(.body).weight(.medium))
                     .foregroundStyle(filename == nil && resolvedDisplayLabel == nil ? .secondary : .primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -893,6 +901,8 @@ struct AppListRowBackground: View {
     let isSelected: Bool
     var toneFill: Color? = nil
     var cornerRadius: CGFloat = 8
+    /// Round 16: a small lock at the row's end for records locked for editing.
+    var isLocked = false
 
     var body: some View {
         Group {
@@ -904,6 +914,23 @@ struct AppListRowBackground: View {
                 Color.clear
             }
         }
+        .overlay(alignment: .trailing) {
+            if isLocked {
+                AppLockedRowGlyph()
+                    .padding(.trailing, 6)
+            }
+        }
+    }
+}
+
+/// Round 16: the lock shown on list rows of locked records (neutral, never
+/// the delete red).
+struct AppLockedRowGlyph: View {
+    var body: some View {
+        Image(systemName: "lock.fill")
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .accessibilityHidden(true)
     }
 }
 
@@ -937,7 +964,7 @@ struct AppListRowButton<Background: View, Content: View>: View {
     var body: some View {
         Button(action: action) {
             content
-                .font(.system(size: 12))
+                .font(appFont(.secondary))
                 .padding(.leading, horizontalPadding + 4)
                 .padding(.trailing, horizontalPadding)
                 .padding(.vertical, verticalPadding)
@@ -1187,7 +1214,7 @@ struct MultiSelectFilterMenu: View {
                                 }
                             )) {
                                 Text(display(option))
-                                    .font(.system(size: 13))
+                                    .font(appFont(.body))
                                     .lineLimit(1)
                                     .truncationMode(.tail)
                             }
@@ -1318,7 +1345,7 @@ struct AppFilterRangeControl: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
 
             if bounds.lowerBound < bounds.upperBound {
                 if lowerLabel != nil || upperLabel != nil {
@@ -1343,7 +1370,7 @@ struct AppFilterRangeControl: View {
                 )
             } else {
                 Text(verbatim: unavailableText ?? String(Int(bounds.lowerBound)))
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -1645,7 +1672,7 @@ struct AppCompactReferenceTable<Header: View, Rows: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             if let heading = title?.nonEmpty {
                 Text(heading)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(appFont(.tableHeader))
                     .foregroundStyle(.secondary)
             }
 
@@ -1673,12 +1700,12 @@ struct AppCompactEmptyListLabel: View {
     var body: some View {
         VStack(spacing: 2) {
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             if let subtitle = subtitle.nonEmpty {
                 Text(subtitle)
-                    .font(.system(size: 12))
+                    .font(appFont(.secondary))
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
             }
@@ -1692,7 +1719,7 @@ struct AppCompactListSectionLabel: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: 12, weight: .semibold))
+            .font(appFont(.secondary).weight(.semibold))
             .foregroundStyle(.secondary)
     }
 }
@@ -1841,7 +1868,7 @@ struct ListCountFootnote: View {
     var body: some View {
         if displayedCount != totalCount {
             Text(footerText)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -1868,7 +1895,7 @@ struct AppActiveFilterChip: View {
             Image(systemName: systemImage)
                 .font(.system(size: 12, weight: .semibold))
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(.medium))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             if let clearAction {
@@ -1916,7 +1943,7 @@ struct AppInlineDataQualityPanel: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: containsCriticalIssue ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(containsCriticalIssue ? AppPalette.vividRed : AppPalette.vividOrange)
+                        .foregroundStyle(containsCriticalIssue ? AppPalette.statusText(.negative) : AppPalette.statusText(.warning))
                     Text(title)
                         .appTypography(.tableHeader)
                     Spacer()
@@ -1930,16 +1957,16 @@ struct AppInlineDataQualityPanel: View {
                 ForEach(issues.prefix(4)) { issue in
                     HStack(alignment: .top, spacing: 8) {
                         Circle()
-                            .fill(issue.severity == .critical ? AppPalette.vividRed : AppPalette.vividOrange)
+                            .fill(issue.severity == .critical ? AppPalette.statusText(.negative) : AppPalette.statusText(.warning))
                             .frame(width: 6, height: 6)
                             .padding(.top, 6)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(issue.title)
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(appFont(.secondary).weight(.semibold))
                                 .foregroundStyle(.primary)
                             if !issue.details.isEmpty {
                                 Text(issue.details)
-                                    .font(.system(size: 12))
+                                    .font(appFont(.secondary))
                                     .foregroundStyle(.secondary)
                                     .lineLimit(2)
                             }
@@ -1949,18 +1976,18 @@ struct AppInlineDataQualityPanel: View {
 
                 if issues.count > 4 {
                     Text("+\(issues.count - 4)")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(appFont(.secondary).weight(.medium))
                         .foregroundStyle(.secondary)
                 }
             }
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(containsCriticalIssue ? AppPalette.shadeRed.opacity(0.16) : AppPalette.pillSurface.opacity(0.58))
+                    .fill(containsCriticalIssue ? AppPalette.statusFill(.negative).opacity(0.16) : AppPalette.pillSurface.opacity(0.58))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke((containsCriticalIssue ? AppPalette.vividRed : AppPalette.vividOrange).opacity(0.42), lineWidth: 1)
+                    .stroke((containsCriticalIssue ? AppPalette.statusText(.negative) : AppPalette.statusText(.warning)).opacity(0.42), lineWidth: 1)
             )
         }
     }
@@ -2010,19 +2037,21 @@ struct FootprintMetadataChip: View {
                     .font(.system(size: 12, weight: .semibold))
             }
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(appFont(.secondary).weight(isSelected ? .semibold : .medium))
                 .lineLimit(1)
         }
-        .foregroundStyle(isSelected ? AppPalette.activeTabText : AppPalette.appText.opacity(0.82))
+        // Round 16: the selected look matches AppFilterChip (same corner
+        // radius, fill and stroke) so both kinds of chip read the same way.
+        .foregroundStyle(isSelected ? AppPalette.appText : AppPalette.appText.opacity(0.82))
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(
-            Capsule(style: .continuous)
-                .fill(isSelected ? AppPalette.activeTabSurface : AppPalette.fieldSurface)
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(isSelected ? AppPalette.activeTabSurface.opacity(0.24) : AppPalette.fieldSurface)
         )
         .overlay(
-            Capsule(style: .continuous)
-                .stroke(isSelected ? AppPalette.activeTabSurface.opacity(0.36) : AppPalette.subtleBorder, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .stroke(isSelected ? AppPalette.activeTabSurface.opacity(0.78) : AppPalette.subtleBorder, lineWidth: 1)
         )
     }
 }
@@ -2060,13 +2089,13 @@ struct AppMetadataLabel: View {
     private var font: Font {
         switch style {
         case .normal:
-            return .system(size: 11, weight: .semibold)
+            return appFont(.secondary).weight(.semibold)
         case .count:
-            return .system(size: 11, weight: .bold)
+            return appFont(.secondary).weight(.bold)
         case .micro:
-            return .system(size: 10, weight: .semibold)
+            return appFont(.secondary).weight(.semibold)
         case .monospaced:
-            return .system(size: 11, weight: .semibold, design: .monospaced)
+            return appFont(.secondary).weight(.semibold).monospaced()
         }
     }
 }
@@ -2105,7 +2134,7 @@ struct AppOutcomeBars: View {
                 let fraction = Double(item.count) / Double(denominator)
                 HStack(spacing: 10) {
                     Text(item.title)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(appFont(.secondary).weight(.semibold))
                         .foregroundStyle(.secondary)
                         .frame(width: labelWidth, alignment: .leading)
 
@@ -2121,7 +2150,7 @@ struct AppOutcomeBars: View {
                     .frame(height: 10)
 
                     Text("\(item.count) (\(Int((fraction * 100).rounded())) %)")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(appFont(.secondary).weight(.bold))
                         .monospacedDigit()
                         .foregroundStyle(AppPalette.appText)
                         .frame(width: countWidth, alignment: .trailing)
@@ -2163,11 +2192,11 @@ struct AppStatisticListRow<Leading: View, Trailing: View>: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(appFont(.secondary).weight(.semibold))
                     .foregroundStyle(AppPalette.appText)
                     .lineLimit(titleLineLimit)
                 Text(subtitle)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(appFont(.secondary).weight(.medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(subtitleLineLimit)
             }
@@ -2185,7 +2214,7 @@ struct SortableListHeaderLabel: View {
     let title: String
     let ascending: Bool?
     var sortIndex: Int? = nil
-    var fontSize: CGFloat = 12
+    var fontSize: CGFloat? = nil
     var foreground: Color = .secondary
 
     var body: some View {
@@ -2202,7 +2231,8 @@ struct SortableListHeaderLabel: View {
                 }
             }
         }
-        .font(.system(size: fontSize, weight: .semibold))
+        // Round 16: follows the table-header typography setting unless a size is given.
+        .font(fontSize.map { .system(size: $0, weight: .semibold) } ?? appFont(.tableHeader))
         .foregroundStyle(foreground)
         .contentShape(Rectangle())
     }
@@ -2216,7 +2246,7 @@ struct AppSortableListHeader: View {
     var minWidth: CGFloat? = nil
     var maxWidth: CGFloat? = nil
     var alignment: Alignment = .leading
-    var fontSize: CGFloat = 12
+    var fontSize: CGFloat? = nil
     var foreground: Color = .secondary
     let resetTitle: String
     let onToggle: () -> Void
@@ -2368,15 +2398,45 @@ struct AppDestructiveActionButton: View {
     let title: String
     var systemImage = "trash"
     var help: String? = nil
+    /// Round 16: with a cancel title the button asks before it deletes, like
+    /// `DeleteActionButton`. Leave it nil only when the caller already shows
+    /// its own confirmation (for example an alert of its own).
+    var cancelTitle: String? = nil
+    var confirmationTitle: String? = nil
+    var confirmationMessage: String? = nil
     let action: () -> Void
+    /// Returns true when the store will show its own linked-object warning for
+    /// this deletion; the button then skips its own question so the user is
+    /// asked exactly once.
+    var storeAsksFirst: (() -> Bool)? = nil
+
+    @State private var showsConfirmation = false
 
     var body: some View {
-        Button(role: .destructive, action: action) {
+        Button(role: .destructive) {
+            if cancelTitle == nil || storeAsksFirst?() == true {
+                action()
+            } else {
+                showsConfirmation = true
+            }
+        } label: {
             Label(title, systemImage: systemImage)
         }
         .appDeleteButtonStyle()
         .help(help ?? title)
         .accessibilityLabel(help ?? title)
+        .confirmationDialog(
+            confirmationTitle ?? help ?? title,
+            isPresented: $showsConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(title, role: .destructive, action: action)
+            Button(cancelTitle ?? "", role: .cancel) {}
+        } message: {
+            if let confirmationMessage {
+                Text(confirmationMessage)
+            }
+        }
     }
 }
 
@@ -2473,63 +2533,68 @@ struct AppBadgeColors {
     let background: Color
     let stroke: Color
 
-    static let positiveSolid = AppBadgeColors(
-        foreground: AppPalette.semanticOnColor,
-        background: AppPalette.vividGreen,
-        stroke: AppPalette.vividGreen.opacity(0.78)
-    )
+    // Round 16: computed (not frozen at first use) so light/dark switches
+    // and Settings colours apply at once; status badges use the shared tones.
 
-    static let positiveMuted = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.shadeGreen,
-        stroke: AppPalette.vividGreen
-    )
-
-    static let negativeMuted = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.shadeRed,
-        stroke: AppPalette.vividRed
-    )
-
-    static let pendingSolid = AppBadgeColors(
-        foreground: AppPalette.semanticOnColor,
-        background: AppPalette.vividYellow,
-        stroke: AppPalette.vividYellow.opacity(0.82)
-    )
-
-    static let pendingMuted = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.shadeYellow,
-        stroke: AppPalette.vividYellow
-    )
-
-    static let neutralOutline = AppBadgeColors(
-        foreground: .primary,
-        background: AppPalette.fieldSurface,
-        stroke: AppPalette.border
-    )
-
-    static let neutralCard = AppBadgeColors(
-        foreground: AppPalette.appText,
-        background: AppPalette.secondaryCardSurface,
-        stroke: AppPalette.border.opacity(0.55)
-    )
-
-    static let saveSolid = AppBadgeColors(
-        foreground: AppPalette.semanticOnColor,
-        background: AppPalette.actionSave.opacity(0.86),
-        stroke: AppPalette.border.opacity(0.55)
-    )
-
-    static func lifecycle(_ status: ProjectLifecycleStatus) -> AppBadgeColors {
-        switch status {
-        case .planned:
-            return AppBadgeColors(foreground: AppPalette.semanticOnColor, background: AppPalette.vividYellow, stroke: .clear)
-        case .ongoing:
-            return AppBadgeColors(foreground: AppPalette.semanticOnColor, background: AppPalette.vividGreen, stroke: .clear)
-        case .completed:
-            return AppBadgeColors(foreground: AppPalette.semanticOnColor, background: AppPalette.chartRed, stroke: .clear)
+    /// A badge in a status tone: on-fill text on the status fill; no-fill
+    /// tones get the neutral outline (paler text for calls not open yet).
+    static func status(_ tone: AppStatusTone) -> AppBadgeColors {
+        switch tone {
+        case .none:
+            return neutralOutline
+        case .notOpen:
+            return AppBadgeColors(
+                foreground: AppPalette.statusText(.notOpen),
+                background: AppPalette.fieldSurface,
+                stroke: AppPalette.border
+            )
+        default:
+            return AppBadgeColors(
+                foreground: AppPalette.statusOnFill,
+                background: AppPalette.statusFill(tone),
+                stroke: AppPalette.statusText(tone).opacity(0.35)
+            )
         }
+    }
+
+    static var positiveSolid: AppBadgeColors { status(.done) }
+
+    static var positiveMuted: AppBadgeColors { status(.done) }
+
+    static var negativeMuted: AppBadgeColors { status(.negative) }
+
+    static var pendingSolid: AppBadgeColors { status(.pending) }
+
+    static var pendingMuted: AppBadgeColors { status(.pending) }
+
+    static var neutralOutline: AppBadgeColors {
+        AppBadgeColors(
+            foreground: .primary,
+            background: AppPalette.fieldSurface,
+            stroke: AppPalette.border
+        )
+    }
+
+    static var neutralCard: AppBadgeColors {
+        AppBadgeColors(
+            foreground: AppPalette.appText,
+            background: AppPalette.secondaryCardSurface,
+            stroke: AppPalette.border.opacity(0.55)
+        )
+    }
+
+    static var saveSolid: AppBadgeColors {
+        AppBadgeColors(
+            foreground: AppPalette.semanticOnColor,
+            background: AppPalette.actionSave.opacity(0.86),
+            stroke: AppPalette.border.opacity(0.55)
+        )
+    }
+
+    /// Without the store the project's progress is unknown; prefer
+    /// `status(store.projectStatusTone(project))`.
+    static func lifecycle(_ status: ProjectLifecycleStatus) -> AppBadgeColors {
+        self.status(AppStatusTones.project(status: status, hasProgress: false))
     }
 }
 
@@ -2609,16 +2674,7 @@ enum AppConferenceContributionBadgeStatus {
     }
 
     var badgeColors: AppBadgeColors {
-        switch self {
-        case .presented, .accepted:
-            return .positiveMuted
-        case .rejected:
-            return .negativeMuted
-        case .submitted:
-            return .pendingMuted
-        case .planned:
-            return .neutralOutline
-        }
+        .status(AppStatusTones.conferenceContribution(self))
     }
 
     private static func congressHasPassed(_ contribution: CVConferenceContribution, referenceDate: Date) -> Bool {
@@ -2639,16 +2695,7 @@ enum AppConferenceContributionBadgeStatus {
 }
 
 func appPublicationStatusBadgeColors(for status: PublicationStatus) -> AppBadgeColors {
-    switch status {
-    case .published, .accepted:
-        return .positiveSolid
-    case .submitted:
-        return .pendingSolid
-    case .rejected:
-        return .negativeMuted
-    case .planned, .inPreparation:
-        return .pendingMuted
-    }
+    .status(AppStatusTones.publication(status))
 }
 
 enum PublicationStatusIndicatorStyle: Equatable {
@@ -2659,29 +2706,25 @@ enum PublicationStatusIndicatorStyle: Equatable {
 }
 
 func publicationStatusIndicatorStyle(for status: PublicationStatus) -> PublicationStatusIndicatorStyle {
-    switch status {
-    case .published, .accepted:
+    switch AppStatusTones.publication(status) {
+    case .done:
         return .positiveSolid
-    case .submitted:
+    case .pending:
         return .inProgressSolid
-    case .rejected:
+    case .negative:
         return .negativeSolid
-    case .planned, .inPreparation:
+    default:
         return .neutralOutline
     }
 }
 
 func appPublicationStatusIndicatorColors(for status: PublicationStatus) -> (fill: Color, stroke: Color) {
-    switch publicationStatusIndicatorStyle(for: status) {
-    case .positiveSolid:
-        return (AppPalette.vividGreen, AppPalette.vividGreen.opacity(0.84))
-    case .inProgressSolid:
-        return (AppPalette.vividYellow, AppPalette.vividYellow.opacity(0.86))
-    case .negativeSolid:
-        return (AppPalette.vividRed, AppPalette.vividRed.opacity(0.86))
-    case .neutralOutline:
-        return (.white, AppPalette.border.opacity(0.95))
+    // Round 16: no fill ("white") for statuses without a tone.
+    let tone = AppStatusTones.publication(status)
+    guard tone.hasFill else {
+        return (.clear, AppPalette.border.opacity(0.95))
     }
+    return (AppPalette.statusFill(tone), AppPalette.statusText(tone).opacity(0.45))
 }
 
 private struct AppDeleteButtonModifier: ViewModifier {
@@ -2690,7 +2733,7 @@ private struct AppDeleteButtonModifier: ViewModifier {
         // the bezel, including the desaturated bezel of an inactive window —
         // forced white there was unreadable on the near-white gray.
         content
-            .font(.system(size: 13, weight: .semibold))
+            .font(appFont(.body).weight(.semibold))
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
             .tint(AppPalette.actionDelete)
@@ -2700,7 +2743,7 @@ private struct AppDeleteButtonModifier: ViewModifier {
 private struct AppAddButtonModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.system(size: 13, weight: .semibold))
+            .font(appFont(.body).weight(.semibold))
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
             .tint(AppPalette.linkAction)
@@ -2708,6 +2751,13 @@ private struct AppAddButtonModifier: ViewModifier {
 }
 
 extension View {
+    /// Round 16: the one look for save and confirm buttons (prominent bezel
+    /// with the save tint), instead of tinting each button by hand.
+    func appSaveButtonStyle() -> some View {
+        buttonStyle(.borderedProminent)
+            .tint(AppPalette.actionSave)
+    }
+
     func appDeleteButtonStyle() -> some View {
         modifier(AppDeleteButtonModifier())
     }
