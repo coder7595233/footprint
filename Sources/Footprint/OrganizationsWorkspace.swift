@@ -1492,32 +1492,20 @@ private struct LocalizedOptionDetailView: View {
                 syncSalaryBirthDateFromCurrentUser()
             }
             .onChange(of: option) { oldValue, newValue in
-                guard oldValue.id != newValue.id else { return }
+                guard oldValue.id != newValue.id else {
+                    // The same organization changed outside this editor
+                    // (undo, merge, rename from another view). Show the new
+                    // values unless the user has unsaved typing here;
+                    // otherwise the next autosave would write the old
+                    // values back over the change.
+                    guard oldValue != newValue, !hasLocalEdits(comparedTo: oldValue) else { return }
+                    loadFields(from: newValue)
+                    scheduleSalaryRowsRefresh()
+                    return
+                }
                 autosaveTask?.cancel()
                 persistAutosaveIfNeeded(baseline: oldValue)
-                nameSv = newValue.nameSv
-                nameEn = newValue.nameEn
-                addressLine = newValue.addressLine
-                postalCode = newValue.postalCode
-                city = newValue.city
-                country = newValue.country
-                note = newValue.note ?? ""
-                websiteURL = newValue.websiteURL
-                phoneNumber = newValue.phoneNumber
-                organizationNumber = newValue.organizationNumber
-                vatNumber = newValue.vatNumber
-                employerContacts = Self.normalizedEmployerContacts(newValue.employerContacts)
-                flag = newValue.flag
-                membershipFrom = newValue.membershipFrom
-                membershipTo = newValue.membershipTo
-                congressRows = Self.normalizedCongressRows(newValue.congresses)
-                taskRows = Self.normalizedOrganizationTasks(newValue.projectTasks)
-                selectedRoles = Set(newValue.roles)
-                let calculator = Self.defaultSalaryCalculator(for: newValue)
-                salaryCalculator = calculator
-                sharedCostPeriods = Self.mergedSharedCostPeriods(from: calculator)
-                salaryRowsCache = []
-                salaryRowsSignature = nil
+                loadFields(from: newValue)
                 resetSectionExpansionDefaults()
                 resetDeferredPanels()
                 scheduleDeferredPanelRefresh(reset: true)
@@ -2215,6 +2203,59 @@ private struct LocalizedOptionDetailView: View {
         }
     }
 
+    /// True when the editor's fields differ from `baseline`, i.e. the user
+    /// has typed something that is not saved yet.
+    private func hasLocalEdits(comparedTo baseline: OrganizationRecord) -> Bool {
+        let roles = OrganizationRole.allCases.filter(selectedRoles.contains)
+        let calculator = showsSalaryCalculator ? calculatorForPersistence() : baseline.salaryCalculator
+        return nameSv != baseline.nameSv
+            || nameEn != baseline.nameEn
+            || addressLine != baseline.addressLine
+            || postalCode != baseline.postalCode
+            || city != baseline.city
+            || country != baseline.country
+            || derivedScopeCategory != baseline.category
+            || note != (baseline.note ?? "")
+            || websiteURL != baseline.websiteURL
+            || phoneNumber != baseline.phoneNumber
+            || organizationNumber != baseline.organizationNumber
+            || vatNumber != baseline.vatNumber
+            || persistedEmployerContacts() != baseline.employerContacts
+            || flag != baseline.flag
+            || membershipFrom != baseline.membershipFrom
+            || membershipTo != baseline.membershipTo
+            || persistedCongresses() != baseline.congresses
+            || persistedOrganizationTasks() != baseline.projectTasks
+            || baseline.roles != roles
+            || calculator != baseline.salaryCalculator
+    }
+
+    private func loadFields(from record: OrganizationRecord) {
+        nameSv = record.nameSv
+        nameEn = record.nameEn
+        addressLine = record.addressLine
+        postalCode = record.postalCode
+        city = record.city
+        country = record.country
+        note = record.note ?? ""
+        websiteURL = record.websiteURL
+        phoneNumber = record.phoneNumber
+        organizationNumber = record.organizationNumber
+        vatNumber = record.vatNumber
+        employerContacts = Self.normalizedEmployerContacts(record.employerContacts)
+        flag = record.flag
+        membershipFrom = record.membershipFrom
+        membershipTo = record.membershipTo
+        congressRows = Self.normalizedCongressRows(record.congresses)
+        taskRows = Self.normalizedOrganizationTasks(record.projectTasks)
+        selectedRoles = Set(record.roles)
+        let calculator = Self.defaultSalaryCalculator(for: record)
+        salaryCalculator = calculator
+        sharedCostPeriods = Self.mergedSharedCostPeriods(from: calculator)
+        salaryRowsCache = []
+        salaryRowsSignature = nil
+    }
+
     private func persistAutosaveIfNeeded(baseline: OrganizationRecord) {
         let roles = OrganizationRole.allCases.filter(selectedRoles.contains)
         let calculator = showsSalaryCalculator ? calculatorForPersistence() : baseline.salaryCalculator
@@ -2749,8 +2790,8 @@ private struct LocalizedOptionDetailView: View {
         if merged.isEmpty {
             return defaults
         }
-        let existingByID = Dictionary(uniqueKeysWithValues: merged.map { ($0.id, $0) })
-        let existingByKey = Dictionary(uniqueKeysWithValues: merged.map { ("\(normalizedDateInput($0.from))|\(normalizedDateInput($0.to))", $0) })
+        let existingByID = Dictionary(firstWinsKeysWithValues: merged.map { ($0.id, $0) })
+        let existingByKey = Dictionary(firstWinsKeysWithValues: merged.map { ("\(normalizedDateInput($0.from))|\(normalizedDateInput($0.to))", $0) })
         for period in defaults {
             if let existing = existingByID[period.id] {
                 if existing.value.nonEmpty == nil,

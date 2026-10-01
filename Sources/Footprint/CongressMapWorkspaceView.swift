@@ -1350,14 +1350,14 @@ struct CongressMapWorkspaceView: View {
             selectedID: selectedCongressID,
             capacity: adaptiveLabelCapacity
         )
-        let screenRowsByID = Dictionary(uniqueKeysWithValues: visibleScreenRows.map { ($0.positioned.id, $0) })
+        let screenRowsByID = Dictionary(firstWinsKeysWithValues: visibleScreenRows.map { ($0.positioned.id, $0) })
         let labelScreenRows = plans.compactMap { screenRowsByID[$0.representativeID] }
         let placements = optimizedAnnotationPlacements(
             for: labelScreenRows,
             protectedScreenRows: allScreenRows
         )
         let plansByRepresentativeID = Dictionary(
-            uniqueKeysWithValues: plans.map { ($0.representativeID, $0) }
+            firstWinsKeysWithValues: plans.map { ($0.representativeID, $0) }
         )
 
         return labelScreenRows.compactMap { screenRow in

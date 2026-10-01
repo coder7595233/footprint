@@ -10,6 +10,9 @@ enum GrantReminderKind: String, Hashable {
     case dispositionEndingSoon
     case dispositionEnded
     case repaymentOverdue
+    /// The day after closing, when the call is still "Att söka": did you
+    /// apply? Clicking the notification asks the question.
+    case closedUnanswered
 }
 
 /// One planned reminder: which application, what kind and when it is sent.
@@ -163,6 +166,7 @@ final class GrantReminderCoordinator: NSObject, @unchecked Sendable {
         content.userInfo = [
             "applicationID": plan.applicationID,
             "primaryLink": plan.primaryLink ?? "",
+            "kind": plan.id.hasPrefix(Self.closedUnansweredIDPrefix) ? Self.closedUnansweredNotificationKind : "",
         ]
         return content
     }
@@ -218,8 +222,13 @@ final class GrantReminderCoordinator: NSObject, @unchecked Sendable {
             return language.text("Disposition time has ended", "Disponeringstiden har passerat")
         case .repaymentOverdue:
             return language.text("Repayment date has passed", "Datum för återgäldande har passerat")
+        case .closedUnanswered:
+            return language.text("The call has closed – did you apply?", "Utlysningen har stängt – sökte du?")
         }
     }
+
+    static let closedUnansweredIDPrefix = "grant-closed-unanswered"
+    static let closedUnansweredNotificationKind = "grantClosedUnanswered"
 
     /// Which reminders an application gets and when. Nothing when reminders
     /// are switched off. Applications that were declined, withdrawn or not
@@ -254,6 +263,14 @@ final class GrantReminderCoordinator: NSObject, @unchecked Sendable {
            let closeDate = application.closeDate,
            let closeReminderDate = calendar.date(byAdding: .day, value: -settings.grantClosingLeadDays, to: closeDate) {
             add(.closingSoon, idPrefix: "grant-close-soon", anchor: closeDate, fireDay: closeReminderDate)
+        }
+
+        if application.isToApplyStatus,
+           application.appliedOn?.trimmedOrNil == nil,
+           application.notAppliedOn?.trimmedOrNil == nil,
+           let closeDate = application.closeDate,
+           let dayAfterClosing = calendar.date(byAdding: .day, value: 1, to: closeDate) {
+            add(.closedUnanswered, idPrefix: Self.closedUnansweredIDPrefix, anchor: closeDate, fireDay: dayAfterClosing)
         }
 
         if application.resultLabel == "Väntar svar",

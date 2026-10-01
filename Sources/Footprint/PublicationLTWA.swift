@@ -120,7 +120,7 @@ private final class PublicationLTWAStore: @unchecked Sendable {
 
         let titleTokens = tokenize(normalizedTitle)
         let wordInfos = Self.wordInfos(in: titleTokens)
-        let wordInfoByTokenIndex = Dictionary(uniqueKeysWithValues: wordInfos.map { ($0.tokenIndex, $0) })
+        let wordInfoByTokenIndex = Dictionary(firstWinsKeysWithValues: wordInfos.map { ($0.tokenIndex, $0) })
         let protectedWordIndices = protectedSingleTitleWordIndices(in: titleTokens, wordInfos: wordInfos)
 
         let outputTokens = titleTokens

@@ -1319,7 +1319,7 @@ struct StatisticsView: View {
     }
 
     private var teachingHoursByYear: [Int: TeachingYearHours] {
-        let contextsByID = Dictionary(uniqueKeysWithValues: store.teachingCourses.map { ($0.id, $0) })
+        let contextsByID = Dictionary(firstWinsKeysWithValues: store.teachingCourses.map { ($0.id, $0) })
         let doctoralSourceAssignmentIDs = Set(store.doctoralCandidates.flatMap(\.sourceAssignmentIDs))
         var result: [Int: TeachingYearHours] = [:]
 
@@ -1572,7 +1572,7 @@ struct StatisticsView: View {
 
     private func teachingDrilldownContent(for selection: StatisticsDrilldownSelection, language: AppLanguage) -> StatisticsDrilldownContent {
         let selectedYear = statisticsYear(for: selection.columnIndex, years: teachingYears).flatMap(Int.init)
-        let contextsByID = Dictionary(uniqueKeysWithValues: store.teachingCourses.map { ($0.id, $0) })
+        let contextsByID = Dictionary(firstWinsKeysWithValues: store.teachingCourses.map { ($0.id, $0) })
         let doctoralSourceAssignmentIDs = Set(store.doctoralCandidates.flatMap(\.sourceAssignmentIDs))
 
         let assignmentItems = store.teachingAssignments.compactMap { assignment -> StatisticsDrilldownItem? in
@@ -2047,7 +2047,7 @@ private final class StatisticsActivityStatisticsCache {
             return cachedSnapshot
         }
 
-        let projectNames = Dictionary(uniqueKeysWithValues: store.projects.map { ($0.id, $0.displayName(for: store.language)) })
+        let projectNames = Dictionary(firstWinsKeysWithValues: store.projects.map { ($0.id, $0.displayName(for: store.language)) })
         let unlinkedProjectName = store.language.text("Unlinked", "Ej kopplat till projekt")
         let unknownProjectName = store.language.text("Unknown project", "Okänt projekt")
         var records: [StatisticsActivityRecord] = []

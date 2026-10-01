@@ -667,7 +667,11 @@ struct GrantApplication: Identifiable, Codable, Hashable {
     }
 
     var preferredBudgetAmountValue: Double? {
-        maximumTotalAmountValue ?? maximumAmountValue ?? approximateAmountValue ?? grantedAmountValue ?? appliedAmountValue
+        // The salary calculator's estimate is always in SEK, so it only
+        // stands in for the budget when the application is in SEK too;
+        // otherwise it would be converted as if it were euros or dollars.
+        let sekEstimate = currencyCode == "SEK" ? approximateAmountValue : nil
+        return maximumTotalAmountValue ?? maximumAmountValue ?? sekEstimate ?? grantedAmountValue ?? appliedAmountValue
     }
 
     var sortOrganization: String { organization }
@@ -1372,7 +1376,7 @@ struct TaskItem: Codable, Hashable, Identifiable {
             ?? participantNames.compactMap(\.trimmedOrNil)
         participantAuthorIDs = Array(NSOrderedSet(array: participantAuthorIDs.compactMap(\.trimmedOrNil))) as? [String]
             ?? participantAuthorIDs.compactMap(\.trimmedOrNil)
-        links = Array(Dictionary(uniqueKeysWithValues: links.compactMap { $0.normalized() }.map { ($0.id, $0) }).values)
+        links = Array(Dictionary(firstWinsKeysWithValues: links.compactMap { $0.normalized() }.map { ($0.id, $0) }).values)
             .sorted { $0.id < $1.id }
         completedOn = completedOn.map(DateParsers.canonicalizedDayInput)?.trimmedOrNil
         agendaText = agendaText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -4782,13 +4786,83 @@ enum GrantParsing {
 
     static func formatAmountInput(_ raw: String?) -> String? {
         guard let raw = raw?.trimmedOrNil else { return nil }
-        // Amounts are whole kronor: öre after a decimal comma or point
-        // ("1 250 000,50") are dropped instead of being read as more digits.
-        let withoutDecimals = raw.replacingOccurrences(of: #"[.,]\d{1,2}\s*(kr|SEK)?\s*$"#, with: "", options: [.regularExpression, .caseInsensitive])
-        let digits = withoutDecimals.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
-        guard !digits.isEmpty else { return nil }
+        let wholeUnits: Double
+        if let parsed = parsedAmount(raw) {
+            // Öre are dropped as before; the small margin keeps "1,15 M"
+            // from becoming 1 149 999 through rounding in the multiplication.
+            wholeUnits = (parsed + 0.001).rounded(.down)
+        } else {
+            // Unusual text ("ca 500 000"): keep the digits as before.
+            let digits = raw.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+            guard !digits.isEmpty else { return nil }
+            return groupedDigits(digits)
+        }
+        guard wholeUnits.isFinite, wholeUnits >= 0, wholeUnits < 1e15 else { return nil }
+        return groupedDigits(String(Int64(wholeUnits)))
+    }
+
+    /// Reads amounts such as "1 250 000", "1 250 000,50 kr", "1.5 M",
+    /// "1,5 milj", "250 tkr" or "€ 40,000". Nil when the text is not a
+    /// plain amount. Öre are kept as decimals; the caller drops them.
+    static func parsedAmount(_ raw: String) -> Double? {
+        var text = raw
+            .replacingOccurrences(of: "\u{a0}", with: " ")
+            .replacingOccurrences(of: "\u{202f}", with: " ")
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let currencyPattern = #"(kr\.?|:-|sek|eur|usd|nok|dkk|gbp|€|\$|£)"#
+        func stripCurrency() {
+            text = text
+                // Not after a letter, so "tkr" and "msek" keep their multiplier.
+                .replacingOccurrences(of: #"\s*(?<![a-zåäö])"# + currencyPattern + #"\s*$"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"^\s*"# + currencyPattern + #"\s*"#, with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        stripCurrency()
+        var multiplier = 1.0
+        let multipliers: [(pattern: String, factor: Double)] = [
+            (#"(mkr|msek|meur|musd|miljoner|miljon|milj\.?|mn|millions?|m)"#, 1_000_000),
+            (#"(tkr|tsek|ksek|keur|kusd|tusen|k)"#, 1_000),
+        ]
+        for candidate in multipliers {
+            if let range = text.range(of: #"(?<=\d)\s*"# + candidate.pattern + #"$"#, options: .regularExpression) {
+                text.removeSubrange(range)
+                multiplier = candidate.factor
+                break
+            }
+        }
+        stripCurrency()
+        let number = text.replacingOccurrences(of: " ", with: "")
+        guard number.range(of: #"^\d[\d.,]*$"#, options: .regularExpression) != nil else { return nil }
+
+        var integerPart = number
+        var fractionPart = ""
+        if let separator = number.lastIndex(where: { $0 == "," || $0 == "." }) {
+            let tail = String(number[number.index(after: separator)...])
+            let separatorCount = number.filter { $0 == "," || $0 == "." }.count
+            // "1,5 M" and "1 250,50" have a decimal part; "1.250.000" and
+            // "40,000" only group thousands.
+            let isDecimal = !tail.isEmpty && (
+                (multiplier > 1 && separatorCount == 1)
+                    || tail.count <= 2
+                    || (tail.count != 3 && separatorCount == 1)
+            )
+            if isDecimal {
+                integerPart = String(number[..<separator])
+                fractionPart = tail
+            }
+        }
+        let integerDigits = integerPart.filter(\.isNumber)
+        guard !integerDigits.isEmpty,
+              let value = Double(integerDigits + "." + (fractionPart.isEmpty ? "0" : fractionPart))
+        else { return nil }
+        return value * multiplier
+    }
+
+    private static func groupedDigits(_ digits: String) -> String {
+        var current = String(digits.drop(while: { $0 == "0" }))
+        if current.isEmpty { current = "0" }
         var parts: [String] = []
-        var current = digits
         while current.count > 3 {
             parts.insert(String(current.suffix(3)), at: 0)
             current.removeLast(3)
@@ -4987,5 +5061,15 @@ extension Array {
     func uniqued<Key: Hashable>(by keyPath: KeyPath<Element, Key>) -> [Element] {
         var seen = Set<Key>()
         return filter { seen.insert($0[keyPath: keyPath]).inserted }
+    }
+}
+
+extension Dictionary {
+    /// Like `init(uniqueKeysWithValues:)` but keeps the first value when a
+    /// key repeats instead of stopping the app. Saved data can contain two
+    /// records with the same name or id (imports, old versions), and a
+    /// crash there would make the app impossible to open.
+    init<S: Sequence>(firstWinsKeysWithValues pairs: S) where S.Element == (Key, Value) {
+        self.init(pairs, uniquingKeysWith: { first, _ in first })
     }
 }

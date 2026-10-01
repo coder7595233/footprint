@@ -692,7 +692,7 @@ private let legacyCalendarPlaceCountryVariants: [(variant: String, canonical: St
 
 private let legacyCalendarPlaceFlagLookup: [String: String] = {
     Dictionary(
-        uniqueKeysWithValues: legacyCalendarPlaceCountryVariants
+        firstWinsKeysWithValues: legacyCalendarPlaceCountryVariants
             .filter(\.isFlag)
             .map { ($0.variant, $0.canonical) }
     )
@@ -700,7 +700,7 @@ private let legacyCalendarPlaceFlagLookup: [String: String] = {
 
 private let legacyCalendarPlaceTextLookup: [String: String] = {
     Dictionary(
-        uniqueKeysWithValues: legacyCalendarPlaceCountryVariants
+        firstWinsKeysWithValues: legacyCalendarPlaceCountryVariants
             .filter { !$0.isFlag }
             .map { ($0.variant.lowercased(), $0.canonical) }
     )

@@ -697,7 +697,7 @@ private struct DoctoralCandidateDetailView: View {
     }
 
     private var linkedPublications: [PublicationRecord] {
-        let eligibleByID = Dictionary(uniqueKeysWithValues: eligiblePublicationChoices.map { ($0.id, $0) })
+        let eligibleByID = Dictionary(firstWinsKeysWithValues: eligiblePublicationChoices.map { ($0.id, $0) })
         return draft.linkedPublicationIDs
             .compactMap { eligibleByID[$0] }
             .sorted(by: doctoralPublicationSortOrder)

@@ -177,7 +177,7 @@ private struct OrganizationCompactGrantStatsRow: View {
             (.waiting, waiting),
             (.granted, granted)
         ]
-        let amountsByKind = Dictionary(uniqueKeysWithValues: buckets.map { kind, rows in
+        let amountsByKind = Dictionary(firstWinsKeysWithValues: buckets.map { kind, rows in
             (kind, rows.reduce(0) { $0 + statsAmount(for: $1, kind: kind) })
         })
         let total = amountsByKind.values.reduce(0, +)
@@ -292,6 +292,7 @@ private struct OrganizationCompactGrantStatsRow: View {
             )
         }
         let amount = CurrencyFormatter.format(total, code: "SEK")
+            + store.unconvertedAmountSuffix(for: rows.map { ($0, store.effectiveRemainingGrantedAmountValue(for: $0)) })
         return language.text("Of which \(amount) remains.", "Varav \(amount) kvarvarande medel.")
     }
 

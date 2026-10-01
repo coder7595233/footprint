@@ -621,6 +621,8 @@ struct ProjectDetailView: View {
                 )
             },
             code: "SEK"
+        ) + store.unconvertedAmountSuffix(
+            for: applications.map { ($0, store.effectiveRemainingGrantedAmountValue(for: $0)) }
         )
     }
 
@@ -1465,8 +1467,13 @@ struct ProjectDetailView: View {
         return normalized + [emptyRow ?? ProjectTaskItem()]
     }
 
-    private func currentProjectDraft() -> ProjectRecord {
-        ProjectRecord(
+    /// The editor's fields on top of `base`, the record they belong to.
+    /// Round 13: when the selection changes, `project` is already the newly
+    /// selected record, so the record being left is passed in (before, the
+    /// previous project got the next one's note, website and people links).
+    private func currentProjectDraft(base: ProjectRecord? = nil) -> ProjectRecord {
+        let project = base ?? self.project
+        return ProjectRecord(
             id: project.id,
             nameSv: nameSv,
             nameEn: nameEn,
@@ -1534,7 +1541,7 @@ struct ProjectDetailView: View {
     }
 
     private func persistAutosaveIfNeeded(baseline: ProjectRecord) {
-        let draft = currentProjectDraft()
+        let draft = currentProjectDraft(base: baseline)
         guard draft != baseline else { return }
         store.autosaveProjectRecord(draft, previousID: baseline.id, completePendingSelection: true)
     }

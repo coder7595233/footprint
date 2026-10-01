@@ -255,6 +255,7 @@ struct ContentView: View {
                 }
             )
             .modifier(StartupReportAlertModifier(store: store, language: language))
+            .modifier(AppliedQuestionAlertModifier(store: store, language: language))
     }
 
     private func rootContent(language: AppLanguage) -> some View {

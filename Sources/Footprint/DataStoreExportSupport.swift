@@ -322,7 +322,7 @@ extension GrantDataStore {
     }
 
     static func normalizedDropdownOverrides(_ values: [String: String], language: AppLanguage) -> [String: String]? {
-        let definitionsByKey = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map { ($0.key, $0) })
+        let definitionsByKey = Dictionary(firstWinsKeysWithValues: editableDropdownTranslationDefinitions.map { ($0.key, $0) })
         let normalized = values.reduce(into: [String: String]()) { partialResult, entry in
             guard let definition = definitionsByKey[entry.key] else { return }
             let trimmed = entry.value.trimmingCharacters(in: .whitespacesAndNewlines)

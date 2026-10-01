@@ -919,7 +919,7 @@ extension GrantDataStore {
         try ensureStorageDirectory()
         try recoverInterruptedRestoreIfNeeded()
         let persistedCache = try Dictionary(
-            uniqueKeysWithValues: encodedSQLiteDocuments(for: payload.snapshot)
+            firstWinsKeysWithValues: encodedSQLiteDocuments(for: payload.snapshot)
         )
 
         let sqliteStore = try SQLiteDocumentStore(url: databaseURL)

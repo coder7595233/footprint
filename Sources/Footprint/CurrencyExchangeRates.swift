@@ -6,7 +6,7 @@ struct CurrencyExchangeRateDay: Codable, Hashable, Sendable {
 
     mutating func normalize() {
         date = DateParsers.canonicalizedDayInput(date).trimmingCharacters(in: .whitespacesAndNewlines)
-        rates = Dictionary(uniqueKeysWithValues: rates.compactMap { key, value in
+        rates = Dictionary(firstWinsKeysWithValues: rates.compactMap { key, value in
             let code = key.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
             guard !code.isEmpty, value > 0 else { return nil }
             return (code, value)
@@ -363,9 +363,36 @@ extension GrantDataStore {
         return currencyExchangeRateCache.convertingToSEK(value, currency: application.currency, onOrBefore: date)
     }
 
+    /// Amount in SEK for sums and statistics. A foreign amount without an
+    /// exchange rate counts as 0 (it used to be added as if it were
+    /// kronor); sums show it separately as "ej omräknat" through
+    /// `unconvertedAmountSuffix(for:)`.
     func grantStatisticsAmountInSEK(for application: GrantApplication, amount: Double?) -> Double {
         guard let amount else { return 0 }
-        return approximateSEKValue(amount, for: application) ?? amount
+        if application.currencyCode == "SEK" { return amount }
+        return approximateSEKValue(amount, for: application) ?? 0
+    }
+
+    func isGrantAmountUnconverted(for application: GrantApplication, amount: Double?) -> Bool {
+        guard let amount, amount != 0, application.currencyCode != "SEK" else { return false }
+        return approximateSEKValue(amount, for: application) == nil
+    }
+
+    /// " (ej omräknat: 1 000 USD)" for the amounts in `rows` that could not be
+    /// converted to SEK, or "" when every amount was converted.
+    func unconvertedAmountSuffix(for rows: [(application: GrantApplication, amount: Double?)]) -> String {
+        let text = unconvertedAmountText(for: rows)
+        return text.isEmpty ? "" : " (\(text))"
+    }
+
+    func unconvertedAmountText(for rows: [(application: GrantApplication, amount: Double?)]) -> String {
+        var byCurrency: [String: Double] = [:]
+        for row in rows where isGrantAmountUnconverted(for: row.application, amount: row.amount) {
+            byCurrency[row.application.currencyCode, default: 0] += row.amount ?? 0
+        }
+        guard !byCurrency.isEmpty else { return "" }
+        let amounts = byCurrency.keys.sorted().map { CurrencyFormatter.format(byCurrency[$0], code: $0) }
+        return language.text("not converted", "ej omräknat") + ": " + amounts.joined(separator: " • ")
     }
 
     func formattedGrantAmountWithSEKApproximation(_ value: Double?, for application: GrantApplication) -> String {
@@ -438,6 +465,7 @@ extension GrantDataStore {
 
         var total = 0.0
         var hasConvertedCurrency = false
+        var unconvertedRows: [(application: GrantApplication, amount: Double)] = []
         for row in rows {
             if row.application.currencyCode == "SEK" {
                 total += row.amount
@@ -445,12 +473,16 @@ extension GrantDataStore {
                 total += converted
                 hasConvertedCurrency = true
             } else {
-                return formattedOriginalCurrencySummary(rows)
+                unconvertedRows.append(row)
             }
+        }
+        if unconvertedRows.count == rows.count {
+            return formattedOriginalCurrencySummary(rows) + " (" + language.text("not converted", "ej omräknat") + ")"
         }
 
         let formatted = CurrencyFormatter.format(total, code: "SEK")
-        return hasConvertedCurrency ? "≈ \(formatted)" : formatted
+        let suffix = unconvertedAmountSuffix(for: unconvertedRows.map { ($0.application, Optional($0.amount)) })
+        return (hasConvertedCurrency ? "≈ \(formatted)" : formatted) + suffix
     }
 
     private func formattedOriginalCurrencySummary(_ rows: [(application: GrantApplication, amount: Double)]) -> String {

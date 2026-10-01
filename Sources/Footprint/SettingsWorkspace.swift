@@ -262,10 +262,10 @@ struct SettingsWorkspaceView: View {
             defaultFundManagerOrganizationID = store.defaultFundManagerOrganizationID ?? ""
             loadedHomeOrganizationValues = [homeCountry, homeRegionOrganizationID, defaultFundManagerOrganizationID]
             listFilterRetentionPreferences = store.listFilterRetentionPreferenceSnapshot()
-            dropdownTranslationsSv = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map {
+            dropdownTranslationsSv = Dictionary(firstWinsKeysWithValues: editableDropdownTranslationDefinitions.map {
                 ($0.key, store.dropdownTranslationText(for: $0, language: .swedish))
             })
-            dropdownTranslationsEn = Dictionary(uniqueKeysWithValues: editableDropdownTranslationDefinitions.map {
+            dropdownTranslationsEn = Dictionary(firstWinsKeysWithValues: editableDropdownTranslationDefinitions.map {
                 ($0.key, store.dropdownTranslationText(for: $0, language: .english))
             })
             customMediaLanguageOptions = store.editableMetadataSnapshot.mediaLanguageOptions ?? []
@@ -2512,7 +2512,7 @@ struct SettingsWorkspaceView: View {
     }
 
     private func loadCalendarDayHighlightSettings() {
-        calendarDayHighlightColors = Dictionary(uniqueKeysWithValues: CalendarDayHighlightKind.allCases.map { kind in
+        calendarDayHighlightColors = Dictionary(firstWinsKeysWithValues: CalendarDayHighlightKind.allCases.map { kind in
             let stored = store.calendarDayHighlightColorSetting(kind)
             return (
                 kind,
@@ -2942,7 +2942,7 @@ struct SettingsWorkspaceView: View {
     }
 
     private func applyCalendarDayHighlightPreset(_ preset: CalendarDayHighlightColorPreset) {
-        let settingsByID = Dictionary(uniqueKeysWithValues: preset.settings.map { ($0.id, $0) })
+        let settingsByID = Dictionary(firstWinsKeysWithValues: preset.settings.map { ($0.id, $0) })
         for kind in CalendarDayHighlightKind.allCases {
             let id = CalendarDayHighlightColorSetting.id(for: kind)
             guard let setting = settingsByID[id] else { continue }
@@ -2963,7 +2963,7 @@ struct SettingsWorkspaceView: View {
 
     private func applyCalendarCategoryColorPreset(_ preset: CalendarCategoryColorPreset) {
         let previousDefault = defaultNewActivityCategoryColors
-        let settingsByID = Dictionary(uniqueKeysWithValues: preset.settings.map { ($0.id, $0) })
+        let settingsByID = Dictionary(firstWinsKeysWithValues: preset.settings.map { ($0.id, $0) })
 
         for category in CalendarFixedCategory.allCases {
             let id = CalendarCategoryColorSetting.fixedColorID(for: category)
@@ -3343,7 +3343,7 @@ struct SettingsWorkspaceView: View {
     }
 
     private func loadCalendarCategorySettings() {
-        fixedCalendarCategoryColors = Dictionary(uniqueKeysWithValues: CalendarFixedCategory.allCases.map { category in
+        fixedCalendarCategoryColors = Dictionary(firstWinsKeysWithValues: CalendarFixedCategory.allCases.map { category in
             let stored = store.calendarFixedCategoryColorSetting(category)
             return (
                 category,
@@ -3353,8 +3353,8 @@ struct SettingsWorkspaceView: View {
                 )
             )
         })
-        let settingsByID = Dictionary(uniqueKeysWithValues: store.calendarCategoryColorSettings.map { ($0.id, $0) })
-        activityCategoryColors = Dictionary(uniqueKeysWithValues: CalendarActivityColorRole.allCases.map { role in
+        let settingsByID = Dictionary(firstWinsKeysWithValues: store.calendarCategoryColorSettings.map { ($0.id, $0) })
+        activityCategoryColors = Dictionary(firstWinsKeysWithValues: CalendarActivityColorRole.allCases.map { role in
             let id = CalendarCategoryColorSetting.activityColorID(for: role)
             let stored = settingsByID[id]
             return (
@@ -3940,7 +3940,7 @@ struct SettingsWorkspaceView: View {
     }
 
     private func persistedCalendarDayHighlightColorSettings() -> [CalendarDayHighlightColorSetting] {
-        var settingsByID = Dictionary(uniqueKeysWithValues: store.calendarDayHighlightColorSettings.map { ($0.id, $0) })
+        var settingsByID = Dictionary(firstWinsKeysWithValues: store.calendarDayHighlightColorSettings.map { ($0.id, $0) })
 
         for kind in CalendarDayHighlightKind.allCases {
             let colors = calendarDayHighlightColors[kind] ?? EditableCalendarDayHighlightColors(
@@ -3984,7 +3984,7 @@ struct SettingsWorkspaceView: View {
     }
 
     private func persistedCalendarCategoryColorSettings() -> [CalendarCategoryColorSetting] {
-        var settingsByID = Dictionary(uniqueKeysWithValues: store.calendarCategoryColorSettings.map { ($0.id, $0) })
+        var settingsByID = Dictionary(firstWinsKeysWithValues: store.calendarCategoryColorSettings.map { ($0.id, $0) })
 
         for category in CalendarFixedCategory.allCases {
             let colors = fixedCalendarCategoryColors[category] ?? EditableCalendarCategoryColors(

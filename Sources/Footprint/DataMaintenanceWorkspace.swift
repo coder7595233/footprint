@@ -361,6 +361,7 @@ struct DataMaintenanceWorkspaceView: View {
     @State private var cachedRevisionHistory: [GrantDataStore.RecordRevisionEntry] = []
     @State private var needsDiagnosticsRefreshWhenActive = false
     @State private var showHiddenWarnings = false
+    @State private var showsShowAllHiddenConfirmation = false
     @State private var pendingDuplicateMergeIssue: GrantDataStore.DuplicateIssue?
     @State private var loadedIssueFilters = Set<DataQualityIssueFilter>()
     /// Lists in collapsed sections that still show their count from before
@@ -533,7 +534,7 @@ struct DataMaintenanceWorkspaceView: View {
         // computes all of them; timed so the log shows what a redraw costs.
         let summariesStartedAt = CFAbsoluteTimeGetCurrent()
         let sectionSummaries = Dictionary(
-            uniqueKeysWithValues: DataQualitySectionKey.allCases.map { ($0, sectionSummary($0, language: language)) }
+            firstWinsKeysWithValues: DataQualitySectionKey.allCases.map { ($0, sectionSummary($0, language: language)) }
         )
         let _ = reportSlowSectionSummaries(startedAt: summariesStartedAt)
 
@@ -551,16 +552,46 @@ struct DataMaintenanceWorkspaceView: View {
                     placeholder: nil
                 )
                 .frame(width: 190, alignment: .leading)
+                let hiddenTotal = store.hiddenDataQualityWarningTotalCount
                 Toggle(isOn: $showHiddenWarnings) {
-                    Text(language.text("Hidden", "Dolda"))
+                    Text(hiddenTotal > 0
+                        ? language.text("Hidden (\(hiddenTotal))", "Dolda (\(hiddenTotal))")
+                        : language.text("Hidden", "Dolda"))
                 }
                 .toggleStyle(.switch)
                 .controlSize(.small)
                 .fixedSize()
                 .help(language.text(
-                    "Include warnings you have hidden.",
-                    "Visa även varningar som du har dolt."
+                    "Include warnings you have hidden. Each hidden row gets a Show again button.",
+                    "Visa även varningar som du har dolt. Varje dold rad får knappen Visa igen."
                 ))
+                if hiddenTotal > 0 {
+                    Button(language.text("Show all hidden", "Visa alla dolda")) {
+                        showsShowAllHiddenConfirmation = true
+                    }
+                    .controlSize(.small)
+                    .help(language.text(
+                        "Stop hiding every hidden warning. Can be undone.",
+                        "Sluta dölja alla dolda varningar. Kan ångras."
+                    ))
+                    .confirmationDialog(
+                        language.text(
+                            "Show all \(hiddenTotal) hidden warnings again?",
+                            "Visa alla \(hiddenTotal) dolda varningar igen?"
+                        ),
+                        isPresented: $showsShowAllHiddenConfirmation
+                    ) {
+                        Button(language.text("Show all", "Visa alla")) {
+                            store.showAllHiddenDataQualityWarnings()
+                        }
+                        Button(language.text("Cancel", "Avbryt"), role: .cancel) {}
+                    } message: {
+                        Text(language.text(
+                            "Warnings you hid, also in older versions of the app, are shown in the lists again. You can undo this with Undo.",
+                            "Varningar som du har dolt, även i äldre versioner av appen, visas i listorna igen. Du kan ångra med Ångra."
+                        ))
+                    }
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)

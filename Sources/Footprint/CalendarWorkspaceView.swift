@@ -2157,6 +2157,33 @@ func buildFootprintCalendarEvents(
             )
         }
 
+    // A call whose closing date has passed while it is still "Att söka"
+    // is asked about on today's date every day until "Sökt" or "Ej sökt"
+    // is answered. It cannot be hidden. Clicking it asks the question.
+    let appliedQuestionEvents: [CalendarWorkspaceEvent] = (today >= displayedMonthStart && today <= displayedMonthEnd)
+        ? store.applicationsAwaitingAppliedAnswer().map { application in
+            let grantTitle = store.localizedGrantName(for: application, language: language).nonEmpty
+                ?? store.organizationLabel(for: application, language: language)
+            let organization = store.organizationLabel(for: application, language: language)
+            let closing = application.closesOn?.trimmedOrNil ?? ""
+            return CalendarWorkspaceEvent(
+                id: "application-applied-question:\(application.id)",
+                source: .application(application.id),
+                displayDate: today,
+                isRolledOverPastDue: true,
+                title: language.text("Did you apply? ", "Sökt eller inte sökt? ") + grantTitle,
+                subtitle: organization,
+                detail: language.text("Closed \(closing)", "Stängde \(closing)"),
+                place: "",
+                timeText: "",
+                kind: .applicationDeadline,
+                completedOn: nil,
+                action: { store.askAppliedQuestion(applicationID: application.id) },
+                toggleCompletion: nil
+            )
+        }
+        : []
+
     let reviewDeadlineEvents = resolvedReviewEntries.compactMap { review -> CalendarWorkspaceEvent? in
         guard !review.isCompleted,
               let deadline = review.deadlineDay(calendar: calendar) else {
@@ -2819,6 +2846,7 @@ func buildFootprintCalendarEvents(
     events.append(contentsOf: meetingEvents)
     events.append(contentsOf: mediaAppearanceEvents)
     events.append(contentsOf: applicationEvents)
+    events.append(contentsOf: appliedQuestionEvents)
     events.append(contentsOf: reviewDeadlineEvents)
     events.append(contentsOf: organizationTaskEvents)
     events.append(contentsOf: projectTaskEvents)
@@ -7296,7 +7324,7 @@ struct CalendarWorkspaceView: View {
         width: CGFloat,
         fontSize: CGFloat
     ) -> [CalendarVerticalMarker] {
-        let positionsByDay = Dictionary(uniqueKeysWithValues: positions.map { (DateParsers.isoDay.string(from: $0.date), $0) })
+        let positionsByDay = Dictionary(firstWinsKeysWithValues: positions.map { (DateParsers.isoDay.string(from: $0.date), $0) })
         var markers: [CalendarVerticalMarker] = []
         var currentID: String?
         var currentLabel: String = ""
