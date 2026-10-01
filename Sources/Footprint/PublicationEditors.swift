@@ -2459,19 +2459,13 @@ struct PublicationEditorView: View {
                         )
 
                     VStack(alignment: .leading, spacing: 8) {
-                        if let label = finalPDFDisplayLabel ?? finalPDFFilename {
-                            Text(label)
-                                .font(appFont(.secondary).weight(.medium))
-                                .foregroundStyle(.primary)
-                                .lineLimit(4)
-                                .frame(maxWidth: 220, alignment: .leading)
-                                .help(finalPDFOriginalFilenameHelp)
-                        }
-
+                        // No title next to the preview: the article's own
+                        // page already shows it. The file name is in the help text.
                         Button(language.text("Open PDF", "Öppna PDF")) {
                             openFinalPDF()
                         }
                         .buttonStyle(.bordered)
+                        .help(finalPDFOriginalFilenameHelp)
 
                         if !isEditingLocked {
                             Button(language.text("Replace…", "Ersätt…")) {
