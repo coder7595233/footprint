@@ -3454,9 +3454,18 @@ private struct CVMediaAppearanceDetailView: View {
             }
         }
         .onChange(of: appearance) { oldValue, newValue in
+            // Same record changed elsewhere while typed text is unsaved: the
+            // typed text is saved on top and stays on screen (it used to be
+            // replaced on screen and then written back later).
+            if oldValue.id == newValue.id, draft != oldValue, draft != newValue {
+                persistAutosaveIfNeeded(baseline: newValue)
+                return
+            }
             autosaveTask?.cancel()
             forcedPersistTask?.cancel()
-            persistAutosaveIfNeeded(baseline: oldValue)
+            if oldValue.id != newValue.id {
+                persistAutosaveIfNeeded(baseline: oldValue)
+            }
             draft = newValue
             projectAssociationInput = ""
             publicationAssociationInput = ""
@@ -4423,9 +4432,16 @@ private struct CVReviewEntryDetailView: View {
             }
         }
         .onChange(of: review) { oldValue, newValue in
+            // See the media editor: keep and save unsaved typing.
+            if oldValue.id == newValue.id, draft != oldValue, draft != newValue {
+                persistAutosaveIfNeeded(baseline: newValue)
+                return
+            }
             autosaveTask?.cancel()
             forcedPersistTask?.cancel()
-            persistAutosaveIfNeeded(baseline: oldValue)
+            if oldValue.id != newValue.id {
+                persistAutosaveIfNeeded(baseline: oldValue)
+            }
             draft = newValue
             showsCertificatePDFPreview = false
         }
@@ -4980,7 +4996,7 @@ private struct CVReviewEntryDetailView: View {
             )
             return
         }
-        let filename = draft.certificateFilename?.nonEmpty ?? "review-certificate.pdf"
+        let filename = safeTemporaryPDFFilename(draft.certificateFilename, fallback: "review-certificate.pdf")
         let targetURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
             .appendingPathComponent(filename)

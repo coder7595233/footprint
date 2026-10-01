@@ -1255,8 +1255,8 @@ extension GrantDataStore {
         }
 
         if let directPath = finalPDFPath?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !directPath.isEmpty {
-            let directURL = absoluteAttachmentURL(fromStored: directPath) ?? URL(fileURLWithPath: directPath)
+           !directPath.isEmpty,
+           let directURL = absoluteAttachmentURL(fromStored: directPath) {
             if FileManager.default.fileExists(atPath: directURL.path),
                (try? FileManager.default.destinationOfSymbolicLink(atPath: directURL.path)) == nil {
                 return directURL
@@ -1324,8 +1324,8 @@ extension GrantDataStore {
         }
 
         if let directPath = pdfPath?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !directPath.isEmpty {
-            let directURL = absoluteAttachmentURL(fromStored: directPath) ?? URL(fileURLWithPath: directPath)
+           !directPath.isEmpty,
+           let directURL = absoluteAttachmentURL(fromStored: directPath) {
             if FileManager.default.fileExists(atPath: directURL.path),
                (try? FileManager.default.destinationOfSymbolicLink(atPath: directURL.path)) == nil {
                 return directURL
@@ -1385,8 +1385,8 @@ extension GrantDataStore {
         }
 
         if let directPath = certificatePath?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !directPath.isEmpty {
-            let directURL = absoluteAttachmentURL(fromStored: directPath) ?? URL(fileURLWithPath: directPath)
+           !directPath.isEmpty,
+           let directURL = absoluteAttachmentURL(fromStored: directPath) {
             if FileManager.default.fileExists(atPath: directURL.path),
                (try? FileManager.default.destinationOfSymbolicLink(atPath: directURL.path)) == nil {
                 return directURL
@@ -1429,8 +1429,8 @@ extension GrantDataStore {
         }
 
         if let directPath = pdfPath?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !directPath.isEmpty {
-            let directURL = absoluteAttachmentURL(fromStored: directPath) ?? URL(fileURLWithPath: directPath)
+           !directPath.isEmpty,
+           let directURL = absoluteAttachmentURL(fromStored: directPath) {
             if FileManager.default.fileExists(atPath: directURL.path),
                (try? FileManager.default.destinationOfSymbolicLink(atPath: directURL.path)) == nil {
                 return directURL
@@ -1804,22 +1804,40 @@ extension GrantDataStore {
 
     /// F1: resolves a stored location (relative, or absolute from any user
     /// account) against the current storage directory.
+    ///
+    /// A stored location comes from the database, which can be imported from
+    /// someone else. A relative location must stay inside the storage
+    /// directory ("../../" is refused), and an absolute location outside it
+    /// is only accepted for a PDF file (older records pointed at PDFs in the
+    /// user's own folders). Otherwise a record could make the app copy, back
+    /// up or open any file on the Mac.
     nonisolated static func absoluteAttachmentURL(fromStored stored: String) -> URL? {
         let trimmed = stored.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
+        func containedInStorage(_ relative: String) -> URL? {
+            let root = storageDirectory.standardizedFileURL
+            let candidate = root.appendingPathComponent(relative).standardizedFileURL
+            let rootComponents = root.pathComponents
+            let candidateComponents = candidate.pathComponents
+            guard candidateComponents.count > rootComponents.count,
+                  Array(candidateComponents.prefix(rootComponents.count)) == rootComponents
+            else { return nil }
+            return candidate
+        }
         if trimmed.hasPrefix("/") {
             for folderName in [configuredAppSupportFolderName, legacyAppSupportFolderName] {
                 let marker = "/Application Support/\(folderName)/"
                 if let range = trimmed.range(of: marker) {
                     let relative = String(trimmed[range.upperBound...])
                     if !relative.isEmpty {
-                        return storageDirectory.appendingPathComponent(relative).standardizedFileURL
+                        return containedInStorage(relative)
                     }
                 }
             }
-            return URL(fileURLWithPath: trimmed)
+            let url = URL(fileURLWithPath: trimmed).standardizedFileURL
+            return url.pathExtension.lowercased() == "pdf" ? url : nil
         }
-        return storageDirectory.appendingPathComponent(trimmed).standardizedFileURL
+        return containedInStorage(trimmed)
     }
 
     nonisolated private static func managedAttachmentURL(
@@ -1990,9 +2008,12 @@ extension GrantDataStore {
         if let legacyURL = legacyManagedAttachmentURL(root: doctoralCandidatePDFsDirectory, id: document.id, fileExtension: "pdf") {
             return legacyURL
         }
-        guard let path = document.path?.trimmedOrNil else { return nil }
-        let directURL = absoluteAttachmentURL(fromStored: path) ?? URL(fileURLWithPath: path)
-        return FileManager.default.fileExists(atPath: directURL.path) ? directURL : nil
+        guard let path = document.path?.trimmedOrNil,
+              let directURL = absoluteAttachmentURL(fromStored: path),
+              FileManager.default.fileExists(atPath: directURL.path),
+              (try? FileManager.default.destinationOfSymbolicLink(atPath: directURL.path)) == nil
+        else { return nil }
+        return directURL
     }
 
     /// The names a PDF from the earlier Media attachment UI can have in
@@ -2090,6 +2111,8 @@ extension GrantDataStore {
            resolvedURL.path != managedURL.path {
             let data = try Data(contentsOf: resolvedURL)
             guard !data.isEmpty else { return didChange }
+            // Only a real PDF is copied into the app's storage.
+            guard data.prefix(1_024).range(of: Data("%PDF-".utf8)) != nil else { return didChange }
             _ = try persistManagedPublicationPDF(data: data, forPublicationID: publication.id)
             didChange = true
         }
@@ -2134,6 +2157,8 @@ extension GrantDataStore {
            resolvedURL.path != managedURL.path {
             let data = try Data(contentsOf: resolvedURL)
             guard !data.isEmpty else { return didChange }
+            // Only a real PDF is copied into the app's storage.
+            guard data.prefix(1_024).range(of: Data("%PDF-".utf8)) != nil else { return didChange }
             _ = try persistManagedCVMediaAppearancePDF(data: data, forMediaAppearanceID: appearance.id)
             didChange = true
         }
@@ -2216,6 +2241,8 @@ extension GrantDataStore {
            resolvedURL.path != managedURL.path {
             let data = try Data(contentsOf: resolvedURL)
             guard !data.isEmpty else { return didChange }
+            // Only a real PDF is copied into the app's storage.
+            guard data.prefix(1_024).range(of: Data("%PDF-".utf8)) != nil else { return didChange }
             _ = try persistManagedCVReviewCertificatePDF(data: data, forReviewEntryID: entry.id)
             didChange = true
         }
@@ -2259,6 +2286,8 @@ extension GrantDataStore {
            resolvedURL.path != managedURL.path {
             let data = try Data(contentsOf: resolvedURL)
             guard !data.isEmpty else { return didChange }
+            // Only a real PDF is copied into the app's storage.
+            guard data.prefix(1_024).range(of: Data("%PDF-".utf8)) != nil else { return didChange }
             _ = try persistManagedCVConferenceContributionPDF(data: data, forContributionID: contribution.id)
             didChange = true
         }

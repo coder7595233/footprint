@@ -370,12 +370,43 @@ struct GrantApplication: Identifiable, Codable, Hashable {
         let decodedNotAppliedOn = try container.decodeIfPresent(String.self, forKey: .notAppliedOn)
         let decodedNotAppliedOnUncertain = try container.decodeIfPresent(Bool.self, forKey: .notAppliedOnUncertain) ?? false
 
-        let migratedGrantedOn = decodedGrantedOn ?? ((decodedResult == "Beviljat") ? legacyDecisionOn : nil)
-        let migratedGrantedOnUncertain = decodedGrantedOn != nil ? decodedGrantedOnUncertain : ((decodedResult == "Beviljat") ? legacyDecisionOnUncertain : false)
-        let migratedDeniedOn = decodedDeniedOn ?? ((decodedResult == "Avslag") ? legacyDecisionOn : nil)
-        let migratedDeniedOnUncertain = decodedDeniedOn != nil ? decodedDeniedOnUncertain : ((decodedResult == "Avslag") ? legacyDecisionOnUncertain : false)
-        let migratedWithdrawnOn = decodedWithdrawnOn ?? ((decodedResult == "Tillbakadragen") ? legacyDecisionOn : nil)
-        let migratedWithdrawnOnUncertain = decodedWithdrawnOn != nil ? decodedWithdrawnOnUncertain : ((decodedResult == "Tillbakadragen") ? legacyDecisionOnUncertain : false)
+        var migratedGrantedOn = decodedGrantedOn ?? ((decodedResult == "Beviljat") ? legacyDecisionOn : nil)
+        var migratedGrantedOnUncertain = decodedGrantedOn != nil ? decodedGrantedOnUncertain : ((decodedResult == "Beviljat") ? legacyDecisionOnUncertain : false)
+        var migratedDeniedOn = decodedDeniedOn ?? ((decodedResult == "Avslag") ? legacyDecisionOn : nil)
+        var migratedDeniedOnUncertain = decodedDeniedOn != nil ? decodedDeniedOnUncertain : ((decodedResult == "Avslag") ? legacyDecisionOnUncertain : false)
+        var migratedWithdrawnOn = decodedWithdrawnOn ?? ((decodedResult == "Tillbakadragen") ? legacyDecisionOn : nil)
+        var migratedWithdrawnOnUncertain = decodedWithdrawnOn != nil ? decodedWithdrawnOnUncertain : ((decodedResult == "Tillbakadragen") ? legacyDecisionOnUncertain : false)
+        // An old record saved as "Beviljat", "Avslag" or "Tillbakadragen"
+        // without any decision date used to turn into "Väntar svar" (it has
+        // an applied date), and the next save then removed the granted
+        // amount and the rest of the grant data. Such a record keeps its
+        // result: the decision date becomes the expected decision date, the
+        // applied date or the closing date, marked as uncertain.
+        if [migratedGrantedOn, migratedDeniedOn, migratedWithdrawnOn].allSatisfy({ $0?.trimmedOrNil == nil }),
+           let decided = decodedResult?.trimmedOrNil,
+           ["Beviljat", "Avslag", "Tillbakadragen"].contains(decided) {
+            let fallbackDay = [
+                try container.decodeIfPresent(String.self, forKey: .decisionExpectedOn),
+                try container.decodeIfPresent(String.self, forKey: .appliedOn),
+                try container.decodeIfPresent(String.self, forKey: .closesOn),
+            ]
+            .lazy
+            .compactMap { $0.map(DateParsers.canonicalizedDayInput)?.trimmedOrNil }
+            .first { DateParsers.isoDay.date(from: $0) != nil }
+            if let fallbackDay {
+                switch decided {
+                case "Beviljat":
+                    migratedGrantedOn = fallbackDay
+                    migratedGrantedOnUncertain = true
+                case "Avslag":
+                    migratedDeniedOn = fallbackDay
+                    migratedDeniedOnUncertain = true
+                default:
+                    migratedWithdrawnOn = fallbackDay
+                    migratedWithdrawnOnUncertain = true
+                }
+            }
+        }
         let migratedNotAppliedOn = decodedNotAppliedOn ?? ((decodedResult == "Ej sökt") ? legacyDecisionOn : nil)
         let migratedNotAppliedOnUncertain = decodedNotAppliedOn != nil ? decodedNotAppliedOnUncertain : ((decodedResult == "Ej sökt") ? legacyDecisionOnUncertain : false)
 

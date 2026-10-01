@@ -199,7 +199,8 @@ extension GrantDataStore {
                 flagIdentical: true
             )
         }
-        for project in projects {
+        // Locked records are not offered: a fix here would change them.
+        for project in projects where !project.isEditingLocked {
             let projectTitle = title(project.nameSv, project.nameEn, fallback: project.id)
             check(
                 .project,
@@ -284,7 +285,7 @@ extension GrantDataStore {
                   destination: .cv, routeRecordID: "conferenceContribution:\(contribution.id)",
                   field: .title, sv: contribution.titleSv, en: contribution.titleEn, flagIdentical: false)
         }
-        for media in cvMediaAppearances {
+        for media in cvMediaAppearances where !media.isEditingLocked {
             check(.mediaAppearance, recordID: media.id,
                   recordTitle: title(media.titleSv, media.titleEn, fallback: media.id),
                   destination: .cv, routeRecordID: "mediaAppearance:\(media.id)",
@@ -355,7 +356,7 @@ extension GrantDataStore {
                 calculator: manager.salaryCalculator
             )
         case .project:
-            guard var project = projects.first(where: { $0.id == issue.recordID }) else { return }
+            guard var project = projects.first(where: { $0.id == issue.recordID }), !project.isEditingLocked else { return }
             let previousID = project.id
             switch issue.field {
             case .fullName:
@@ -411,7 +412,7 @@ extension GrantDataStore {
             contribution.titleEn = en
             autosaveCVConferenceContribution(contribution)
         case .mediaAppearance:
-            guard var media = cvMediaAppearances.first(where: { $0.id == issue.recordID }) else { return }
+            guard var media = cvMediaAppearances.first(where: { $0.id == issue.recordID }), !media.isEditingLocked else { return }
             media.titleSv = sv
             media.titleEn = en
             autosaveCVMediaAppearance(media)

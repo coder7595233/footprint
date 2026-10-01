@@ -75,20 +75,34 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
-## Omgång 13 – pågår
+## Omgång 14 – pågår
 
 | Nr | Område | Ändring | Status |
 |---|---|---|---|
-| F82 | Projekt | När man byter från ett projekt till ett annat medan en ändring väntar på att sparas, skrivs inte längre det nya projektets anteckning, webbadress och medarbetare in i det gamla. | Pågår |
-| F83 | Ångra | Ångra fungerar också direkt efter en automatisk sparning (appen kunde tro att den gamla versionen redan var sparad och tappa ångra-steget). | Pågår |
-| F84 | Inställningar och dolda varningar | Ändringar i inställningar som ännu inte hunnit sparas följer med när man slår ihop dubbletter eller gör andra ändringar, i stället för att skrivas över. | Pågår |
-| F85 | Ansökningar, organisationer | Om samma post ändras någon annanstans (ångra, sammanslagning, namnbyte) medan den är öppen, visas det nya. Förut kunde nästa automatiska sparning skriva tillbaka de gamla värdena. Det du själv skrivit men inte sparat skrivs aldrig över. | Pågår |
-| F86 | Stabilitet | Två tidskrifter (eller andra poster) med samma namn eller id kan inte längre få appen att krascha; den första används. | Pågår |
-| F87 | Valuta | Belopp i utländsk valuta utan växelkurs räknas som 0 i summorna och står separat som "ej omräknat" (beslut 2026-09-30). Förut räknades de som kronor. Gäller projektets och organisationens summor, årsrapporten, projektexporten och doktorandens anslag, som nu också räknas om till kronor. | Pågår |
-| F88 | Valuta | Lönekalkylens belopp (alltid i kronor) används inte längre som budget för en ansökan i annan valuta, där det räknades om som om det vore euro eller dollar. | Pågår |
-| F89 | Belopp | Inklistrade belopp som "1,5 M", "1,5 milj", "2 mkr", "250 tkr", "40,000 EUR" och "1.250.000" tolkas rätt (förut blev "1,5 M" 1 kr och "40,000 EUR" kunde bli fel). | Pågår |
-| F90 | Data | Knappen "Visa alla dolda" i Data-vyn visar alla dolda varningar igen på en gång, även de som dolts i äldre versioner. Den frågar först och kan ångras. Reglaget "Dolda" visar antalet, och varje dold rad har knappen "Visa igen". | Pågår |
-| F91 | Ansökningar, kalender | En utlysning som har stängt men fortfarande står som "Att söka" försvann med filtret "Hitta nya/Framtida anslag" och ur anslagsflödet. Nu ligger den kvar: i listan står "Svara" i kolumnen Stänger, i anslagsflödet "Stängd – sökt?". I kalendern ligger "Sökt eller inte sökt?" på dagens datum varje dag tills du svarat; klick ger frågan med knapparna Sökt, Ej sökt, Öppna ansökan och Senare. Sökt sätter ansökningsdatum till stängningsdagen (markerat osäkert), Ej sökt sätter Ej sökt-datum till stängningsdagen. Dagen efter stängning kommer också en notis som öppnar samma fråga. Kan ångras. | Pågår |
+| F92 | Bilagor, säkerhet | En sökväg till en bilaga som kommer från databasen (till exempel en importerad) kan inte längre peka utanför appens lagringsmapp, utom till en PDF-fil. Bara riktiga PDF-filer kopieras in i appen och öppnas; en app, ett skript eller en webbsida öppnas aldrig. Tillfälliga kopior av PDF:er får ett säkert filnamn. | Pågår |
+| F93 | Projektuppgifter, kongresser | Uppgiften "Nya medel" läggs inte tillbaka vid varje start eller Ångra när du har tagit bort den. Du läggs inte tillbaka som deltagare på en kongress du tagit bort dig från, när appen startar eller när du sparar samma resa eller boende igen. | Pågår |
+| F94 | Data, översättningar | Låsta projekt och medieframträdanden visas inte i listan med översättningar att rätta och kan inte ändras därifrån. | Pågår |
+| F95 | Redigerare | Text du just skrivit försvinner inte när samma post ändras någon annanstans (projekt, publikationer, media, granskningar). En halvifylld ny affiliering hos en forskare töms inte. Etikansökningar, clinicaltrials-registreringar och datainsamlingar följer sin rad, så att det du skriver inte hamnar på raden under. Kurs- och undervisningsredigerarna fastnar inte som "osparade". | Pågår |
+| F96 | Publikationer | Att bara klicka på en publikation ändrar inte längre dess korresponderande författare eller CRediT-roller. | Pågår |
+| F97 | Kalender, inställningar | En kalender- eller inställningsändring som väntar på att sparas försvinner inte om en annan sparning misslyckas. | Pågår |
+| F98 | Statistik | Beloppsgrupperna använder beloppet i kronor (ett anslag på 200 000 euro hamnade i gruppen under 250 000). Undervisningstimmar räknar terminen då perioden slutar, och en period utan slutdatum som inte börjat än räknas inte. | Pågår |
+| F99 | Ansökningar | En gammal post sparad som Beviljat, Avslag eller Tillbakadragen utan beslutsdatum blev "Väntar svar" och förlorade beviljat belopp vid nästa sparning. Nu behåller den sitt utfall; beslutsdatum blir förväntat beslutsdatum, ansökningsdatum eller stängningsdag, markerat som osäkert. | Pågår |
+| F100 | Inställningar, export | Kopian av all data till en mapp (förut Google Drive) är avstängd från början (beslut 2026-10-01). I Inställningar > Lagring slår du på den och väljer en valfri mapp, till exempel i Google Drive eller OneDrive. | Pågår |
+
+## Omgång 13 – klar 2026-10-01 (#8)
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F82 | Projekt | När man byter från ett projekt till ett annat medan en ändring väntar på att sparas, skrivs inte längre det nya projektets anteckning, webbadress och medarbetare in i det gamla. | Klar |
+| F83 | Ångra | Ångra fungerar också direkt efter en automatisk sparning (appen kunde tro att den gamla versionen redan var sparad och tappa ångra-steget). | Klar |
+| F84 | Inställningar och dolda varningar | Ändringar i inställningar som ännu inte hunnit sparas följer med när man slår ihop dubbletter eller gör andra ändringar, i stället för att skrivas över. | Klar |
+| F85 | Ansökningar, organisationer | Om samma post ändras någon annanstans (ångra, sammanslagning, namnbyte) medan den är öppen, visas det nya. Förut kunde nästa automatiska sparning skriva tillbaka de gamla värdena. Det du själv skrivit men inte sparat skrivs aldrig över. | Klar |
+| F86 | Stabilitet | Två tidskrifter (eller andra poster) med samma namn eller id kan inte längre få appen att krascha; den första används. | Klar |
+| F87 | Valuta | Belopp i utländsk valuta utan växelkurs räknas som 0 i summorna och står separat som "ej omräknat" (beslut 2026-09-30). Förut räknades de som kronor. Gäller projektets och organisationens summor, årsrapporten, projektexporten och doktorandens anslag, som nu också räknas om till kronor. | Klar |
+| F88 | Valuta | Lönekalkylens belopp (alltid i kronor) används inte längre som budget för en ansökan i annan valuta, där det räknades om som om det vore euro eller dollar. | Klar |
+| F89 | Belopp | Inklistrade belopp som "1,5 M", "1,5 milj", "2 mkr", "250 tkr", "40,000 EUR" och "1.250.000" tolkas rätt (förut blev "1,5 M" 1 kr och "40,000 EUR" kunde bli fel). | Klar |
+| F90 | Data | Knappen "Visa alla dolda" i Data-vyn visar alla dolda varningar igen på en gång, även de som dolts i äldre versioner. Den frågar först och kan ångras. Reglaget "Dolda" visar antalet, och varje dold rad har knappen "Visa igen". | Klar |
+| F91 | Ansökningar, kalender | En utlysning som har stängt men fortfarande står som "Att söka" försvann med filtret "Hitta nya/Framtida anslag" och ur anslagsflödet. Nu ligger den kvar: i listan står "Svara" i kolumnen Stänger, i anslagsflödet "Stängd – sökt?". I kalendern ligger "Sökt eller inte sökt?" på dagens datum varje dag tills du svarat; klick ger frågan med knapparna Sökt, Ej sökt, Öppna ansökan och Senare. Sökt sätter ansökningsdatum till stängningsdagen (markerat osäkert), Ej sökt sätter Ej sökt-datum till stängningsdagen. Dagen efter stängning kommer också en notis som öppnar samma fråga. Kan ångras. | Klar |
 
 ## Omgång 12 – klar 2026-09-30 (#7)
 

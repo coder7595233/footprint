@@ -1,23 +1,24 @@
 import Foundation
 
-/// Skriver en läsbar kopia av Footprints data till en mapp som Claude kan läsa
-/// (standard: ~/Google Drive/footprint_export):
+/// Writes a readable copy of Footprint's data to a folder the user chooses
+/// in Settings > Storage (for example a Google Drive or OneDrive folder):
 ///
-///   data/          ett JSON-dokument per område och _manifest.json
-///   attachments/   kopior av appens bilagor (PDF:er m.m.), en undermapp per typ
+///   data/          one JSON document per area and _manifest.json
+///   attachments/   copies of the app's attachments (PDFs etc.), one subfolder per kind
 ///
-/// Anropas efter varje lyckad sparning (se DataStore.exportToFootprintExportAfterWrite).
-/// Körs på en egen kö och kan aldrig stoppa eller fördröja själva sparningen; fel loggas bara.
-/// Ingenting raderas i exporten: en bilaga som tas bort i appen ligger kvar i attachments/.
+/// Called after every successful save (see DataStore.exportToFootprintExportAfterWrite).
+/// Runs on its own queue and can never stop or delay the save; errors are only logged.
+/// Nothing is deleted in the export: an attachment removed in the app stays in attachments/.
 ///
-/// Styrs av, i prioritetsordning:
-///   miljövariabeln FOOTPRINT_EXPORT_DIRECTORY
-///   Info.plist-nyckeln FootprintExportDirectory
-///   standardmappen ovan
-/// Stängs av med Info.plist-nyckeln FootprintExportEnabled = false.
-/// Avstängd sedan 2026-09-28 (Scripts/Footprint-Info.plist): data nås via GitHub i stället.
+/// Round 14 (user decision 2026-10-01): off unless switched on in Settings,
+/// and only to the folder chosen there. It used to be on by default (only an
+/// Info.plist key turned it off) and wrote to ~/Google Drive/footprint_export,
+/// or to a folder named by an environment variable.
 final class FootprintExportWriter: @unchecked Sendable {
     static let shared = FootprintExportWriter()
+
+    static var enabledDefaultsKey: String { AppRuntime.scopedDefaultsKey("FootprintExport.Enabled") }
+    static var folderDefaultsKey: String { AppRuntime.scopedDefaultsKey("FootprintExport.FolderPath") }
 
     /// Dokument som aldrig exporteras (appinställningar, inte data).
     static let excludedKeys: Set<String> = ["app_settings"]
@@ -33,25 +34,37 @@ final class FootprintExportWriter: @unchecked Sendable {
     private let lock = NSLock()
     private var didFullExport = false
 
+    /// The folder chosen in Settings, or nil when none is chosen.
+    static var chosenFolder: URL? {
+        guard let raw = UserDefaults.standard.string(forKey: folderDefaultsKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else { return nil }
+        return URL(fileURLWithPath: raw, isDirectory: true)
+    }
+
+    static var isSwitchedOn: Bool {
+        UserDefaults.standard.bool(forKey: enabledDefaultsKey)
+    }
+
     var isEnabled: Bool {
         // F34: a test run never exports, whatever started it.
         if TestProcessDetection.isRunningTests { return false }
-        if let flag = Bundle.main.object(forInfoDictionaryKey: "FootprintExportEnabled") as? Bool { return flag }
-        return true
+        return Self.isSwitchedOn && Self.chosenFolder != nil
+    }
+
+    /// Saves the choice from Settings. A new folder or switching on gets a
+    /// full export at the next save.
+    func configure(enabled: Bool, folder: URL?) {
+        UserDefaults.standard.set(enabled, forKey: Self.enabledDefaultsKey)
+        if let folder {
+            UserDefaults.standard.set(folder.standardizedFileURL.path, forKey: Self.folderDefaultsKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.folderDefaultsKey)
+        }
+        lock.lock(); didFullExport = false; lock.unlock()
     }
 
     var rootDirectory: URL {
-        let environment = ProcessInfo.processInfo.environment
-        if let raw = environment["FOOTPRINT_EXPORT_DIRECTORY"]?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty {
-            return URL(fileURLWithPath: (raw as NSString).expandingTildeInPath, isDirectory: true)
-        }
-        if let raw = (Bundle.main.object(forInfoDictionaryKey: "FootprintExportDirectory") as? String)?
-            .trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty {
-            return URL(fileURLWithPath: (raw as NSString).expandingTildeInPath, isDirectory: true)
-        }
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Google Drive", isDirectory: true)
-            .appendingPathComponent("footprint_export", isDirectory: true)
+        Self.chosenFolder ?? FileManager.default.temporaryDirectory.appendingPathComponent("footprint_export_unset", isDirectory: true)
     }
 
     var dataDirectory: URL { rootDirectory.appendingPathComponent("data", isDirectory: true) }

@@ -83,15 +83,18 @@ struct ProjectEthicsAndDataCollectionSection: View {
                                 )
                             }
                         } else {
-                            ForEach(Array(ethicsAmendments.indices), id: \.self) { index in
+                            // Rows are tied to their id, not their position:
+                            // an emptied row moves to the end, and a row bound
+                            // by position then let typing land in the next one.
+                            ForEach($ethicsAmendments) { $amendment in
                                 ProjectEthicsApplicationEditor(
-                                    application: $ethicsAmendments[index],
+                                    application: $amendment,
                                     language: language,
                                     showsFieldTitles: false,
-                                    onRemove: index == ethicsAmendments.count - 1 && ethicsAmendments[index].isEmpty
+                                    onRemove: amendment.id == ethicsAmendments.last?.id && amendment.isEmpty
                                         ? nil
                                         : {
-                                            ethicsAmendments.remove(at: index)
+                                            ethicsAmendments.removeAll { $0.id == amendment.id }
                                         }
                                 )
                             }
@@ -112,12 +115,12 @@ struct ProjectEthicsAndDataCollectionSection: View {
                                 )
                             }
                         } else {
-                            ForEach(Array(clinicalTrialRegistrations.indices), id: \.self) { index in
+                            ForEach($clinicalTrialRegistrations) { $registration in
                                 ProjectClinicalTrialRegistrationEditor(
-                                    registration: $clinicalTrialRegistrations[index],
+                                    registration: $registration,
                                     language: language,
                                     onRemove: {
-                                        clinicalTrialRegistrations.remove(at: index)
+                                        clinicalTrialRegistrations.removeAll { $0.id == registration.id }
                                         if clinicalTrialRegistrations.isEmpty {
                                             clinicalTrialRegistrations = [ProjectClinicalTrialRegistration()]
                                         }
@@ -691,8 +694,7 @@ private struct ProjectDataCollectionEditor: View {
             }
             .padding(.bottom, isEditingLocked ? 0 : 1)
 
-            ForEach(Array(visibleDataCollections.indices), id: \.self) { visibleIndex in
-                let collection = visibleDataCollections[visibleIndex]
+            ForEach(Array(visibleDataCollections.enumerated()), id: \.element.id) { visibleIndex, collection in
                 let index = dataCollections.firstIndex { $0.id == collection.id } ?? visibleIndex
                 let dateRangeState = AppFieldValidators.optionalDateRange(from: collection.from, to: collection.to, language: language).state
                 HStack(alignment: .top, spacing: projectComplianceColumnSpacing) {

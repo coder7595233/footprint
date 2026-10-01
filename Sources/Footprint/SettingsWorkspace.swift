@@ -70,6 +70,8 @@ struct SettingsWorkspaceView: View {
     let dismiss: () -> Void
 
     @State private var selectedSection: SettingsWorkspaceSection = .appearance
+    @State private var copyExportEnabled = FootprintExportWriter.isSwitchedOn
+    @State private var copyExportFolderPath = FootprintExportWriter.chosenFolder?.path ?? ""
     @State private var lightModeStartsAt: String = ""
     @State private var darkModeStartsAt: String = ""
     @State private var selectedHolidayCountries: Set<HolidayCountry> = []
@@ -1030,6 +1032,8 @@ struct SettingsWorkspaceView: View {
 
     @ViewBuilder
     private func dataSection(language: AppLanguage) -> some View {
+        copyExportSection(language: language)
+
         settingsCard {
             Text(language.text("Storage", "Lagring"))
                 .appTypography(.sectionTitle)
@@ -1470,6 +1474,73 @@ struct SettingsWorkspaceView: View {
                 TeachingFormatSettingsRow(store: store, format: format, language: language)
             }
         }
+    }
+
+    /// Round 14: the readable copy of all data (JSON files and attachments)
+    /// is off until switched on here, and goes to a folder chosen here.
+    private func copyExportSection(language: AppLanguage) -> some View {
+        settingsCard {
+            Text(language.text("Copy of data to a folder", "Kopia av data till en mapp"))
+                .appTypography(.sectionTitle)
+
+            Toggle(isOn: Binding(
+                get: { copyExportEnabled },
+                set: { newValue in
+                    if newValue, copyExportFolderPath.isEmpty {
+                        guard let folder = chooseCopyExportFolder(language: language) else { return }
+                        copyExportFolderPath = folder.path
+                    }
+                    copyExportEnabled = newValue
+                    FootprintExportWriter.shared.configure(
+                        enabled: newValue,
+                        folder: copyExportFolderPath.isEmpty ? nil : URL(fileURLWithPath: copyExportFolderPath, isDirectory: true)
+                    )
+                }
+            )) {
+                Text(language.text("Copy all data to a folder after each save", "Kopiera all data till en mapp efter varje sparning"))
+            }
+            .toggleStyle(.switch)
+
+            settingsInfoRow(
+                title: language.text("Folder", "Mapp"),
+                value: copyExportFolderPath.nonEmpty ?? language.text("No folder chosen", "Ingen mapp vald")
+            )
+
+            HStack(spacing: 10) {
+                Button(language.text("Choose folder…", "Välj mapp…")) {
+                    guard let folder = chooseCopyExportFolder(language: language) else { return }
+                    copyExportFolderPath = folder.path
+                    FootprintExportWriter.shared.configure(enabled: copyExportEnabled, folder: folder)
+                }
+                .buttonStyle(.bordered)
+                if !copyExportFolderPath.isEmpty {
+                    Button(language.text("Open folder", "Öppna mappen")) {
+                        NSWorkspace.shared.open(URL(fileURLWithPath: copyExportFolderPath, isDirectory: true))
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+
+            SettingsEffectNote(language.text(
+                "Affects: when switched on, every save also writes all data (salary included) as readable files, and copies of all attachments, to the chosen folder, for example a Google Drive or OneDrive folder. Nothing is deleted there when you delete something in the app. Off by default.",
+                "Påverkar: när valet är på skrivs vid varje sparning all data (även lön) som läsbara filer, och kopior av alla bilagor, till den valda mappen, till exempel en mapp i Google Drive eller OneDrive. Ingenting raderas där när du tar bort något i appen. Avstängt från början."
+            ))
+        }
+    }
+
+    private func chooseCopyExportFolder(language: AppLanguage) -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = language.text("Choose", "Välj")
+        panel.message = language.text(
+            "Choose the folder that gets a copy of all data.",
+            "Välj mappen som ska få en kopia av all data."
+        )
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        return url
     }
 
     private func settingsCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {

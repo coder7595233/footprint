@@ -2829,7 +2829,10 @@ private struct TeachingAssignmentDetailView: View {
     private func persist() {
         AutosaveCoordinator.flush(&autosaveTask) {
             let normalized = preparedForPersistence(from: draft)
-            guard normalized != assignment else { return }
+            // Nothing to save means nothing is pending either; a flag left
+            // on made the editor ignore later outside changes and write the
+            // old text back when it was closed.
+            guard normalized != assignment else { hasPendingLocalEdits = false; return }
             store.saveTeachingAssignment(normalized)
             hasPendingLocalEdits = false
         }
@@ -2841,7 +2844,7 @@ private struct TeachingAssignmentDetailView: View {
 
     private func autosave(baseline: TeachingAssignment) {
         let normalized = preparedForPersistence(from: draft)
-        guard normalized != baseline else { return }
+        guard normalized != baseline else { hasPendingLocalEdits = false; return }
         store.autosaveTeachingAssignment(normalized)
         hasPendingLocalEdits = false
     }
@@ -4007,7 +4010,8 @@ private struct TeachingStructureBranchDetailView: View {
     private func persist() {
         AutosaveCoordinator.flush(&autosaveTask) {
             let normalized = preparedForPersistence(from: draft)
-            guard normalized != course else { return }
+            // See the assignment editor: no change means nothing pending.
+            guard normalized != course else { hasPendingLocalEdits = false; return }
             store.saveTeachingCourse(normalized)
             hasPendingLocalEdits = false
         }
@@ -4015,7 +4019,7 @@ private struct TeachingStructureBranchDetailView: View {
 
     private func autosave() {
         let normalized = preparedForPersistence(from: draft)
-        guard normalized != course else { return }
+        guard normalized != course else { hasPendingLocalEdits = false; return }
         store.autosaveTeachingCourse(normalized)
         hasPendingLocalEdits = false
     }

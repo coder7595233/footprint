@@ -20608,7 +20608,16 @@ final class GrantDataStore: ObservableObject {
             applications[index].refreshDerivedValues()
             applications[index] = synchronizedApplicationRelations(applications[index])
         }
-        didChange = ensureGrantedApplicationNewFundsReceivedProjectTasks() || didChange
+        // Once, for records from before the step was tied to saving: it used
+        // to run on every launch and every Undo and put back a "new funds
+        // received" task the user had deleted. Saving an application that
+        // becomes granted still adds it (save and autosave).
+        didChange = runRound7MigrationOnce(
+            key: "round14-new-funds-tasks-once",
+            details: "\"New funds received\" project tasks are added once for granted applications; afterwards only when an application becomes granted, so a deleted task is not recreated."
+        ) {
+            ensureGrantedApplicationNewFundsReceivedProjectTasks()
+        } || didChange
         for index in organizations.indices {
             let derivedCategory = derivedOrganizationCategory(
                 city: organizations[index].city,
@@ -20628,7 +20637,15 @@ final class GrantDataStore: ObservableObject {
         // User decision: the roles ticked on an organization are what count.
         // The app no longer removes "Employer" from organizations by name here.
         didChange = migrateHomeOrganizationSettingsIfNeeded() || didChange
-            didChange = ensureCalendarLinkedRecordsMarkCongressParticipation() || didChange
+            // Once: on every launch and Undo it put the user back on a
+            // congress they had removed themselves from. Linking a trip or
+            // stay to a congress in the calendar still marks attendance.
+            didChange = runRound7MigrationOnce(
+                key: "round14-congress-participation-once",
+                details: "Congresses linked from calendar travel or stays are marked as attended once; afterwards only when the link is made in the calendar."
+            ) {
+                ensureCalendarLinkedRecordsMarkCongressParticipation()
+            } || didChange
             didChange = ensureCongressPlanRowsMirroredInCalendar() || didChange
             didChange = removeCalendarOwnedCongressPlanningRows() || didChange
         refreshOptionListsFromApplications(preserveCustomLists: true)
@@ -20922,6 +20939,13 @@ final class GrantDataStore: ObservableObject {
         normalizedCurrent.normalize()
 
         guard let currentLink = congressPlanLink(for: normalizedCurrent) else { return }
+        // Only when the trip is newly linked to this congress: saving the
+        // same trip again must not put back a user who removed themselves.
+        if let previousLink = congressPlanLink(for: previous),
+           previousLink.organizationID == currentLink.organizationID,
+           previousLink.congressID == currentLink.congressID {
+            return
+        }
         markCongressAsAttendingIfNeeded(
             organizationID: currentLink.organizationID,
             congressID: currentLink.congressID
@@ -23340,6 +23364,10 @@ final class GrantDataStore: ObservableObject {
     }
 
     func restoreSnapshotWithoutUndo(_ snapshot: Snapshot) {
+        // A queued metadata write (a calendar or settings edit) is cancelled
+        // below. Its content is part of the snapshot, so it is written again
+        // at the end; before, a failed save elsewhere silently lost it.
+        let droppedQueuedMetadataWrite = pendingMetadataSnapshot != nil
         pendingMetadataPersistenceWorkItem?.cancel()
         pendingMetadataPersistenceWorkItem = nil
         drainMetadataPersistenceQueue()
@@ -23378,6 +23406,9 @@ final class GrantDataStore: ObservableObject {
         refreshPublicationIndexes(mode: .crossReferencesOnly, projectCacheBehavior: .markDirty)
         scheduleDeferredFullPublicationIndexRefresh(reason: "restore-snapshot")
         scheduleDataQualityCachePrewarm(reason: "restore-snapshot")
+        if droppedQueuedMetadataWrite {
+            persistMetadataSilently(metadata, publishStatusUpdates: false)
+        }
     }
 
     func persistMetadataSilently(
