@@ -408,7 +408,9 @@ struct PublicationJournalsView: View {
     let newRecordTrigger: Int
     let isActive: Bool
     @WorkspaceFilterState("Journals.Filter.Search") private var searchText = ""
-    @WorkspaceFilterState("Journals.Filter.SearchPublisher") private var searchAlsoInPublisher = false
+    // Round 17: widens the search; it hides nothing on its own, so it is not
+    // an active filter and never "kept from last time".
+    @WorkspaceFilterState("Journals.Filter.SearchPublisher", tracksRestored: false) private var searchAlsoInPublisher = false
     @WorkspaceFilterState("Journals.Filter.Categories") private var selectedCategories: Set<String> = []
     @WorkspaceFilterState("Journals.Filter.ExcludedCategories") private var excludedCategories: Set<String> = []
     @State private var showingCategoryFilter = false
@@ -438,6 +440,10 @@ struct PublicationJournalsView: View {
     @State private var lastNonSearchFilterSignature = ""
     @State private var journalsViewMeasurementStartedAt: CFAbsoluteTime?
     @State private var journalTableInitialReadyLogged = false
+    /// Round 17: set when the list appears with a remembered selection; the
+    /// next time the rows are filtered it is moved to a visible row if a
+    /// saved filter hides it.
+    @State private var needsAppearSelectionCheck = false
     @State private var journalDetailInitialReadyLogged = false
     @State private var pendingSelectionMeasurementID: String?
     @State private var pendingSelectionStartedAt: CFAbsoluteTime?
@@ -518,7 +524,6 @@ struct PublicationJournalsView: View {
 
     private var hasActiveJournalFilters: Bool {
         searchText.nonEmpty != nil
-            || searchAlsoInPublisher
             || !selectedCategories.isEmpty
             || !excludedCategories.isEmpty
             || minimumJIFValue > 0
@@ -639,9 +644,93 @@ struct PublicationJournalsView: View {
         return VStack(alignment: .leading, spacing: 10) {
             journalHeader(language: language)
             journalSearchFilterCard(language: language)
+            if hasActiveJournalFilters {
+                // Round 17: the same banner as the other lists.
+                AppFilteredListBanner(
+                    displayedCount: filteredJournalRows.count,
+                    totalCount: store.journals.count,
+                    activeFilters: activeJournalFilterDescriptions(language: language),
+                    restoredFromLastSession: RestoredListFilters.wasRestored(workspace: "Journals.Filter"),
+                    language: language,
+                    clearAction: clearAllJournalFilters
+                )
+            }
             journalResultsTable(language: language)
-            ListCountFootnote(displayedCount: filteredJournalRows.count, totalCount: store.journals.count, language: language)
+            if !hasActiveJournalFilters {
+                ListCountFootnote(displayedCount: filteredJournalRows.count, totalCount: store.journals.count, language: language)
+            }
         }
+    }
+
+    private func activeJournalFilterDescriptions(language: AppLanguage) -> [String] {
+        var parts: [String] = []
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            parts.append(searchAlsoInPublisher
+                ? "\(search) \(language.text("(also publishers)", "(även förlag)"))"
+                : search)
+        }
+        if let included = ListFilterLabels.chips(selectedCategories.sorted()) {
+            parts.append(included)
+        }
+        if let excluded = ListFilterLabels.chips(excludedCategories.sorted()) {
+            parts.append("\(language.text("Excluding", "Utom")) \(excluded)")
+        }
+        if minimumJIFValue > 0 {
+            parts.append("\(language.text("Minimum JIF", "Lägst JIF")) \(formattedJournalMetric(minimumJIFValue))")
+        }
+        var norwegian: [String] = []
+        if includeNorwegianLevel1 {
+            norwegian.append(language.text("Norwegian 1", "Norska 1"))
+        }
+        if includeNorwegianLevel2 {
+            norwegian.append(language.text("Norwegian 2", "Norska 2"))
+        }
+        if let levels = ListFilterLabels.chips(norwegian) {
+            parts.append(levels)
+        }
+        if onlyPreviouslySubmitted {
+            parts.append(language.text("Previously submitted to", "Tidigare skickade till"))
+        }
+        if onlyPreviouslyPublished {
+            parts.append(language.text("Previously published in", "Tidigare publicerade i"))
+        }
+        return parts
+    }
+
+    /// Round 17: clears every filter of this list (banner). "Sök även i
+    /// förlag" is a search setting, not a filter, and stays.
+    private func clearAllJournalFilters() {
+        searchText = ""
+        selectedCategories.removeAll()
+        excludedCategories.removeAll()
+        showingCategoryFilter = false
+        minimumJIFValue = 0
+        includeNorwegianLevel1 = false
+        includeNorwegianLevel2 = false
+        onlyPreviouslySubmitted = false
+        onlyPreviouslyPublished = false
+        RestoredListFilters.forget(workspace: "Journals")
+    }
+
+    /// Round 17: a new journal only has a name, so only the filters that
+    /// would hide it are cleared (a search that still finds the name, the
+    /// excluded categories and "Sök även i förlag" stay).
+    private func clearJournalFiltersHidingNewJournal(named name: String) {
+        if searchText.nonEmpty != nil, !SearchFilterQuery(raw: searchText).matches(haystack: name) {
+            searchText = ""
+        }
+        if !selectedCategories.isEmpty { selectedCategories.removeAll() }
+        if minimumJIFValue > 0 { minimumJIFValue = 0 }
+        if includeNorwegianLevel1 { includeNorwegianLevel1 = false }
+        if includeNorwegianLevel2 { includeNorwegianLevel2 = false }
+        if onlyPreviouslySubmitted { onlyPreviouslySubmitted = false }
+        if onlyPreviouslyPublished { onlyPreviouslyPublished = false }
+    }
+
+    private func createJournalRevealingIt() {
+        let id = store.addPublicationJournal()
+        clearJournalFiltersHidingNewJournal(named: store.publicationJournal(id: id)?.name ?? "")
+        setSelectedJournalID(id, armLock: true)
     }
 
     private func journalHeader(language: AppLanguage) -> some View {
@@ -649,7 +738,7 @@ struct PublicationJournalsView: View {
             title: language.text("Journals", "Tidskrifter"),
             actionTitle: language.text("New journal", "Ny tidskrift")
         ) {
-                selectedJournalID = store.addPublicationJournal()
+            createJournalRevealingIt()
         }
         .frame(minHeight: 42)
     }
@@ -719,6 +808,15 @@ struct PublicationJournalsView: View {
     }
 
     private func handleJournalMasterAppear() {
+        // Round 17: with "keep filters" off in Settings, filters saved by an
+        // earlier run are cleared the first time the list is shown.
+        if ListFilterLaunchPolicy.shouldClearSavedFilters(
+            for: .journals,
+            retainsFilters: store.shouldRetainListFilters(for: .journals)
+        ) {
+            clearAllJournalFilters()
+            searchAlsoInPublisher = false
+        }
         guard isActive else {
             needsJournalSnapshotRefreshWhenActive = true
             needsJournalFilterRebuildWhenActive = true
@@ -744,8 +842,14 @@ struct PublicationJournalsView: View {
         if let route = store.route, route.destination == .journals {
             setSelectedJournalID(route.recordID, armLock: true)
             store.consumeRoute()
-        } else if selectedJournalID == nil {
-            setSelectedJournalID(store.lastSelectedRecordID(for: .journals) ?? filteredJournalRows.first?.id)
+        } else {
+            if selectedJournalID == nil {
+                setSelectedJournalID(store.lastSelectedRecordID(for: .journals) ?? filteredJournalRows.first?.id)
+            }
+            // Round 17: the remembered journal may be hidden by a saved
+            // filter.
+            needsAppearSelectionCheck = true
+            applyJournalSelectionPolicyIfNeeded(isFilterChange: false)
         }
         scheduleJournalIdleWarmup()
     }
@@ -830,7 +934,7 @@ struct PublicationJournalsView: View {
 
     private func handleNewJournalRecordTrigger() {
         guard isActive else { return }
-        setSelectedJournalID(store.addPublicationJournal(), armLock: true)
+        createJournalRevealingIt()
     }
 
     private func handleJournalActiveStateChange(_ active: Bool) {
@@ -956,18 +1060,7 @@ struct PublicationJournalsView: View {
                     .layoutPriority(1)
                 }
 
-                AppFilterClearAllRow(isVisible: hasActiveJournalFilters) {
-                    searchText = ""
-                    searchAlsoInPublisher = false
-                    selectedCategories.removeAll()
-                    excludedCategories.removeAll()
-                    showingCategoryFilter = false
-                    minimumJIFValue = 0
-                    includeNorwegianLevel1 = false
-                    includeNorwegianLevel2 = false
-                    onlyPreviouslySubmitted = false
-                    onlyPreviouslyPublished = false
-                }
+                // Round 17: "clear all" is the banner's "Rensa filter".
             }
         }
     }
@@ -1076,7 +1169,8 @@ struct PublicationJournalsView: View {
 
     private func clearJournalFiltersForDeactivationIfNeeded() {
         guard !store.shouldRetainListFilters(for: .journals) else { return }
-        guard hasActiveJournalFilters else { return }
+        guard hasActiveJournalFilters || searchAlsoInPublisher else { return }
+        RestoredListFilters.forget(workspace: "Journals")
         searchText = ""
         searchAlsoInPublisher = false
         selectedCategories.removeAll()
@@ -1350,6 +1444,10 @@ struct PublicationJournalsView: View {
             setSelectedJournalID(rows.first?.id, resignFirstResponder: false)
         } else if store.publicationJournal(id: selectedJournalID) == nil {
             setSelectedJournalID(rows.first?.id, resignFirstResponder: false)
+        } else {
+            // Round 17: a filter change (not a data change) that hides the
+            // selected journal moves the selection to the first visible row.
+            applyJournalSelectionPolicyIfNeeded(isFilterChange: reason == "manual" || reason == "debounced-search")
         }
         logJournalMeasurement(
             "journals-filtered reason=%@ rows=%d base_rows=%d incremental=%@ filter_ms=%.2f",
@@ -1362,6 +1460,26 @@ struct PublicationJournalsView: View {
         store.appendPerformanceDiagnostic(
             "journals-query raw=\(searchQuery.raw.debugDescription) included=\(searchQuery.includedTerms) excluded=\(searchQuery.excludedTerms) rows=\(rows.count) first=\(rows.prefix(5).map(\.name))"
         )
+    }
+
+    /// Moves the selection to the first visible row when a filter hides it,
+    /// after a filter change or once after the list appeared. A journal whose
+    /// row is not built yet (just created) is left alone.
+    private func applyJournalSelectionPolicyIfNeeded(isFilterChange: Bool) {
+        guard isFilterChange || needsAppearSelectionCheck else { return }
+        guard !journalRows.isEmpty else { return }
+        if !isFilterChange {
+            needsAppearSelectionCheck = false
+        }
+        guard let selectedJournalID,
+              journalRows.contains(where: { $0.id == selectedJournalID }) else { return }
+        let next = ListSelectionPolicy.selectionAfterFilterChange(
+            selected: selectedJournalID,
+            visibleIDs: filteredJournalRows.map(\.id)
+        )
+        if next != selectedJournalID {
+            setSelectedJournalID(next, resignFirstResponder: false)
+        }
     }
 
     private func scheduleFilteredJournalRowsRebuild() {
@@ -2185,9 +2303,7 @@ private struct PublicationJournalEditorView: View {
                     }
 
                     if draft.rankingRows.isEmpty {
-                        Text(language.text("No ranking rows yet.", "Inga rankingrader ännu."))
-                            .appTypography(.secondary)
-                            .foregroundStyle(.primary)
+                        AppCompactEmptyListLabel(title: language.text("No ranking rows yet", "Inga rankingrader ännu"))
                     }
 
                     Menu {
@@ -2199,14 +2315,12 @@ private struct PublicationJournalEditorView: View {
                     } label: {
                         Label(language.text("Add ranking row", "Lägg till rankingrad"), systemImage: "plus")
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    .appAddButtonStyle()
                     .padding(.top, draft.rankingRows.isEmpty ? 0 : 4)
                 }
                 }
             } else {
-                ProgressView()
-                    .controlSize(.small)
+                AppLoadingLabel(language: language)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -2270,8 +2384,7 @@ private struct PublicationJournalEditorView: View {
     private func linkedReviewsPanel(language: AppLanguage) -> some View {
         PublicationCompactPanel(title: language.text("Related reviews", "Relaterade sakkunniguppdrag"), usesInnerSurface: false) {
             if !showLinkedDataSection {
-                ProgressView()
-                    .controlSize(.small)
+                AppLoadingLabel(language: language)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 AppCompactReferenceList(isEmpty: linkedReviews.isEmpty, emptyTitle: language.text("No records", "Inga poster"), rowSpacing: 0) {
@@ -2669,9 +2782,7 @@ private struct PublicationJournalStatisticsCard: View {
                 .foregroundStyle(AppPalette.appText)
 
             if rows.isEmpty {
-                Text(language.text("No accepted, rejected or pending submissions found for this journal.", "Inga accepterade, refuserade eller väntande inskick hittades för tidskriften."))
-                    .appTypography(.secondary)
-                    .foregroundStyle(.secondary)
+                AppCompactEmptyListLabel(title: language.text("No accepted, rejected or pending submissions found for this journal", "Inga accepterade, refuserade eller väntande inskick hittades för tidskriften"))
             } else {
                 PublicationJournalStatisticsOutcomeBar(rows: rows, language: language)
             }
@@ -2701,7 +2812,7 @@ private struct PublicationJournalStatisticsOutcomeBar: View {
                             Text(segment.outcome.title(language: language))
                                 .appTypography(.tableHeader)
                             Text("\(segment.count)")
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .font(appFont(.statValue))
                                 .monospacedDigit()
                         }
                         .foregroundStyle(AppPalette.semanticOnColor)
@@ -2785,14 +2896,37 @@ struct PublicationJournalRankingSeries: Identifiable, Equatable {
         }
     }
 
+    /// Round 17: the four lines carry no status, so they are shades of
+    /// blue (dark, medium, light and grey-blue), readable in light and dark
+    /// mode. The Norwegian list's points are coloured by level instead
+    /// (see `pointColor(for:)`).
     var color: Color {
         switch metric {
-        case .jci: return AppPalette.chartBlue
-        case .jif: return AppPalette.chartGreen
-        case .sjr: return AppPalette.chartYellow
-        case .norwegian: return AppPalette.chartRed
+        case .jci: return journalRankingBlue(light: 0x1F4E8C, dark: 0x4F7FC4)
+        case .jif: return journalRankingBlue(light: 0x3B7DD8, dark: 0x79AEF2)
+        case .sjr: return journalRankingBlue(light: 0x8DBBEA, dark: 0xBCD8F7)
+        case .norwegian: return journalRankingBlue(light: 0x7A8DA3, dark: 0x8E9DB0)
         }
     }
+
+    /// A point's colour: the line colour, except on the Norwegian list where
+    /// level 2 is green, level 1 yellow and level 0 red.
+    func pointColor(for point: PublicationJournalRankingPoint) -> Color {
+        guard metric == .norwegian else { return color }
+        return AppPalette.statusMark(AppStatusTones.norwegianListLevel(point.value))
+    }
+}
+
+private func journalRankingBlue(light: Int, dark: Int) -> Color {
+    Color(nsColor: NSColor(name: nil) { _ in
+        let hex = AppAppearanceRegistry.usesDarkPalette() ? dark : light
+        return NSColor(
+            srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
+            green: CGFloat((hex >> 8) & 0xFF) / 255,
+            blue: CGFloat(hex & 0xFF) / 255,
+            alpha: 1
+        )
+    })
 }
 
 func publicationJournalRankingSeries(for journal: PublicationJournal) -> [PublicationJournalRankingSeries] {
@@ -2898,6 +3032,9 @@ private struct PublicationJournalRankingChartCard: View {
                             Text(item.title(language: language))
                                 .font(appFont(.secondary).weight(.semibold))
                                 .foregroundStyle(AppPalette.appText)
+                            if item.metric == .norwegian {
+                                norwegianLevelLegend
+                            }
                         }
                     }
                 }
@@ -2912,6 +3049,26 @@ private struct PublicationJournalRankingChartCard: View {
             }
         }
         .modifier(AppStatisticCardModifier())
+    }
+
+    /// Round 17: the Norwegian list's level colours (2 / 1 / 0).
+    private var norwegianLevelLegend: some View {
+        HStack(spacing: 4) {
+            ForEach([2.0, 1.0, 0.0], id: \.self) { level in
+                HStack(spacing: 2) {
+                    Circle()
+                        .fill(AppPalette.statusMark(AppStatusTones.norwegianListLevel(level)))
+                        .frame(width: 7, height: 7)
+                    Text("\(Int(level))")
+                        .font(appFont(.secondary))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .help(language.text(
+            "Points: level 2 green, level 1 yellow, level 0 red",
+            "Punkter: nivå 2 grön, nivå 1 gul, nivå 0 röd"
+        ))
     }
 }
 
@@ -2985,7 +3142,7 @@ private struct PublicationJournalRankingLineChart: View {
                     ForEach(visiblePoints) { point in
                         let location = pointPosition(point, plotWidth: plotWidth, plotHeight: plotHeight)
                         Circle()
-                            .fill(item.color)
+                            .fill(item.pointColor(for: point))
                             .frame(width: 8, height: 8)
                             .overlay(Circle().stroke(AppPalette.cardSurface, lineWidth: 1.5))
                             .position(location)

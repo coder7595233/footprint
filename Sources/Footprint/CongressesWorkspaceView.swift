@@ -52,15 +52,40 @@ private struct CongressListSortCriterion: AppListSortCriterion {
 
 private enum CongressWorkspaceStatusTone: String, Hashable, Sendable {
     case attending
+    case attended
     case abstractOnly
     case rejected
     case missed
     case neutral
 
+    init(_ status: AppStatusTones.CongressStatus) {
+        switch status {
+        case .attending: self = .attending
+        case .attended: self = .attended
+        case .rejected: self = .rejected
+        case .notAttending: self = .missed
+        case .contributionOnly: self = .abstractOnly
+        case .planned: self = .neutral
+        }
+    }
+
+    var congressStatus: AppStatusTones.CongressStatus {
+        switch self {
+        case .attending: return .attending
+        case .attended: return .attended
+        case .rejected: return .rejected
+        case .missed: return .notAttending
+        case .abstractOnly: return .contributionOnly
+        case .neutral: return .planned
+        }
+    }
+
     func label(language: AppLanguage) -> String {
         switch self {
         case .attending:
             return language.text("Attend", "Medverkar")
+        case .attended:
+            return language.text("Attended", "Medverkade")
         case .abstractOnly:
             return language.text("Abstract", "Abstract")
         case .rejected:
@@ -72,16 +97,10 @@ private enum CongressWorkspaceStatusTone: String, Hashable, Sendable {
         }
     }
 
-    /// Round 16: the shared status tones (a passed congress is grey:
-    /// nothing to do now).
+    /// Round 17: the shared congress rule (attending = yellow, attended =
+    /// green, not attending = grey, planned = no fill).
     var statusTone: AppStatusTone {
-        switch self {
-        case .attending: return .done
-        case .abstractOnly: return .pending
-        case .rejected: return .negative
-        case .missed: return .inactive
-        case .neutral: return .none
-        }
+        AppStatusTones.congress(congressStatus)
     }
 
     var fill: Color {
@@ -89,7 +108,7 @@ private enum CongressWorkspaceStatusTone: String, Hashable, Sendable {
     }
 
     var stroke: Color {
-        statusTone.hasFill ? AppPalette.statusText(statusTone).opacity(0.45) : AppPalette.border
+        statusTone.hasFill ? AppPalette.statusEdge(statusTone) : AppPalette.border
     }
 }
 
@@ -157,11 +176,18 @@ struct CongressesWorkspaceView: View {
     @State private var selectedContributionID: String?
     @WorkspaceFilterState("Congresses.Filter.HidePassed") private var hidesPassedCongresses = false
     @WorkspaceFilterState("Congresses.Filter.HidePassedDeadlines") private var hidesPassedAbstractDeadlines = false
-    @WorkspaceFilterState("Congresses.Filter.MinimumYear") private var minimumYearValue = 0.0
-    @WorkspaceFilterState("Congresses.Filter.MaximumYear") private var maximumYearValue = 0.0
-    @WorkspaceFilterState("Congresses.Filter.FollowsRange") private var dateFiltersFollowAvailableRange = true
+    // Round 17: stored as real years; whether the saved range counts as
+    // "kept from last time" is decided against the data (YearRange key).
+    @WorkspaceFilterState("Congresses.Filter.MinimumYear", tracksRestored: false) private var minimumYearValue = 0.0
+    @WorkspaceFilterState("Congresses.Filter.MaximumYear", tracksRestored: false) private var maximumYearValue = 0.0
+    @WorkspaceFilterState("Congresses.Filter.FollowsRange", tracksRestored: false) private var dateFiltersFollowAvailableRange = true
     @State private var draftCongresses: [OrganizationCongress] = []
     @State private var cachedRows: [CongressWorkspaceRow] = []
+    /// Round 17: the years present and the filtered, sorted rows are kept
+    /// here and updated when the rows or a filter change, instead of being
+    /// worked out several times on every redraw.
+    @State private var cachedAvailableYears: [Int] = []
+    @State private var cachedFilteredRows: [CongressWorkspaceRow] = []
     @State private var cachedRowsSignature = ""
     @State private var congressRowsBuildGeneration: UInt = 0
     @State private var congressRowsBuildTask: Task<Void, Never>?
@@ -382,9 +408,14 @@ struct CongressesWorkspaceView: View {
     }
 
     private var filteredRows: [CongressWorkspaceRow] {
+        cachedFilteredRows
+    }
+
+    private func computeFilteredRows() -> [CongressWorkspaceRow] {
         let query = SearchFilterQuery(raw: searchText)
         let lowerYear = Int(min(minimumYearValue, maximumYearValue).rounded())
         let upperYear = Int(max(minimumYearValue, maximumYearValue).rounded())
+        let checksYear = yearFilterIsNarrowed
         return rows.filter { row in
             if hidesPassedCongresses && row.isPast {
                 return false
@@ -392,13 +423,35 @@ struct CongressesWorkspaceView: View {
             if hidesPassedAbstractDeadlines && row.hasPassedAbstractDeadline {
                 return false
             }
-            if let displayYear = row.displayYear,
-               (displayYear < lowerYear || displayYear > upperYear) {
+            // Round 17: one rule for records without a year: shown while the
+            // whole range is selected, hidden once it is narrowed.
+            if checksYear && !YearlessRecordRule.isShown(
+                year: row.displayYear,
+                rangeIsNarrowed: true,
+                rangeContains: { $0 >= lowerYear && $0 <= upperYear }
+            ) {
                 return false
             }
             return query.isEmpty || query.matches(normalizedHaystack: row.normalizedSearchBlob)
         }
         .sorted(by: sortRowsUsingSortHistory)
+    }
+
+    private func refreshFilteredCongressRows() {
+        cachedFilteredRows = computeFilteredRows()
+    }
+
+    /// Everything the filtered rows depend on except the rows themselves.
+    private var congressFilterSignature: String {
+        [
+            searchText,
+            hidesPassedCongresses ? "hide-passed" : "",
+            hidesPassedAbstractDeadlines ? "hide-deadlines" : "",
+            String(format: "%.0f", minimumYearValue),
+            String(format: "%.0f", maximumYearValue),
+            dateFiltersFollowAvailableRange ? "follows" : "chosen",
+            sortHistory.map { "\($0.column.rawValue):\($0.ascending)" }.joined(separator: ","),
+        ].joined(separator: "||")
     }
 
     private var selectedRow: CongressWorkspaceRow? {
@@ -410,7 +463,7 @@ struct CongressesWorkspaceView: View {
     }
 
     private var availableYears: [Int] {
-        Array(Set(rows.compactMap(\.displayYear))).sorted()
+        cachedAvailableYears
     }
 
     private var yearBounds: ClosedRange<Double> {
@@ -445,6 +498,7 @@ struct CongressesWorkspaceView: View {
             refreshCongressTodayKeyIfNeeded(reason: "appear")
             rebuildCongressRows(reason: "appear")
             clampYearFiltersToAvailableRows()
+            refreshFilteredCongressRows()
             consumePendingCongressRouteIfNeeded()
             consumeConferenceContributionRouteIfNeeded()
             reconcileSelection()
@@ -452,8 +506,11 @@ struct CongressesWorkspaceView: View {
         .task(id: congressTodayKey) {
             await refreshCongressRowsAfterOpenAndAtNextDay()
         }
-        .onChange(of: rowsSignature) { _, _ in
+        // Round 17: the build already computes the rows' signature; reading
+        // it here avoids joining every row's text on each redraw.
+        .onChange(of: cachedRowsSignature) { _, _ in
             clampYearFiltersToAvailableRows()
+            refreshFilteredCongressRows()
             consumePendingCongressRouteIfNeeded()
             consumeConferenceContributionRouteIfNeeded()
             reconcileSelection()
@@ -488,6 +545,9 @@ struct CongressesWorkspaceView: View {
         }
         .onChange(of: selectedCongressID) { _, _ in
             selectedContributionID = nil
+        }
+        .onChange(of: congressFilterSignature) { _, _ in
+            refreshFilteredCongressRows()
         }
         .onChange(of: isActive) { _, active in
             if active {
@@ -630,7 +690,7 @@ struct CongressesWorkspaceView: View {
                     // Round 16: congresses exist but the filters hide them.
                     AppWorkspaceEmptyStateView(
                         title: language.text("No records match the filters", "Inga poster matchar filtren"),
-                        subtitle: language.text("Try a broader search or clear the filters.", "Prova en bredare sökning eller rensa filtren."),
+                        subtitle: ListFilterLabels.hiddenByFilters(count: rows.count, language: language),
                         kind: .congresses,
                         actionTitle: language.text("Clear filters", "Rensa filter"),
                         action: clearAllCongressFilters
@@ -661,8 +721,8 @@ struct CongressesWorkspaceView: View {
 
     private var activeCongressFilterDescriptions: [String] {
         var descriptions: [String] = []
-        if let search = searchText.nonEmpty {
-            descriptions.append(language.text("Search “\(search)”", "Sökning ”\(search)”"))
+        if let search = ListFilterLabels.search(searchText, language: language) {
+            descriptions.append(search)
         }
         if hidesPassedCongresses {
             descriptions.append(language.text("Passed congress dates hidden", "Passerade kongressdatum dolda"))
@@ -672,6 +732,10 @@ struct CongressesWorkspaceView: View {
         }
         if yearFilterIsNarrowed {
             descriptions.append(yearRangeText)
+            let yearless = YearlessRecordRule.hiddenCount(years: rows.map(\.displayYear), rangeIsNarrowed: true)
+            if let hidden = ListFilterLabels.yearlessHidden(count: yearless, language: language) {
+                descriptions.append(hidden)
+            }
         }
         return descriptions
     }
@@ -797,7 +861,8 @@ struct CongressesWorkspaceView: View {
     private func congressListRowBackground(row: CongressWorkspaceRow, isSelected: Bool) -> some View {
         AppListRowBackground(
             isSelected: isSelected,
-            toneFill: row.statusTone == .neutral ? nil : row.statusTone.fill
+            toneFill: row.statusTone == .neutral ? nil : row.statusTone.fill,
+            isLocked: row.congress.isEditingLocked
         )
     }
 
@@ -898,6 +963,7 @@ struct CongressesWorkspaceView: View {
             }
             if result.signature != cachedRowsSignature {
                 cachedRows = result.rows
+                cachedAvailableYears = Array(Set(result.rows.compactMap(\.displayYear))).sorted()
                 cachedRowsSignature = result.signature
             }
             let duration = (CFAbsoluteTimeGetCurrent() - startedAt) * 1000
@@ -965,6 +1031,7 @@ struct CongressesWorkspaceView: View {
         Binding(
             get: { minimumYearValue },
             set: { newValue in
+                RestoredListFilters.markChanged(key: Self.yearRangeRestoredKey)
                 minimumYearValue = min(newValue, maximumYearValue)
                 updateCongressRangeFollowingAfterUserEdit()
             }
@@ -975,6 +1042,7 @@ struct CongressesWorkspaceView: View {
         Binding(
             get: { maximumYearValue },
             set: { newValue in
+                RestoredListFilters.markChanged(key: Self.yearRangeRestoredKey)
                 maximumYearValue = max(newValue, minimumYearValue)
                 updateCongressRangeFollowingAfterUserEdit()
             }
@@ -1006,16 +1074,16 @@ struct CongressesWorkspaceView: View {
             if minimumYearValue != lower { minimumYearValue = lower }
             if maximumYearValue != upper { maximumYearValue = upper }
         }
-        if !yearFilterIsNarrowed {
-            // A range covering every year is no filter, so it must not make
-            // the list say "kept from last time".
-            for key in ["MinimumYear", "MaximumYear", "FollowsRange"] {
-                RestoredListFilters.markChanged(key: "Congresses.Filter.\(key)")
-            }
-        }
+        // Round 17: decided the first time the rows are here in this run: a
+        // saved range that still hides years is "kept from last time"; one
+        // that covers every year is no filter.
+        RestoredListFilters.evaluateAtLaunch(key: Self.yearRangeRestoredKey, isRestored: yearFilterIsNarrowed)
     }
 
+    private static let yearRangeRestoredKey = "Congresses.Filter.YearRange"
+
     private func resetCongressYearRange() {
+        RestoredListFilters.markChanged(key: Self.yearRangeRestoredKey)
         dateFiltersFollowAvailableRange = true
         if availableYears.isEmpty {
             minimumYearValue = 0
@@ -1065,6 +1133,9 @@ struct CongressesWorkspaceView: View {
         hidesPassedAbstractDeadlines = false
         dateFiltersFollowAvailableRange = true
         clampYearFiltersToAvailableRows()
+        // The caller selects the row right away; the cached rows must
+        // already include it.
+        refreshFilteredCongressRows()
     }
 
     private func consumeConferenceContributionRouteIfNeeded() {
@@ -1312,19 +1383,12 @@ struct CongressesWorkspaceView: View {
         linkedContributions: [CVConferenceContribution],
         isPast: Bool
     ) -> CongressWorkspaceStatusTone {
-        if linkedContributions.contains(where: \.isRejected) {
-            return .rejected
-        }
-        if currentUserParticipates {
-            return .attending
-        }
-        if hasAbstractOrContributionData(linkedContributions: linkedContributions) {
-            return .abstractOnly
-        }
-        if isPast {
-            return .missed
-        }
-        return .neutral
+        CongressWorkspaceStatusTone(AppStatusTones.congressStatus(
+            isAttending: currentUserParticipates,
+            isPast: isPast,
+            hasContribution: hasAbstractOrContributionData(linkedContributions: linkedContributions),
+            hasRejectedContribution: linkedContributions.contains(where: \.isRejected)
+        ))
     }
 
     nonisolated private static func hasAbstractOrContributionData(
@@ -1702,9 +1766,7 @@ private struct CongressDetailPane: View {
                             }
 
                             if linkedContributions.isEmpty {
-                                Text(language.text("No abstracts linked to this congress yet.", "Inga abstract är kopplade till den här kongressen ännu."))
-                                    .font(appFont(.secondary))
-                                    .foregroundStyle(.secondary)
+                                AppCompactEmptyListLabel(title: language.text("No abstracts linked to this congress yet", "Inga abstract är kopplade till den här kongressen ännu"))
                             } else {
                                 VStack(alignment: .leading, spacing: 0) {
                                     ForEach(linkedContributions) { contribution in
@@ -2152,7 +2214,9 @@ private struct CongressDetailPane: View {
                                     participantLinkButton(for: name, width: participantLinkColumnWidth)
                                     AppInlineDeleteButton(
                                         title: language.text("Delete participant", "Ta bort deltagare"),
-                                        width: participantTrashColumnWidth
+                                        width: participantTrashColumnWidth,
+                                        cancelTitle: language.text("Cancel", "Avbryt"),
+                                        confirmationTitle: language.text("Delete participant?", "Ta bort deltagaren?")
                                     ) {
                                         removeParticipant(named: name)
                                     }
@@ -2303,9 +2367,7 @@ private struct CongressDetailPane: View {
                         }
 
                         if visibleTravelFlights.isEmpty {
-                            Text(language.text("No travel rows added yet.", "Inga resor tillagda ännu."))
-                                .font(appFont(.secondary))
-                                .foregroundStyle(.secondary)
+                            AppCompactEmptyListLabel(title: language.text("No travel rows added yet", "Inga resor tillagda ännu"))
                         } else {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 VStack(alignment: .leading, spacing: isEditingLocked ? 1 : 6) {
@@ -2376,7 +2438,9 @@ private struct CongressDetailPane: View {
                                             }
                                             if !isEditingLocked {
                                                 AppInlineDeleteButton(
-                                                    title: language.text("Remove funding application", "Ta bort finansieringsansökan")
+                                                    title: language.text("Remove funding application", "Ta bort finansieringsansökan"),
+                                                    cancelTitle: language.text("Cancel", "Avbryt"),
+                                                    confirmationTitle: language.text("Remove funding application?", "Ta bort finansieringsansökan?")
                                                 ) {
                                                     draft.fundingApplicationIDs.removeAll { $0 == applicationID }
                                                     scheduleAutosave()
@@ -2440,9 +2504,7 @@ private struct CongressDetailPane: View {
             }
 
             if visibleTravelHotels.isEmpty {
-                Text(language.text("No hotel rows added yet.", "Inga hotellrader tillagda ännu."))
-                    .font(appFont(.secondary))
-                    .foregroundStyle(.secondary)
+                AppCompactEmptyListLabel(title: language.text("No hotel rows added yet", "Inga hotellrader tillagda ännu"))
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: isEditingLocked ? 1 : 6) {
@@ -2510,7 +2572,9 @@ private struct CongressDetailPane: View {
             if !isEditingLocked {
                 AppInlineDeleteButton(
                     title: language.text("Remove travel row", "Ta bort reserad"),
-                    width: 24
+                    width: 24,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Remove travel row?", "Ta bort reseraden?")
                 ) {
                     removeCalendarTravelRecordIfLinked(flightID)
                     draft.travelFlights.removeAll { $0.id == flightID }
@@ -2641,7 +2705,9 @@ private struct CongressDetailPane: View {
             if !isEditingLocked {
                 AppInlineDeleteButton(
                     title: language.text("Remove hotel row", "Ta bort hotellrad"),
-                    width: 24
+                    width: 24,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Remove hotel row?", "Ta bort hotellraden?")
                 ) {
                     removeCalendarAccommodationRecordIfLinked(hotelID)
                     draft.travelHotels.removeAll { $0.id == hotelID }
@@ -2805,7 +2871,7 @@ private struct CongressDetailPane: View {
                     .foregroundStyle(.secondary)
                 CongressMiniBadge(
                     text: contribution.effectiveStatus.displayName(language: language),
-                    isPositive: contribution.effectiveStatus == .accepted || contribution.effectiveStatus == .presented
+                    tone: AppStatusTones.conferenceContribution(contribution.effectiveStatus)
                 )
             }
             .padding(.horizontal, 12)
@@ -2954,7 +3020,7 @@ private struct CongressDetailPane: View {
 
                             if uncertain.wrappedValue {
                                 Text("?")
-                                    .font(.system(size: 12, weight: .bold))
+                                    .font(appBadgeFont())
                                     .foregroundStyle(AppPalette.statusText(.warning))
                                     .padding(.horizontal, 5)
                                     .padding(.vertical, 2)
@@ -3755,11 +3821,13 @@ private struct CongressDetailPane: View {
 private struct CongressMiniBadge: View {
     let text: String
     var isPositive: Bool = false
+    /// Round 17: the shared status tone (wins over `isPositive`).
+    var tone: AppStatusTone? = nil
 
     var body: some View {
         AppSemanticStatusBadge(
             text: text,
-            colors: isPositive ? .saveSolid : .neutralCard,
+            colors: tone.map { AppBadgeColors.status($0) } ?? (isPositive ? AppBadgeColors.saveSolid : AppBadgeColors.neutralCard),
             size: .compact,
             horizontalPadding: 7,
             verticalPadding: 3

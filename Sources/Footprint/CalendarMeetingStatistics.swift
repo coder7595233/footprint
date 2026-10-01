@@ -11,10 +11,18 @@ struct CalendarMeetingHoursSummary: Equatable {
     var plannedMeetingsWithoutDurationCount: Int = 0
     var activityMinutes: [String: Int] = [:]
     var meetingModeMinutes: [String: Int] = [:]
+    /// Round 17: the activity colours chosen in Settings (light and dark),
+    /// keyed like `activityMinutes`; empty when no store was available.
+    var activityColorHexes: [String: CalendarActivityColorHexPair] = [:]
 
     var meetingsWithoutDurationCount: Int {
         completedMeetingsWithoutDurationCount + plannedMeetingsWithoutDurationCount
     }
+}
+
+struct CalendarActivityColorHexPair: Equatable, Sendable {
+    var light: String?
+    var dark: String?
 }
 
 struct CalendarMeetingStatisticsMeeting: Equatable, Identifiable {
@@ -43,7 +51,7 @@ func calendarMeetingHoursSummary(
     scope: CalendarMeetingStatisticsScope,
     referenceDate: Date = Date()
 ) -> CalendarMeetingHoursSummary {
-    calendarMeetingHoursSummary(
+    var summary = calendarMeetingHoursSummary(
         meetings: store.calendarMeetingRecords,
         referenceDate: referenceDate
     ) { meeting in
@@ -76,6 +84,15 @@ func calendarMeetingHoursSummary(
             }
         }
     }
+    // Round 17: the activity-type chart uses the colours from Settings.
+    let activityTypes = Array(summary.activityMinutes.keys)
+    for activityType in activityTypes {
+        summary.activityColorHexes[activityType] = CalendarActivityColorHexPair(
+            light: store.calendarMeetingCategoryColorHex(named: activityType, usesDarkAppearance: false),
+            dark: store.calendarMeetingCategoryColorHex(named: activityType, usesDarkAppearance: true)
+        )
+    }
+    return summary
 }
 
 func calendarMeetingHoursSummary(

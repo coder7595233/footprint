@@ -186,9 +186,7 @@ struct OrganizationUnitsSection: View {
             toolbar(organization: organization)
 
             if organization.units.isEmpty {
-                Text(language.text("No units yet.", "Inga enheter ännu."))
-                    .appTypography(.secondary)
-                    .foregroundStyle(.secondary)
+                AppCompactEmptyListLabel(title: language.text("No units yet", "Inga enheter ännu"))
             } else {
                 HStack(alignment: .top, spacing: 16) {
                     treeList(organization: organization, usageCounts: usageCounts)
@@ -229,16 +227,13 @@ struct OrganizationUnitsSection: View {
     private func treeList(organization: OrganizationRecord, usageCounts: [String: Int]) -> some View {
         let rows = organization.visibleUnitTreeRows(expandedUnitIDs: expandedUnitIDs, searchText: searchText)
         let parentIDs = organization.unitIDsWithChildren()
-        let contentHeight = CGFloat(max(rows.count, 1)) * Self.treeRowHeight + 8
+        // Round 17: room for the shared empty label when nothing matches.
+        let contentHeight: CGFloat = rows.isEmpty ? 44 : CGFloat(rows.count) * Self.treeRowHeight + 8
         let listHeight = min(Self.treeMaxHeight, contentHeight)
         return ScrollView(.vertical) {
             LazyVStack(alignment: .leading, spacing: 0) {
                 if rows.isEmpty {
-                    Text(language.text("No unit matches the search.", "Ingen enhet matchar sökningen."))
-                        .appTypography(.secondary)
-                        .foregroundStyle(.secondary)
-                        .frame(height: Self.treeRowHeight)
-                        .padding(.leading, 8)
+                    AppCompactEmptyListLabel(title: language.text("No unit matches the search", "Ingen enhet matchar sökningen"))
                 }
                 ForEach(rows) { row in
                     treeRow(
@@ -282,7 +277,7 @@ struct OrganizationUnitsSection: View {
         .padding(.trailing, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: Self.treeRowHeight)
-        .background(AppListRowBackground(isSelected: isSelected, cornerRadius: 6))
+        .background(AppListRowBackground(isSelected: isSelected))
         .contentShape(Rectangle())
         .onTapGesture {
             selectedUnitID = unitID

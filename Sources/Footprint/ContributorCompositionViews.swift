@@ -703,14 +703,14 @@ private struct ContributorStatisticsTableSection: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .fill(AppPalette.fieldSurface)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .stroke(AppPalette.subtleBorder, lineWidth: 1)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
         }
     }
 
@@ -809,11 +809,11 @@ private struct ContributorStatisticsSummarySection: View {
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .fill(AppPalette.fieldSurface)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(AppPalette.subtleBorder.opacity(0.8), lineWidth: 1)
                     )
                 }
@@ -839,6 +839,7 @@ private struct CalendarMeetingStatisticsSection: View {
     private var activityDistribution: [CalendarActivityDistributionEntry] {
         calendarActivityDistributionEntries(
             minutesByLabel: summary.activityMinutes,
+            colorHexes: summary.activityColorHexes,
             localizeLabel: { calendarMeetingCategoryDisplayName($0, language: language) }
         )
     }
@@ -951,6 +952,8 @@ private struct CalendarActivityDistributionEntry: Identifiable {
     let minutes: Int
     let percentage: Double
     let color: Color
+    /// Round 17: dark text on light fills, white on dark fills.
+    var foreground: Color = .white.opacity(0.96)
 
     var id: String { label }
 }
@@ -985,11 +988,11 @@ private struct CalendarActivityDistributionSection: View {
                                 if fitsInside {
                                     VStack(spacing: 0) {
                                         Text(entry.label)
-                                            .font(appFont(.secondary).weight(.semibold))
+                                            .font(appBadgeFont())
                                         Text("\(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))")
-                                            .font(appFont(.secondary).weight(.bold))
+                                            .font(appBadgeFont())
                                     }
-                                    .foregroundStyle(.white.opacity(0.96))
+                                    .foregroundStyle(entry.foreground)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.65)
                                     .padding(.horizontal, 4)
@@ -1000,8 +1003,8 @@ private struct CalendarActivityDistributionSection: View {
                         .help("\(entry.label): \(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))")
                     }
                 }
-                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).stroke(AppPalette.subtleBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous).stroke(AppPalette.subtleBorder, lineWidth: 1))
                     .onAppear { barWidth = geometry.size.width }
                     .onChange(of: geometry.size.width) { _, newWidth in barWidth = newWidth }
                 }
@@ -1159,7 +1162,7 @@ private struct CalendarMeetingStatisticsMeetingRow: View {
 
     private var calendarMeetingStatisticsSeparator: some View {
         Text("•")
-            .font(.system(size: 12, weight: .semibold))
+            .font(appFont(.secondary))
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: true, vertical: false)
     }
@@ -1180,7 +1183,7 @@ private struct ContributorCompositionBarSection: View {
 
             VStack(alignment: .leading, spacing: 7) {
             GeometryReader { geometry in
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .fill(AppPalette.fieldSurface)
                     .overlay {
                         HStack(spacing: 0) {
@@ -1195,9 +1198,9 @@ private struct ContributorCompositionBarSection: View {
                                         if fitsInside {
                                             VStack(spacing: 0) {
                                                 Text(entry.label)
-                                                    .font(appFont(.secondary).weight(.semibold))
+                                                    .font(appBadgeFont())
                                                 Text(contributorCompositionSegmentLabel(count: entry.count, percentage: entry.percentage))
-                                                    .font(appFont(.secondary).weight(.bold))
+                                                    .font(appBadgeFont())
                                             }
                                             .foregroundStyle(entry.foregroundColor)
                                             .lineLimit(1)
@@ -1208,10 +1211,10 @@ private struct ContributorCompositionBarSection: View {
                                     }
                             }
                         }
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
                     }
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(AppPalette.subtleBorder, lineWidth: 1)
                     )
                     .onAppear { barWidth = geometry.size.width }
@@ -1441,26 +1444,19 @@ private func calendarMeetingStatisticsMeetingHelpText(
 }
 
 private func calendarMeetingStatisticsDateText(_ date: Date, language: AppLanguage) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: language == .swedish ? "sv_SE" : "en_US")
-    formatter.dateFormat = "d MMM yyyy"
-    return formatter.string(from: date).capitalized
+    // Round 17: shared format; Swedish months stay lowercase ("1 okt. 2026").
+    AppTimestampFormatter.dayMonthYear(date, language: language)
 }
 
 private func calendarActivityDistributionEntries(
     minutesByLabel: [String: Int],
+    colorHexes: [String: CalendarActivityColorHexPair] = [:],
     localizeLabel: (String) -> String
 ) -> [CalendarActivityDistributionEntry] {
     let totalMinutes = minutesByLabel.values.reduce(0, +)
     guard totalMinutes > 0 else { return [] }
-    let palette: [Color] = [
-        Color(red: 0.29, green: 0.48, blue: 0.72),
-        Color(red: 0.43, green: 0.65, blue: 0.80),
-        Color(red: 0.98, green: 0.70, blue: 0.40),
-        Color(red: 0.84, green: 0.35, blue: 0.29),
-        Color(red: 0.42, green: 0.62, blue: 0.46),
-        Color(red: 0.55, green: 0.45, blue: 0.72),
-    ]
+    // Fallback when no colour is chosen in Settings (and for meeting types).
+    let palette: [Int] = [0x4A7AB8, 0x6EA6CC, 0xFAB366, 0xD65A4A, 0x6B9E75, 0x8C73B8]
     return minutesByLabel
         .filter { $0.value > 0 }
         .sorted {
@@ -1468,14 +1464,49 @@ private func calendarActivityDistributionEntries(
             return localizeLabel($0.key).localizedStandardCompare(localizeLabel($1.key)) == .orderedAscending
         }
         .enumerated()
-        .map { index, item in
-            CalendarActivityDistributionEntry(
+        .map { index, item -> CalendarActivityDistributionEntry in
+            let fallback = calendarActivityNSColor(hex: palette[index % palette.count])
+            let pair = colorHexes[item.key]
+            let light = calendarActivityNSColor(hexString: pair?.light) ?? fallback
+            let dark = calendarActivityNSColor(hexString: pair?.dark ?? pair?.light) ?? light
+            return CalendarActivityDistributionEntry(
                 label: localizeLabel(item.key),
                 minutes: item.value,
                 percentage: Double(item.value) / Double(totalMinutes),
-                color: palette[index % palette.count]
+                color: dynamicColor(light: light, dark: dark),
+                foreground: dynamicColor(
+                    light: calendarActivityContrastingText(on: light),
+                    dark: calendarActivityContrastingText(on: dark)
+                )
             )
         }
+}
+
+private func calendarActivityNSColor(hex: Int) -> NSColor {
+    NSColor(
+        srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
+        green: CGFloat((hex >> 8) & 0xFF) / 255,
+        blue: CGFloat(hex & 0xFF) / 255,
+        alpha: 1
+    )
+}
+
+private func calendarActivityNSColor(hexString: String?) -> NSColor? {
+    guard let raw = hexString?.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "#", with: ""),
+          raw.count == 6,
+          let value = Int(raw, radix: 16) else {
+        return nil
+    }
+    return calendarActivityNSColor(hex: value)
+}
+
+/// Dark text on light fills and white text on dark fills.
+private func calendarActivityContrastingText(on fill: NSColor) -> NSColor {
+    guard let srgb = fill.usingColorSpace(.sRGB) else { return NSColor.white }
+    let luminance = 0.2126 * srgb.redComponent + 0.7152 * srgb.greenComponent + 0.0722 * srgb.blueComponent
+    return luminance > 0.55
+        ? NSColor(srgbRed: 0.12, green: 0.14, blue: 0.16, alpha: 1)
+        : NSColor(white: 1, alpha: 0.96)
 }
 
 private func calendarActivityDistributionPercentageText(_ value: Double) -> String {
@@ -1500,7 +1531,7 @@ private struct InlineStatisticsSurfaceModifier: ViewModifier {
         content
             .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                     .fill(
                         dynamicColor(
                             light: NSColor(calibratedWhite: 0.0, alpha: 0.03),
@@ -1510,14 +1541,14 @@ private struct InlineStatisticsSurfaceModifier: ViewModifier {
                     .overlay(
                         // Approximated inner shadow: a blurred stroke nudged
                         // downward and masked to the shape.
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(Color.black.opacity(0.10), lineWidth: 1.5)
                             .blur(radius: 1.4)
                             .offset(y: 1)
-                            .mask(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            .mask(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                             .stroke(AppPalette.subtleBorder.opacity(0.6), lineWidth: 1)
                     )
             )
@@ -1709,9 +1740,11 @@ struct GrantOutcomeCompactRows: View {
         let granted = relevant.filter(\.isGranted)
         let waiting = relevant.filter { $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) == "Väntar svar" }
         let rejected = relevant.filter { $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) == "Avslag" }
+        // Round 17: withdrawn applications get their own grey segment.
+        let withdrawn = relevant.filter { AppStatusTones.isWithdrawn(resultLabel: $0.resultLabel) }
         let others = relevant.filter { application in
             !application.isGranted
-                && !["Väntar svar", "Avslag"].contains(application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines))
+                && !["Väntar svar", "Avslag", "Tillbakadragen"].contains(application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines))
         }
 
         if !relevant.isEmpty {
@@ -1728,7 +1761,8 @@ struct GrantOutcomeCompactRows: View {
                         statusSegment(label: ApplicationOutcome.awaitingDecision.heading(language), matching: waiting, total: relevant.count, color: AppPalette.statsCardPendingStart, endColor: AppPalette.statsCardPendingEnd, usesGrantedAmount: false),
                         statusSegment(label: ApplicationOutcome.granted.heading(language), matching: granted, total: relevant.count, color: AppPalette.statsCardGrantedStart, endColor: AppPalette.statsCardGrantedEnd, usesGrantedAmount: true),
                         statusSegment(label: ApplicationOutcome.declined.heading(language), matching: rejected, total: relevant.count, color: AppPalette.statsCardDeclinedStart, endColor: AppPalette.statsCardDeclinedEnd, usesGrantedAmount: false),
-                        statusSegment(label: language.text("Other", "Övriga"), matching: others, total: relevant.count, color: Color(nsColor: .systemGray), endColor: nil, usesGrantedAmount: false),
+                        statusSegment(label: ApplicationOutcome.withdrawn.heading(language), matching: withdrawn, total: relevant.count, color: AppPalette.statusFill(.inactive), endColor: nil, usesGrantedAmount: false),
+                        statusSegment(label: language.text("Other", "Övriga"), matching: others, total: relevant.count, color: AppPalette.statusFill(.inactive), endColor: nil, usesGrantedAmount: false),
                     ].compactMap { $0 }
                 )
 
@@ -1828,6 +1862,7 @@ struct CalendarMeetingCompactStatisticsSection: View {
                 title: language.text("Activity type", "Aktivitetstyp"),
                 entries: calendarActivityDistributionEntries(
                     minutesByLabel: summary.activityMinutes,
+                    colorHexes: summary.activityColorHexes,
                     localizeLabel: { calendarMeetingCategoryDisplayName($0, language: language) }
                 )
             )
@@ -1864,16 +1899,17 @@ struct CalendarMeetingCompactStatisticsSection: View {
                     CompactStatisticBarRow.Segment(
                         label: language.text("Completed", "Genomförda"),
                         fraction: Double(summary.completedMeetingCount) / Double(total),
-                        color: AppPalette.vividBlue,
-                        foregroundColor: AppPalette.semanticOnColor,
-                        helpText: "\(language.text("Completed", "Genomförda")): \(calendarMeetingStatisticsMeetingCountText(summary.completedMeetingCount, language: language)) · \(calendarMeetingStatisticsHoursText(summary.completedMinutes, language: language))",
-                        endColor: AppPalette.shadeBlue
+                        // Round 17: completed = done (green); planned has no
+                        // status yet = no fill (the bar's border shows it).
+                        color: AppPalette.statusFill(.done),
+                        foregroundColor: AppPalette.statusOnFill,
+                        helpText: "\(language.text("Completed", "Genomförda")): \(calendarMeetingStatisticsMeetingCountText(summary.completedMeetingCount, language: language)) · \(calendarMeetingStatisticsHoursText(summary.completedMinutes, language: language))"
                     ),
                     CompactStatisticBarRow.Segment(
                         label: language.text("Planned", "Planerade"),
                         fraction: Double(summary.plannedMeetingCount) / Double(total),
-                        color: AppPalette.shadeBlue,
-                        foregroundColor: AppPalette.semanticOnColor,
+                        color: AppPalette.fieldSurface,
+                        foregroundColor: AppPalette.appText,
                         helpText: "\(language.text("Planned", "Planerade")): \(calendarMeetingStatisticsMeetingCountText(summary.plannedMeetingCount, language: language)) · \(calendarMeetingStatisticsHoursText(summary.plannedMinutes, language: language))"
                     ),
                 ].filter { $0.fraction > 0 }
@@ -1891,7 +1927,7 @@ struct CalendarMeetingCompactStatisticsSection: View {
                         label: entry.label,
                         fraction: entry.percentage,
                         color: entry.color,
-                        foregroundColor: .white.opacity(0.96),
+                        foregroundColor: entry.foreground,
                         helpText: "\(entry.label): \(calendarMeetingStatisticsHoursText(entry.minutes, language: language)) (\(calendarActivityDistributionPercentageText(entry.percentage)))"
                     )
                 }

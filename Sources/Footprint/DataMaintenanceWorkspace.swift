@@ -350,7 +350,9 @@ struct DataMaintenanceWorkspaceView: View {
     @WorkspaceFilterState("DataQuality.Filter.QueryDraft") private var queryDraft = ""
     @WorkspaceFilterState("DataQuality.Filter.Query") private var query = ""
     @WorkspaceFilterState("DataQuality.Filter.Category") private var category: DataQualityCategory = .all
-    @WorkspaceFilterState("DataQuality.Filter.IssueTypes") private var selectedIssueFilters = DataQualityIssueFilter.defaultSelection
+    // Round 17: the stored choice is respected (default: every list, so each
+    // section header has a live count).
+    @WorkspaceFilterState("DataQuality.Filter.IssueTypes") private var selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
     @WorkspaceFilterState("DataQuality.Filter.ExpandedArchive") private var expandedArchivedIDs = Set<String>()
     @State private var selectedArchivedIDs = Set<String>()
     @WorkspaceFilterState("DataQuality.ExpandedSections") private var expandedSectionKeys = Set<DataQualitySectionKey>()
@@ -638,9 +640,18 @@ struct DataMaintenanceWorkspaceView: View {
             )
         )
         .onAppear {
-            // Every section header shows a live count, so all diagnostic
-            // types are loaded (the loader staggers them off the first frame).
-            selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
+            // Round 17: the issue types the user chose are kept (they used to
+            // be reset to all on every appear). With "keep filters" off in
+            // Settings, filters saved by an earlier run are cleared the
+            // first time the view is shown.
+            if ListFilterLaunchPolicy.shouldClearSavedFilters(
+                for: .dataQuality,
+                retainsFilters: store.shouldRetainListFilters(for: .dataQuality)
+            ) {
+                clearDataQualityFilters()
+                selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
+                expandedArchivedIDs.removeAll()
+            }
             queryDraft = query
             refreshCachedDiagnosticsIfActive(reason: "appear", force: false)
         }
@@ -888,7 +899,7 @@ struct DataMaintenanceWorkspaceView: View {
         queryDraft = ""
         query = ""
         category = .all
-        selectedIssueFilters = DataQualityIssueFilter.defaultSelection
+        selectedIssueFilters = Set(DataQualityIssueFilter.allCases)
         expandedArchivedIDs.removeAll()
     }
 
@@ -963,7 +974,13 @@ struct DataMaintenanceWorkspaceView: View {
 
     @ViewBuilder
     private func dataQualityFilterBanner(language: AppLanguage) -> some View {
-        let counts = DataQualitySectionKey.allCases.compactMap { filteredSectionCounts($0) }
+        // Round 17: the sections count different things (records, issues,
+        // pairs), so the banner gives each section's own count instead of
+        // one sum that mixes them.
+        let counts = DataQualitySectionKey.allCases.compactMap { key -> (title: String, shown: Int, total: Int)? in
+            guard let count = filteredSectionCounts(key) else { return nil }
+            return (title: key.title(language: language), shown: count.shown, total: count.total)
+        }
         let activeFilters = [
             ListFilterLabels.search(query, language: language),
             category == .all ? nil : category.title(language: language),
@@ -975,6 +992,8 @@ struct DataMaintenanceWorkspaceView: View {
             totalCount: counts.reduce(0) { $0 + $1.total },
             activeFilters: activeFilters,
             restoredFromLastSession: restored,
+            countSummary: ListFilterLabels.sectionCounts(counts, language: language)
+                ?? language.text("nothing to show", "inget att visa"),
             language: language,
             clearAction: clearDataQualityFilters
         )
@@ -1219,14 +1238,14 @@ struct DataMaintenanceWorkspaceView: View {
             return language.text("No problem types selected", "Inga problemtyper valda")
         }
         if !selectedIssueFilters.isDisjoint(with: loadingIssueFilters) {
-            return language.text("Loading \(rowCount) rows...", "Laddar \(rowCount) rader...")
+            return language.text("Loading \(rowCount) rows…", "Laddar \(rowCount) rader…")
         }
         return language.text("\(rowCount) rows", "\(rowCount) rader")
     }
 
     private func issueCountText(for filter: DataQualityIssueFilter, language: AppLanguage) -> String {
         if loadingIssueFilters.contains(filter) {
-            return "..."
+            return "…"
         }
         guard loadedIssueFilters.contains(filter) else {
             return "–"
@@ -1340,7 +1359,7 @@ struct DataMaintenanceWorkspaceView: View {
                 dataQualityColumnEmptyText(language.text("Not selected", "Inte vald"))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if isLoading && issues.isEmpty {
-                dataQualityColumnEmptyText(language.text("Loading...", "Laddar..."))
+                dataQualityColumnEmptyText(language.text("Loading…", "Laddar…"))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if issues.isEmpty {
                 dataQualityColumnEmptyText(language.text("No rows", "Inga rader"))
@@ -1507,14 +1526,8 @@ struct DataMaintenanceWorkspaceView: View {
 
     @ViewBuilder
     private func dataQualityEmptyState(language: AppLanguage) -> some View {
-        HStack(spacing: 10) {
-            DataQualityStatusIcon(tone: .ok, size: 15)
-            Text(language.text("No rows match the current filters.", "Inga rader matchar nuvarande filter."))
-                .appTypography(.body)
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .padding(14)
+        AppCompactEmptyListLabel(title: language.text("No rows match the current filters", "Inga rader matchar nuvarande filter"))
+            .padding(14)
     }
 
     @ViewBuilder
@@ -2012,7 +2025,7 @@ struct DataMaintenanceWorkspaceView: View {
                                 .help(language.text("Hide this duplicate warning", "Dölj den här dublettvarningen"))
                             }
                             if store.supportsDuplicateMerge(for: issue.groupKind), issue.entries.count > 1 {
-                                Button(language.text("Merge...", "Slå ihop...")) {
+                                Button(language.text("Merge…", "Slå ihop…")) {
                                     pendingDuplicateMergeIssue = issue
                                 }
                                 .buttonStyle(.bordered)
@@ -2103,7 +2116,7 @@ struct DataMaintenanceWorkspaceView: View {
         } label: {
             Image(systemName: selectedArchivedIDs.contains(itemID) ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 16))
-                .foregroundStyle(selectedArchivedIDs.contains(itemID) ? AppPalette.vividBlue : Color.secondary)
+                .foregroundStyle(selectedArchivedIDs.contains(itemID) ? AppPalette.statusMark(.done) : Color.secondary)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(
@@ -2320,9 +2333,7 @@ struct DataMaintenanceWorkspaceView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
                 if revisionHistory.isEmpty {
-                    Text(language.text("No recent changes", "Inga senaste ändringar"))
-                        .appTypography(.secondary)
-                        .foregroundStyle(.secondary)
+                    AppCompactEmptyListLabel(title: language.text("No recent changes", "Inga senaste ändringar"))
                 } else {
                     ForEach(revisionHistory) { entry in
                         HStack(alignment: .firstTextBaseline) {
@@ -2798,26 +2809,17 @@ private struct IssueSeverityBadge: View {
 private struct ArchivePermanentDeleteIconButton: View {
     let language: AppLanguage
     let action: () -> Void
-    @State private var showsConfirmation = false
 
     var body: some View {
-        Button(role: .destructive) {
-            showsConfirmation = true
-        } label: {
-            Image(systemName: "trash")
-                .frame(width: 24, height: 22)
-        }
-        .buttonStyle(.borderless)
-        .help(language.text("Delete permanently", "Ta bort permanent"))
-        .accessibilityLabel(language.text("Delete permanently", "Ta bort permanent"))
-        .confirmationDialog(
-            language.text("Delete archived record permanently?", "Ta bort arkiverad post permanent?"),
-            isPresented: $showsConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button(language.text("Delete", "Ta bort"), role: .destructive, action: action)
-            Button(language.text("Cancel", "Avbryt"), role: .cancel) {}
-        }
+        // Round 17: the shared row trash icon, which always asks first.
+        AppRowDeleteIconButton(
+            title: language.text("Delete permanently", "Ta bort permanent"),
+            cancelTitle: language.text("Cancel", "Avbryt"),
+            confirmationTitle: language.text("Delete archived record permanently?", "Ta bort arkiverad post permanent?"),
+            width: 24,
+            height: 22,
+            action: action
+        )
     }
 }
 
@@ -3321,9 +3323,7 @@ private struct NameLinkResearcherPicker: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if options.isEmpty {
-                        Text(language.text("No researcher matches.", "Ingen forskare matchar."))
-                            .appTypography(.secondary)
-                            .foregroundStyle(.secondary)
+                        AppCompactEmptyListLabel(title: language.text("No researcher matches", "Ingen forskare matchar"))
                             .padding(8)
                     }
                     ForEach(options) { option in

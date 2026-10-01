@@ -695,8 +695,7 @@ struct ProjectDetailView: View {
     @ViewBuilder
     private func grantedApplicationsAndTimelineContent(language: AppLanguage) -> some View {
         if isLoadingProjectDerivedData {
-            ProgressView()
-                .controlSize(.small)
+            AppLoadingLabel(language: language)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             let timelineSnapshot = visibleProjectTimelineSnapshot
@@ -830,8 +829,9 @@ struct ProjectDetailView: View {
                 text: language.text("Applications awaiting decision", "Ansökningar som väntar svar")
             )
             HStack(spacing: 6) {
-                Text("📄")
-                    .font(.system(size: 12))
+                Image(systemName: AppTab.publications.symbolName)
+                    .font(.system(size: 10))
+                    .foregroundStyle(AppPalette.appText)
                     .frame(width: 22, height: 12)
                 Text(language.text("Publications", "Publikationer"))
                     .foregroundStyle(.secondary)
@@ -987,8 +987,7 @@ struct ProjectDetailView: View {
                     }
                 }
                 if isLoadingProjectDerivedData {
-                    ProgressView()
-                        .controlSize(.small)
+                    AppLoadingLabel(language: language)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     AppCompactReferenceList(isEmpty: projectApplicationsForList.isEmpty, emptyTitle: language.text("No records", "Inga poster"), rowSpacing: 0) {
@@ -1301,11 +1300,11 @@ struct ProjectDetailView: View {
 
     // Round 16: the shared status tones.
     private func projectApplicationStatusColor(for application: GrantApplication) -> Color {
-        AppPalette.statusCapsuleFill(store.applicationStatusTone(application))
+        store.applicationCapsuleFill(application)
     }
 
     private func projectApplicationStatusShadeColor(for application: GrantApplication) -> Color? {
-        AppPalette.statusRowFill(store.applicationStatusTone(application))
+        store.applicationRowFill(application)
     }
 
     private func projectPublicationStatusShadeColor(for status: PublicationStatus) -> Color? {
@@ -1895,6 +1894,8 @@ struct ProjectDetailView: View {
             title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
+            cancelTitle: store.language.text("Cancel", "Avbryt"),
+            confirmationTitle: store.language.text("Delete row?", "Ta bort raden?"),
             action: action
         )
     }
@@ -1991,6 +1992,8 @@ private struct StatusStatisticChipModel: Identifiable {
 
 enum GrantOutcomeSegmentKind: CaseIterable {
     case rejected
+    /// Round 17: withdrawn applications are their own grey group.
+    case withdrawn
     case waiting
     case granted
 
@@ -1998,6 +2001,8 @@ enum GrantOutcomeSegmentKind: CaseIterable {
         switch self {
         case .rejected:
             return ApplicationOutcome.declined.heading(language)
+        case .withdrawn:
+            return ApplicationOutcome.withdrawn.heading(language)
         case .waiting:
             return ApplicationOutcome.awaitingDecision.heading(language)
         case .granted:
@@ -2009,6 +2014,8 @@ enum GrantOutcomeSegmentKind: CaseIterable {
         switch self {
         case .rejected:
             return AppPalette.statsCardDeclinedStart
+        case .withdrawn:
+            return AppPalette.statusFill(.inactive)
         case .waiting:
             return AppPalette.statsCardPendingStart
         case .granted:
@@ -2020,6 +2027,8 @@ enum GrantOutcomeSegmentKind: CaseIterable {
         switch self {
         case .rejected:
             return AppPalette.statsCardDeclinedEnd
+        case .withdrawn:
+            return AppPalette.statusFill(.inactive)
         case .waiting:
             return AppPalette.statsCardPendingEnd
         case .granted:
@@ -2053,10 +2062,9 @@ private struct GrantOutcomeDistributionSnapshot {
         // "Ej sökt" has no segment here; counting its applied amount in the
         // total made the shares add up to less than 100 %.
         let relevant = applications.filter { !$0.isToApplyStatus && !$0.isNotAppliedStatus }
-        let rejected = relevant.filter {
-            let status = $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-            return status == "Avslag" || status == "Tillbakadragen"
-        }
+        // Round 17: withdrawn applications get their own (grey) segment.
+        let rejected = relevant.filter { AppStatusTones.isDeclined(resultLabel: $0.resultLabel) }
+        let withdrawn = relevant.filter { AppStatusTones.isWithdrawn(resultLabel: $0.resultLabel) }
         let waiting = relevant.filter { $0.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) == "Väntar svar" }
         let granted = relevant.filter(\.isGranted)
 
@@ -2111,37 +2119,35 @@ private struct GrantOutcomeDistributionSnapshot {
             return language.text("Of which \(text) remains.", "Varav \(text) kvarvarande medel.")
         }
 
+        func segment(
+            _ kind: GrantOutcomeSegmentKind,
+            _ rows: [GrantApplication],
+            value: KeyPath<GrantApplication, Double?>,
+            remaining: String?
+        ) -> GrantOutcomeDistributionSegment {
+            GrantOutcomeDistributionSegment(
+                kind: kind,
+                applications: rows,
+                referenceAmount: requestedAmount(for: rows),
+                amountText: amountSummary(for: rows, value: value),
+                percentageText: percentageText(for: requestedAmount(for: rows)),
+                countText: countText(rows.count),
+                remainingText: remaining
+            )
+        }
+
+        // Round 17: the withdrawn segment is shown only when there is one.
+        var segments: [GrantOutcomeDistributionSegment] = []
+        segments.append(segment(.rejected, rejected, value: \.appliedAmountValue, remaining: nil))
+        if !withdrawn.isEmpty {
+            segments.append(segment(.withdrawn, withdrawn, value: \.appliedAmountValue, remaining: nil))
+        }
+        segments.append(segment(.waiting, waiting, value: \.appliedAmountValue, remaining: nil))
+        segments.append(segment(.granted, granted, value: \.grantedAmountValue, remaining: remainingText(for: granted)))
+
         return GrantOutcomeDistributionSnapshot(
             totalRequestedAmount: totalRequestedAmount,
-            segments: [
-                GrantOutcomeDistributionSegment(
-                    kind: .rejected,
-                    applications: rejected,
-                    referenceAmount: requestedAmount(for: rejected),
-                    amountText: amountSummary(for: rejected, value: \.appliedAmountValue),
-                    percentageText: percentageText(for: requestedAmount(for: rejected)),
-                    countText: countText(rejected.count),
-                    remainingText: nil
-                ),
-                GrantOutcomeDistributionSegment(
-                    kind: .waiting,
-                    applications: waiting,
-                    referenceAmount: requestedAmount(for: waiting),
-                    amountText: amountSummary(for: waiting, value: \.appliedAmountValue),
-                    percentageText: percentageText(for: requestedAmount(for: waiting)),
-                    countText: countText(waiting.count),
-                    remainingText: nil
-                ),
-                GrantOutcomeDistributionSegment(
-                    kind: .granted,
-                    applications: granted,
-                    referenceAmount: requestedAmount(for: granted),
-                    amountText: amountSummary(for: granted, value: \.grantedAmountValue),
-                    percentageText: percentageText(for: requestedAmount(for: granted)),
-                    countText: countText(granted.count),
-                    remainingText: remainingText(for: granted)
-                )
-            ]
+            segments: segments
         )
     }
 }
@@ -2184,9 +2190,9 @@ struct GrantOutcomeDistributionCard: View {
                     }
                     .frame(width: contentWidth, alignment: .leading)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                         .stroke(AppPalette.border, lineWidth: 1)
                 )
             }
@@ -2246,7 +2252,7 @@ struct GrantOutcomeDistributionCard: View {
         let measuredMinimum = max(titleWidth, amountWidth, footerWidth) + horizontalPadding
         let floorWidth: CGFloat
         switch segment.kind {
-        case .rejected, .waiting:
+        case .rejected, .withdrawn, .waiting:
             floorWidth = 160
         case .granted:
             floorWidth = 200
@@ -2301,7 +2307,7 @@ struct GrantOutcomeDistributionCard: View {
     private func segmentLabel(_ segment: GrantOutcomeDistributionSegment) -> some View {
         if compactAmountOnly {
             Text("\(segment.amountText) (\(segment.percentageText))")
-                .font(appFont(.secondary).weight(.bold))
+                .font(appBadgeFont())
                 .foregroundStyle(AppPalette.semanticOnColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
@@ -2315,7 +2321,7 @@ struct GrantOutcomeDistributionCard: View {
                     .frame(maxWidth: .infinity, alignment: .center)
 
                 Text("\(segment.amountText) (\(segment.percentageText))")
-                    .font(appFont(.secondary).weight(.bold))
+                    .font(appBadgeFont())
                     .foregroundStyle(AppPalette.semanticOnColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)

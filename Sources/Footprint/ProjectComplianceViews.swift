@@ -317,7 +317,11 @@ private struct ProjectEthicsApplicationEditor: View {
 
                     Group {
                         if let onRemove {
-                            AppInlineDeleteButton(title: language.text("Remove ethics row", "Ta bort etikrad")) {
+                            AppInlineDeleteButton(
+                                title: language.text("Remove ethics row", "Ta bort etikrad"),
+                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                confirmationTitle: language.text("Remove ethics row?", "Ta bort etikraden?")
+                            ) {
                                 onRemove()
                             }
                             .disabled(application.isEmpty)
@@ -550,7 +554,9 @@ private struct EditableProjectPrincipalOrganizationRow: View {
             } else {
                 AppInlineDeleteButton(
                     title: language.text("Remove research principal", "Ta bort forskningshuvudman"),
-                    width: trailingAccessoryWidth
+                    width: trailingAccessoryWidth,
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Remove research principal?", "Ta bort forskningshuvudmannen?")
                 ) {
                     onDelete()
                 }
@@ -651,7 +657,9 @@ private struct ProjectClinicalTrialRegistrationEditor: View {
                     Group {
                         if !isEditingLocked, let onRemove {
                             AppInlineDeleteButton(
-                                title: language.text("Remove clinical trial row", "Ta bort clinicaltrials-rad")
+                                title: language.text("Remove clinical trial row", "Ta bort clinicaltrials-rad"),
+                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                confirmationTitle: language.text("Remove clinical trial row?", "Ta bort clinicaltrials-raden?")
                             ) {
                                 onRemove()
                             }
@@ -754,7 +762,9 @@ private struct ProjectDataCollectionEditor: View {
                         } else {
                             AppInlineDeleteButton(
                                 title: language.text("Remove data collection row", "Ta bort datainsamlingsrad"),
-                                width: 24
+                                width: 24,
+                                cancelTitle: language.text("Cancel", "Avbryt"),
+                                confirmationTitle: language.text("Remove data collection row?", "Ta bort datainsamlingsraden?")
                             ) {
                                 dataCollections.remove(at: index)
                             }

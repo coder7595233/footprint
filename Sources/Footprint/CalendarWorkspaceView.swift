@@ -4048,6 +4048,20 @@ struct CalendarWorkspaceView: View {
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .background(AppPalette.calendarWorkspaceSurface)
+                // Round 17: while a filter is on, the calendar says so above
+                // the days, also when the filter panel is collapsed.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if let calendarFilterSummaryText {
+                        AppActiveFiltersBanner(
+                            summary: calendarFilterSummaryText,
+                            language: language,
+                            clearAction: resetFilters
+                        )
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(AppPalette.calendarWorkspaceSurface)
+                    }
+                }
                 .layoutPriority(0)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -4496,7 +4510,7 @@ struct CalendarWorkspaceView: View {
         case .holiday:
             return "flag"
         case .congress:
-            return "person.3"
+            return AppTab.congresses.symbolName
         case .travel:
             return "airplane"
         case .accommodation:
@@ -4544,7 +4558,7 @@ struct CalendarWorkspaceView: View {
                     }
                 }
                 ForEach(organizationReferences, id: \.id) { organization in
-                    FootprintMetadataChip(title: organization.label, systemImage: "building.2") {
+                    FootprintMetadataChip(title: organization.label, systemImage: AppTab.organizations.symbolName) {
                         store.route = AppRoute(recordID: organization.id, destination: .organizations)
                     }
                 }
@@ -4841,10 +4855,23 @@ struct CalendarWorkspaceView: View {
                 } label: {
                     Image(systemName: "sidebar.leading")
                         .frame(width: 22, height: 22)
+                        // Round 17: a small dot while a filter is on.
+                        .overlay(alignment: .topTrailing) {
+                            if hasActiveCalendarFilters {
+                                Circle()
+                                    .fill(Color.accentColor)
+                                    .frame(width: 7, height: 7)
+                                    .offset(x: 3, y: -3)
+                            }
+                        }
                 }
                 .buttonStyle(.borderless)
-                .help(language.text("Show filters", "Visa filter"))
-                .accessibilityLabel(language.text("Show filters", "Visa filter"))
+                .help(hasActiveCalendarFilters
+                    ? language.text("Show filters (filters are on)", "Visa filter (filter är på)")
+                    : language.text("Show filters", "Visa filter"))
+                .accessibilityLabel(hasActiveCalendarFilters
+                    ? language.text("Show filters (filters are on)", "Visa filter (filter är på)")
+                    : language.text("Show filters", "Visa filter"))
 
                 Text(language.text("Filters", "Filter"))
                     .calendarTypography(.tableHeader)
@@ -6467,7 +6494,7 @@ struct CalendarWorkspaceView: View {
     }
 
     private func detailTextColor(for event: CalendarWorkspaceEvent) -> Color {
-        event.isRolledOverPastDue ? AppPalette.statusText(AppStatusTones.task(isCompleted: false, isOverdue: true)) : eventBodyTextColor(for: event)
+        event.isRolledOverPastDue ? AppPalette.lateText : eventBodyTextColor(for: event)
     }
 
     private func dateAccentTextColor(for group: CalendarWorkspaceDayGroup) -> Color {
@@ -6874,7 +6901,7 @@ struct CalendarWorkspaceView: View {
             CalendarDetailRecordLink(
                 id: "doctoralCandidate:\(candidate.id)",
                 title: candidate.label,
-                systemImage: "person.crop.rectangle",
+                systemImage: AppTab.doctoralCandidates.symbolName,
                 destination: .doctoralCandidate(candidate.id)
             )
         }
@@ -6893,7 +6920,7 @@ struct CalendarWorkspaceView: View {
             return CalendarDetailRecordLink(
                 id: "congress:\(organization.id):\(congress.id)",
                 title: title,
-                systemImage: "person.3",
+                systemImage: AppTab.congresses.symbolName,
                 destination: .congress(organizationID: organization.id, congressID: congress.id)
             )
         case let .accommodation(accommodationID):
@@ -6906,7 +6933,7 @@ struct CalendarWorkspaceView: View {
             return CalendarDetailRecordLink(
                 id: "congress:\(organization.id):\(congress.id)",
                 title: title,
-                systemImage: "person.3",
+                systemImage: AppTab.congresses.symbolName,
                 destination: .congress(organizationID: organization.id, congressID: congress.id)
             )
         case let .congress(organizationID, congressID) where event.kind == .travel || event.kind == .accommodation:
@@ -6918,7 +6945,7 @@ struct CalendarWorkspaceView: View {
             return CalendarDetailRecordLink(
                 id: "congress:\(organization.id):\(congress.id)",
                 title: title,
-                systemImage: "person.3",
+                systemImage: AppTab.congresses.symbolName,
                 destination: .congress(organizationID: organization.id, congressID: congress.id)
             )
         default:
@@ -9734,14 +9761,13 @@ private struct CalendarGoToDatePopover: View {
         if isSelected(date) {
             return AppPalette.actionSave.opacity(0.95)
         }
-        if isToday(date) {
-            return AppPalette.vividBlue.opacity(0.14)
-        }
         return Color.clear
     }
 
+    // Round 17: today is marked like in the timelines (red ring and red
+    // text); the selected day stays the accent colour.
     private func dayStrokeColor(_ date: Date) -> Color {
-        isToday(date) ? AppPalette.vividBlue.opacity(0.65) : Color.clear
+        isToday(date) ? AppPalette.todayMarker : Color.clear
     }
 
     private func dayTextColor(_ date: Date) -> Color {
@@ -9749,7 +9775,7 @@ private struct CalendarGoToDatePopover: View {
             return .white
         }
         if isToday(date) {
-            return AppPalette.vividBlue
+            return AppPalette.todayMarker
         }
         return AppPalette.appText
     }
@@ -10316,17 +10342,15 @@ struct CalendarProjectTaskSheet: View {
                                     )
 
                                     if row.name.trimmedOrNil != nil {
-                                        Button(role: .destructive) {
+                                        AppRowDeleteIconButton(
+                                            title: language.text("Remove participant", "Ta bort deltagare"),
+                                            cancelTitle: language.text("Cancel", "Avbryt"),
+                                            confirmationTitle: language.text("Remove participant?", "Ta bort deltagare?")
+                                        ) {
                                             guard participantRows.indices.contains(index) else { return }
                                             participantRows.remove(at: index)
                                             normalizeParticipantRows()
-                                        } label: {
-                                            Image(systemName: "trash")
-                                                .foregroundStyle(AppPalette.actionDelete)
                                         }
-                                        .buttonStyle(.borderless)
-                                        .help(language.text("Remove participant", "Ta bort deltagare"))
-                                        .accessibilityLabel(language.text("Remove participant", "Ta bort deltagare"))
                                     }
                                 }
                             }
@@ -10600,17 +10624,15 @@ struct CalendarPublicationTaskSheet: View {
                                     )
 
                                     if row.name.trimmedOrNil != nil {
-                                        Button(role: .destructive) {
+                                        AppRowDeleteIconButton(
+                                            title: language.text("Remove participant", "Ta bort deltagare"),
+                                            cancelTitle: language.text("Cancel", "Avbryt"),
+                                            confirmationTitle: language.text("Remove participant?", "Ta bort deltagare?")
+                                        ) {
                                             guard participantRows.indices.contains(index) else { return }
                                             participantRows.remove(at: index)
                                             normalizeParticipantRows()
-                                        } label: {
-                                            Image(systemName: "trash")
-                                                .foregroundStyle(AppPalette.actionDelete)
                                         }
-                                        .buttonStyle(.borderless)
-                                        .help(language.text("Remove participant", "Ta bort deltagare"))
-                                        .accessibilityLabel(language.text("Remove participant", "Ta bort deltagare"))
                                     }
                                 }
                             }
@@ -11153,7 +11175,7 @@ private struct CalendarTravelSheet: View {
 
             if uncertain.wrappedValue {
                 Text("?")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(appBadgeFont())
                     .foregroundStyle(AppPalette.statusText(.warning))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
@@ -11193,7 +11215,7 @@ private struct CalendarTravelSheet: View {
 
             if uncertain.wrappedValue {
                 Text("?")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(appBadgeFont())
                     .foregroundStyle(AppPalette.statusText(.warning))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
@@ -11840,17 +11862,15 @@ private struct CalendarMeetingTypeCatalogPopover: View {
                     .appTextInputChrome()
 
                     if option.trimmedOrNil != nil {
-                        Button(role: .destructive) {
+                        AppRowDeleteIconButton(
+                            title: language.text("Remove", "Ta bort"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Remove this option?", "Ta bort alternativet?")
+                        ) {
                             guard options.indices.contains(index) else { return }
                             options.remove(at: index)
                             persist()
-                        } label: {
-                            Image(systemName: "trash")
-                                .foregroundStyle(AppPalette.actionDelete)
                         }
-                        .buttonStyle(.borderless)
-                        .help(language.text("Remove", "Ta bort"))
-                        .accessibilityLabel(language.text("Remove", "Ta bort"))
                     } else {
                         Color.clear.frame(width: 18, height: 18)
                     }

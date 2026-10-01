@@ -10,19 +10,29 @@ struct WorkspaceFilterState<Value: Codable & Sendable>: DynamicProperty {
     @State private var value: Value
     private let defaultsKey: String
 
-    init(wrappedValue defaultValue: Value, _ defaultsKey: String) {
+    /// `tracksRestored: false` is for values that are not a filter on
+    /// their own (a year range stored as real years equals "all years" when
+    /// it covers the data); the workspace then decides about the badge itself.
+    init(wrappedValue defaultValue: Value, _ defaultsKey: String, tracksRestored: Bool = true) {
         self.defaultsKey = AppRuntime.scopedDefaultsKey(defaultsKey)
         let restored: Value
+        var differsFromDefault = false
         if let data = UserDefaults.standard.data(forKey: self.defaultsKey),
            let decoded = try? JSONDecoder().decode(Value.self, from: data) {
             restored = decoded
             // A value other than the default came back from an earlier run:
             // the list shows "Sparat från förra gången" until it is changed.
             if let defaultData = try? JSONEncoder().encode(defaultValue), defaultData != data {
-                RestoredListFilters.markRestored(key: defaultsKey)
+                differsFromDefault = true
             }
         } else {
             restored = defaultValue
+        }
+        if tracksRestored {
+            // Round 17: decided only the first time this key is read in a
+            // run; the workspace is rebuilt often and must not mark a value
+            // the user just chose.
+            RestoredListFilters.evaluateAtLaunch(key: defaultsKey, isRestored: differsFromDefault)
         }
         _value = State(initialValue: restored)
     }

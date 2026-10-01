@@ -431,7 +431,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         panel.title = language.text("Import Footprint database", "Importera Footprint-databas")
         panel.message = language.text(
             "Choose a .footprintdb package or a verified Footprint backup folder.",
-            "Välj ett .footprintdb-paket eller en verifierad Footprint-backupmapp."
+            "Välj ett .footprintdb-paket eller en verifierad mapp med Footprint-säkerhetskopior."
         )
         guard panel.runModal() == .OK, let url = panel.url else { return }
         let confirmation = NSAlert()
@@ -439,7 +439,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         confirmation.messageText = language.text("Import this Footprint database?", "Importera denna Footprint-databas?")
         confirmation.informativeText = language.text(
             "Footprint verifies the package and creates a complete safety backup first. A full package replaces the current database; a selective package merges only its listed categories.",
-            "Footprint verifierar paketet och skapar först en komplett säkerhetsbackup. Ett fullständigt paket ersätter den aktuella databasen; ett selektivt paket sammanfogar endast de angivna kategorierna."
+            "Footprint verifierar paketet och skapar först en komplett säkerhetskopia. Ett fullständigt paket ersätter den aktuella databasen; ett selektivt paket sammanfogar endast de angivna kategorierna."
         )
         confirmation.addButton(withTitle: language.text("Import", "Importera"))
         confirmation.addButton(withTitle: language.text("Cancel", "Avbryt"))
@@ -619,7 +619,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             guard let self else { return }
             let alert = NSAlert()
             alert.alertStyle = .informational
-            alert.messageText = self.store.language.text("Backup health", "Backuphälsa")
+            alert.messageText = self.store.language.text("Backup health", "Säkerhetskopiornas skick")
             alert.informativeText = summary
             alert.addButton(withTitle: self.store.language.text("OK", "OK"))
             alert.runModal()
@@ -634,13 +634,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         panel.allowsMultipleSelection = false
         panel.directoryURL = store.backupsDirectoryURL
         panel.prompt = language.text("Restore", "Återställ")
-        panel.title = language.text("Choose a backup folder to restore", "Välj en backupmapp att återställa")
+        panel.title = language.text("Choose a backup folder to restore", "Välj en mapp med säkerhetskopior att återställa")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         store.loadBackupRestorePreviewSummaryAsync(for: url) { [weak self] summary in
             guard let self else { return }
             let alert = NSAlert()
             alert.alertStyle = .warning
-            alert.messageText = language.text("Restore backup?", "Återställ backup?")
+            alert.messageText = language.text("Restore backup?", "Återställ säkerhetskopia?")
             alert.informativeText = summary
             alert.addButton(withTitle: language.text("Restore", "Återställ"))
             alert.addButton(withTitle: language.text("Cancel", "Avbryt"))

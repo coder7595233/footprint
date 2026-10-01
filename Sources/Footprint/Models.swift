@@ -3135,6 +3135,8 @@ struct DashboardSummary {
     let pendingCount: Int
     let totalRequested: Double
     let totalAwarded: Double
+    /// Round 17: withdrawn applications, never counted as declined.
+    var withdrawnCount: Int = 0
 }
 
 struct StoreNotice: Identifiable, Equatable {

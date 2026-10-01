@@ -20,6 +20,27 @@ enum AppTimestampFormatter {
         return formatter.string(from: date)
     }
 
+    /// Round 17: day, short month and year ("1 okt. 2026" in Swedish,
+    /// "1 Oct 2026" in English). The month follows the language's own rule:
+    /// Swedish month names stay lowercase, English ones keep their capital.
+    static func dayMonthYear(
+        _ date: Date,
+        locale: Locale?,
+        calendar: Calendar = Calendar(identifier: .gregorian)
+    ) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        if let locale {
+            formatter.locale = locale
+        }
+        formatter.dateFormat = "d MMM yyyy"
+        return formatter.string(from: date)
+    }
+
+    static func dayMonthYear(_ date: Date, language: AppLanguage) -> String {
+        dayMonthYear(date, locale: Locale(identifier: language == .swedish ? "sv_SE" : "en_US"))
+    }
+
     /// 24-hour time ("14:05").
     static func time(_ date: Date) -> String {
         let formatter = DateFormatter()

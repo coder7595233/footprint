@@ -300,7 +300,7 @@ struct SettingsWorkspaceView: View {
         }
         .onDisappear { persistSettingsIfNeeded() }
         .alert(
-            language.text("Restore selected backup?", "Återställ vald backup?"),
+            language.text("Restore selected backup?", "Återställ vald säkerhetskopia?"),
             isPresented: Binding(
                 get: { pendingRestoreBackupURL != nil },
                 set: { newValue in
@@ -742,7 +742,7 @@ struct SettingsWorkspaceView: View {
                 Text(language.text("Day colors", "Dagfärger"))
                     .appTypography(.panelTitle)
 
-                Text(language.text("Choose text and background colors for holidays, Saturdays, and Sundays in both light mode and dark mode. The built-in presets follow the same semantic scale as the rest of the app.", "Välj text- och bakgrundsfärger för helgdagar, lördagar och söndagar i både ljust och mörkt läge. De färdiga preseten följer samma semantiska skala som resten av appen."))
+                Text(language.text("Choose text and background colors for holidays, Saturdays, and Sundays in both light mode and dark mode. The built-in presets follow the same semantic scale as the rest of the app.", "Välj text- och bakgrundsfärger för helgdagar, lördagar och söndagar i både ljust och mörkt läge. De färdiga förinställningarna följer samma semantiska skala som resten av appen."))
                     .appTypography(.secondary)
                     .foregroundStyle(.secondary)
 
@@ -755,7 +755,7 @@ struct SettingsWorkspaceView: View {
                         nameForID: calendarDayHighlightPresetName(for:),
                         setName: renameCalendarDayHighlightPreset
                     ),
-                    description: language.text("Standard keeps your current colors. Built-in themes can be applied as a starting point, then saved as new presets.", "Standard behåller dina nuvarande färger. Färdiga teman kan användas som utgångspunkt och sedan sparas som nya presets."),
+                    description: language.text("Standard keeps your current colors. Built-in themes can be applied as a starting point, then saved as new presets.", "Standard behåller dina nuvarande färger. Färdiga teman kan användas som utgångspunkt och sedan sparas som nya förinställningar."),
                     applyAction: applySelectedCalendarDayHighlightPreset,
                     updateAction: { updateSelectedCalendarDayHighlightPreset(language: language) },
                     createAction: { createCurrentCalendarDayHighlightPreset(language: language) },
@@ -765,7 +765,7 @@ struct SettingsWorkspaceView: View {
 
                 SettingsEffectNote(language.text(
                     "Affects: the text and background color of holiday, Saturday and Sunday rows in the calendar list, in light and dark mode. Choosing a preset copies its colors into the fields.",
-                    "Påverkar: text- och bakgrundsfärg på raderna för helgdagar, lördagar och söndagar i kalenderlistan, i ljust och mörkt läge. Att välja ett preset kopierar dess färger till fälten."
+                    "Påverkar: text- och bakgrundsfärg på raderna för helgdagar, lördagar och söndagar i kalenderlistan, i ljust och mörkt läge. Att välja en förinställning kopierar dess färger till fälten."
                 ))
 
                 ForEach(CalendarDayHighlightKind.allCases) { kind in
@@ -1046,7 +1046,7 @@ struct SettingsWorkspaceView: View {
                 value: store.storageDirectoryURL.path
             )
             settingsInfoRow(
-                title: language.text("Backups path", "Sökväg till backuper"),
+                title: language.text("Backups path", "Sökväg till säkerhetskopior"),
                 value: store.backupsDirectoryURL.path
             )
             settingsInfoRow(
@@ -1065,7 +1065,7 @@ struct SettingsWorkspaceView: View {
                 }
                 .appSaveButtonStyle()
 
-                Button(language.text("Open backups folder", "Öppna backupmapp")) {
+                Button(language.text("Open backups folder", "Öppna mappen med säkerhetskopior")) {
                     NSWorkspace.shared.open(store.backupsDirectoryURL)
                 }
                 .buttonStyle(.bordered)
@@ -1114,13 +1114,13 @@ struct SettingsWorkspaceView: View {
                 .buttonStyle(.bordered)
             }
 
-            Text(language.text("Use this section to verify live data, inspect backup snapshots and restore the exact snapshot you choose.", "Använd denna del för att verifiera live-data, granska backupsnapshots och återställa exakt den snapshot du väljer."))
+            Text(language.text("Use this section to verify live data, inspect backup snapshots and restore the exact snapshot you choose.", "Använd denna del för att verifiera live-data, granska säkerhetskopior och återställa exakt den säkerhetskopia du väljer."))
                 .appTypography(.secondary)
                 .foregroundStyle(.secondary)
 
             SettingsEffectNote(language.text(
                 "Affects: Create snapshot now saves a copy of all current data in the backups folder. Restore selected backup replaces all current data in the app with the chosen copy; the checkbox only unlocks that button.",
-                "Påverkar: Skapa snapshot nu sparar en kopia av all aktuell data i backupmappen. Återställ vald backup ersätter all aktuell data i appen med den valda kopian; kryssrutan låser bara upp den knappen."
+                "Påverkar: Skapa snapshot nu sparar en kopia av all aktuell data i mappen med säkerhetskopior. Återställ vald säkerhetskopia ersätter all aktuell data i appen med den valda kopian; kryssrutan låser bara upp den knappen."
             ))
 
             VStack(alignment: .leading, spacing: 6) {
@@ -1141,7 +1141,7 @@ struct SettingsWorkspaceView: View {
                 }
 
                 if backupSnapshots.isEmpty {
-                    Text(language.text("No backups were found in the active backups folder.", "Inga backuper hittades i den aktiva backupmappen."))
+                    Text(language.text("No backups were found in the active backups folder.", "Inga säkerhetskopior hittades i den aktiva mappen för säkerhetskopior."))
                         .appTypography(.secondary)
                         .foregroundStyle(.secondary)
                 } else {
@@ -1182,14 +1182,14 @@ struct SettingsWorkspaceView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(language.text("Selected backup preview", "Förhandsgranskning av vald backup"))
+                Text(language.text("Selected backup preview", "Förhandsgranskning av vald säkerhetskopia"))
                     .appTypography(.fieldLabel)
-                settingsReadOnlyText(selectedBackupPreview.nonEmpty ?? language.text("Select a backup snapshot to inspect it.", "Välj en backupsnapshot för att granska den."))
+                settingsReadOnlyText(selectedBackupPreview.nonEmpty ?? language.text("Select a backup snapshot to inspect it.", "Välj en säkerhetskopia för att granska den."))
                     .frame(minHeight: 200, alignment: .topLeading)
             }
 
             HStack(spacing: 10) {
-                Button(language.text("Open selected backup", "Öppna vald backup")) {
+                Button(language.text("Open selected backup", "Öppna vald säkerhetskopia")) {
                     guard let selectedBackupURL else { return }
                     NSWorkspace.shared.open(selectedBackupURL)
                 }
@@ -1204,11 +1204,10 @@ struct SettingsWorkspaceView: View {
                 .fixedSize()
                 .disabled(selectedBackupURL == nil)
 
-                Button(language.text("Restore selected backup", "Återställ vald backup")) {
+                Button(language.text("Restore selected backup", "Återställ vald säkerhetskopia")) {
                     pendingRestoreBackupURL = selectedBackupURL
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(AppPalette.actionDelete)
+                .appDeleteButtonStyle()
                 .disabled(selectedBackupURL == nil || !restoreConfirmationAcknowledged)
             }
         }
@@ -1335,11 +1334,14 @@ struct SettingsWorkspaceView: View {
                                 TextField(language.text("Code", "Kod"), text: $option.id)
                                     .frame(width: 90)
                                     .appTextInputChrome(fillsWidth: false)
-                                Button(language.text("Remove", "Ta bort"), role: .destructive) {
+                                AppRowDeleteIconButton(
+                                    title: language.text("Remove language", "Ta bort språk"),
+                                    cancelTitle: language.text("Cancel", "Avbryt"),
+                                    confirmationTitle: language.text("Remove language?", "Ta bort språket?")
+                                ) {
                                     customMediaLanguageOptions.removeAll { $0.id == option.id }
                                     scheduleAutosave()
                                 }
-                                .buttonStyle(.borderless)
                             }
                         },
                         swedish: {
@@ -2095,15 +2097,15 @@ struct SettingsWorkspaceView: View {
             options.first(where: { $0.0 == selectedPresetID.wrappedValue })?.1
                 ?? presetName.wrappedValue
         ).trimmedOrNil ?? language.text("selected", "vald")
-        let updateTitle = language.text("Update preset \(selectedName)", "Uppdatera preset \(selectedName)")
+        let updateTitle = language.text("Update preset \(selectedName)", "Uppdatera förinställningen \(selectedName)")
 
         return VStack(alignment: .leading, spacing: 10) {
-            Text(language.text("Presets", "Presets"))
+            Text(language.text("Presets", "Förinställningar"))
                 .appTypography(.fieldLabel)
 
             HStack(alignment: .bottom, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(language.text("Selected preset", "Vald preset"))
+                    Text(language.text("Selected preset", "Vald förinställning"))
                         .appTypography(.secondary)
                         .foregroundStyle(.secondary)
                     AppMenuSelectionField(
@@ -2114,10 +2116,10 @@ struct SettingsWorkspaceView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(language.text("Preset name", "Presetnamn"))
+                    Text(language.text("Preset name", "Namn på förinställning"))
                         .appTypography(.secondary)
                         .foregroundStyle(.secondary)
-                    TextField(language.text("Preset name", "Presetnamn"), text: presetName)
+                    TextField(language.text("Preset name", "Namn på förinställning"), text: presetName)
                         .appTextInputChrome()
                         .frame(width: 220)
                 }
@@ -2148,12 +2150,13 @@ struct SettingsWorkspaceView: View {
                         }
                         .buttonStyle(.bordered)
 
-                        Button(role: .destructive) {
+                        AppDestructiveActionButton(
+                            title: language.text("Delete preset", "Ta bort förinställning"),
+                            cancelTitle: language.text("Cancel", "Avbryt"),
+                            confirmationTitle: language.text("Delete preset?", "Ta bort förinställning?")
+                        ) {
                             deleteAction()
-                        } label: {
-                            Label(language.text("Delete preset", "Ta bort preset"), systemImage: "trash")
                         }
-                        .appDeleteButtonStyle()
                         .disabled(!canDeleteSelected)
                     }
                 }
@@ -2836,7 +2839,7 @@ struct SettingsWorkspaceView: View {
 
     private func createCurrentCalendarDayHighlightPreset(language: AppLanguage) {
         let baseName = calendarDayHighlightPresetName(for: selectedCalendarDayHighlightColorPresetID).trimmedOrNil
-            ?? language.text("New preset", "Ny preset")
+            ?? language.text("New preset", "Ny förinställning")
         let name = nextPresetName(
             base: baseName,
             existingNames: calendarDayHighlightColorPresets.map(\.name)
@@ -2882,7 +2885,7 @@ struct SettingsWorkspaceView: View {
 
     private func createCurrentCalendarCategoryColorPreset(language: AppLanguage) {
         let baseName = calendarCategoryPresetName(for: selectedCalendarCategoryColorPresetID).trimmedOrNil
-            ?? language.text("New preset", "Ny preset")
+            ?? language.text("New preset", "Ny förinställning")
         let name = nextPresetName(
             base: baseName,
             existingNames: calendarCategoryColorPresets.map(\.name)
@@ -2940,7 +2943,7 @@ struct SettingsWorkspaceView: View {
         let presets = useDark ? darkSemanticColorPresets : lightSemanticColorPresets
         let selectedID = useDark ? selectedDarkSemanticColorPresetID : selectedLightSemanticColorPresetID
         let baseName = presets.first(where: { $0.id == selectedID })?.name.trimmedOrNil
-            ?? language.text("New preset", "Ny preset")
+            ?? language.text("New preset", "Ny förinställning")
         let existingNames = presets.map(\.name)
         let name = nextPresetName(
             base: baseName,
@@ -3278,13 +3281,13 @@ struct SettingsWorkspaceView: View {
                 .foregroundStyle(AppPalette.appText)
                 .padding(.top, 24)
 
-                Button(role: .destructive) {
-                    requestEditableCalendarMeetingCategoryRemoval(at: index)
-                } label: {
-                    Image(systemName: "trash")
-                        .foregroundStyle(AppPalette.actionDelete)
-                }
-                .buttonStyle(.borderless)
+                AppRowDeleteIconButton(
+                    title: language.text("Remove category", "Ta bort kategori"),
+                    cancelTitle: language.text("Cancel", "Avbryt"),
+                    confirmationTitle: language.text("Remove category?", "Ta bort kategori?"),
+                    action: { requestEditableCalendarMeetingCategoryRemoval(at: index) },
+                    storeAsksFirst: { editableCalendarMeetingCategoryRemovalAsksFirst(at: index) }
+                )
                 .padding(.top, 24)
             } else {
                 HStack(spacing: 12) {
@@ -3569,6 +3572,17 @@ struct SettingsWorkspaceView: View {
         editableCalendarMeetingCategories.insert(category, at: destination)
         ensureTrailingEditableCalendarMeetingCategoryRow()
         scheduleAutosave()
+    }
+
+    /// Round 17: true when removing this category opens the "category in use"
+    /// sheet, which already asks; the trash icon then skips its own question.
+    private func editableCalendarMeetingCategoryRemovalAsksFirst(at index: Int) -> Bool {
+        guard editableCalendarMeetingCategories.indices.contains(index) else { return false }
+        let category = editableCalendarMeetingCategories[index]
+        guard let sourceCategoryName = calendarMeetingCategoryDeletionSourceName(for: category) else {
+            return false
+        }
+        return calendarMeetingCategoryUsageCount(in: store.calendarMeetingRecords, named: sourceCategoryName) > 0
     }
 
     private func requestEditableCalendarMeetingCategoryRemoval(at index: Int) {
@@ -4372,11 +4386,11 @@ struct SettingsWorkspaceView: View {
                 .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
                 .padding(12)
                 .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                         .fill(AppPalette.secondaryCardSurface)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppPalette.mediumCornerRadius, style: .continuous)
                         .stroke(performanceStatusColor(item.tone).opacity(0.28), lineWidth: 1)
                 )
             }
@@ -4384,15 +4398,18 @@ struct SettingsWorkspaceView: View {
     }
 
     private func performanceStatusColor(_ tone: String) -> Color {
+        // Round 17: icons and thin strokes use the mark colours (clearly
+        // green/orange/red, never the pale fills); "info" has no status and
+        // is neutral grey.
         switch tone {
         case "ok":
-            return AppPalette.vividGreen
+            return AppPalette.statusMark(.done)
         case "warning":
-            return AppPalette.vividOrange
+            return AppPalette.statusMark(.warning)
         case "critical":
-            return AppPalette.vividRed
+            return AppPalette.statusMark(.negative)
         default:
-            return AppPalette.vividBlue
+            return AppPalette.statusMark(.inactive)
         }
     }
 
@@ -4503,7 +4520,7 @@ struct SettingsWorkspaceView: View {
         let snapshots = ((try? store.backupSnapshots()) ?? [])
             .sorted { $0.date > $1.date }
         backupSnapshots = snapshots
-        backupHealthSummaryText = store.language.text("Loading backup health…", "Laddar backuphälsa…")
+        backupHealthSummaryText = store.language.text("Loading backup health…", "Laddar säkerhetskopiornas skick…")
 
         let resolvedSelection = preferredURL
             ?? selectedBackupURL.flatMap { existing in snapshots.contains(where: { $0.url == existing }) ? existing : nil }
@@ -4514,7 +4531,7 @@ struct SettingsWorkspaceView: View {
         selectedBackupURL = resolvedSelection
         selectedBackupPreview = resolvedSelection == nil
             ? ""
-            : store.language.text("Loading backup preview…", "Laddar backupförhandsvisning…")
+            : store.language.text("Loading backup preview…", "Laddar förhandsvisning av säkerhetskopian…")
 
         store.loadBackupHealthSummaryAsync { summary in
             backupHealthSummaryText = summary
@@ -4530,7 +4547,7 @@ struct SettingsWorkspaceView: View {
     private func selectBackupSnapshot(_ url: URL) {
         selectedBackupURL = url
         restoreConfirmationAcknowledged = false
-        selectedBackupPreview = store.language.text("Loading backup preview…", "Laddar backupförhandsvisning…")
+        selectedBackupPreview = store.language.text("Loading backup preview…", "Laddar förhandsvisning av säkerhetskopian…")
         store.loadBackupRestorePreviewSummaryAsync(for: url) { summary in
             guard selectedBackupURL == url else { return }
             selectedBackupPreview = summary
@@ -4541,7 +4558,7 @@ struct SettingsWorkspaceView: View {
         do {
             try store.createForcedBackupSnapshot(prefix: "manual")
             store.notice = StoreNotice(
-                message: store.language.text("Created backup snapshot.", "Skapade backupsnapshot."),
+                message: store.language.text("Created backup snapshot.", "Skapade säkerhetskopia."),
                 tone: .success
             )
             store.loadError = nil
@@ -4549,7 +4566,7 @@ struct SettingsWorkspaceView: View {
         } catch {
             store.loadError = error.localizedDescription
             store.notice = StoreNotice(
-                message: store.language.text("Could not create backup snapshot.", "Kunde inte skapa backupsnapshot."),
+                message: store.language.text("Could not create backup snapshot.", "Kunde inte skapa säkerhetskopia."),
                 tone: .error
             )
         }
@@ -4761,7 +4778,7 @@ struct SettingsWorkspaceView: View {
         case .export:
             return language.text("Export target", "Exporttarget")
         case .data:
-            return language.text("Data & backups", "Data och backuper")
+            return language.text("Data & backups", "Data och säkerhetskopior")
         case .listFilters:
             return language.text("List filters", "Listfilter")
         case .translations:
@@ -4839,19 +4856,23 @@ private struct TeachingFormatSettingsRow: View {
                 TextField(currentPlaceholder, text: localizedNameBinding)
                     .appTextInputChrome()
                 if canDelete {
-                    Button(role: .destructive) {
-                        let targetID = createdFormatID ?? format.id
-                        if !targetID.isEmpty {
-                            suppressPersistence = true
-                            autosaveTask?.cancel()
-                            forcedPersistTask?.cancel()
-                            store.deleteTeachingFormat(id: targetID)
+                    AppRowDeleteIconButton(
+                        title: language.text("Delete activity type", "Ta bort aktivitetstyp"),
+                        cancelTitle: language.text("Cancel", "Avbryt"),
+                        confirmationTitle: language.text("Delete activity type?", "Ta bort aktivitetstyp?"),
+                        action: {
+                            let targetID = createdFormatID ?? format.id
+                            if !targetID.isEmpty {
+                                suppressPersistence = true
+                                autosaveTask?.cancel()
+                                forcedPersistTask?.cancel()
+                                store.deleteTeachingFormat(id: targetID)
+                            }
+                        },
+                        storeAsksFirst: {
+                            store.teachingFormatDeletionShowsImpactWarning(id: createdFormatID ?? format.id)
                         }
-                    } label: {
-                        Image(systemName: "trash")
-                            .foregroundStyle(AppPalette.actionDelete)
-                    }
-                    .buttonStyle(.borderless)
+                    )
                 }
             }
         }

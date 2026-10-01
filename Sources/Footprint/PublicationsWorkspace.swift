@@ -97,9 +97,9 @@ struct PublicationsWorkspaceView: View {
             case .inPreparation:
                 return [PublicationStatus.inPreparation.rawValue]
             case .submitted:
-                return [PublicationStatus.submitted.rawValue]
+                return PublicationStatusChipValues.submitted
             case .publishedAccepted:
-                return [PublicationStatus.published.rawValue, PublicationStatus.accepted.rawValue]
+                return PublicationStatusChipValues.publishedAccepted
             case .rejected:
                 return [PublicationStatus.rejected.rawValue]
             }
@@ -196,6 +196,10 @@ struct PublicationsWorkspaceView: View {
     @State private var pendingRoutePublicationID: String?
     @State private var publicationIdleWarmupTask: DispatchWorkItem?
     @State private var publicationPipelineExpanded = false
+    /// Round 17: set when the list appears with a remembered selection; the
+    /// first time the rows are built it is moved to a visible row if a
+    /// filter hides it.
+    @State private var needsAppearSelectionCheck = false
 
     private var nonSearchMatchingPublicationRows: [PublicationListRow] {
         publicationRows.filter { row in
@@ -296,12 +300,17 @@ struct PublicationsWorkspaceView: View {
 
                             publicationTable(language: language)
 
-                            ListCountFootnote(displayedCount: filteredPublicationRows.count, totalCount: store.publications.count, language: language)
+                            // Round 17: the banner already gives the count
+                            // while a filter is on.
+                            if !hasActivePublicationFilters {
+                                ListCountFootnote(displayedCount: filteredPublicationRows.count, totalCount: store.publications.count, language: language)
+                            }
                         }
                         .padding(14)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .background(AppPalette.sidebarPanelSurface)
                         .onAppear {
+                            clearSavedPublicationFiltersAtLaunchIfNeeded()
                             guard isActive else {
                                 needsPublicationRowsRefreshWhenActive = true
                                 needsPublicationFilterRebuildWhenActive = true
@@ -314,8 +323,14 @@ struct PublicationsWorkspaceView: View {
                                 rebuildFilteredPublicationRows()
                                 setSelectedPublicationID(route.recordID, armLock: true)
                                 store.consumeRoute()
-                            } else if selectedPublicationID == nil {
-                                setSelectedPublicationID(store.lastSelectedRecordID(for: .publications) ?? filteredPublicationRows.first?.id)
+                            } else {
+                                if selectedPublicationID == nil {
+                                    setSelectedPublicationID(store.lastSelectedRecordID(for: .publications) ?? filteredPublicationRows.first?.id)
+                                }
+                                // Round 17: the remembered publication may be
+                                // hidden by a saved filter; checked when the
+                                // rows are built.
+                                needsAppearSelectionCheck = true
                             }
                             applyPresetIfNeeded()
                             schedulePublicationIdleWarmup()
@@ -660,6 +675,16 @@ struct PublicationsWorkspaceView: View {
         } else if store.publication(id: selectedPublicationID) == nil {
             setSelectedPublicationID(rows.first?.id, resignFirstResponder: false)
         }
+        if needsAppearSelectionCheck, !publicationRows.isEmpty {
+            needsAppearSelectionCheck = false
+            let next = ListSelectionPolicy.selectionAfterFilterChange(
+                selected: selectedPublicationID,
+                visibleIDs: rows.map(\.id)
+            )
+            if next != selectedPublicationID {
+                setSelectedPublicationID(next, resignFirstResponder: false)
+            }
+        }
     }
 
     private func scheduleFilteredPublicationRowsRebuild() {
@@ -887,12 +912,12 @@ struct PublicationsWorkspaceView: View {
         case .all:
             return true
         case .originalPublished:
-            return isOriginal(publication) && publication.statusLabel == PublicationStatus.published.rawValue
+            return isOriginal(publication) && isPublishedOrAccepted(publication)
         case .originalSubmitted:
             return isOriginal(publication) && (PublicationStatus.fromStored(publication.statusLabel)).isSubmittedFamily
         case .originalPublishedIndependentLeadAfterPhD:
             return isOriginal(publication)
-                && publication.statusLabel == PublicationStatus.published.rawValue
+                && isPublishedOrAccepted(publication)
                 && isIndependentLeadAfterPhD(publication)
         case .originalSubmittedIndependentLeadAfterPhD:
             return isOriginal(publication)
@@ -901,8 +926,14 @@ struct PublicationsWorkspaceView: View {
         }
     }
 
+    /// Round 17: the same statuses as the "Publicerad/accepterad" chip.
+    private func isPublishedOrAccepted(_ publication: PublicationRecord) -> Bool {
+        PublicationStatusChipValues.publishedAccepted.contains(PublicationStatus.fromStored(publication.statusLabel).rawValue)
+    }
+
+    /// Round 17: a chip looks selected only when all its statuses are.
     private func isStatusFilterOptionSelected(_ option: PublicationStatusFilterOption) -> Bool {
-        !selectedStatusFilters.isDisjoint(with: option.statusRawValues)
+        PublicationStatusChipValues.isChipSelected(values: option.statusRawValues, selected: selectedStatusFilters)
     }
 
     private func toggleStatusFilterOption(_ option: PublicationStatusFilterOption) {
@@ -1051,10 +1082,7 @@ struct PublicationsWorkspaceView: View {
                 }
             }
 
-            AppFilterClearAllRow(isVisible: hasActivePublicationFilters) {
-                resetFiltersForDirectNavigation()
-                rebuildFilteredPublicationRows()
-            }
+            // Round 17: "clear all" is the banner's "Rensa filter".
         }
     }
 
@@ -1102,20 +1130,14 @@ struct PublicationsWorkspaceView: View {
             selectedStatusFilters.removeAll()
             selectedTypeFilters.removeAll()
             showsOnlyIndependentLeadAfterPhD = false
-        case .originalPublished:
-            selectedStatusFilters = [PublicationStatus.published.rawValue]
+        // Round 17: a preset selects a chip's full set of statuses
+        // ("Publicerad/accepterad" is both), so the chip shows as selected.
+        case .originalPublished, .originalSubmitted:
+            selectedStatusFilters = PublicationStatusChipValues.statuses(for: preset)
             selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
             showsOnlyIndependentLeadAfterPhD = false
-        case .originalSubmitted:
-            selectedStatusFilters = [PublicationStatus.submitted.rawValue]
-            selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
-            showsOnlyIndependentLeadAfterPhD = false
-        case .originalPublishedIndependentLeadAfterPhD:
-            selectedStatusFilters = [PublicationStatus.published.rawValue]
-            selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
-            showsOnlyIndependentLeadAfterPhD = true
-        case .originalSubmittedIndependentLeadAfterPhD:
-            selectedStatusFilters = [PublicationStatus.submitted.rawValue]
+        case .originalPublishedIndependentLeadAfterPhD, .originalSubmittedIndependentLeadAfterPhD:
+            selectedStatusFilters = PublicationStatusChipValues.statuses(for: preset)
             selectedTypeFilters = [PublicationTypeFilterOption.original.rawValue]
             showsOnlyIndependentLeadAfterPhD = true
         }
@@ -1193,6 +1215,22 @@ struct PublicationsWorkspaceView: View {
         selectedPeerReviewFilters.removeAll()
         showsOnlyIndependentLeadAfterPhD = false
         preset = nil
+    }
+
+    /// Round 17: with "keep filters" off in Settings, filters saved by an
+    /// earlier run are cleared the first time the list is shown. A preset
+    /// from the overview is left alone.
+    private func clearSavedPublicationFiltersAtLaunchIfNeeded() {
+        guard ListFilterLaunchPolicy.shouldClearSavedFilters(
+            for: .publications,
+            retainsFilters: store.shouldRetainListFilters(for: .publications)
+        ) else { return }
+        searchText = ""
+        selectedStatusFilters.removeAll()
+        selectedTypeFilters.removeAll()
+        selectedPeerReviewFilters.removeAll()
+        showsOnlyIndependentLeadAfterPhD = false
+        RestoredListFilters.forget(workspace: "Publications")
     }
 
     private func clearPublicationFiltersForDeactivationIfNeeded() {
@@ -2076,18 +2114,13 @@ private enum PublicationPipelineCurtainLane: String, CaseIterable, Identifiable 
         }
     }
 
+    /// Round 17: every lane is work in progress or waiting for the journal,
+    /// so all lanes share the pending (yellow) tone; "published" (done,
+    /// green) has no lane here.
     var tint: Color {
         switch self {
-        case .dataCollection:
-            return AppPalette.vividBlue
-        case .dataAnalysis:
-            return AppPalette.shadeBlue
-        case .writing:
-            return AppPalette.vividOrange
-        case .withCoauthors:
-            return AppPalette.chartYellow
-        case .submitted:
-            return AppPalette.vividGreen
+        case .dataCollection, .dataAnalysis, .writing, .withCoauthors, .submitted:
+            return AppPalette.statusFill(.pending)
         }
     }
 }

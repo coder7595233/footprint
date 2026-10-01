@@ -6,10 +6,11 @@ import Foundation
 // MARK: - Short descriptions for the filtered-list banner
 
 enum ListFilterLabels {
-    /// "Sök: ”text”" for the banner, nil when there is no search text.
+    /// "Sökning ”text”" for the banner, nil when there is no search text.
+    /// Round 17: the one wording used by every list.
     static func search(_ text: String, language: AppLanguage) -> String? {
         guard let trimmed = text.trimmedOrNil else { return nil }
-        return language.text("Search: “\(trimmed)”", "Sök: ”\(trimmed)”")
+        return language.text("Search “\(trimmed)”", "Sökning ”\(trimmed)”")
     }
 
     /// "År 2020–2024" for a narrowed year range.

@@ -956,15 +956,6 @@ private struct AppFieldChromeModifier: ViewModifier {
 // MARK: - Palette
 
 enum AppPalette {
-    private static let nightGreen = hexColor(0x1F833A)
-    private static let nightYellow = hexColor(0xE2B122)
-    private static let nightRed = hexColor(0xBA1B2C)
-    private static let darkNewGreen = hexColor(0x115651)
-    private static let darkNewRed = hexColor(0x97141D)
-    private static let darkNewGold = hexColor(0xA97119)
-    private static let darkNewGoldLight = hexColor(0xD4A639)
-    private static let darkNewGreenLight = hexColor(0x306F69)
-    private static let darkNewRedLight = hexColor(0xAB2D32)
     private static let renewedDarkPanel = hexColor(0x0B0D0F)
     private static let renewedDarkPanelAlt = hexColor(0x0E1012)
     private static let renewedDarkField = hexColor(0x1F2327)
@@ -1035,9 +1026,6 @@ enum AppPalette {
 
     static let canvasTop = appChromeSurfaceColor(.workspace)
     static let canvasBottom = appChromeSurfaceColor(.workspace)
-    static let chromeTop = appChromeSurfaceColor(.menu)
-    static let chromeBottom = appChromeSurfaceColor(.menu)
-    static let navigationSurface = appChromeSurfaceColor(.menu)
     static let cardSurface = chromeDynamicColor(
         light: NSColor(calibratedWhite: 1.0, alpha: 0.82),
         dark: NSColor(calibratedRed: 0.12, green: 0.14, blue: 0.17, alpha: 0.94),
@@ -1114,12 +1102,12 @@ enum AppPalette {
         AppAppearanceRegistry.semanticColor(.positive, shaded: shaded, useDarkPalette: useDarkPalette ?? AppAppearanceRegistry.usesDarkPalette())
     }
 
+    /// Round 17: Save is the accent blue in every mode (it was green in
+    /// dark mode, which read as a status).
     static func actionSaveColor(for mode: AppVisualMode) -> NSColor {
         switch mode {
-        case .light, .lightClean:
+        case .light, .lightClean, .dark, .darkClean, .darkNew:
             return NSColor.controlAccentColor
-        case .dark, .darkClean, .darkNew:
-            return accentColor(shaded: false, useDarkPalette: true)
         }
     }
 
@@ -1159,9 +1147,6 @@ enum AppPalette {
             return linkActionColor(for: mode)
         }
     )
-    static var linkChipBackground: Color {
-        Color(nsColor: accentColor(shaded: true).withAlphaComponent(0.62))
-    }
     static func selectionColor(for mode: AppVisualMode) -> NSColor {
         switch mode {
         case .light, .lightClean:
@@ -1170,14 +1155,6 @@ enum AppPalette {
             return hexColor(0x261CC1)
         }
     }
-    static let inactiveTabSurface = chromeDynamicColor(
-        light: NSColor(calibratedWhite: 1.0, alpha: 0.85),
-        dark: NSColor(calibratedRed: 0.15, green: 0.17, blue: 0.20, alpha: 1),
-        lightClean: NSColor(calibratedRed: 0.93, green: 0.94, blue: 0.95, alpha: 1),
-        darkClean: NSColor(calibratedRed: 0.15, green: 0.16, blue: 0.18, alpha: 1),
-        renewedLight: NSColor(calibratedRed: 0.96, green: 0.97, blue: 0.95, alpha: 1),
-        renewedDark: renewedDarkPanelAlt
-    )
     static let activeTabSurface = Color(
         nsColor: NSColor(name: nil) { appearance in
             let mode = currentVisualModePreference() ?? (appearance.usesDarkPalette ? AppVisualMode.dark : .light)
@@ -1253,7 +1230,8 @@ enum AppPalette {
     static let detailPanelSurface = appChromeSurfaceColor(.workspace)
     static var vividGreen: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.positive, shaded: false)) }
     static var vividYellow: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }
-    static var vividOrange: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }
+    // Round 17: real orange (it used to equal yellow).
+    static var vividOrange: Color { statusFill(.warning) }
     static var vividRed: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.negative, shaded: false)) }
     static var vividBlue: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.neutral, shaded: false)) }
     static var shadeGreen: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.positive, shaded: true)) }
@@ -1264,17 +1242,6 @@ enum AppPalette {
     static var chartYellow: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }
     static var chartRed: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.negative, shaded: false)) }
     static var chartBlue: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.neutral, shaded: false)) }
-
-    static var statisticsGreen: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.positive, shaded: false)) }
-    static var statisticsYellow: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }
-    static var statisticsRed: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.negative, shaded: false)) }
-    static var statisticsBlue: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.neutral, shaded: false)) }
-
-    static var deadlineWarningLong: Color { statusFill(.pending) }
-
-    static var deadlineWarningShort: Color { statusFill(.warning) }
-
-    static var deadlineNeutral: Color { shadeBlue }
 
     static var timelineBarStart: Color {
         Color(nsColor: AppAppearanceRegistry.semanticColor(.positive, shaded: true))
@@ -1316,19 +1283,6 @@ enum AppPalette {
         Color(nsColor: shaded(AppAppearanceRegistry.semanticColor(.positive, shaded: false), by: 0.18))
     }
 
-    static var timelineUncertainStroke: Color {
-        Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false))
-    }
-
-    // Round 16: text colours (the pale fills were unreadable as text).
-    static var dispositionPositiveText: Color {
-        statusText(.done)
-    }
-
-    static var dispositionWarningText: Color {
-        statusText(.negative)
-    }
-
     static var statsCardPendingStart: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: false)) }
 
     static var statsCardPendingEnd: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.inProgress, shaded: true)) }
@@ -1341,55 +1295,9 @@ enum AppPalette {
 
     static var statsCardDeclinedEnd: Color { Color(nsColor: AppAppearanceRegistry.semanticColor(.negative, shaded: true)) }
 
-    /* legacy definitions retained below only for light/clean structural palette values */
-    static let legacyStatsCardPendingStart = dynamicColor(
-        light: hexColor(0xFFF3B7),
-        dark: nightYellow,
-        lightClean: hexColor(0xFFF3B7),
-        darkClean: nightYellow,
-        darkNew: darkNewGold
-    )
-
-    static let legacyStatsCardPendingEnd = dynamicColor(
-        light: hexColor(0xFFE281),
-        dark: nightYellow,
-        lightClean: hexColor(0xFFE281),
-        darkClean: nightYellow,
-        darkNew: darkNewGoldLight
-    )
-
-    static let legacyStatsCardGrantedStart = dynamicColor(
-        light: hexColor(0x71CD8C),
-        dark: nightGreen,
-        lightClean: hexColor(0x71CD8C),
-        darkClean: nightGreen,
-        darkNew: darkNewGreen
-    )
-
-    static let legacyStatsCardGrantedEnd = dynamicColor(
-        light: hexColor(0xADDDC6),
-        dark: nightGreen,
-        lightClean: hexColor(0xADDDC6),
-        darkClean: nightGreen,
-        darkNew: darkNewGreenLight
-    )
-
-    static let legacyStatsCardDeclinedStart = dynamicColor(
-        light: hexColor(0xF1BCAF),
-        dark: nightRed,
-        lightClean: hexColor(0xF1BCAF),
-        darkClean: nightRed,
-        darkNew: darkNewRed
-    )
-
-    static let legacyStatsCardDeclinedEnd = dynamicColor(
-        light: hexColor(0xF1E1D5),
-        dark: nightRed,
-        lightClean: hexColor(0xF1E1D5),
-        darkClean: nightRed,
-        darkNew: darkNewRedLight
-    )
-
+    // Round 17: the three corner radii. Small for buttons, chips and tags;
+    // medium for list rows and cards; large for panels and sheets. Use these
+    // instead of literal numbers on equivalent components.
     static var largeCornerRadius: CGFloat {
         AppRuntime.usesRenewedChrome ? 18 : (currentVisualModePreference()?.isClean == true ? 10 : 22)
     }

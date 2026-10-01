@@ -553,7 +553,7 @@ struct SalaryWorkspaceView: View {
                         Button(language.text("Export Excel", "Exportera Excel")) {
                             store.exportSalaryCoverageWorkbookToDefaultLocation()
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.bordered)
                     }
 
                     salarySelectedDetailForm(language: language)
@@ -1001,6 +1001,8 @@ struct SalaryWorkspaceView: View {
             title: store.language.text("Delete", "Ta bort"),
             font: .system(size: 12, weight: .semibold),
             width: 28,
+            cancelTitle: store.language.text("Cancel", "Avbryt"),
+            confirmationTitle: store.language.text("Delete row?", "Ta bort raden?"),
             action: action
         )
     }
@@ -2339,10 +2341,7 @@ private struct SalaryCoverageTimelineView: View {
 
     var body: some View {
         if entries.isEmpty || years.isEmpty || months.isEmpty {
-            Text(language.text("No periods", "Inga perioder"))
-                .appTypography(.secondary)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            AppCompactEmptyListLabel(title: language.text("No periods", "Inga perioder"))
         } else {
             compactTimelineBody
             .frame(height: headerSectionHeight + timelineBodyHeight)
