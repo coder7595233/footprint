@@ -9,11 +9,13 @@ enum StatisticsEditorialStyle {
     /// Hairline used between table rows.
     static var hairline: Color { AppPalette.border }
 
-    /// The app palette used by the statistics marks.
-    static let paletteGreen = Color(hex: 0xB6D8A6)
-    static let paletteYellow = Color(hex: 0xF1E08C)
-    static let paletteOrange = Color(hex: 0xF0926C)
-    static let paletteBlue = Color(hex: 0xA1D1E6)
+    /// The app palette used by the statistics marks. Round 16: the status
+    /// colours follow Settings and light/dark mode (no fixed pastels).
+    static var paletteGreen: Color { AppPalette.statusFill(.done) }
+    static var paletteYellow: Color { AppPalette.statusFill(.pending) }
+    static var paletteOrange: Color { AppPalette.statusFill(.warning) }
+    /// Blue is a category colour here (not a status): Settings' neutral colour.
+    static var paletteBlue: Color { AppPalette.vividBlue }
     static let palettePurple = Color(hex: 0xC9B8E8)
 }
 

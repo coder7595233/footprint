@@ -665,11 +665,11 @@ struct ProjectDetailView: View {
     }
 
     private func dispositionStatusColor(for application: GrantApplication) -> Color {
-        guard let deadline = application.lastDispositionDate ?? application.receivedUsageTo.flatMap({ DateParsers.isoDay.date(from: $0) }) else {
+        // Round 16: shared disposition thresholds, readable text colours.
+        if store.isEffectivelyFullySpent(application) {
             return .secondary
         }
-        let months = Calendar.current.dateComponents([.month], from: Calendar.current.startOfDay(for: Date()), to: Calendar.current.startOfDay(for: deadline)).month ?? 0
-        return months < 12 ? AppPalette.dispositionWarningText : AppPalette.dispositionPositiveText
+        return AppPalette.dispositionDeadlineText(application.dispositionDeadlineDate)
     }
 
     private func nonGrantedWorklist(from applications: [GrantApplication]) -> [GrantApplication] {
@@ -689,20 +689,7 @@ struct ProjectDetailView: View {
     }
 
     private func publicationStatusTone(for publication: PublicationRecord) -> BadgeTone {
-        switch PublicationStatus.fromStored(publication.statusLabel) {
-        case .published:
-            return .positive
-        case .accepted:
-            return .positive
-        case .rejected:
-            return .negative
-        case .submitted:
-            return .pending
-        case .planned:
-            return .pending
-        case .inPreparation:
-            return .outline
-        }
+        BadgeTone(AppStatusTones.publication(storedStatus: publication.statusLabel))
     }
 
     @ViewBuilder
@@ -930,7 +917,7 @@ struct ProjectDetailView: View {
     }
 
     private func timelineStatusColor(for application: GrantApplication) -> Color {
-        application.isGranted ? dispositionStatusColor(for: application) : AppPalette.dispositionPositiveText
+        application.isGranted ? dispositionStatusColor(for: application) : AppPalette.statusText(.pending)
     }
 
     @ViewBuilder
@@ -1312,56 +1299,21 @@ struct ProjectDetailView: View {
         return result
     }
 
+    // Round 16: the shared status tones.
     private func projectApplicationStatusColor(for application: GrantApplication) -> Color {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return store.isEffectivelyFullySpent(application)
-                ? AppPalette.vividGreen.opacity(0.72)
-                : AppPalette.vividGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.vividRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.vividYellow
-        }
-        return dynamicColor(light: NSColor(calibratedRed: 0.95, green: 0.95, blue: 0.95, alpha: 1), dark: NSColor(calibratedRed: 0.24, green: 0.24, blue: 0.24, alpha: 1))
+        AppPalette.statusCapsuleFill(store.applicationStatusTone(application))
     }
 
     private func projectApplicationStatusShadeColor(for application: GrantApplication) -> Color? {
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return AppPalette.shadeGreen
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return AppPalette.shadeRed
-        }
-        if status == "Väntar svar" {
-            return AppPalette.shadeYellow
-        }
-        return nil
+        AppPalette.statusRowFill(store.applicationStatusTone(application))
     }
 
-    private func projectPublicationStatusShadeColor(for status: PublicationStatus) -> Color {
-        switch status {
-        case .published, .accepted:
-            return AppPalette.shadeGreen
-        case .submitted, .planned, .inPreparation:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        }
+    private func projectPublicationStatusShadeColor(for status: PublicationStatus) -> Color? {
+        AppPalette.statusRowFill(AppStatusTones.publication(status))
     }
 
-    private func projectContributionStatusShadeColor(for status: CVConferenceContributionStatus) -> Color {
-        switch status {
-        case .presented, .accepted:
-            return AppPalette.shadeGreen
-        case .planned:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        }
+    private func projectContributionStatusShadeColor(for status: CVConferenceContributionStatus) -> Color? {
+        AppPalette.statusRowFill(AppStatusTones.conferenceContribution(status))
     }
 
     private func projectPublicationSortOrder(_ lhs: PublicationRecord, _ rhs: PublicationRecord) -> Bool {

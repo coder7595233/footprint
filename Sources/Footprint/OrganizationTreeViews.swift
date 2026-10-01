@@ -867,7 +867,7 @@ private struct OrganizationUnitRowEditor: View {
                 if !unit.hasValidDateRange {
                     Text(language.text("Ends before it starts", "Slutar innan den börjar"))
                         .appTypography(.secondary)
-                        .foregroundStyle(AppPalette.chartRed)
+                        .foregroundStyle(AppPalette.statusText(.negative))
                 }
                 Spacer(minLength: 0)
             }

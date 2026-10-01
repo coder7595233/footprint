@@ -707,7 +707,7 @@ struct PublicationJournalsView: View {
             AppWorkspaceEmptyStateView(
                 title: language.text("No journals found", "Inga tidskrifter hittades"),
                 subtitle: language.text("Add or search for a journal.", "Lägg till eller sök fram en tidskrift."),
-                kind: .publications,
+                kind: .journals,
                 fillsBackground: true
             )
             .background(
@@ -2294,15 +2294,9 @@ private struct PublicationJournalEditorView: View {
         }
     }
 
-    private func linkedPublicationStatusFill(for status: PublicationStatus) -> Color {
-        switch status {
-        case .published, .accepted:
-            return AppPalette.shadeGreen
-        case .submitted, .planned, .inPreparation:
-            return AppPalette.shadeYellow
-        case .rejected:
-            return AppPalette.shadeRed
-        }
+    private func linkedPublicationStatusFill(for status: PublicationStatus) -> Color? {
+        // Round 16: the shared publication tones.
+        AppPalette.statusRowFill(AppStatusTones.publication(status))
     }
 
     private func rankingKindLabel(_ kind: JournalRankingKind) -> String {
@@ -2593,11 +2587,11 @@ private enum PublicationJournalStatisticsOutcome: String, CaseIterable, Identifi
     var color: Color {
         switch self {
         case .accepted:
-            return AppPalette.vividGreen
+            return AppPalette.statusFill(.done)
         case .rejected:
-            return AppPalette.vividRed
+            return AppPalette.statusFill(.negative)
         case .waiting:
-            return AppPalette.vividYellow
+            return AppPalette.statusFill(.pending)
         }
     }
 

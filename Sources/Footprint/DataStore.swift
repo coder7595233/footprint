@@ -739,6 +739,8 @@ final class GrantDataStore: ObservableObject {
     /// The application whose "Sökt eller inte sökt?" question is shown
     /// (from the calendar or a notification). Nil when no question is open.
     @Published var pendingAppliedQuestionApplicationID: String?
+    /// Round 16: the open "Ska projektet ändras till Pågående?" question.
+    @Published var pendingOngoingQuestion: ProjectOngoingQuestion?
     @Published var pendingCongressRoute: AppRoute?
     @Published var pendingCongressRouteToken: UUID?
     @Published var pendingCalendarOpenRequest: CalendarOpenRequest?
@@ -4909,6 +4911,7 @@ final class GrantDataStore: ObservableObject {
             notice = StoreNotice(message: successMessage, tone: .success)
             loadError = nil
             refreshCurrencyExchangeRatesIfNeeded()
+            evaluateOngoingQuestion(previousApplication: previous, application: normalized)
         } catch {
             restoreSnapshotWithoutUndo(previousSnapshot)
             persistenceStatus.isSaving = false
@@ -4948,6 +4951,7 @@ final class GrantDataStore: ObservableObject {
                 previousStates: previousStates
             )
             refreshCurrencyExchangeRatesIfNeeded()
+            evaluateOngoingQuestion(previousApplication: previous, application: normalized)
         } catch {
             applications[index] = previous
             projects = previousProjects
@@ -14802,6 +14806,13 @@ final class GrantDataStore: ObservableObject {
             draft.nameEn = draft.nameSv
         }
         let oldValue = projects[index].nameSv
+        let projectBeforeSave = projects[index]
+        defer {
+            // Round 16: ask "Ska projektet ändras till Pågående?" for new events.
+            if let saved = project(id: projectBeforeSave.id), saved != projectBeforeSave {
+                evaluateOngoingQuestion(previous: projectBeforeSave, current: saved)
+            }
+        }
 
         performUndoableChange(
             actionName: language.text("Edit project", "Redigera projekt"),
@@ -14851,7 +14862,8 @@ final class GrantDataStore: ObservableObject {
                 excluding: oldValue,
                 within: projects,
                 isArchived: draft.projectStatus == .completed,
-                isEditingLocked: draft.isEditingLocked
+                isEditingLocked: draft.isEditingLocked,
+                dismissedOngoingPromptKeys: ProjectOngoingPrompt.mergedDismissedKeys(previousProject, draft)
             )
             projects[index] = updated
             propagateProjectRename(from: oldValue, to: updated)
@@ -14912,7 +14924,8 @@ final class GrantDataStore: ObservableObject {
                 excluding: oldValue,
                 within: projects,
                 isArchived: draft.projectStatus == .completed,
-                isEditingLocked: draft.isEditingLocked
+                isEditingLocked: draft.isEditingLocked,
+                dismissedOngoingPromptKeys: ProjectOngoingPrompt.mergedDismissedKeys(previousProject, draft)
             )
             let pendingSelectionAffectedSet: PersistenceSet = completePendingSelection
                 ? pendingSelectionPersistenceSet(for: .project, entityID: updated.id)
@@ -14950,6 +14963,7 @@ final class GrantDataStore: ObservableObject {
                 actionName: language.text("Edit project", "Redigera projekt"),
                 previousStates: previousStates
             )
+            evaluateOngoingQuestion(previous: previousProject, current: updated)
         } catch {
             projects[index] = previousProject
             applications = previousApplications
@@ -25192,7 +25206,8 @@ final class GrantDataStore: ObservableObject {
         excluding excludedValue: String,
         within list: [ProjectRecord],
         isArchived: Bool = false,
-        isEditingLocked: Bool = false
+        isEditingLocked: Bool = false,
+        dismissedOngoingPromptKeys: [String]? = nil
     ) -> ProjectRecord {
         let trimmedSv = nameSv.trimmedOrNil ?? fallback
         let trimmedEn = nameEn.trimmedOrNil ?? trimmedSv
@@ -25246,7 +25261,8 @@ final class GrantDataStore: ObservableObject {
             projectTasks: linkedProjectTasks,
             suppressedSeedProjectTaskComments: normalizedSuppressedSeedProjectTaskComments,
             isArchived: isArchived,
-            isEditingLocked: isEditingLocked
+            isEditingLocked: isEditingLocked,
+            dismissedOngoingPromptKeys: dismissedOngoingPromptKeys
         )
     }
 
@@ -25713,7 +25729,8 @@ final class GrantDataStore: ObservableObject {
                 sortProject: projectDisplayLabel,
                 sortAppliedCaseNumber: application.sortAppliedCaseNumber,
                 sortMaximumAmount: grantStatisticsAmountInSEK(for: application, amount: application.preferredBudgetAmountValue),
-                normalizedSearchBlob: normalizedSearchFilterText(searchBlob)
+                normalizedSearchBlob: normalizedSearchFilterText(searchBlob),
+                isEditingLocked: application.isEditingLocked
             )
         }
 
@@ -25977,6 +25994,8 @@ final class GrantDataStore: ObservableObject {
                     && (effectiveRemainingGrantedAmountValue(for: application) ?? 0) > 0
             }
             let hasActiveTasks = project.projectTasks.contains { !$0.isEmpty && !$0.isCompleted }
+            let hasProgress = AppStatusTones.projectHasOwnProgress(project)
+                || applications.contains { $0.isGranted && applicationBelongs($0, to: project) }
             return ProjectRowSnapshot(
                 id: project.id,
                 title: title,
@@ -25992,7 +26011,9 @@ final class GrantDataStore: ObservableObject {
                 status: project.projectStatus,
                 hasDataCollection: project.hasDataCollection,
                 hasActiveTasks: hasActiveTasks,
-                isLedByCurrentUser: isLedByCurrentUser
+                isLedByCurrentUser: isLedByCurrentUser,
+                statusTone: AppStatusTones.project(status: project.projectStatus, hasProgress: hasProgress),
+                isEditingLocked: project.isEditingLocked
             )
         }
 

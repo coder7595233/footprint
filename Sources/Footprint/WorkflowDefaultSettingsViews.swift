@@ -300,7 +300,7 @@ struct WorkflowDefaultSettingsPanel: View {
                 if let path = teachingMeritsTemplatePath.nonEmpty, !FileManager.default.fileExists(atPath: path) {
                     Text(language.text("The file cannot be found. The built-in template is used instead.", "Filen hittas inte. Den inbyggda mallen används i stället."))
                         .appTypography(.secondary)
-                        .foregroundStyle(AppPalette.vividRed)
+                        .foregroundStyle(AppPalette.statusText(.negative))
                 }
                 effect(language.text(
                     "Affects: the Word file the Teaching merits export is filled into. The built-in template is used when no file is chosen or the file is missing.",

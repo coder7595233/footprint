@@ -6467,7 +6467,7 @@ struct CalendarWorkspaceView: View {
     }
 
     private func detailTextColor(for event: CalendarWorkspaceEvent) -> Color {
-        event.isRolledOverPastDue ? AppPalette.vividRed : eventBodyTextColor(for: event)
+        event.isRolledOverPastDue ? AppPalette.statusText(AppStatusTones.task(isCompleted: false, isOverdue: true)) : eventBodyTextColor(for: event)
     }
 
     private func dateAccentTextColor(for group: CalendarWorkspaceDayGroup) -> Color {
@@ -7108,7 +7108,7 @@ struct CalendarWorkspaceView: View {
             return .secondary
         }
         let completedToday = workspaceCalendar.isDate(completedDate, inSameDayAs: today)
-        return completedToday ? AppPalette.vividGreen : .secondary
+        return completedToday ? AppPalette.statusText(AppStatusTones.task(isCompleted: true, isOverdue: false)) : .secondary
     }
 
     private func calendarDateLabelFormatter(format: String) -> DateFormatter {
@@ -7176,7 +7176,7 @@ struct CalendarWorkspaceView: View {
         Text(text)
             .font(.system(size: fontSize, weight: .semibold))
             .monospacedDigit()
-            .foregroundStyle(Color.black.opacity(0.9))
+            .foregroundStyle(.secondary)
             .lineLimit(1)
             .fixedSize()
             .rotationEffect(.degrees(-90))
@@ -9598,7 +9598,7 @@ private struct CalendarGoToDatePopover: View {
             if showsInvalidDate {
                 Text(language.text("Enter a date as YYYY-MM-DD.", "Ange datum som ÅÅÅÅ-MM-DD."))
                     .calendarTypography(.secondary)
-                    .foregroundStyle(AppPalette.vividRed)
+                    .foregroundStyle(AppPalette.statusText(.negative))
             }
 
             LazyVGrid(columns: monthColumns, alignment: .leading, spacing: 12) {
@@ -11154,7 +11154,7 @@ private struct CalendarTravelSheet: View {
             if uncertain.wrappedValue {
                 Text("?")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(AppPalette.vividOrange)
+                    .foregroundStyle(AppPalette.statusText(.warning))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
                     .background(
@@ -11194,7 +11194,7 @@ private struct CalendarTravelSheet: View {
             if uncertain.wrappedValue {
                 Text("?")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(AppPalette.vividOrange)
+                    .foregroundStyle(AppPalette.statusText(.warning))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
                     .background(

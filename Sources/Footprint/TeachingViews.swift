@@ -1767,7 +1767,7 @@ struct TeachingWorkspaceView: View {
     private func teachingListRowBackground(for row: TeachingAssignmentDirectoryRow) -> some View {
         AppListRowBackground(
             isSelected: row.id == selectedAssignmentID,
-            toneFill: row.retendoState.needsConfirmation ? AppPalette.vividRed : nil
+            toneFill: row.retendoState.needsConfirmation ? AppPalette.statusFill(.warning) : nil
         )
     }
 

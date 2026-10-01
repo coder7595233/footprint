@@ -825,28 +825,16 @@ struct DoctoralCandidatesWorkspaceView: View {
     private func doctoralListRowBackground(for candidate: DoctoralCandidateRecord) -> some View {
         AppListRowBackground(
             isSelected: candidate.id == selectedCandidateID,
-            toneFill: doctoralCandidateStatusColor(candidate)
+            toneFill: doctoralCandidateStatusColor(candidate),
+            isLocked: candidate.isEditingLocked
         )
     }
 
-    private func doctoralCandidateStatusColor(_ candidate: DoctoralCandidateRecord) -> Color {
-        // Round 12: supervision not confirmed in Retendo is marked red, as in
-        // the teaching list.
-        if candidate.supervisionPeriods.contains(where: \.needsRetendoConfirmation) {
-            return AppPalette.vividRed
-        }
-        if DoctoralMilestoneOutcome(rawValue: candidate.halftimeOutcomeRaw ?? "") == .endedBefore ||
-            DoctoralMilestoneOutcome(rawValue: candidate.plannedDisputationOutcomeRaw ?? "") == .endedBefore {
-            return AppPalette.shadeRed
-        }
-        if DoctoralMilestoneOutcome(rawValue: candidate.plannedDisputationOutcomeRaw ?? "") == .completed ||
-            doctoralDateIsPastOrToday(candidate.disputationDate) {
-            return Color.gray.opacity(0.58)
-        }
-        if doctoralDateIsPastOrToday(candidate.admissionDate) {
-            return AppPalette.shadeYellow
-        }
-        return Color.white
+    private func doctoralCandidateStatusColor(_ candidate: DoctoralCandidateRecord) -> Color? {
+        // Round 16: the shared doctoral tones (ongoing yellow, disputerad
+        // green, ended early grey, not started no fill). Supervision not
+        // confirmed in Retendo needs the user's action (orange).
+        AppPalette.statusRowFill(AppStatusTones.doctoral(candidate))
     }
 
     private func doctoralDateIsPastOrToday(_ rawDate: String) -> Bool {
@@ -1462,7 +1450,7 @@ private struct DoctoralCandidateDetailView: View {
                             HStack(spacing: 8) {
                                 // Round 12: red bar while not confirmed in Retendo.
                                 RoundedRectangle(cornerRadius: 1.5)
-                                    .fill(period.needsRetendoConfirmation ? AppPalette.vividRed : Color.clear)
+                                    .fill(period.needsRetendoConfirmation ? AppPalette.statusFill(.warning) : Color.clear)
                                     .frame(width: 3, height: 22)
                                     .help(period.needsRetendoConfirmation ? language.text("Not confirmed in Retendo", "Inte bekräftad i Retendo") : "")
                                 if draft.isEditingLocked {
@@ -2641,27 +2629,28 @@ private struct DoctoralCandidateDetailView: View {
     }
 
     private func supervisorStatusColor(_ status: SupervisorRowStatus) -> Color {
+        // Round 16: shared tones; no fill for planned.
         switch status {
         case .planned:
-            return Color.white
+            return AppPalette.statusFill(.none)
         case .ongoing:
-            return AppPalette.shadeYellow
+            return AppPalette.statusFill(.pending)
         case .endedWithoutDisputation:
-            return AppPalette.shadeRed
+            return AppPalette.statusFill(.inactive)
         case .endedWithDisputation:
-            return AppPalette.shadeGreen
+            return AppPalette.statusFill(.done)
         }
     }
 
     private func doctoralCourseStatusColor(_ course: DoctoralCandidateCourse) -> Color {
         if course.completedOn?.trimmedOrNil != nil {
-            return AppPalette.shadeGreen
+            return AppPalette.statusFill(.done)
         }
         if let year = Int(course.year.trimmingCharacters(in: .whitespacesAndNewlines)),
            year <= Calendar.current.component(.year, from: Date()) {
-            return AppPalette.shadeYellow
+            return AppPalette.statusFill(.pending)
         }
-        return Color.white
+        return AppPalette.statusFill(.none)
     }
 
     private var doctoralCourseCreditsSummary: String {

@@ -496,7 +496,9 @@ struct ProjectsWorkspaceView: View {
             hasDataCollection: project.hasDataCollection,
             hasActiveTasks: project.hasActiveTasks,
             collaboratorNames: project.collaboratorNames,
-            collaboratorFlags: project.collaboratorFlags
+            collaboratorFlags: project.collaboratorFlags,
+            statusTone: project.statusTone,
+            isEditingLocked: project.isEditingLocked
         )
     }
 
@@ -899,18 +901,14 @@ struct ProjectsWorkspaceView: View {
     private func projectListRowBackground(for row: ProjectDirectoryRow) -> some View {
         AppListRowBackground(
             isSelected: row.id == selectedProjectID,
-            toneFill: projectStatusShadeColor(for: row)
+            toneFill: projectStatusShadeColor(for: row),
+            isLocked: row.isEditingLocked
         )
     }
 
-    private func projectStatusShadeColor(for row: ProjectDirectoryRow) -> Color {
-        if row.status == .completed {
-            return AppPalette.shadeRed
-        }
-        if row.status == .ongoing && row.hasDataCollection {
-            return AppPalette.shadeGreen
-        }
-        return AppPalette.shadeYellow
+    private func projectStatusShadeColor(for row: ProjectDirectoryRow) -> Color? {
+        // Round 16: the shared project rule (completed grey, not red).
+        AppPalette.statusRowFill(row.statusTone)
     }
 
     private func projectLeaderLabel(for row: ProjectDirectoryRow, language: AppLanguage) -> String {
@@ -944,6 +942,8 @@ struct ProjectDirectoryRow: Identifiable {
     let hasActiveTasks: Bool
     let collaboratorNames: [String]
     let collaboratorFlags: [String]
+    var statusTone: AppStatusTone = .none
+    var isEditingLocked: Bool = false
 
     var sortTitle: String { title }
     var sortLeaderName: String { leaderName }

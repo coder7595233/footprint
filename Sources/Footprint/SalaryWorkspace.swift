@@ -2595,7 +2595,7 @@ private struct SalaryCoverageTimelineView: View {
         if today >= timelineStart && today <= timelineEndExclusive {
             let markerWidth: CGFloat = 3
             Rectangle()
-                .fill(Color(red: 0.98, green: 0.08, blue: 0.08))
+                .fill(AppPalette.todayMarker)
                 .frame(width: markerWidth, height: height)
                 .offset(x: positionX(for: today, monthWidth: monthWidth) - markerWidth / 2)
                 .allowsHitTesting(false)

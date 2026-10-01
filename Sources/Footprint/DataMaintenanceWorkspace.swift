@@ -329,12 +329,13 @@ private struct DataQualityStatusIcon: View {
 
     private var color: Color {
         switch tone {
+        // Round 16: readable text colours for symbols on the background.
         case .ok:
-            return AppPalette.vividGreen
+            return AppPalette.statusText(.done)
         case .warning:
-            return AppPalette.vividOrange
+            return AppPalette.statusText(.warning)
         case .critical:
-            return AppPalette.vividRed
+            return AppPalette.statusText(.negative)
         case .info:
             return AppPalette.linkAction
         }
@@ -1636,7 +1637,7 @@ struct DataMaintenanceWorkspaceView: View {
                     }
                 }
                 dataQualityIconButton(
-                    systemImage: "arrow.up.right.square",
+                    systemImage: "arrow.right.circle",
                     help: language.text("Show", "Visa")
                 ) {
                     dismiss()
@@ -1671,7 +1672,7 @@ struct DataMaintenanceWorkspaceView: View {
                         }
                     }
                 } label: {
-                    Image(systemName: "arrow.up.right.square")
+                    Image(systemName: "arrow.right.circle")
                         .frame(width: 24, height: 22)
                 }
                 .menuStyle(.borderlessButton)
@@ -1702,7 +1703,7 @@ struct DataMaintenanceWorkspaceView: View {
                     }
                 }
                 dataQualityIconButton(
-                    systemImage: "arrow.up.right.square",
+                    systemImage: "arrow.right.circle",
                     help: language.text("Show", "Visa")
                 ) {
                     dismiss()
@@ -1733,7 +1734,7 @@ struct DataMaintenanceWorkspaceView: View {
                 if let destination = entry.destination,
                    let recordID = entry.recordID {
                     dataQualityIconButton(
-                        systemImage: "arrow.up.right.square",
+                        systemImage: "arrow.right.circle",
                         help: language.text("Show", "Visa")
                     ) {
                         dismiss()
@@ -1802,13 +1803,13 @@ struct DataMaintenanceWorkspaceView: View {
     private func filterTint(_ filter: DataQualityIssueFilter) -> Color {
         switch filter {
         case .missingFields:
-            return AppPalette.vividOrange
+            return AppPalette.statusText(.warning)
         case .duplicates:
             return AppPalette.linkAction
         case .integrity:
-            return AppPalette.vividRed
+            return AppPalette.statusText(.negative)
         case .structure:
-            return AppPalette.chartGreen
+            return AppPalette.statusText(.done)
         case .archive, .revisions:
             return AppPalette.appText.opacity(0.62)
         }
@@ -2378,11 +2379,11 @@ struct DataMaintenanceWorkspaceView: View {
                     Spacer()
                     Text("\(percent)%")
                         .appTypography(.tableHeader)
-                        .foregroundStyle(percent == 100 ? AppPalette.chartGreen : AppPalette.linkAction)
+                        .foregroundStyle(percent == 100 ? AppPalette.statusText(.done) : AppPalette.linkAction)
                 }
                 ProgressView(value: item.completionFraction)
                     .progressViewStyle(.linear)
-                    .tint(percent == 100 ? AppPalette.chartGreen : AppPalette.linkAction)
+                    .tint(percent == 100 ? AppPalette.statusText(.done) : AppPalette.linkAction)
                 HStack {
                     Text(language.text(
                         "\(item.completeRecords) of \(item.totalRecords) complete",
@@ -2762,7 +2763,7 @@ private struct IssueSeverityBadge: View {
     private var fill: Color {
         switch severity {
         case .critical:
-            return AppPalette.shadeRed.opacity(0.22)
+            return AppPalette.statusFill(.negative).opacity(0.22)
         case .warning:
             return AppPalette.pillSurface.opacity(0.9)
         }
@@ -2771,9 +2772,9 @@ private struct IssueSeverityBadge: View {
     private var textColor: Color {
         switch severity {
         case .critical:
-            return AppPalette.vividRed
+            return AppPalette.statusText(.negative)
         case .warning:
-            return AppPalette.vividOrange
+            return AppPalette.statusText(.warning)
         }
     }
 

@@ -629,41 +629,9 @@ private struct OrganizationCompactGrantApplicationsTable: View {
     }
 
     private func statusBadgeColors(for application: GrantApplication) -> (foreground: Color, background: Color, stroke: Color) {
-        if application.isToApplyStatus {
-            return (
-                foreground: AppPalette.appText,
-                background: AppPalette.fieldSurface,
-                stroke: AppPalette.border
-            )
-        }
-
-        let status = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        if application.isGranted {
-            return (
-                foreground: AppPalette.semanticOnColor,
-                background: AppPalette.vividGreen,
-                stroke: AppPalette.vividGreen.opacity(0.78)
-            )
-        }
-        if status == "Avslag" || status == "Tillbakadragen" {
-            return (
-                foreground: AppPalette.semanticOnColor,
-                background: AppPalette.vividRed,
-                stroke: AppPalette.vividRed.opacity(0.78)
-            )
-        }
-        if status == "Väntar svar" {
-            return (
-                foreground: AppPalette.semanticOnColor,
-                background: AppPalette.vividYellow,
-                stroke: AppPalette.vividYellow.opacity(0.82)
-            )
-        }
-        return (
-            foreground: AppPalette.semanticOnColor,
-            background: AppPalette.vividYellow,
-            stroke: AppPalette.vividYellow.opacity(0.82)
-        )
+        // Round 16: the shared application status tones.
+        let colors = AppBadgeColors.status(store.applicationStatusTone(application))
+        return (foreground: colors.foreground, background: colors.background, stroke: colors.stroke)
     }
 }
 
