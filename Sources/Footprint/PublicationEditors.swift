@@ -1496,11 +1496,11 @@ struct PublicationEditorView: View {
                                 )
                             }
                             }
-                            compactField(language.text("Peer review", "Granskning"), width: 150) {
+                            compactField(language.text("Peer reviewed", "Expertgranskad"), width: 150) {
                                 if isEditingLocked {
                                     lockedPublicationValueText(draft.isPeerReviewed ? language.text("Yes", "Ja") : language.text("No", "Nej"))
                                 } else {
-                                    Toggle(language.text("Peer reviewed", "Expertgranskad"), isOn: boolBinding(\.isPeerReviewed))
+                                    Toggle(language.text("Yes", "Ja"), isOn: boolBinding(\.isPeerReviewed))
                                         .appCheckboxStyle()
                                 }
                             }
