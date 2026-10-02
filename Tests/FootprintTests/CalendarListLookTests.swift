@@ -97,4 +97,172 @@ final class CalendarListLookTests: XCTestCase {
         XCTAssertEqual(calendarMeetingCategoryIconName(place: "Exempelstad"), "person.2")
         XCTAssertEqual(calendarMeetingCategoryIconName(place: ""), "person.2")
     }
+
+    // MARK: Title with organisation
+
+    func testTitleGetsOrganisationInParentheses() {
+        XCTAssertEqual(
+            calendarListTitleText(title: "Intervju postdoc", organization: "Påhittat universitet"),
+            "Intervju postdoc (Påhittat universitet)"
+        )
+        XCTAssertEqual(
+            calendarListTitleText(title: "Intervju postdoc", organization: "  Påhittat universitet "),
+            "Intervju postdoc (Påhittat universitet)"
+        )
+    }
+
+    func testTitleWithoutOrHiddenOrganisationStaysAsItIs() {
+        XCTAssertEqual(calendarListTitleText(title: "Intervju postdoc", organization: nil), "Intervju postdoc")
+        XCTAssertEqual(calendarListTitleText(title: "Intervju postdoc", organization: " "), "Intervju postdoc")
+    }
+
+    func testOrganisationIsNotRepeatedOrShownWithoutTitle() {
+        // A grant whose title falls back to the funder's name.
+        XCTAssertEqual(calendarListTitleText(title: "Exempelfonden", organization: "exempelfonden"), "Exempelfonden")
+        XCTAssertEqual(
+            calendarListTitleText(title: "Möte (Exempelfonden)", organization: "Exempelfonden"),
+            "Möte (Exempelfonden)"
+        )
+        // Leave categories show no title, so nothing to put it after.
+        XCTAssertEqual(calendarListTitleText(title: "", organization: "Exempelfonden"), "")
+    }
+
+    // MARK: Participants apart from the title
+
+    func testMeetingTitleKeepsParticipantsApartForTheList() {
+        let parts = calendarMeetingTitleParts(
+            title: "Möte",
+            participantNames: ["Anna Exempel", "Bertil Exempel"],
+            isLeave: false,
+            language: .swedish
+        )
+        // The rest of the app keeps the old title with participants.
+        XCTAssertEqual(parts.title, "Möte (Anna Exempel, Bertil Exempel)")
+        XCTAssertEqual(parts.listTitle, "Möte")
+        XCTAssertEqual(parts.participantNames, ["Anna Exempel", "Bertil Exempel"])
+    }
+
+    func testMeetingTitleWithoutParticipantsOrTitle() {
+        let parts = calendarMeetingTitleParts(title: " ", participantNames: [], isLeave: false, language: .swedish)
+        XCTAssertEqual(parts.title, "Aktivitet")
+        XCTAssertEqual(parts.listTitle, "Aktivitet")
+        XCTAssertEqual(parts.participantNames, [])
+    }
+
+    func testLeaveMeetingShowsNoTitleAndNoParticipants() {
+        let parts = calendarMeetingTitleParts(
+            title: "Semester",
+            participantNames: ["Anna Exempel"],
+            isLeave: true,
+            language: .swedish
+        )
+        XCTAssertEqual(parts, CalendarMeetingTitleParts(title: "", listTitle: "", participantNames: []))
+    }
+
+    func testParticipantsLineSkipsBlanksAndRepeats() {
+        XCTAssertEqual(
+            calendarListParticipantsText(["Anna Exempel", " ", "Bertil Exempel ", "Anna Exempel"]),
+            "Anna Exempel, Bertil Exempel"
+        )
+        XCTAssertEqual(calendarListParticipantsText([]), "")
+    }
+
+    // MARK: Detail parts and "Visa i raden"
+
+    func testDetailPartsKeepOnlyPartsWithText() {
+        let parts = calendarDetailParts([
+            (nil, "Hybrid"),
+            (.note, " "),
+            (.publication, "Publikation: Påhittad studie"),
+            (.application, nil)
+        ])
+        XCTAssertEqual(parts, [
+            CalendarWorkspaceDetailPart(nil, "Hybrid"),
+            CalendarWorkspaceDetailPart(.publication, "Publikation: Påhittad studie")
+        ])
+    }
+
+    func testHiddenDetailPartsAreLeftOutOfTheRow() {
+        let event = makeEvent(
+            detail: "Hybrid · Agenda · Publikation: Påhittad studie · Anslag: Påhittat anslag",
+            detailParts: [
+                CalendarWorkspaceDetailPart(nil, "Hybrid"),
+                CalendarWorkspaceDetailPart(.note, "Agenda"),
+                CalendarWorkspaceDetailPart(.publication, "Publikation: Påhittad studie"),
+                CalendarWorkspaceDetailPart(.application, "Anslag: Påhittat anslag")
+            ]
+        )
+        XCTAssertEqual(
+            calendarListVisibleDetailText(for: event, hiddenKinds: [], language: .swedish),
+            "Hybrid · Agenda · Publikation: Påhittad studie · Anslag: Påhittat anslag"
+        )
+        XCTAssertEqual(
+            calendarListVisibleDetailText(for: event, hiddenKinds: [.publication, .application], language: .swedish),
+            "Hybrid · Agenda"
+        )
+        // Parts without a kind always show.
+        XCTAssertEqual(
+            calendarListVisibleDetailText(
+                for: event,
+                hiddenKinds: Set(CalendarListDetailKind.allCases),
+                language: .swedish
+            ),
+            "Hybrid"
+        )
+    }
+
+    func testRowsWithoutPartsShowTheirWholeDetail() {
+        let event = makeEvent(detail: "Accepterat: 2026-09-01", detailParts: nil, isDateUncertain: true)
+        XCTAssertEqual(
+            calendarListVisibleDetailText(for: event, hiddenKinds: Set(CalendarListDetailKind.allCases), language: .swedish),
+            "Osäkert datum · Accepterat: 2026-09-01"
+        )
+    }
+
+    func testDetailSettingsHaveSwedishNamesAndDistinctStorageKeys() {
+        XCTAssertEqual(CalendarListDetailKind.participants.title(language: .swedish), "Deltagare")
+        XCTAssertEqual(CalendarListDetailKind.organization.title(language: .swedish), "Organisation")
+        XCTAssertEqual(CalendarListDetailKind.publication.title(language: .swedish), "Publikation")
+        XCTAssertEqual(CalendarListDetailKind.application.title(language: .swedish), "Ansökan")
+        XCTAssertEqual(CalendarListDetailKind.teaching.title(language: .swedish), "Undervisning")
+        let keys = CalendarListDetailKind.allCases.map(\.hiddenStorageKey)
+        XCTAssertEqual(Set(keys).count, keys.count)
+        XCTAssertTrue(keys.allSatisfy { $0.hasPrefix("rowDetail.") })
+    }
+
+    // MARK: Link symbols
+
+    func testLinkSymbolFollowsWhatTheLinkOpens() {
+        XCTAssertEqual(calendarListLinkSymbolName(for: .project), AppTab.projects.symbolName)
+        XCTAssertEqual(calendarListLinkSymbolName(for: .publication), AppTab.publications.symbolName)
+        XCTAssertEqual(calendarListLinkSymbolName(for: .application), AppTab.applications.symbolName)
+        XCTAssertEqual(calendarListLinkSymbolName(for: .organization), AppTab.organizations.symbolName)
+        XCTAssertEqual(calendarListLinkSymbolName(for: .congress), AppTab.congresses.symbolName)
+        XCTAssertEqual(calendarListLinkSymbolName(for: .doctoralCandidate), AppTab.doctoralCandidates.symbolName)
+        XCTAssertEqual(calendarListLinkSymbolName(for: .teaching), AppTab.teaching.symbolName)
+        XCTAssertEqual(calendarListLinkSymbolName(for: .web), "link")
+    }
+
+    private func makeEvent(
+        detail: String,
+        detailParts: [CalendarWorkspaceDetailPart]?,
+        isDateUncertain: Bool = false
+    ) -> CalendarWorkspaceEvent {
+        CalendarWorkspaceEvent(
+            id: "meeting:example",
+            source: .meeting("example"),
+            displayDate: Date(timeIntervalSince1970: 0),
+            isDateUncertain: isDateUncertain,
+            title: "Möte",
+            subtitle: "",
+            detail: detail,
+            place: "",
+            timeText: "",
+            kind: .meeting,
+            detailParts: detailParts,
+            completedOn: nil,
+            action: nil,
+            toggleCompletion: nil
+        )
+    }
 }

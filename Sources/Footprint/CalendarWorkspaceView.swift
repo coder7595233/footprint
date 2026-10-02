@@ -36,6 +36,20 @@ struct CalendarWorkspaceEvent: Identifiable {
     let kind: CalendarWorkspaceEventKind
     var meetingCategoryName: String? = nil
     var travelMode: CalendarTravelMode? = nil
+    /// The calendar list's own title: a meeting's title without the
+    /// participants that `title` carries in parentheses. Nil when the list
+    /// shows `title` as it is.
+    var listTitle: String? = nil
+    /// The people the calendar list shows on their own line under the title.
+    var participantNames: [String] = []
+    /// The organisation the calendar list can show in parentheses after the
+    /// title ("Intervju (Påhittat universitet)").
+    var organizationName: String? = nil
+    /// The calendar list's detail line split into its parts, so the
+    /// "Visa i raden" settings can leave parts out. Nil: the list shows
+    /// `detail` as one part. Participants and the organisation are not
+    /// repeated here; the list shows them on their own.
+    var detailParts: [CalendarWorkspaceDetailPart]? = nil
     let completedOn: String?
     let action: (() -> Void)?
     let toggleCompletion: ((Bool) -> Void)?
@@ -129,6 +143,182 @@ func calendarMeetingCategoryIconName(place: String) -> String {
 
 func calendarPlaceIsOnline(_ place: String) -> Bool {
     place.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare("Online") == .orderedSame
+}
+
+/// The parts a calendar list row can show besides its title. Each one has a
+/// checkbox under "Visa i raden" in the calendar sidebar.
+enum CalendarListDetailKind: String, CaseIterable, Hashable, Identifiable {
+    case participants
+    case organization
+    case publication
+    case application
+    case teaching
+    case doctoralCandidate
+    case congress
+    case media
+    case note
+    case reference
+
+    var id: String { rawValue }
+
+    /// Stored among the calendar's hidden column keys, with a prefix so it
+    /// never clashes with a column name.
+    var hiddenStorageKey: String { "rowDetail.\(rawValue)" }
+
+    func title(language: AppLanguage) -> String {
+        switch self {
+        case .participants:
+            return language.text("Participants", "Deltagare")
+        case .organization:
+            return language.text("Organisation", "Organisation")
+        case .publication:
+            return language.text("Publication", "Publikation")
+        case .application:
+            return language.text("Application", "Ansökan")
+        case .teaching:
+            return language.text("Teaching", "Undervisning")
+        case .doctoralCandidate:
+            return language.text("Doctoral candidate", "Doktorand")
+        case .congress:
+            return language.text("Congress", "Kongress")
+        case .media:
+            return language.text("Media", "Media")
+        case .note:
+            return language.text("Notes", "Anteckningar")
+        case .reference:
+            return language.text("Booking reference", "Bokningsreferens")
+        }
+    }
+}
+
+/// One part of a calendar list row's grey detail line. Parts without a kind
+/// (an uncertain date, "Hybrid", a deadline's own dates) always show.
+struct CalendarWorkspaceDetailPart: Hashable {
+    let kind: CalendarListDetailKind?
+    let text: String
+
+    init(_ kind: CalendarListDetailKind?, _ text: String) {
+        self.kind = kind
+        self.text = text
+    }
+}
+
+/// The detail parts that have text, in order. Builders pass optional texts
+/// and keep only the ones that are there.
+func calendarDetailParts(_ parts: [(CalendarListDetailKind?, String?)]) -> [CalendarWorkspaceDetailPart] {
+    parts.compactMap { part -> CalendarWorkspaceDetailPart? in
+        guard let text = part.1?.trimmedOrNil else { return nil }
+        return CalendarWorkspaceDetailPart(part.0, text)
+    }
+}
+
+/// The title on a calendar list row: the title, then the organisation in
+/// parentheses when one is given and it is not already the title itself,
+/// e.g. "Intervju postdoc (Påhittat universitet)". Pass nil as the
+/// organisation when the Organisation setting is off.
+func calendarListTitleText(title: String, organization: String?) -> String {
+    let cleanedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !cleanedTitle.isEmpty,
+          let organization = organization?.trimmedOrNil,
+          cleanedTitle.caseInsensitiveCompare(organization) != .orderedSame,
+          !cleanedTitle.hasSuffix("(\(organization))") else {
+        return cleanedTitle
+    }
+    return "\(cleanedTitle) (\(organization))"
+}
+
+/// The participants line under a calendar list row's title: "Anna, Bertil".
+func calendarListParticipantsText(_ names: [String]) -> String {
+    var seen = Set<String>()
+    return names
+        .compactMap(\.trimmedOrNil)
+        .filter { seen.insert($0).inserted }
+        .joined(separator: ", ")
+}
+
+/// A meeting's title in two forms: `title` with the participants in
+/// parentheses ("Möte (Anna, Bertil)"), as the rest of the app shows it, and
+/// `listTitle` with `participantNames` apart, for the calendar list.
+/// Categories marked "Leave" show no title and no participants.
+struct CalendarMeetingTitleParts: Equatable {
+    let title: String
+    let listTitle: String
+    let participantNames: [String]
+}
+
+func calendarMeetingTitleParts(
+    title rawTitle: String,
+    participantNames: [String],
+    isLeave: Bool,
+    language: AppLanguage
+) -> CalendarMeetingTitleParts {
+    // Categories marked "Leave" in Settings > Calendar categories show no title.
+    guard !isLeave else {
+        return CalendarMeetingTitleParts(title: "", listTitle: "", participantNames: [])
+    }
+    let base = rawTitle.nonEmpty ?? language.text("Activity", "Aktivitet")
+    let title = participantNames.isEmpty
+        ? base
+        : "\(base) (\(participantNames.joined(separator: ", ")))"
+    return CalendarMeetingTitleParts(
+        title: title,
+        listTitle: base,
+        participantNames: participantNames.compactMap(\.trimmedOrNil)
+    )
+}
+
+/// What a link button next to a calendar list title opens. It decides the
+/// button's symbol: the same symbol as the page the link opens.
+enum CalendarListLinkTarget: Hashable {
+    case project
+    case publication
+    case application
+    case organization
+    case congress
+    case doctoralCandidate
+    case teaching
+    case web
+}
+
+func calendarListLinkSymbolName(for target: CalendarListLinkTarget) -> String {
+    switch target {
+    case .project:
+        return AppTab.projects.symbolName
+    case .publication:
+        return AppTab.publications.symbolName
+    case .application:
+        return AppTab.applications.symbolName
+    case .organization:
+        return AppTab.organizations.symbolName
+    case .congress:
+        return AppTab.congresses.symbolName
+    case .doctoralCandidate:
+        return AppTab.doctoralCandidates.symbolName
+    case .teaching:
+        return AppTab.teaching.symbolName
+    case .web:
+        return "link"
+    }
+}
+
+/// The grey detail line of a calendar list row, with the parts the
+/// "Visa i raden" settings hide left out. Rows without split parts show
+/// their whole detail text as before.
+func calendarListVisibleDetailText(
+    for event: CalendarWorkspaceEvent,
+    hiddenKinds: Set<CalendarListDetailKind>,
+    language: AppLanguage
+) -> String {
+    guard let parts = event.detailParts else {
+        return calendarWorkspaceVisibleDetailText(for: event, language: language)
+    }
+    let uncertainText: String? = event.isDateUncertain ? language.text("Uncertain date", "Osäkert datum") : nil
+    let shownParts: [String] = parts
+        .filter { part in part.kind.map { !hiddenKinds.contains($0) } ?? true }
+        .map(\.text)
+    return ([uncertainText] + shownParts.map { Optional($0) })
+        .compactMap { $0?.trimmedOrNil }
+        .joined(separator: " · ")
 }
 
 func calendarWorkspaceVisibleDetailText(for event: CalendarWorkspaceEvent, language: AppLanguage) -> String {
@@ -291,7 +481,8 @@ private enum CalendarWorkspaceColumn: String, CaseIterable, Hashable, Identifiab
         case .title:
             return 210
         case .completion:
-            return 34
+            // Room for the "Klar"/"Done" header; the ring sits centred.
+            return 42
         case .details:
             return 280
         case .place:
@@ -537,6 +728,9 @@ private struct CalendarWorkspaceCache {
     var projectReferencesByEventID: [String: [(id: String, label: String)]] = [:]
     var visibleDetailTextByEventID: [String: String] = [:]
     var detailLinkPresentationByEventID: [String: CalendarDetailLinkPresentation] = [:]
+    /// The list row's detail line for rows split into parts, with the parts
+    /// hidden under "Visa i raden" left out.
+    var listDetailPresentationByEventID: [String: CalendarDetailLinkPresentation] = [:]
     var searchTextByEventID: [String: String] = [:]
     var projectOptions: [(id: String, label: String)] = []
     var researcherOptions: [String] = []
@@ -712,6 +906,38 @@ private struct CalendarDetailRecordLink: Identifiable {
     let title: String
     let systemImage: String
     let destination: Destination
+
+    /// What the link opens; decides its symbol in the list rows.
+    var linkTarget: CalendarListLinkTarget {
+        switch destination {
+        case .application:
+            return .application
+        case .publication:
+            return .publication
+        case .congress:
+            return .congress
+        case .teachingAssignment, .teachingCourse:
+            return .teaching
+        case .doctoralCandidate:
+            return .doctoralCandidate
+        }
+    }
+
+    /// The "Visa i raden" setting that shows or hides the link in the rows.
+    var detailKind: CalendarListDetailKind {
+        switch destination {
+        case .application:
+            return .application
+        case .publication:
+            return .publication
+        case .congress:
+            return .congress
+        case .teachingAssignment, .teachingCourse:
+            return .teaching
+        case .doctoralCandidate:
+            return .doctoralCandidate
+        }
+    }
 }
 
 private struct CalendarViewportRestoreSnapshot {
@@ -786,7 +1012,9 @@ private struct CalendarItalicTextModifier: ViewModifier {
     }
 }
 
-private let calendarMinimumFontSize: Double = 12
+/// No calendar text is smaller than this (details, headers and labels
+/// included).
+private let calendarMinimumFontSize: Double = 13
 
 private func calendarTextStyle(for role: AppTypographyRole) -> AppTextStyleSetting {
     let typography = AppAppearanceRegistry.typography()
@@ -817,6 +1045,18 @@ private func calendarAppFont(_ role: AppTypographyRole) -> Font {
     return .system(
         size: max(style.size, calendarMinimumFontSize),
         weight: style.weight.swiftUIWeight,
+        design: style.family.swiftUIDesign
+    )
+}
+
+/// The week header row's font: semibold, 2 pt larger than the secondary
+/// text size (14 pt with the standard 12 pt secondary size), never under
+/// the calendar's minimum size.
+private func calendarWeekHeaderFont() -> Font {
+    let style = calendarTextStyle(for: .secondary)
+    return .system(
+        size: max(style.size + 2, calendarMinimumFontSize),
+        weight: .semibold,
         design: style.family.swiftUIDesign
     )
 }
@@ -2224,6 +2464,9 @@ func buildFootprintCalendarEvents(
                 place: "",
                 timeText: "",
                 kind: .applicationDeadline,
+                // The list shows the funder after the title, not underneath.
+                organizationName: organization,
+                detailParts: [],
                 completedOn: nil,
                 action: { store.openRoute(for: application) },
                 toggleCompletion: nil
@@ -2320,28 +2563,25 @@ func buildFootprintCalendarEvents(
             return nil
         }
 
+        let detailParts = calendarTaskDetailParts(
+            note: task.note,
+            publicationID: task.publicationID,
+            applicationID: task.applicationID,
+            publicationsByID: publicationsByID,
+            applicationsByID: applicationsByID,
+            store: store,
+            language: language
+        )
+        let organizationName = organization.displayName(for: language)
+
         return CalendarWorkspaceEvent(
             id: "organization-task:\(organization.id):\(task.id)",
             source: .organizationTask(organizationID: organization.id, taskID: task.id),
             displayDate: displayDate,
             isRolledOverPastDue: isRolledOverPastDue,
             title: comment,
-            subtitle: organization.displayName(for: language),
-            detail: [
-                task.note.nonEmpty,
-                task.publicationID.flatMap { id in
-                    publicationsByID[id]?.title.nonEmpty
-                }?.map { "\(language.text("Publication", "Publikation")): \($0)" },
-                task.applicationID.flatMap { id in
-                    applicationsByID[id].map { application in
-                        let grantTitle = store.localizedGrantName(for: application, language: language).nonEmpty
-                            ?? store.organizationLabel(for: application, language: language)
-                        return "\(language.text("Grant", "Anslag")): \(grantTitle)"
-                    }
-                }
-            ]
-            .compactMap { $0 }
-            .joined(separator: " · "),
+            subtitle: organizationName,
+            detail: detailParts.map(\.text).joined(separator: " · "),
             place: formattedCalendarPlace(
                 city: organization.city,
                 country: organization.country,
@@ -2350,6 +2590,8 @@ func buildFootprintCalendarEvents(
             ),
             timeText: "",
             kind: .taskDeadline,
+            organizationName: organizationName,
+            detailParts: detailParts,
             completedOn: task.completedOn,
             action: { store.openRoute(for: organization) },
             toggleCompletion: { isCompleted in
@@ -2394,6 +2636,16 @@ func buildFootprintCalendarEvents(
             return nil
         }
 
+        let detailParts = calendarTaskDetailParts(
+            note: task.note,
+            publicationID: task.publicationID,
+            applicationID: task.applicationID,
+            publicationsByID: publicationsByID,
+            applicationsByID: applicationsByID,
+            store: store,
+            language: language
+        )
+
         return CalendarWorkspaceEvent(
             id: "project-task:\(project.id):\(task.id)",
             source: .projectTask(projectID: project.id, taskID: task.id),
@@ -2401,24 +2653,11 @@ func buildFootprintCalendarEvents(
             isRolledOverPastDue: isRolledOverPastDue,
             title: comment,
             subtitle: project.displayName(for: language),
-            detail: [
-                task.note.nonEmpty,
-                task.publicationID.flatMap { id in
-                    publicationsByID[id]?.title.nonEmpty
-                }?.map { "\(language.text("Publication", "Publikation")): \($0)" },
-                task.applicationID.flatMap { id in
-                    applicationsByID[id].map { application in
-                        let grantTitle = store.localizedGrantName(for: application, language: language).nonEmpty
-                            ?? store.organizationLabel(for: application, language: language)
-                        return "\(language.text("Grant", "Anslag")): \(grantTitle)"
-                    }
-                }
-            ]
-            .compactMap { $0 }
-            .joined(separator: " · "),
+            detail: detailParts.map(\.text).joined(separator: " · "),
             place: "",
             timeText: "",
             kind: .taskDeadline,
+            detailParts: detailParts,
             completedOn: task.completedOn,
             action: {
                 store.route = AppRoute(recordID: project.id, destination: .projects)
@@ -2461,6 +2700,17 @@ func buildFootprintCalendarEvents(
             return nil
         }
 
+        // The task's own publication is the row's context, not a detail.
+        let detailParts = calendarTaskDetailParts(
+            note: task.note,
+            publicationID: nil,
+            applicationID: task.applicationID,
+            publicationsByID: publicationsByID,
+            applicationsByID: applicationsByID,
+            store: store,
+            language: language
+        )
+
         return CalendarWorkspaceEvent(
             id: "publication-task:\(publication.id):\(task.id)",
             source: .publicationTask(publicationID: publication.id, taskID: task.id),
@@ -2468,21 +2718,11 @@ func buildFootprintCalendarEvents(
             isRolledOverPastDue: isRolledOverPastDue,
             title: comment,
             subtitle: publication.title.nonEmpty ?? language.text("Untitled", "Utan titel"),
-            detail: [
-                task.note.nonEmpty,
-                task.applicationID.flatMap { id in
-                    applicationsByID[id].map { application in
-                        let grantTitle = store.localizedGrantName(for: application, language: language).nonEmpty
-                            ?? store.organizationLabel(for: application, language: language)
-                        return "\(language.text("Grant", "Anslag")): \(grantTitle)"
-                    }
-                }
-            ]
-            .compactMap { $0 }
-            .joined(separator: " · "),
+            detail: detailParts.map(\.text).joined(separator: " · "),
             place: "",
             timeText: "",
             kind: .taskDeadline,
+            detailParts: detailParts,
             completedOn: task.completedOn,
             action: { store.openRoute(for: publication) },
             toggleCompletion: { isCompleted in
@@ -2520,6 +2760,16 @@ func buildFootprintCalendarEvents(
             return nil
         }
 
+        let detailParts = calendarTaskDetailParts(
+            note: task.note,
+            publicationID: task.publicationID,
+            applicationID: task.applicationID,
+            publicationsByID: publicationsByID,
+            applicationsByID: applicationsByID,
+            store: store,
+            language: language
+        )
+
         return CalendarWorkspaceEvent(
             id: "teaching-task:\(task.id)",
             source: .teachingTask(taskID: task.id),
@@ -2527,24 +2777,11 @@ func buildFootprintCalendarEvents(
             isRolledOverPastDue: isRolledOverPastDue,
             title: comment,
             subtitle: "",
-            detail: [
-            task.note.nonEmpty,
-            task.publicationID.flatMap { id in
-                publicationsByID[id]?.title.nonEmpty
-            }?.map { "\(language.text("Publication", "Publikation")): \($0)" },
-            task.applicationID.flatMap { id in
-                applicationsByID[id].map { application in
-                    let grantTitle = store.localizedGrantName(for: application, language: language).nonEmpty
-                        ?? store.organizationLabel(for: application, language: language)
-                    return "\(language.text("Grant", "Anslag")): \(grantTitle)"
-                    }
-                }
-            ]
-            .compactMap { $0 }
-            .joined(separator: " · "),
+            detail: detailParts.map(\.text).joined(separator: " · "),
             place: "",
             timeText: "",
             kind: .taskDeadline,
+            detailParts: detailParts,
             completedOn: task.completedOn,
             action: nil,
             toggleCompletion: { isCompleted in
@@ -2589,6 +2826,7 @@ func buildFootprintCalendarEvents(
             // task among the day's timed events.
             timeText: task.calendarTimeText(displayDate: displayDate, calendar: calendar),
             kind: .taskDeadline,
+            detailParts: calendarDetailParts([(.note, task.note)]),
             completedOn: task.completedOn,
             action: nil,
             toggleCompletion: { store.toggleTaskItemCompletion(taskID: task.id, isCompleted: $0) }
@@ -2658,6 +2896,10 @@ func buildFootprintCalendarEvents(
         ]
         .compactMap { $0 }
         .joined(separator: " · ")
+        let travelDetailParts = calendarDetailParts([
+            (.congress, congressDetail),
+            (.reference, travel.reference)
+        ])
 
         return CalendarWorkspaceEvent(
             id: "travel:\(travel.id)",
@@ -2675,6 +2917,7 @@ func buildFootprintCalendarEvents(
             ),
             kind: .travel,
             travelMode: travel.mode,
+            detailParts: travelDetailParts,
             completedOn: nil,
             action: nil,
             toggleCompletion: nil
@@ -2699,6 +2942,10 @@ func buildFootprintCalendarEvents(
         ]
         .compactMap { $0 }
         .joined(separator: " · ")
+        let accommodationDetailParts = calendarDetailParts([
+            (.congress, congressDetail),
+            (.reference, accommodation.reference)
+        ])
         let eventPlace = [accommodation.hotelName.nonEmpty, place.nonEmpty]
             .compactMap { $0 }
             .joined(separator: " · ")
@@ -2718,6 +2965,7 @@ func buildFootprintCalendarEvents(
                         place: eventPlace,
                         timeText: normalizedCalendarTimeInput(accommodation.checkInTime),
                         kind: .accommodation,
+                        detailParts: accommodationDetailParts,
                         completedOn: nil,
                         action: nil,
                         toggleCompletion: nil
@@ -2744,6 +2992,7 @@ func buildFootprintCalendarEvents(
                         place: eventPlace,
                         timeText: "",
                         kind: .accommodation,
+                        detailParts: accommodationDetailParts,
                         completedOn: nil,
                         action: nil,
                         toggleCompletion: nil
@@ -2766,6 +3015,7 @@ func buildFootprintCalendarEvents(
                         place: eventPlace,
                         timeText: normalizedCalendarTimeInput(accommodation.checkOutTime),
                         kind: .accommodation,
+                        detailParts: accommodationDetailParts,
                         completedOn: nil,
                         action: nil,
                         toggleCompletion: nil
@@ -2836,15 +3086,26 @@ func buildFootprintCalendarEvents(
         ]
         .compactMap { $0 }
         .joined(separator: " · ")
-        let participantText = meeting.participantNames.isEmpty
-            ? nil
-            : meeting.participantNames.joined(separator: ", ")
-        let title = calendarMeetingEventTitle(
-            meeting,
-            participantText: participantText,
-            isLeave: store.calendarCategoryIsLeave(named: meeting.meetingType),
+        let isLeave = store.calendarCategoryIsLeave(named: meeting.meetingType)
+        // The rest of the app shows the participants in the title; the
+        // calendar list shows them on their own line and the organisation
+        // after the title, so they are kept apart here too.
+        let titleParts = calendarMeetingTitleParts(
+            title: meeting.title,
+            participantNames: meeting.participantNames,
+            isLeave: isLeave,
             language: language
         )
+        let listDetailParts = calendarDetailParts([
+            (nil, detailMode),
+            (.note, meeting.detail),
+            (.teaching, teachingAssignmentText),
+            // A leave row has no title to put the organisation after.
+            (.organization, isLeave ? organizationText : nil),
+            (.application, applicationText),
+            (.publication, publicationText),
+            (.media, mediaText)
+        ])
         let meetingPlace = meetingMode == .online
             ? language.text("Online", "Online")
             : formattedCalendarPlace(
@@ -2858,12 +3119,16 @@ func buildFootprintCalendarEvents(
             id: "meeting:\(meeting.id)",
             source: .meeting(meeting.id),
             displayDate: displayDate,
-            title: title,
+            title: titleParts.title,
             subtitle: organizationText ?? "",
             detail: detail,
             place: meetingPlace,
             timeText: timeRangeText(start: meeting.startTime, end: meeting.endTime),
             kind: .meeting,
+            listTitle: titleParts.listTitle,
+            participantNames: titleParts.participantNames,
+            organizationName: isLeave ? nil : organizationText,
+            detailParts: listDetailParts,
             completedOn: nil,
             action: nil,
             toggleCompletion: nil
@@ -2909,6 +3174,9 @@ func buildFootprintCalendarEvents(
             timeText: timeRangeText(start: appearance.startTime, end: appearance.endTime),
             kind: .meeting,
             meetingCategoryName: "Övrigt",
+            // The list shows the researchers on the participants line.
+            participantNames: researcherNames,
+            detailParts: calendarDetailParts([(.note, appearance.comment)]),
             completedOn: nil,
             action: { store.openRoute(for: appearance) },
             toggleCompletion: nil
@@ -2932,6 +3200,38 @@ func buildFootprintCalendarEvents(
     return events
 }
 
+/// A task row's detail parts: the note, the linked publication and the
+/// linked grant. Joined with " · " they are the task's detail text.
+@MainActor
+private func calendarTaskDetailParts(
+    note: String,
+    publicationID: String?,
+    applicationID: String?,
+    publicationsByID: [String: PublicationRecord],
+    applicationsByID: [String: GrantApplication],
+    store: GrantDataStore,
+    language: AppLanguage
+) -> [CalendarWorkspaceDetailPart] {
+    let publicationText: String? = publicationID
+        .flatMap { id in publicationsByID[id]?.title.nonEmpty }
+        .map { title in "\(language.text("Publication", "Publikation")): \(title)" }
+    let applicationText: String? = applicationID
+        .flatMap { id in applicationsByID[id] }
+        .map { application in
+            let grantTitle = store.localizedGrantName(for: application, language: language).nonEmpty
+                ?? store.organizationLabel(for: application, language: language)
+            return "\(language.text("Grant", "Anslag")): \(grantTitle)"
+        }
+    return calendarDetailParts([
+        (.note, note),
+        (.publication, publicationText),
+        (.application, applicationText)
+    ])
+}
+
+/// The older one-string form of a meeting title. The calendar now builds
+/// meeting titles with `calendarMeetingTitleParts`, which gives the same
+/// title and keeps the participants apart for the list.
 private func calendarMeetingEventTitle(
     _ meeting: CalendarMeetingRecord,
     participantText: String?,
@@ -3459,6 +3759,7 @@ private func calendarCongressTravelEvents(
             timeText: timeRangeText(start: flight.fromTime, end: flight.toTime),
             kind: .travel,
             travelMode: flight.mode,
+            detailParts: calendarDetailParts([(.congress, congressDetail)]),
             completedOn: nil,
             action: {
                 store.openRouteToCongress(organizationID: organization.id, congressID: congress.id)
@@ -3491,6 +3792,7 @@ private func calendarCongressTravelEvents(
                         place: [hotel.hotelName.nonEmpty, congressPlace.nonEmpty].compactMap { $0 }.joined(separator: " · "),
                         timeText: normalizedCalendarTimeInput(hotel.fromTime),
                         kind: .accommodation,
+                        detailParts: calendarDetailParts([(.congress, congressDetail)]),
                         completedOn: nil,
                         action: {
                             store.openRouteToCongress(organizationID: organization.id, congressID: congress.id)
@@ -3528,6 +3830,7 @@ private func calendarCongressTravelEvents(
                         place: [hotel.hotelName.nonEmpty, congressPlace.nonEmpty].compactMap { $0 }.joined(separator: " · "),
                         timeText: "",
                         kind: .accommodation,
+                        detailParts: calendarDetailParts([(.congress, congressDetail)]),
                         completedOn: nil,
                         action: {
                             store.openRouteToCongress(organizationID: organization.id, congressID: congress.id)
@@ -3559,6 +3862,7 @@ private func calendarCongressTravelEvents(
                         place: [hotel.hotelName.nonEmpty, congressPlace.nonEmpty].compactMap { $0 }.joined(separator: " · "),
                         timeText: normalizedCalendarTimeInput(hotel.toTime),
                         kind: .accommodation,
+                        detailParts: calendarDetailParts([(.congress, congressDetail)]),
                         completedOn: nil,
                         action: {
                             store.openRouteToCongress(organizationID: organization.id, congressID: congress.id)
@@ -3792,6 +4096,13 @@ struct CalendarWorkspaceView: View {
         _isStabilizingDefaultOpen = State(initialValue: true)
         _visibleCalendarColumns = State(initialValue: Self.initialVisibleCalendarColumns(hiddenColumnKeys: store.calendarHiddenColumnKeys))
         _visibleCalendarMarkerColumns = State(initialValue: Self.initialVisibleCalendarMarkerColumns(hiddenColumnKeys: store.calendarHiddenColumnKeys))
+        _hiddenCalendarRowDetailKinds = State(initialValue: Self.initialHiddenCalendarRowDetailKinds(hiddenColumnKeys: store.calendarHiddenColumnKeys))
+    }
+
+    /// The "Visa i raden" choices are stored with the hidden columns, each
+    /// as "rowDetail.<part>". Everything shows by default.
+    private static func initialHiddenCalendarRowDetailKinds(hiddenColumnKeys: Set<String>) -> Set<CalendarListDetailKind> {
+        Set(CalendarListDetailKind.allCases.filter { hiddenColumnKeys.contains($0.hiddenStorageKey) })
     }
 
     private static func initialVisibleCalendarColumns(hiddenColumnKeys: Set<String>) -> Set<CalendarWorkspaceColumn> {
@@ -3826,6 +4137,9 @@ struct CalendarWorkspaceView: View {
     @State private var isCalendarFilterSidebarVisible = true
     @State private var visibleCalendarColumns: Set<CalendarWorkspaceColumn> = Set(CalendarWorkspaceColumn.allCases)
     @State private var visibleCalendarMarkerColumns: Set<CalendarWorkspaceMarkerColumn> = Set(CalendarWorkspaceMarkerColumn.allCases)
+    /// The row parts turned off under "Visa i raden" (participants,
+    /// organisation, publication and so on).
+    @State private var hiddenCalendarRowDetailKinds: Set<CalendarListDetailKind> = []
     @State private var selectedProjectID: String = ""
     @State private var selectedResearcherName: String = ""
     @State private var selectedDayLocation: String = ""
@@ -3907,23 +4221,22 @@ struct CalendarWorkspaceView: View {
         if visibleCalendarColumns.contains(.weekday) { return .weekday }
         return nil
     }
-    /// The columns the list draws. The Klar ring sits in the time column and
-    /// the details sit under the title, so Klar and Detaljer have no columns
-    /// of their own; their settings still decide whether the ring and the
-    /// detail line show.
+    /// The columns the list draws. The details sit under the title, so
+    /// Detaljer has no column of its own; its setting still decides whether
+    /// the detail line shows. Klar is its own narrow column between Rubrik
+    /// and Plats.
     private var calendarLayoutColumnList: [CalendarWorkspaceColumn] {
         let mergesDayAndDate = calendarMergesDayAndDate
-        let showsTimeColumn = visibleCalendarColumns.contains(.time) || calendarShowsCompletionRing
         let showsTitleColumn = visibleCalendarColumns.contains(.title) || calendarShowsDetailLine
         return CalendarWorkspaceColumn.allCases.filter { column in
             switch column {
             case .weekday:
                 return visibleCalendarColumns.contains(.weekday) && !mergesDayAndDate
-            case .time:
-                return showsTimeColumn
             case .title:
                 return showsTitleColumn
-            case .completion, .details:
+            case .completion:
+                return calendarShowsCompletionRing
+            case .details:
                 return false
             default:
                 return visibleCalendarColumns.contains(column)
@@ -3936,9 +4249,6 @@ struct CalendarWorkspaceView: View {
             return 136
         case .date, .weekday:
             return column.width + (calendarTodayTagColumn == column ? 44 : 0)
-        case .time:
-            guard visibleCalendarColumns.contains(.time) else { return 40 }
-            return column.width + (calendarShowsCompletionRing ? 26 : 0)
         case .title:
             return calendarShowsDetailLine ? CalendarWorkspaceColumn.details.width : column.width
         default:
@@ -3952,12 +4262,13 @@ struct CalendarWorkspaceView: View {
         if column == .title {
             return GridItem(.flexible(minimum: width), spacing: column.trailingSpacing, alignment: .topLeading)
         }
+        if column == .completion {
+            return GridItem(.fixed(width), spacing: column.trailingSpacing, alignment: .top)
+        }
         return GridItem(.fixed(width), spacing: column.trailingSpacing, alignment: .topLeading)
     }
     private func calendarLayoutColumnTitle(_ column: CalendarWorkspaceColumn) -> String {
         switch column {
-        case .time where !visibleCalendarColumns.contains(.time):
-            return CalendarWorkspaceColumn.completion.title(language: language)
         case .title where !visibleCalendarColumns.contains(.title):
             return CalendarWorkspaceColumn.details.title(language: language)
         default:
@@ -4063,11 +4374,14 @@ struct CalendarWorkspaceView: View {
 
     private func persistCalendarColumnVisibility(
         _ visibleColumns: Set<CalendarWorkspaceColumn>,
-        markerColumns visibleMarkerColumns: Set<CalendarWorkspaceMarkerColumn>? = nil
+        markerColumns visibleMarkerColumns: Set<CalendarWorkspaceMarkerColumn>? = nil,
+        hiddenRowDetailKinds: Set<CalendarListDetailKind>? = nil
     ) {
         let markerColumns = visibleMarkerColumns ?? visibleCalendarMarkerColumns
+        let hiddenDetailKinds = hiddenRowDetailKinds ?? hiddenCalendarRowDetailKinds
         let hiddenKeys = Set(CalendarWorkspaceColumn.allCases.filter { !visibleColumns.contains($0) }.map(\.rawValue))
             .union(CalendarWorkspaceMarkerColumn.allCases.filter { !markerColumns.contains($0) }.map(\.rawValue))
+            .union(hiddenDetailKinds.map(\.hiddenStorageKey))
         store.autosaveCalendarHiddenColumnKeys(hiddenKeys)
     }
 
@@ -4556,40 +4870,76 @@ struct CalendarWorkspaceView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    @ViewBuilder
     private func calendarDetailLinkButton(_ url: URL, compact: Bool) -> some View {
-        Button {
-            NSWorkspace.shared.open(url)
-        } label: {
-            // In the list rows the arrows are grey so they don't compete
-            // with the text; the detail sheet keeps the link colour.
-            AppLinkDestinationLabel(
-                kind: .web,
-                language: language,
-                fontSize: compact ? 12 : 13,
-                tint: compact ? Color.secondary : AppPalette.linkAction,
-                showsTitle: false
-            )
-            .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
+        if compact {
+            // In the list rows the link buttons are grey so they don't
+            // compete with the text, and show what they open.
+            Button {
+                NSWorkspace.shared.open(url)
+            } label: {
+                calendarRowLinkIcon(.web)
+            }
+            .buttonStyle(.plain)
+            .help(language.text("Open link", "Öppna länk"))
+            .accessibilityLabel(language.text("Open link", "Öppna länk"))
+        } else {
+            // The detail sheet keeps the link colour.
+            Button {
+                NSWorkspace.shared.open(url)
+            } label: {
+                AppLinkDestinationLabel(
+                    kind: .web,
+                    language: language,
+                    fontSize: 13,
+                    tint: AppPalette.linkAction,
+                    showsTitle: false
+                )
+                .frame(width: 20, height: 20)
+            }
+            .buttonStyle(.plain)
+            .help(language.text("Open link", "Öppna länk"))
         }
-        .buttonStyle(.plain)
-        .help(language.text("Open link", "Öppna länk"))
     }
 
+    @ViewBuilder
     private func calendarDetailRecordLinkButton(_ link: CalendarDetailRecordLink, compact: Bool) -> some View {
-        Button {
-            openDetailRecordLink(link)
-        } label: {
-            AppLinkDestinationLabel(
-                kind: .app,
-                language: language,
-                fontSize: compact ? 12 : 13,
-                tint: compact ? Color.secondary : AppPalette.linkAction,
-                showsTitle: false
-            )
-            .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
+        if compact {
+            Button {
+                openDetailRecordLink(link)
+            } label: {
+                calendarRowLinkIcon(link.linkTarget)
+            }
+            .buttonStyle(.plain)
+            .help(link.title)
+            .accessibilityLabel(link.title)
+        } else {
+            Button {
+                openDetailRecordLink(link)
+            } label: {
+                AppLinkDestinationLabel(
+                    kind: .app,
+                    language: language,
+                    fontSize: 13,
+                    tint: AppPalette.linkAction,
+                    showsTitle: false
+                )
+                .frame(width: 20, height: 20)
+            }
+            .buttonStyle(.plain)
+            .help(link.title)
         }
-        .buttonStyle(.plain)
-        .help(link.title)
+    }
+
+    /// A list row's link button: the symbol of the page it opens (a folder
+    /// for a project, a book for a publication, a link for a web address),
+    /// in grey.
+    private func calendarRowLinkIcon(_ target: CalendarListLinkTarget) -> some View {
+        Image(systemName: calendarListLinkSymbolName(for: target))
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(Color.secondary)
+            .frame(width: 18, height: 18)
+            .contentShape(Rectangle())
     }
 
     private func calendarInlineDetailRecordLinkButton(
@@ -4801,7 +5151,10 @@ struct CalendarWorkspaceView: View {
     private var compactHeaderRow: some View {
         LazyVGrid(columns: visibleCompactGrid, alignment: .leading, spacing: 12) {
             ForEach(calendarLayoutColumnList) { column in
-                headerCell(calendarLayoutColumnTitle(column))
+                headerCell(
+                    calendarLayoutColumnTitle(column),
+                    alignment: column == .completion ? .center : .leading
+                )
             }
         }
         .padding(.leading, calendarRowLeadingPadding)
@@ -4946,6 +5299,20 @@ struct CalendarWorkspaceView: View {
                                 visibleCalendarColumns.count == CalendarWorkspaceColumn.allCases.count
                                     && visibleCalendarMarkerColumns.count == CalendarWorkspaceMarkerColumn.allCases.count
                             )
+                            .padding(.top, 4)
+                        }
+                    }
+
+                    calendarSidebarSection(title: language.text("Show in row", "Visa i raden")) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(CalendarListDetailKind.allCases) { kind in
+                                calendarRowDetailToggle(kind)
+                            }
+                            Button(language.text("Show all", "Visa alla")) {
+                                setHiddenCalendarRowDetailKinds([])
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(hiddenCalendarRowDetailKinds.isEmpty)
                             .padding(.top, 4)
                         }
                     }
@@ -5366,6 +5733,37 @@ struct CalendarWorkspaceView: View {
         .appCheckboxStyle()
     }
 
+    /// A "Visa i raden" checkbox: shows or hides one part of the rows
+    /// (participants, organisation, publication and so on), both its text
+    /// and its link buttons.
+    private func calendarRowDetailToggle(_ kind: CalendarListDetailKind) -> some View {
+        Toggle(
+            isOn: Binding(
+                get: { !hiddenCalendarRowDetailKinds.contains(kind) },
+                set: { isVisible in
+                    var nextHiddenKinds = hiddenCalendarRowDetailKinds
+                    if isVisible {
+                        nextHiddenKinds.remove(kind)
+                    } else {
+                        nextHiddenKinds.insert(kind)
+                    }
+                    setHiddenCalendarRowDetailKinds(nextHiddenKinds)
+                }
+            )
+        ) {
+            Text(kind.title(language: language))
+                .calendarTypography(.body)
+        }
+        .appCheckboxStyle()
+    }
+
+    private func setHiddenCalendarRowDetailKinds(_ hiddenKinds: Set<CalendarListDetailKind>) {
+        guard hiddenKinds != hiddenCalendarRowDetailKinds else { return }
+        hiddenCalendarRowDetailKinds = hiddenKinds
+        persistCalendarColumnVisibility(visibleCalendarColumns, hiddenRowDetailKinds: hiddenKinds)
+        rebuildCalendarListDetailCache(hiddenKinds: hiddenKinds)
+    }
+
     private func categoryChip(_ kind: CalendarWorkspaceEventKind) -> some View {
         let isSelected = selectedKinds.contains(kind)
         return Button {
@@ -5532,15 +5930,15 @@ struct CalendarWorkspaceView: View {
                 }
             }
         }
-        // Calm rows: one plain surface per day, a thin line between days and
-        // no lines between the rows of a day. Today is marked in the day
-        // column, not with an outline round the whole day.
+        // Calm rows: one plain surface per day, a clear 1 pt line between
+        // days and no lines between the rows of a day. Today is marked in the
+        // day column, not with an outline round the whole day.
         .background(Rectangle().fill(dayGroupFill(for: group)))
         .overlay(alignment: .top) {
             if !group.startsWeek {
                 Rectangle()
-                    .fill(AppPalette.subtleBorder.opacity(0.6))
-                    .frame(height: 0.5)
+                    .fill(AppPalette.border)
+                    .frame(height: 1)
                     .accessibilityHidden(true)
             }
         }
@@ -5559,7 +5957,7 @@ struct CalendarWorkspaceView: View {
     /// week and year text in the left margin.
     private func calendarWeekHeaderRow(for group: CalendarWorkspaceDayGroup) -> some View {
         Text(calendarWeekHeaderText(for: group))
-            .font(calendarAppFont(.secondary).weight(.semibold))
+            .font(calendarWeekHeaderFont())
             .monospacedDigit()
             .foregroundStyle(.secondary)
             .lineLimit(1)
@@ -5776,9 +6174,10 @@ struct CalendarWorkspaceView: View {
             projectCell(for: event, group: group)
         case .title:
             eventTitleCell(event, group: group)
-        case .completion, .details:
-            // Never laid out: the Klar ring sits in the time column and the
-            // details sit under the title.
+        case .completion:
+            eventCompletionCell(event, group: group)
+        case .details:
+            // Never laid out: the details sit under the title.
             EmptyView()
         case .place:
             placeCell(
@@ -5793,35 +6192,34 @@ struct CalendarWorkspaceView: View {
         }
     }
 
-    /// The time column: the Klar ring (when Klar is on and the row can be
-    /// ticked off) and then the time. Rows without a ring keep the ring's
-    /// room so the times line up.
+    /// The time column: only the time (a task shows its deadline time).
     private func eventTimeCell(
         _ event: CalendarWorkspaceEvent,
         group: CalendarWorkspaceDayGroup,
         textColor: Color
     ) -> some View {
-        let showsTime = visibleCalendarColumns.contains(.time)
         let timeText = event.timeText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return HStack(alignment: .center, spacing: 6) {
-            if calendarShowsCompletionRing {
-                if event.toggleCompletion != nil {
-                    completionToggle(for: event, group: group)
-                } else {
-                    Color.clear
-                        .frame(width: 20, height: 18)
-                        .accessibilityHidden(true)
-                }
-            }
-            if showsTime, !timeText.isEmpty {
-                Text(timeText)
-                    .calendarTypography(.body)
-                    .monospacedDigit()
-                    .foregroundStyle(eventForegroundColor(for: event, group: group, base: textColor))
-                    .lineLimit(2)
-            }
+        return Text(timeText)
+            .calendarTypography(.body)
+            .monospacedDigit()
+            .foregroundStyle(timeText.isEmpty ? Color.clear : eventForegroundColor(for: event, group: group, base: textColor))
+            .lineLimit(2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The narrow Klar column between Rubrik and Plats: the ring for rows
+    /// that can be ticked off, empty for the others.
+    @ViewBuilder
+    private func eventCompletionCell(_ event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
+        if event.toggleCompletion != nil {
+            completionToggle(for: event, group: group)
+                .frame(maxWidth: .infinity, alignment: .center)
+        } else {
+            Color.clear
+                .frame(width: 20, height: 18)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .accessibilityHidden(true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func completionToggle(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
@@ -5852,13 +6250,16 @@ struct CalendarWorkspaceView: View {
     }
 
     private func calendarListRowDetail(for event: CalendarWorkspaceEvent) -> CalendarListRowDetail {
-        let presentation = detailLinkPresentation(for: event)
-        let congressLink = congressDetailRecordLink(for: event)
+        // Parts turned off under "Visa i raden" are left out of the text
+        // (already in the cached line) and of the link buttons.
+        let hiddenKinds = hiddenCalendarRowDetailKinds
+        let presentation = listDetailLinkPresentation(for: event)
+        let congressLink = hiddenKinds.contains(.congress) ? nil : congressDetailRecordLink(for: event)
         let visibleText = detailTextByRemovingInlineRecordLink(
             presentation.visibleText,
             linkTitle: congressLink?.title
         )
-        let recordLinks = detailRecordLinks(for: event)
+        let recordLinks = detailRecordLinks(for: event).filter { !hiddenKinds.contains($0.detailKind) }
         let helpText = [
             presentation.visibleText.nonEmpty,
             recordLinks.map(\.title).joined(separator: "\n").nonEmpty
@@ -6260,12 +6661,21 @@ struct CalendarWorkspaceView: View {
         .joined(separator: "\n")
     }
 
-    /// The title, with the row's link arrows right after it and the details
-    /// as a smaller grey line underneath (the Detaljer setting decides
-    /// whether that line shows).
+    /// The title (with the organisation in parentheses), the row's link
+    /// buttons right after it, the participants on a grey line underneath
+    /// and then the details as a smaller grey line (the Detaljer setting
+    /// decides whether that line shows; "Visa i raden" decides which parts).
     private func eventTitleCell(_ event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
         let showsTitle = visibleCalendarColumns.contains(.title)
         let detail: CalendarListRowDetail? = calendarShowsDetailLine ? calendarListRowDetail(for: event) : nil
+        let hiddenKinds = hiddenCalendarRowDetailKinds
+        let titleText = calendarListTitleText(
+            title: event.listTitle ?? event.title,
+            organization: hiddenKinds.contains(.organization) ? nil : event.organizationName
+        )
+        let participantsText = hiddenKinds.contains(.participants)
+            ? ""
+            : calendarListParticipantsText(event.participantNames)
         let usesItalicStyle = eventUsesItalicStyle(event)
         let foreground = eventForegroundColor(for: event, group: group, base: eventBodyTextColor(for: event))
         let detailItalic = detailUsesItalicStyle(for: event)
@@ -6285,7 +6695,7 @@ struct CalendarWorkspaceView: View {
                             presentCalendarEventDetail(event)
                         }
                     } label: {
-                        Text(event.title)
+                        Text(titleText)
                             .calendarTypography(.body)
                             .modifier(CalendarItalicTextModifier(isItalic: usesItalicStyle))
                             .foregroundStyle(foreground)
@@ -6301,6 +6711,15 @@ struct CalendarWorkspaceView: View {
                     }
                     Spacer(minLength: 0)
                 }
+            }
+            if !participantsText.isEmpty {
+                Text(participantsText)
+                    .calendarTypography(.secondary)
+                    .modifier(CalendarItalicTextModifier(isItalic: usesItalicStyle))
+                    .foregroundStyle(eventForegroundColor(for: event, group: group, base: Color.secondary))
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                    .help(participantsText)
             }
             if let detail, detail.hasTextLine || (!showsTitle && detail.hasLinkButtons) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -6403,13 +6822,13 @@ struct CalendarWorkspaceView: View {
         return parts[3].trimmedOrNil
     }
 
-    private func headerCell(_ title: String) -> some View {
+    private func headerCell(_ title: String, alignment: Alignment = .leading) -> some View {
         Text(title)
             .calendarTypography(.tableHeader)
             .foregroundStyle(AppPalette.appText.opacity(effectiveUsesDarkAppearance ? 0.84 : 0.82))
             .multilineTextAlignment(.leading)
             .lineLimit(1)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: alignment)
     }
 
     private func rowCell(
@@ -6609,34 +7028,20 @@ struct CalendarWorkspaceView: View {
         }
     }
 
-    /// The project as plain grey text (no box, no folder icon). Clicking the
-    /// name still opens the project.
+    /// The projects as plain grey text (no box, no folder icon), each on
+    /// its own line; the row grows to fit them. Clicking a name still opens
+    /// the project.
     @ViewBuilder
     private func projectCell(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
         let references = projectReferences(for: event)
         let foreground = eventForegroundColor(for: event, group: group, base: .secondary)
         if references.isEmpty {
             rowCell("")
-        } else if expandedProjectDayID == group.id {
+        } else {
             VStack(alignment: .leading, spacing: 3) {
                 ForEach(references, id: \.id) { project in
                     calendarProjectLink(id: project.id, label: project.label, foreground: foreground)
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .help(references.map(\.label).joined(separator: "\n"))
-        } else if let firstProject = references.first {
-            let remainingProjects = Array(references.dropFirst())
-            HStack(spacing: 5) {
-                calendarProjectLink(id: firstProject.id, label: firstProject.label, foreground: foreground)
-
-                if !remainingProjects.isEmpty {
-                    projectOverflowIndicator {
-                        expandedProjectDayID = group.id
-                    }
-                    .opacity(eventForegroundOpacity(for: event, group: group))
-                }
-                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .help(references.map(\.label).joined(separator: "\n"))
@@ -8612,6 +9017,35 @@ struct CalendarWorkspaceView: View {
         cache.visibleDetailTextByEventID = visibleDetailTextByEventID
         cache.detailLinkPresentationByEventID = detailLinkPresentationByEventID
         cache.searchTextByEventID = searchTextByEventID
+        rebuildCalendarListDetailCache()
+    }
+
+    /// The list rows' detail lines for rows split into parts. Rebuilt with
+    /// the other row texts and when a "Visa i raden" setting changes, so the
+    /// rows themselves only look the text up.
+    private func rebuildCalendarListDetailCache(hiddenKinds newHiddenKinds: Set<CalendarListDetailKind>? = nil) {
+        var listDetailPresentationByEventID: [String: CalendarDetailLinkPresentation] = [:]
+        let hiddenKinds = newHiddenKinds ?? hiddenCalendarRowDetailKinds
+        for event in cache.events where event.detailParts != nil {
+            listDetailPresentationByEventID[event.id] = calendarDetailLinkPresentation(
+                from: calendarListVisibleDetailText(for: event, hiddenKinds: hiddenKinds, language: language)
+            )
+        }
+        cache.listDetailPresentationByEventID = listDetailPresentationByEventID
+    }
+
+    private func listDetailLinkPresentation(for event: CalendarWorkspaceEvent) -> CalendarDetailLinkPresentation {
+        guard event.detailParts != nil else {
+            return detailLinkPresentation(for: event)
+        }
+        return cache.listDetailPresentationByEventID[event.id]
+            ?? calendarDetailLinkPresentation(
+                from: calendarListVisibleDetailText(
+                    for: event,
+                    hiddenKinds: hiddenCalendarRowDetailKinds,
+                    language: language
+                )
+            )
     }
 
     private func rebuildDerivedCalendarData(skipIfUnchanged: Bool = true) {
