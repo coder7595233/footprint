@@ -9734,7 +9734,15 @@ extension CalendarWorkspaceView {
                     usesDarkAppearance: effectiveUsesDarkAppearance,
                     onPreviousWeek: { moveCalendarWeek(by: -1) },
                     onNextWeek: { moveCalendarWeek(by: 1) },
-                    onSelectEvent: { event in presentCalendarEventDetail(event) },
+                    // Same as clicking the title in the list: open the editor when
+                    // the event has one, otherwise the detail sheet.
+                    onSelectEvent: { event in
+                        if let primaryAction = eventTapAction(for: event) {
+                            primaryAction()
+                        } else {
+                            presentCalendarEventDetail(event)
+                        }
+                    },
                     eventContextMenu: { event, date in calendarEventContextMenu(for: event, on: date) },
                     dayContextMenu: { date in dayCreationContextMenu(for: date) }
                 )
