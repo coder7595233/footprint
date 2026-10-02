@@ -1496,11 +1496,11 @@ struct PublicationEditorView: View {
                                 )
                             }
                             }
-                            compactField(language.text("Peer review", "Granskning"), width: 150) {
+                            compactField(language.text("Peer reviewed", "Expertgranskad"), width: 150) {
                                 if isEditingLocked {
                                     lockedPublicationValueText(draft.isPeerReviewed ? language.text("Yes", "Ja") : language.text("No", "Nej"))
                                 } else {
-                                    Toggle(language.text("Peer reviewed", "Expertgranskad"), isOn: boolBinding(\.isPeerReviewed))
+                                    Toggle(language.text("Yes", "Ja"), isOn: boolBinding(\.isPeerReviewed))
                                         .appCheckboxStyle()
                                 }
                             }
@@ -2459,19 +2459,13 @@ struct PublicationEditorView: View {
                         )
 
                     VStack(alignment: .leading, spacing: 8) {
-                        if let label = finalPDFDisplayLabel ?? finalPDFFilename {
-                            Text(label)
-                                .font(appFont(.secondary).weight(.medium))
-                                .foregroundStyle(.primary)
-                                .lineLimit(4)
-                                .frame(maxWidth: 220, alignment: .leading)
-                                .help(finalPDFOriginalFilenameHelp)
-                        }
-
+                        // No title next to the preview: the article's own
+                        // page already shows it. The file name is in the help text.
                         Button(language.text("Open PDF", "Öppna PDF")) {
                             openFinalPDF()
                         }
                         .buttonStyle(.bordered)
+                        .help(finalPDFOriginalFilenameHelp)
 
                         if !isEditingLocked {
                             Button(language.text("Replace…", "Ersätt…")) {

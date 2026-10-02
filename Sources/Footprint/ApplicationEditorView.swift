@@ -2237,7 +2237,13 @@ struct ApplicationEditorView: View {
     }
 
     private func approximateAmountBreakdownView(language: AppLanguage) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        // Wraps onto more lines: with many years one row pushed the whole
+        // editor (and its timeline) wider than the window.
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 148, maximum: 200), spacing: 12, alignment: .topLeading)],
+            alignment: .leading,
+            spacing: 10
+        ) {
             ForEach(approximateAmountMetrics(language: language)) { metric in
                 VStack(alignment: .leading, spacing: AppRuntime.usesRenewedChrome ? 8 : 6) {
                     Text(metric.label)
@@ -2249,15 +2255,11 @@ struct ApplicationEditorView: View {
                         ReadOnlyValue(text: metric.value)
                     }
                 }
-                .frame(
-                    minWidth: metric.emphasized ? 164 : 136,
-                    idealWidth: metric.emphasized ? 180 : 148,
-                    maxWidth: metric.emphasized ? 200 : 164,
-                    alignment: .leading
-                )
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minWidth: 148, maxWidth: .infinity, alignment: .leading)
+        .layoutPriority(1)
     }
 
     private struct OverheadRuleSummaryLine {
@@ -2951,7 +2953,8 @@ private struct ApplicationTimelineStepper: View {
                     segmentView(index: index, centers: centers)
                 }
 
-                if let markerX = todayMarkerX(centers: centers) {
+                if let markerX = todayMarkerX(centers: centers),
+                   markerX <= (lastVisibleCenter(centers: centers) ?? .greatestFiniteMagnitude) {
                     Path { path in
                         path.move(to: CGPoint(x: markerX, y: 0))
                         path.addLine(to: CGPoint(x: markerX, y: markerCenterY * 2))
@@ -2980,6 +2983,13 @@ private struct ApplicationTimelineStepper: View {
 
     @ViewBuilder
     private func segmentView(index: Int, centers: [CGFloat]) -> some View {
+        if segmentIsVisible(index: index) {
+            visibleSegmentView(index: index, centers: centers)
+        }
+    }
+
+    @ViewBuilder
+    private func visibleSegmentView(index: Int, centers: [CGFloat]) -> some View {
         let startX = centers[index]
         let endX = centers[index + 1]
         let base = segmentBaseStyle(index: index)
@@ -3032,9 +3042,40 @@ private struct ApplicationTimelineStepper: View {
             .position(x: startX + (width / 2), y: markerCenterY)
     }
 
+    /// Locked records hide "Beslut väntas" and every step that no longer
+    /// applies (the dispositions after a declined application). Their places
+    /// are kept, so the other circles sit where they do in the open editor.
+    private func isStepHidden(_ step: ApplicationTimelineStep) -> Bool {
+        application.isEditingLocked && (step == .decisionExpected || isStepDeemphasized(step))
+    }
+
+    private func nextVisibleStepIndex(from index: Int) -> Int? {
+        guard index < allSteps.count else { return nil }
+        return (index..<allSteps.count).first { !isStepHidden(allSteps[$0]) }
+    }
+
+    /// A hidden step takes the colour of the next visible step, so the line
+    /// runs straight past the empty place.
+    private func colorSourceStep(at index: Int) -> ApplicationTimelineStep {
+        allSteps[nextVisibleStepIndex(from: index) ?? index]
+    }
+
+    /// No line after the last visible step.
+    private func segmentIsVisible(index: Int) -> Bool {
+        nextVisibleStepIndex(from: index + 1) != nil
+    }
+
+    /// The centre of the last visible circle; the today line is not drawn
+    /// in the hidden part after it.
+    private func lastVisibleCenter(centers: [CGFloat]) -> CGFloat? {
+        guard let index = allSteps.indices.last(where: { !isStepHidden(allSteps[$0]) }),
+              centers.indices.contains(index) else { return nil }
+        return centers[index]
+    }
+
     private func segmentBaseStyle(index: Int) -> (leadingColor: Color, trailingColor: Color, dashed: Bool) {
-        let leftStep = allSteps[index]
-        let rightStep = allSteps[index + 1]
+        let leftStep = colorSourceStep(at: index)
+        let rightStep = colorSourceStep(at: index + 1)
         if isStepDeemphasized(leftStep) || isStepDeemphasized(rightStep) {
             return (segmentEndpointColor(for: leftStep), segmentEndpointColor(for: rightStep), false)
         }
@@ -3060,6 +3101,17 @@ private struct ApplicationTimelineStepper: View {
 
     @ViewBuilder
     private func stepView(_ step: ApplicationTimelineStep, centerX: CGFloat, width: CGFloat) -> some View {
+        if isStepHidden(step) {
+            Color.clear
+                .frame(width: width, height: timelineHeight)
+                .allowsHitTesting(false)
+                .position(x: centerX, y: timelineHeight / 2)
+        } else {
+            visibleStepView(step, centerX: centerX, width: width)
+        }
+    }
+
+    private func visibleStepView(_ step: ApplicationTimelineStep, centerX: CGFloat, width: CGFloat) -> some View {
         VStack(spacing: 9) {
             markerView(for: step)
             labelBlock(for: step)

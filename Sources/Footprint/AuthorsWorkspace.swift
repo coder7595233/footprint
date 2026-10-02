@@ -3592,15 +3592,15 @@ private struct PublicationAuthorEditorView: View {
                             organization: affiliationTreeOrganization(for: index),
                             unitID: affiliation.unitID,
                             language: language,
-                            // Gets the department field's room when a unit is chosen.
-                            width: affiliationHasUnit(at: index) ? 300 : 180
+                            width: 300,
+                            // The department is chosen as a unit; there is no free-text field.
+                            // Old free text stays stored and is shown until a unit is chosen.
+                            fallbackText: affiliationHasUnit(at: index) ? nil : localizedAffiliationDepartmentBinding(index, language: language).wrappedValue,
+                            onAddUnit: { name in
+                                addAffiliationUnit(named: name, at: index)
+                            }
                         ) { unit in
                             selectAffiliationUnit(unit, at: index)
-                        }
-                        // F48: the chosen unit is the department; the free text is only for rows without a unit.
-                        if !affiliationHasUnit(at: index) {
-                            TextField(language.text("Department", "Avdelning"), text: localizedAffiliationDepartmentBinding(index, language: language))
-                                .appTextInputChrome()
                         }
                         TextField(language.text("City", "Ort"), text: affiliationBinding(index, \.city))
                             .appTextInputChrome()
@@ -4155,6 +4155,14 @@ private struct PublicationAuthorEditorView: View {
     /// F21: points the affiliation to a unit and writes the organization's
     /// and the unit's official names as the text (round 7: one correct
     /// spelling); "no unit" keeps the department text as it is.
+    /// Adds a unit directly under the row's organization and returns it, so
+    /// the picker can choose it at once.
+    private func addAffiliationUnit(named name: String, at index: Int) -> OrganizationUnit? {
+        guard let organization = affiliationTreeOrganization(for: index),
+              let unitID = store.addOrganizationUnit(organizationID: organization.id, nameSv: name) else { return nil }
+        return store.organization(id: organization.id)?.unit(withID: unitID)
+    }
+
     private func selectAffiliationUnit(_ unit: OrganizationUnit?, at index: Int) {
         guard index < draft.affiliations.count,
               let organization = affiliationTreeOrganization(for: index) else { return }

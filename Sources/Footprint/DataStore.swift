@@ -608,6 +608,9 @@ final class GrantDataStore: ObservableObject {
                 // Country flags in the researcher and project lists hide the home country.
                 rebuildPublicationAuthorRowSnapshots()
                 rebuildProjectRowSnapshots()
+            } else if oldValue.taskItems != metadata.taskItems {
+                // The project filter "Aktiva uppgifter" counts tasks linked to a project.
+                rebuildProjectRowSnapshots()
             }
         }
     }
@@ -714,6 +717,11 @@ final class GrantDataStore: ObservableObject {
     private var undoStateInternPool: [Data: Data] = [:]
     private var undoStateInternOrder: [Data] = []
     private var publicationAuthorPresentedNameMissCache: Set<String> = []
+    /// The researchers the name lookups were last built from. Rebuilding
+    /// them (and emptying the miss cache) when no researcher changed made
+    /// every co-applicant edit rescan all researchers for every unmatched
+    /// name: about ten seconds.
+    private var publicationAuthorLookupCacheSource: [PublicationAuthor]?
     // Deferred states whose background write has started but whose main-queue
     // completion (which updates persistedDocumentCache) has not run yet.
     private var inFlightDeferredPersistedStatesByKey: [String: PersistedDocumentState] = [:]
@@ -25462,6 +25470,11 @@ final class GrantDataStore: ObservableObject {
     }
 
     private func rebuildPublicationAuthorLookupCaches() {
+        if let source = publicationAuthorLookupCacheSource, source == publicationAuthors {
+            cachedUnlinkedPersonNames = nil
+            return
+        }
+        publicationAuthorLookupCacheSource = publicationAuthors
         publicationAuthorByID = publicationAuthors.reduce(into: [:]) { $0[$1.id] = $1 }
         publicationAuthorByName = publicationAuthors.reduce(into: [:]) { $0[$1.name] = $1 }
         publicationAuthorByPresentedName = publicationAuthors.reduce(into: [:]) { partialResult, author in
@@ -26012,6 +26025,14 @@ final class GrantDataStore: ObservableObject {
     private func rebuildProjectRowSnapshots() {
         let startedAt = CFAbsoluteTimeGetCurrent()
         let homeCountry = homeCountryName
+        // Tasks are kept in the shared task list and linked to a project; the
+        // old tasks stored inside a project are counted too.
+        var projectIDsWithActiveLinkedTasks = Set<String>()
+        for task in taskItems where !task.isEmpty && !task.isCompleted {
+            for link in task.links where link.kind == .project && link.ownerID == nil {
+                projectIDsWithActiveLinkedTasks.insert(link.targetID)
+            }
+        }
         let snapshots = projects.map { project -> ProjectRowSnapshot in
             let title = localizedOptionDisplayName(project)
             let collaboratorNames = project.collaboratorNames.compactMap { $0.trimmedOrNil }
@@ -26028,7 +26049,8 @@ final class GrantDataStore: ObservableObject {
                     && application.isGranted
                     && (effectiveRemainingGrantedAmountValue(for: application) ?? 0) > 0
             }
-            let hasActiveTasks = project.projectTasks.contains { !$0.isEmpty && !$0.isCompleted }
+            let hasActiveTasks = projectIDsWithActiveLinkedTasks.contains(project.id)
+                || project.projectTasks.contains { !$0.isEmpty && !$0.isCompleted }
             let hasProgress = AppStatusTones.projectHasOwnProgress(project)
                 || applications.contains { $0.isGranted && applicationBelongs($0, to: project) }
             return ProjectRowSnapshot(

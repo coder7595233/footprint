@@ -4245,7 +4245,8 @@ private struct CVReviewWorkflowTimeline: View {
     private var visibleSteps: [CVReviewWorkflowStep] {
         let steps: [CVReviewWorkflowStep] = [.accepted, .completed, .deadline]
         guard isEditingLocked else { return steps }
-        return steps.filter(stepHasDefinedDate)
+        // A locked assignment is finished: the deadline is no longer of interest.
+        return steps.filter { $0 != .deadline && stepHasDefinedDate($0) }
     }
 
     private var today: Date {

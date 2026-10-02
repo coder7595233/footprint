@@ -1034,7 +1034,16 @@ struct OrganizationUnitPickerMenu: View {
     let unitID: String?
     let language: AppLanguage
     var width: CGFloat? = nil
+    /// Old free text (e.g. a department typed before units existed), shown
+    /// when no unit is chosen and offered as the new unit's name.
+    var fallbackText: String? = nil
+    /// Adds a unit directly under the organization and returns it; nil
+    /// hides "Lägg till ny enhet…".
+    var onAddUnit: ((String) -> OrganizationUnit?)? = nil
     let onSelect: (OrganizationUnit?) -> Void
+
+    @State private var isAddingUnit = false
+    @State private var newUnitName = ""
 
     private var selectedUnit: OrganizationUnit? {
         organization?.unit(withID: unitID)
@@ -1047,6 +1056,9 @@ struct OrganizationUnitPickerMenu: View {
         if let selectedUnit {
             return selectedUnit.displayName(language: language)
         }
+        if let fallbackText = fallbackText?.trimmedOrNil {
+            return fallbackText
+        }
         return language.text("Choose unit…", "Välj enhet…")
     }
 
@@ -1058,6 +1070,12 @@ struct OrganizationUnitPickerMenu: View {
             return language.text(
                 "Write or choose an organization that is in the Organizations list; then its units can be chosen here.",
                 "Skriv eller välj en organisation som finns under Organisationer, så kan dess enheter väljas här."
+            )
+        }
+        if fallbackText?.trimmedOrNil != nil {
+            return language.text(
+                "Written as text before units existed. Choose the unit in the list, or add it as a new unit.",
+                "Skrivet som text innan enheter fanns. Välj enheten i listan, eller lägg till den som ny enhet."
             )
         }
         return language.text(
@@ -1091,11 +1109,19 @@ struct OrganizationUnitPickerMenu: View {
                         }
                     }
                 }
+                if onAddUnit != nil {
+                    Divider()
+                    Button(language.text("Add new unit…", "Lägg till ny enhet…")) {
+                        newUnitName = fallbackText?.trimmedOrNil ?? ""
+                        isAddingUnit = true
+                    }
+                }
             }
         } label: {
             Text(labelText)
                 .lineLimit(1)
                 .truncationMode(.tail)
+                .foregroundStyle(selectedUnit == nil && fallbackText?.trimmedOrNil != nil ? Color.secondary : AppPalette.appText)
         }
         .menuStyle(.borderlessButton)
         .font(appFont(.secondary).weight(.semibold))
@@ -1103,6 +1129,29 @@ struct OrganizationUnitPickerMenu: View {
         .frame(minHeight: AppPalette.fieldMinHeight)
         .disabled(organization == nil)
         .help(helpText)
+        .alert(language.text("New unit", "Ny enhet"), isPresented: $isAddingUnit) {
+            TextField(language.text("Name of the unit", "Enhetens namn"), text: $newUnitName)
+            Button(language.text("Add", "Lägg till")) {
+                addNewUnit()
+            }
+            .disabled(newUnitName.trimmedOrNil == nil)
+            Button(language.text("Cancel", "Avbryt"), role: .cancel) {}
+        } message: {
+            if let organization {
+                Text(language.text(
+                    "The unit is added directly under \(organization.displayName(for: language)). You can move it in the organization's tree later.",
+                    "Enheten läggs direkt under \(organization.displayName(for: language)). Du kan flytta den i organisationens träd senare."
+                ))
+            }
+        }
+    }
+
+    private func addNewUnit() {
+        guard let name = newUnitName.trimmedOrNil, let onAddUnit else { return }
+        if let unit = onAddUnit(name) {
+            onSelect(unit)
+        }
+        newUnitName = ""
     }
 
     private func menuTitle(for row: OrganizationUnitTreeRow) -> String {
