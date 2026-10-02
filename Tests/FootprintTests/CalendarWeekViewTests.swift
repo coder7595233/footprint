@@ -258,3 +258,15 @@ final class CalendarWeekViewTests: XCTestCase {
         XCTAssertEqual(calendarWeekViewPackColumns([]), [])
     }
 }
+
+final class CalendarWeekSwipeTests: XCTestCase {
+    func testSidewaysSwipeChangesWeek() {
+        XCTAssertEqual(CalendarWeekSwipeTracker.direction(totalX: 120, totalY: 10), .previous)
+        XCTAssertEqual(CalendarWeekSwipeTracker.direction(totalX: -120, totalY: 5), .next)
+    }
+
+    func testSmallOrMostlyVerticalMovementDoesNothing() {
+        XCTAssertNil(CalendarWeekSwipeTracker.direction(totalX: 30, totalY: 0))
+        XCTAssertNil(CalendarWeekSwipeTracker.direction(totalX: 100, totalY: 80))
+    }
+}

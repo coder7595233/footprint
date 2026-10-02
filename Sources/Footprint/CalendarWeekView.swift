@@ -527,6 +527,7 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
             }
         }
         .background(AppPalette.calendarWorkspaceSurface)
+        .modifier(CalendarWeekSwipeNavigation(onPrevious: onPreviousWeek, onNext: onNextWeek))
     }
 
     // MARK: Header
@@ -920,5 +921,108 @@ private struct CalendarWeekCompletionRing: View {
                 ? language.text("Mark as not done", "Markera som inte klar")
                 : language.text("Mark as done", "Markera som klar")
         )
+    }
+}
+
+
+// MARK: - Swipe between weeks
+
+/// A sideways two-finger swipe on the trackpad (or a three-finger swipe)
+/// moves one week back or forward, like the ‹ › buttons. Vertical scrolling
+/// of the hour grid is left alone.
+private struct CalendarWeekSwipeNavigation: ViewModifier {
+    let onPrevious: () -> Void
+    let onNext: () -> Void
+
+    @State private var monitor: Any?
+    @State private var tracker = CalendarWeekSwipeTracker()
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                tracker.onPrevious = onPrevious
+                tracker.onNext = onNext
+                guard monitor == nil else { return }
+                let tracker = tracker
+                monitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .swipe]) { event in
+                    MainActor.assumeIsolated {
+                        tracker.handle(event)
+                    }
+                    return event
+                }
+            }
+            .onDisappear {
+                if let monitor {
+                    NSEvent.removeMonitor(monitor)
+                }
+                monitor = nil
+            }
+    }
+}
+
+enum CalendarWeekSwipeDirection: Equatable {
+    case previous
+    case next
+}
+
+/// Adds up one trackpad gesture and decides, once, whether it was a clear
+/// sideways swipe.
+@MainActor
+final class CalendarWeekSwipeTracker {
+    /// Points of sideways movement needed before a week changes.
+    nonisolated static let threshold: CGFloat = 70
+
+    var onPrevious: () -> Void = {}
+    var onNext: () -> Void = {}
+
+    private var totalX: CGFloat = 0
+    private var totalY: CGFloat = 0
+    private var hasFired = false
+
+    func handle(_ event: NSEvent) {
+        switch direction(for: event) {
+        case .previous?:
+            onPrevious()
+        case .next?:
+            onNext()
+        case nil:
+            break
+        }
+    }
+
+    private func direction(for event: NSEvent) -> CalendarWeekSwipeDirection? {
+        if event.type == .swipe {
+            // Three-finger swipe: deltaX is +1 (right) or -1 (left).
+            if event.deltaX > 0 { return .previous }
+            if event.deltaX < 0 { return .next }
+            return nil
+        }
+        guard event.type == .scrollWheel, event.hasPreciseScrollingDeltas else { return nil }
+        if event.phase.contains(.began) {
+            totalX = 0
+            totalY = 0
+            hasFired = false
+        }
+        // Momentum after the fingers lift is ignored.
+        guard event.momentumPhase.isEmpty else { return nil }
+        totalX += event.scrollingDeltaX
+        totalY += event.scrollingDeltaY
+        var result: CalendarWeekSwipeDirection?
+        if !hasFired, let direction = Self.direction(totalX: totalX, totalY: totalY) {
+            hasFired = true
+            result = direction
+        }
+        if event.phase.contains(.ended) || event.phase.contains(.cancelled) {
+            totalX = 0
+            totalY = 0
+            hasFired = false
+        }
+        return result
+    }
+
+    /// Fingers moving right (the week slides right) means the previous week.
+    nonisolated static func direction(totalX: CGFloat, totalY: CGFloat) -> CalendarWeekSwipeDirection? {
+        guard abs(totalX) >= threshold, abs(totalX) > abs(totalY) * 2 else { return nil }
+        return totalX > 0 ? .previous : .next
     }
 }

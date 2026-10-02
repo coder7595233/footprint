@@ -5160,7 +5160,9 @@ struct CalendarWorkspaceView: View {
             }
             .appSaveButtonStyle()
             .controlSize(.regular)
-            .help(language.text("Scroll to today", "Gå till idag"))
+            // ⌘T goes to today in both the list and the week view.
+            .keyboardShortcut("t", modifiers: .command)
+            .help(language.text("Go to today (⌘T)", "Gå till idag (⌘T)"))
         }
         .padding(.top, 10)
         .padding(.trailing, 14)
