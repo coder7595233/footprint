@@ -75,6 +75,18 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
+## Omgång 18 – pågår (rättningar efter test av omgång 17)
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F121 | Forskare, affilieringar | Rullistan för enhet har "Lägg till ny enhet…" längst ner; den nya enheten läggs direkt under organisationen och väljs på raden. Fritextfältet Avdelning är borttaget; gammal avdelningstext ligger kvar och visas i grått tills en enhet väljs. | Pågår |
+| F122 | Tidskrifter | Reglaget för lägsta JIF har inga streck och syns tydligt. | Pågår |
+| F123 | Projekt | Filtret "Aktiva uppgifter" räknar uppgifter i den gemensamma uppgiftslistan som är kopplade till projektet. | Pågår |
+| F124 | Ansökningar | Belopp per år radbryts i stället för att dra ut vyn. Låsta poster döljer steg i tidslinjen som inte längre gäller (Beslut väntas, och dispositionerna efter avslag); cirklarna står kvar på samma plats. | Pågår |
+| F125 | Ansökningar, prestanda | Att lägga till eller ändra en sökande låser inte längre appen i flera sekunder: namnlistan för forskare byggs bara om när någon forskare ändrats. | Pågår |
+| F126 | Publikationer, sakkunniguppdrag | Ingen titel bredvid PDF-förhandsvisningen. Rubriken "Expertgranskad" med bock "Ja". Låsta sakkunniguppdrag visar inte tidsfristen. | Pågår |
+| F127 | Doktorander | Tidslinjen: kurser i blått (fyllt = avklarat, ljust streckat = kommande), handledning i jämnhöga blågrå band med orange kant när den inte är bekräftad i Retendo, streckat bara för det som är kvar, svaga radband, tunnare dagens-linje med "Idag", mindre aktivitetscirklar i statusfärger, tätare delarbeten, milstolpsetiketter som inte krockar och en förklaring med färgprover. Ersätter utseendet i F53 och den röda kanten i F78. | Pågår |
+
 ## Omgång 17 – pågår (rättningar efter omgång 16, färger och utseende)
 
 | Nr | Område | Ändring | Status |
