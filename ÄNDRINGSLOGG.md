@@ -81,6 +81,8 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F128 | Kalendern | Lugnare lista (beslut 2026-10-02): kategorins färg som remsa i radens höjd med ikon och namn; onlinemöten och fysiska möten har olika ikoner; projekt som grå text; en rubrikrad per vecka; dag och datum i en kolumn med "Idag"-etikett; helgdagar med röd datumtext utan färgplatta; Klar-ringen i tidskolumnen; detaljer under rubriken; grå länkpilar; linjer bara mellan dagar. Kongresser döljs när kolumnen Konferenser är dold, och försenade uppgifter har en röd ring i stället för en röd prick och ordet Försenad. | Pågår |
 | F129 | Uppgifter | En uppgift kan få ett klockslag som deadline. Klockslaget visas bredvid ringen i kalendern, i uppgiftslistor och exporter; uppgiften räknas som försenad när klockslaget passerat. | Pågår |
+| F130 | Kalendern | Linjer mellan dagar tydligare; deltagare på egen rad under rubriken och organisationen inom parentes efter; länkar med ikon efter mål (projekt, publikation, ansökan …) och flera projekt på varsin rad; Klar-ringen i egen kolumn före Plats; nytt val "Visa i raden" för deltagare, organisation, publikation, ansökan m.m.; större veckorubrik; minst 13 punkter text. | Pågår |
+| F131 | Kalendern | Veckovy: knappen Lista/Vecka, dagar i sidled och timmar nedåt, heldagsremsa överst, block i kategorifärg, överlappande möten sida vid sida, röd nu-linje, ‹ › för att byta vecka. | Pågår |
 
 ## Omgång 18 – klar 2026-10-02 (#13) (rättningar efter test av omgång 17)
 
