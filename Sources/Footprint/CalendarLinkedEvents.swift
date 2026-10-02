@@ -163,7 +163,17 @@ private func calendarLinkedIDEventRows(
                 calendar: calendar,
                 policy: .rollOverPastDue
             ),
-            timeText: "",
+            timeText: task.calendarTimeText(
+                displayDate: effectiveCalendarTaskDate(
+                    deadline: deadline,
+                    completedOn: task.completedOn,
+                    isCompleted: task.isCompleted,
+                    today: today,
+                    calendar: calendar,
+                    policy: .rollOverPastDue
+                ),
+                calendar: calendar
+            ),
             kind: .taskDeadline,
             primaryText: calendarLinkedComposePrimaryText(
                 title: comment,
@@ -432,7 +442,7 @@ private func calendarLinkedResearcherEventRows(
             id: "teaching-task:\(task.id)",
             source: .teachingTask(taskID: task.id),
             displayDate: displayDate,
-            timeText: "",
+            timeText: task.calendarTimeText(displayDate: displayDate, calendar: calendar),
             kind: .taskDeadline,
             primaryText: calendarLinkedComposePrimaryText(
                 title: comment,
@@ -689,7 +699,17 @@ private func calendarLinkedProjectEventRows(
                 calendar: calendar,
                 policy: .rollOverPastDue
             ),
-            timeText: "",
+            timeText: task.calendarTimeText(
+                displayDate: effectiveCalendarTaskDate(
+                    deadline: deadline,
+                    completedOn: task.completedOn,
+                    isCompleted: task.isCompleted,
+                    today: today,
+                    calendar: calendar,
+                    policy: .rollOverPastDue
+                ),
+                calendar: calendar
+            ),
             kind: .taskDeadline,
             primaryText: calendarLinkedComposePrimaryText(
                 title: comment,
@@ -925,7 +945,17 @@ private func calendarLinkedPublicationEventRows(
                 calendar: calendar,
                 policy: .rollOverPastDue
             ),
-            timeText: "",
+            timeText: task.calendarTimeText(
+                displayDate: effectiveCalendarTaskDate(
+                    deadline: deadline,
+                    completedOn: task.completedOn,
+                    isCompleted: task.isCompleted,
+                    today: today,
+                    calendar: calendar,
+                    policy: .rollOverPastDue
+                ),
+                calendar: calendar
+            ),
             kind: .taskDeadline,
             primaryText: calendarLinkedComposePrimaryText(
                 title: comment,

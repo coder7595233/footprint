@@ -21,8 +21,9 @@ struct CentralTaskListSection: View {
         store.taskItems(linkedTo: linkKind, targetID: targetID, ownerID: ownerID)
             .filter { !$0.isCompleted || showsCompleted || isReadOnly }
             .sorted {
-                let left = $0.deadline.trimmedOrNil ?? "9999-12-31"
-                let right = $1.deadline.trimmedOrNil ?? "9999-12-31"
+                // Same day: a task with a time before one without.
+                let left = ($0.deadline.trimmedOrNil ?? "9999-12-31") + " " + ($0.deadlineTime ?? "99:99")
+                let right = ($1.deadline.trimmedOrNil ?? "9999-12-31") + " " + ($1.deadlineTime ?? "99:99")
                 return left == right ? $0.comment.localizedStandardCompare($1.comment) == .orderedAscending : left < right
             }
     }
@@ -112,7 +113,8 @@ private struct CentralTaskRowEditor: View {
         }
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
-        if deadlineDay < todayStart {
+        // A task with a clock time is overdue once that time has passed.
+        if deadlineDay < todayStart || (task.deadlineMoment(calendar: calendar).map { $0 <= Date() } ?? false) {
             // Round 17: overdue tasks use the strong "late" red-orange
             // (the same as the calendar's overdue dots).
             return AppPalette.lateMark
@@ -138,16 +140,22 @@ private struct CentralTaskRowEditor: View {
                 }
 
                 if isReadOnly {
-                    AppLockedFieldValueText(text: task.deadline)
-                        .frame(width: 120, alignment: .leading)
+                    // Locked records show the time after the date.
+                    AppLockedFieldValueText(text: task.deadlineDisplayText)
+                        .frame(width: task.deadlineTime == nil ? 120 : 160, alignment: .leading)
                 } else {
                     CommitDateFieldWithTodayButton(
                         placeholder: language.datePlaceholder,
-                        text: stringBinding(\.deadline),
+                        text: deadlineBinding(),
                         formatter: DateParsers.canonicalizedDayInput,
                         clearBackgroundInDarkNew: true,
                         width: 120
                     )
+
+                    CalendarTimeInputField(placeholder: "hh:mm", text: deadlineTimeBinding(), updatesContinuously: false)
+                        .frame(width: 70)
+                        .disabled(task.deadline.trimmedOrNil == nil)
+                        .help(language.text("Optional time on the deadline day", "Valfritt klockslag på dagen"))
                 }
 
                 if !isReadOnly {
@@ -205,6 +213,28 @@ private struct CentralTaskRowEditor: View {
         Binding(
             get: { task?[keyPath: keyPath] ?? "" },
             set: { value in update { $0[keyPath: keyPath] = value } }
+        )
+    }
+
+    /// Clearing the date also clears the time.
+    private func deadlineBinding() -> Binding<String> {
+        Binding(
+            get: { task?.deadline ?? "" },
+            set: { value in
+                update {
+                    $0.deadline = value
+                    if value.trimmedOrNil == nil {
+                        $0.deadlineTime = nil
+                    }
+                }
+            }
+        )
+    }
+
+    private func deadlineTimeBinding() -> Binding<String> {
+        Binding(
+            get: { task?.deadlineTime ?? "" },
+            set: { value in update { $0.deadlineTime = TaskItem.normalizedDeadlineTime(value) } }
         )
     }
 
