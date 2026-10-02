@@ -6791,7 +6791,8 @@ final class GrantDataStore: ObservableObject {
         return headers + records.map { record in
             let comment = record.centralTask?.comment ?? record.projectTask?.comment ?? record.publicationTask?.comment ?? ""
             let completedOn = record.centralTask?.completedOn ?? record.projectTask?.completedOn ?? record.publicationTask?.completedOn
-            let deadline = record.centralTask?.deadline ?? record.projectTask?.deadline ?? record.publicationTask?.deadline ?? ""
+            // A shared task's deadline time follows the date ("2026-10-15 14:00").
+            let deadline = record.centralTask?.deadlineDisplayText ?? record.projectTask?.deadline ?? record.publicationTask?.deadline ?? ""
             let note = record.centralTask?.note ?? record.projectTask?.note ?? record.publicationTask?.note ?? ""
             let participants = record.centralTask?.participantNames ?? record.projectTask?.participantNames ?? record.publicationTask?.participantNames ?? []
             let createdOn = record.centralTask?.createdOn ?? record.projectTask?.createdOn ?? record.publicationTask?.createdOn ?? ""

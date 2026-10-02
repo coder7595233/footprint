@@ -126,6 +126,8 @@ struct CalendarTaskReminderEntry: Hashable, Identifiable {
     let title: String
     let context: String
     let badgeTargets: Set<CalendarTaskReminderBadgeTarget>
+    /// The deadline's clock time on the deadline day, when the task has one.
+    let deadlineMoment: Date?
 
     init(
         id: String,
@@ -133,7 +135,8 @@ struct CalendarTaskReminderEntry: Hashable, Identifiable {
         displayDate: Date,
         title: String,
         context: String,
-        badgeTargets: Set<CalendarTaskReminderBadgeTarget> = []
+        badgeTargets: Set<CalendarTaskReminderBadgeTarget> = [],
+        deadlineMoment: Date? = nil
     ) {
         self.id = id
         self.source = source
@@ -141,6 +144,7 @@ struct CalendarTaskReminderEntry: Hashable, Identifiable {
         self.title = title
         self.context = context
         self.badgeTargets = badgeTargets
+        self.deadlineMoment = deadlineMoment
     }
 }
 
@@ -485,7 +489,8 @@ func calendarTaskReminderEntries(
                 badgeTargets: badgeRouter.targets(
                     source: .teachingTask(taskID: task.id),
                     links: task.links
-                )
+                ),
+                deadlineMoment: task.deadlineMoment(calendar: calendar)
             )
         )
     }
@@ -579,15 +584,24 @@ func calendarTaskReminderEntries(
 }
 
 /// The daily task notification is sent at the time in Settings > Calendar
-/// (default 12:00).
+/// (default 12:00). When a task on that day has a deadline time, the
+/// notification comes one hour before the earliest such time if that is
+/// earlier than the usual time (never before midnight).
 func calendarTaskReminderFireDate(
     on day: Date,
     calendar: Calendar,
-    settings: CalendarReminderSettings = .standard
+    settings: CalendarReminderSettings = .standard,
+    deadlineMoments: [Date] = []
 ) -> Date {
     let startOfDay = calendar.startOfDay(for: day)
     let time = settings.taskNotificationHourMinute
-    return calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: startOfDay) ?? startOfDay
+    let usual = calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: startOfDay) ?? startOfDay
+    guard let earliestDeadline = deadlineMoments
+        .filter({ calendar.isDate($0, inSameDayAs: startOfDay) })
+        .min()
+    else { return usual }
+    let beforeDeadline = max(startOfDay, earliestDeadline.addingTimeInterval(-3600))
+    return min(usual, beforeDeadline)
 }
 
 /// Not used by the Dock badge: the badge counts today's tasks and is refreshed
@@ -650,7 +664,12 @@ func calendarTaskReminderPlans(
         return CalendarTaskReminderPlan(
             id: "calendar-task-reminder-\(dayString)",
             dayString: dayString,
-            fireDate: calendarTaskReminderFireDate(on: day, calendar: calendar, settings: reminderSettings),
+            fireDate: calendarTaskReminderFireDate(
+                on: day,
+                calendar: calendar,
+                settings: reminderSettings,
+                deadlineMoments: dayEntries.compactMap(\.deadlineMoment)
+            ),
             title: title,
             body: body,
             entries: dayEntries
