@@ -41,10 +41,20 @@ struct DoctoralRecordHeroView: View {
     private static let todayAnchorID = "doctoral-timeline-today"
     private static let paperDiamondBlock: CGFloat = 16
     private static let edgeMargin: CGFloat = 32
+    /// Room above the milestone row for the small "Idag" tag on the today line.
+    private static let todayTagReserve: CGFloat = 20
+    /// Milestones closer than this (node to node) put their labels on
+    /// opposite sides of the row.
+    private static let milestoneLabelSpacing: Double = 120
+    /// Supervision blocks are equally low bands; the hours are written inside.
+    private static let supervisionBandHeight: CGFloat = 26
+    /// Course bars at least this tall carry their "x hp" label inside.
+    private static let courseInsideLabelMinHeight: CGFloat = 18
     // Round 17: timeline circles about 17 % larger (18 → 21, 12 → 14, 24 → 28).
     nonisolated private static let milestoneNodeSize: CGFloat = 21
-    private static let activityDotSize: CGFloat = 14
-    private static let activityGroupSize: CGFloat = 28
+    // Activity circles about 15 % smaller than round 17 (14 → 12, 28 → 24).
+    private static let activityDotSize: CGFloat = 12
+    private static let activityGroupSize: CGFloat = 24
     /// Activities closer than this (in points) share one marker with a count.
     private static let activityGroupWindow: Double = 2 * Double(activityGroupSize + 4)
 
@@ -226,14 +236,51 @@ struct DoctoralRecordHeroView: View {
         HStack(alignment: .firstTextBaseline, spacing: 18) {
             grantRow
             Spacer(minLength: 12)
-            Text(language.text(
-                "Solid = completed / confirmed in Retendo · dashed = not yet · red edge = supervision not confirmed in Retendo",
-                "Heldragen = genomförd / bekräftad i Retendo · streckad = inte än · röd kant = handledning ej bekräftad i Retendo"
-            ))
-            .appTypography(.secondary)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.trailing)
-            .fixedSize(horizontal: false, vertical: true)
+            legend
+        }
+    }
+
+    /// A compact key: small swatches with short labels.
+    private var legend: some View {
+        HStack(alignment: .center, spacing: 14) {
+            legendItem(language.text("Completed", "Genomförd")) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(AppPalette.statusFill(.done))
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(AppPalette.statusEdge(.done), lineWidth: 1.2))
+            }
+            legendItem(language.text("Upcoming", "Kommande")) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(DoctoralHeroColors.coursePlannedFill)
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(
+                        DoctoralHeroColors.futureBlue,
+                        style: StrokeStyle(lineWidth: 1.2, dash: [3, 2])
+                    ))
+            }
+            legendItem(language.text("Not confirmed in Retendo", "Ej bekräftad i Retendo")) {
+                Rectangle()
+                    .fill(DoctoralHeroColors.supervisionPendingFill)
+                    .overlay(Rectangle().stroke(
+                        DoctoralHeroColors.supervisionEdge,
+                        style: StrokeStyle(lineWidth: 1, dash: [3, 2])
+                    ))
+                    .overlay(alignment: .leading) {
+                        Rectangle()
+                            .fill(AppPalette.statusMark(.warning))
+                            .frame(width: 3)
+                    }
+            }
+        }
+        .fixedSize()
+    }
+
+    private func legendItem<Swatch: View>(_ title: String, @ViewBuilder swatch: () -> Swatch) -> some View {
+        HStack(spacing: 5) {
+            swatch()
+                .frame(width: 16, height: 10)
+            Text(title)
+                .appTypography(.secondary)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
         }
     }
 
@@ -293,8 +340,21 @@ struct DoctoralRecordHeroView: View {
         /// Where the line from "work began" starts; nil when there is no date.
         let startX: CGFloat?
         let lane: Int
+        /// Width of the "P1" label, which sits to the left of the line start.
+        let labelWidth: CGFloat
 
         var id: String { publication.id }
+
+        /// Where the label ends: just left of the line start, or of the
+        /// marker when there is no line.
+        var labelAnchorX: CGFloat { startX.map { $0 - 8 } ?? (x - 12) }
+    }
+
+    /// A faint background band behind every other lane.
+    private struct LaneBand: Identifiable {
+        let id: Int
+        let top: CGFloat
+        let height: CGFloat
     }
 
     private struct ActivityMarker: Identifiable {
@@ -321,8 +381,9 @@ struct DoctoralRecordHeroView: View {
         var coursesBase: CGFloat?
         var coursesHeight: CGFloat = 72
         var supervisionBase: CGFloat?
-        var supervisionHeight: CGFloat = 58
-        var paperLabelHeight: CGFloat = 0
+        // Room for one low band of `supervisionBandHeight` plus a gap above it.
+        var supervisionHeight: CGFloat = 34
+        var laneBands: [LaneBand] = []
         var height: CGFloat = 60
 
         /// Top edge of a milestone label. Even lanes go below the node row,
@@ -383,12 +444,21 @@ struct DoctoralRecordHeroView: View {
                 inset: nodeInset
             )
         }
-        let lanes = DoctoralTimelineLayout.lanes(for: spans.map { $0.span }, gap: 12)
+        // Each span is widened to at least `milestoneLabelSpacing` around its
+        // node, so two milestones closer than that always get different
+        // lanes: one label below the row, the next above it.
+        let reach = (Self.milestoneLabelSpacing - 12) / 2
+        let laneSpans = spans.indices.map { index -> ClosedRange<Double> in
+            let nodeX = Double(prepared[index].1)
+            let span = spans[index].span
+            return min(span.lowerBound, nodeX - reach)...max(span.upperBound, nodeX + reach)
+        }
+        let lanes = DoctoralTimelineLayout.lanes(for: laneSpans, gap: 12)
         let maxLane = lanes.max() ?? 0
         let rowsAbove = CGFloat((maxLane + 1) / 2)
         let rowsBelow = CGFloat(maxLane / 2 + 1)
         let nodeHalf = Self.milestoneNodeSize / 2
-        geometry.milestoneRowY = 6 + rowsAbove * geometry.labelBlock + nodeHalf + (rowsAbove > 0 ? 4 : 0)
+        geometry.milestoneRowY = Self.todayTagReserve + rowsAbove * geometry.labelBlock + nodeHalf + (rowsAbove > 0 ? 4 : 0)
         geometry.milestones = prepared.indices.map { index in
             MilestonePlacement(
                 milestone: prepared[index].0,
@@ -400,9 +470,12 @@ struct DoctoralRecordHeroView: View {
             )
         }
         var y = geometry.milestoneRowY + nodeHalf + 4 + rowsBelow * geometry.labelBlock
+        // Top and bottom of every lane, for the background bands.
+        var laneExtents: [(top: CGFloat, bottom: CGFloat)] = [(0, y)]
 
         // Activities: close ones share one marker with a count.
         if !data.activities.isEmpty {
+            let laneTop = y
             geometry.activitiesY = y + 16
             let today = Calendar.current.startOfDay(for: Date())
             let positions = data.activities.map { Double(x(doctoralHeroYearFraction(of: $0.displayDate))) }
@@ -419,6 +492,7 @@ struct DoctoralRecordHeroView: View {
                 )
             }
             y += 36
+            laneExtents.append((laneTop, y))
         }
 
         // Papers: markers that would overlap stack in lanes.
@@ -433,14 +507,21 @@ struct DoctoralRecordHeroView: View {
                 )
             }
             // A paper's lane span covers its line too, so lines never cross markers.
-            let paperSpans = items.map { item -> ClosedRange<Double> in
-                let half = Double(max(16, Self.textWidth(item.1, font: labelFont)) / 2 + 3)
-                let lower = min(Double(item.2) - half, item.3.map { Double($0) - 4 } ?? .infinity)
+            // The "P1" label sits to the left of the line start (or of the
+            // marker), so the lane span covers it too.
+            let labelWidths = items.map { Self.textWidth($0.1, font: labelFont) + 2 }
+            let paperSpans = items.indices.map { index -> ClosedRange<Double> in
+                let item = items[index]
+                let half = Double(Self.paperDiamondBlock / 2 + 3)
+                let labelEnd = Double(item.3.map { $0 - 8 } ?? (item.2 - 12))
+                let lower = labelEnd - Double(labelWidths[index]) - 2
                 return lower...(Double(item.2) + half)
             }
             let paperLanes = DoctoralTimelineLayout.lanes(for: paperSpans, gap: 4)
-            geometry.paperLabelHeight = ceil(captionFont.pointSize * 1.3)
-            geometry.paperLaneHeight = Self.paperDiamondBlock + 2 + geometry.paperLabelHeight + 6
+            // About half the old row spacing: the label no longer sits under
+            // the marker.
+            geometry.paperLaneHeight = Self.paperDiamondBlock + 4
+            let laneTop = y
             geometry.papersTopY = y + 4
             geometry.papers = items.indices.map { index in
                 PaperPlacement(
@@ -448,23 +529,32 @@ struct DoctoralRecordHeroView: View {
                     label: items[index].1,
                     x: items[index].2,
                     startX: items[index].3,
-                    lane: paperLanes[index]
+                    lane: paperLanes[index],
+                    labelWidth: labelWidths[index]
                 )
             }
             y += 4 + CGFloat((paperLanes.max() ?? 0) + 1) * geometry.paperLaneHeight + 4
+            laneExtents.append((laneTop, y))
         }
 
         if !data.courseBars.isEmpty {
+            let laneTop = y
             y += geometry.coursesHeight
             geometry.coursesBase = y
             y += 8
+            laneExtents.append((laneTop, y))
         }
         if !data.supervisionBlocks.isEmpty {
+            let laneTop = y
             y += geometry.supervisionHeight
             geometry.supervisionBase = y
             y += 4
+            laneExtents.append((laneTop, y))
         }
         geometry.height = max(y, 60)
+        geometry.laneBands = laneExtents.indices
+            .filter { $0 % 2 == 1 }
+            .map { LaneBand(id: $0, top: laneExtents[$0].top, height: max(0, laneExtents[$0].bottom - laneExtents[$0].top)) }
         return geometry
     }
 
@@ -544,16 +634,17 @@ struct DoctoralRecordHeroView: View {
                 laneLabel(language.text("Courses", "Kurser"), y: base - 14)
             }
             if let base = geometry.supervisionBase {
-                laneLabel(language.text("Supervision", "Handledning"), y: base - 14)
+                laneLabel(language.text("Supervision", "Handledning"), y: base - Self.supervisionBandHeight / 2)
             }
         }
         .frame(width: Self.laneLabelWidth, height: Self.yearLabelHeight + geometry.height)
     }
 
+    /// Every lane label uses the same font role and the same secondary colour.
     private func laneLabel(_ text: String, y: CGFloat) -> some View {
         Text(text)
             .appTypography(.body)
-            .foregroundStyle(AppPalette.appText)
+            .foregroundStyle(.secondary)
             .lineLimit(1)
             .minimumScaleFactor(0.85)
             .frame(width: Self.laneLabelWidth, alignment: .leading)
@@ -612,7 +703,7 @@ struct DoctoralRecordHeroView: View {
             (x(Double(year) + inset), x(Double(year) + 1 - inset))
         }
         let top = Self.yearLabelHeight
-        let dashed = StrokeStyle(lineWidth: 1.2, dash: [4, 3])
+        let showsToday = todayFraction > Double(yearRange.lowerBound) && todayFraction < Double(yearRange.upperBound + 1)
 
         return ZStack(alignment: .topLeading) {
             // Fixes the drawing area; no fill of its own, so the timeline
@@ -620,13 +711,25 @@ struct DoctoralRecordHeroView: View {
             Color.clear
                 .frame(width: width, height: top + geometry.height)
 
-            // Faint year boundaries through the whole plot
-            ForEach(Array(yearRange.dropFirst()), id: \.self) { year in
-                Rectangle()
-                    .fill(AppPalette.subtleBorder.opacity(0.6))
-                    .frame(width: 1, height: geometry.height)
-                    .offset(x: x(Double(year)), y: top)
-                    .allowsHitTesting(false)
+            Group {
+                // Very faint bands behind every other lane, so the rows are
+                // easy to follow across the years.
+                ForEach(geometry.laneBands) { band in
+                    Rectangle()
+                        .fill(DoctoralHeroColors.rowBand)
+                        .frame(width: width, height: band.height)
+                        .offset(y: top + band.top)
+                        .allowsHitTesting(false)
+                }
+
+                // Faint year boundaries through the whole plot
+                ForEach(Array(yearRange.dropFirst()), id: \.self) { year in
+                    Rectangle()
+                        .fill(AppPalette.subtleBorder.opacity(0.6))
+                        .frame(width: 1, height: geometry.height)
+                        .offset(x: x(Double(year)), y: top)
+                        .allowsHitTesting(false)
+                }
             }
 
             // Year labels and a thin line under them
@@ -642,92 +745,60 @@ struct DoctoralRecordHeroView: View {
                 .frame(width: width, height: 1)
                 .offset(y: top - 1)
 
-            // Today marker (same red as the project timeline), behind the markers
-            if todayFraction > Double(yearRange.lowerBound), todayFraction < Double(yearRange.upperBound + 1) {
+            // Today line (same red as the project timeline): thin, drawn
+            // before every bar and marker so it never runs over them, with a
+            // small "Idag" tag at its top.
+            if showsToday {
                 Rectangle()
                     .fill(Self.todayMarkerColor)
-                    .frame(width: 2.4, height: geometry.height)
-                    .offset(x: x(todayFraction) - 1.2, y: top)
+                    .frame(width: 1.5, height: geometry.height)
+                    .offset(x: x(todayFraction) - 0.75, y: top)
+                    .allowsHitTesting(false)
+                Text(language.text("Today", "Idag"))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1.5)
+                    .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(Self.todayMarkerColor))
+                    .position(x: x(todayFraction), y: top + Self.todayTagReserve / 2)
                     .allowsHitTesting(false)
             }
 
-            // Courses: solid part = completed credits, dashed part = not yet
+            // Courses (blue, no status): solid part = completed credits,
+            // pale dashed part = not yet.
             if let base = geometry.coursesBase {
                 let maxCredits = data.courseBars.map(\.value).max() ?? 1
                 ForEach(data.courseBars) { bar in
                     let (xa, xb) = yearSpanX(bar.year, inset: 0.08)
                     let h = max(8, CGFloat(bar.value / max(maxCredits, 1)) * (geometry.coursesHeight - 24))
-                    let doneHeight = bar.value > 0 ? h * CGFloat(bar.completed / bar.value) : 0
-                    ZStack(alignment: .bottom) {
-                        Rectangle()
-                            .fill(AppPalette.timelineBarStart.opacity(0.25))
-                            .overlay(Rectangle().stroke(AppPalette.timelineBarStroke, style: dashed))
-                        if doneHeight > 0 {
-                            Rectangle()
-                                .fill(LinearGradient(colors: [AppPalette.timelineBarEnd, AppPalette.timelineBarStart], startPoint: .bottom, endPoint: .top))
-                                .overlay(Rectangle().stroke(AppPalette.timelineBarStroke, lineWidth: 1))
-                                .frame(height: doneHeight)
-                        }
+                    courseBarView(bar, width: xb - xa, height: h)
+                        .contentShape(Rectangle())
+                        .help(courseHelpText(bar))
+                        .offset(x: xa, y: top + base - h)
+                    if h < Self.courseInsideLabelMinHeight {
+                        Text(courseCreditsText(bar))
+                            .font(appFont(.secondary).weight(.semibold))
+                            .monospacedDigit()
+                            .foregroundStyle(AppPalette.appText)
+                            .fixedSize()
+                            .position(x: (xa + xb) / 2, y: top + base - h - 10)
                     }
-                    .frame(width: xb - xa, height: h)
-                    .contentShape(Rectangle())
-                    .help(courseHelpText(bar))
-                    .offset(x: xa, y: top + base - h)
-                    Text(doctoralStatisticsNumber(bar.value, language: language) + " hp")
-                        .font(appFont(.secondary).weight(.semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(AppPalette.appText)
-                        .fixedSize()
-                        .position(x: (xa + xb) / 2, y: top + base - h - 10)
                 }
             }
 
-            // Supervision per semester: solid = confirmed in Retendo, dashed =
-            // not confirmed; a red left edge whenever it is not confirmed (round 12).
+            // Supervision per semester: equally low blue-grey bands. Solid =
+            // confirmed in Retendo, pale dashed = not confirmed, with an
+            // orange left edge whenever something is not confirmed.
             if let base = geometry.supervisionBase {
-                let purple = StatisticsEditorialStyle.palettePurple
-                let maxHours = data.supervisionBlocks.map(\.hours).max() ?? 1
                 ForEach(data.supervisionBlocks) { block in
                     let xa = x(block.startFraction + 0.02)
                     let xb = x(block.startFraction + 0.48)
-                    let h = max(9, CGFloat(block.hours / max(maxHours, 1)) * (geometry.supervisionHeight - 16))
-                    let confirmedHeight = block.hours > 0 ? h * CGFloat(min(1, block.confirmedHours / block.hours)) : 0
-                    let hoursText = doctoralStatisticsNumber(block.hours, language: language) + " h"
-                    ZStack(alignment: .bottom) {
-                        Rectangle()
-                            .fill(purple.opacity(0.22))
-                            .overlay(Rectangle().stroke(purple, style: dashed))
-                        if confirmedHeight > 0 {
-                            Rectangle()
-                                .fill(LinearGradient(
-                                    colors: [purple.opacity(0.45), purple],
-                                    startPoint: .bottom,
-                                    endPoint: .top
-                                ))
-                                .overlay(Rectangle().stroke(purple.opacity(0.9), lineWidth: 1))
-                                .frame(height: confirmedHeight)
-                        }
-                        if h >= 18 {
-                            Text(hoursText)
-                                .font(appFont(.secondary).weight(.semibold))
-                                .monospacedDigit()
-                                .foregroundStyle(AppPalette.appText)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
-                                .frame(maxHeight: .infinity)
-                        }
-                    }
-                    .frame(width: max(4, xb - xa), height: h)
-                    .overlay(alignment: .leading) {
-                        if block.needsConfirmation {
-                            Rectangle()
-                                .fill(AppPalette.statusFill(.warning))
-                                .frame(width: 3)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .help(supervisionHelpText(block))
-                    .offset(x: xa, y: top + base - h)
+                    supervisionBlockView(block, width: max(4, xb - xa))
+                        .contentShape(Rectangle())
+                        .help(supervisionHelpText(block))
+                        .offset(x: xa, y: top + base - Self.supervisionBandHeight)
                 }
             }
 
@@ -739,18 +810,18 @@ struct DoctoralRecordHeroView: View {
                 }
             }
 
-            // Papers: a line from the day work began to the marker
+            // Papers: a line from the day work began to the marker, with the
+            // "P1" label to the left of where the line starts.
             if let papersTop = geometry.papersTopY {
                 ForEach(geometry.papers) { paper in
-                    let laneTop = top + papersTop + CGFloat(paper.lane) * geometry.paperLaneHeight
+                    let rowY = top + papersTop + CGFloat(paper.lane) * geometry.paperLaneHeight + Self.paperDiamondBlock / 2
                     if let startX = paper.startX {
-                        paperLineView(paper, startX: startX, y: laneTop + Self.paperDiamondBlock / 2)
+                        paperLineView(paper, startX: startX, y: rowY)
                     }
-                    paperMarkerView(paper, labelHeight: geometry.paperLabelHeight)
-                        .position(
-                            x: paper.x,
-                            y: laneTop + (Self.paperDiamondBlock + 2 + geometry.paperLabelHeight) / 2
-                        )
+                    paperLabelView(paper)
+                        .position(x: paper.labelAnchorX - paper.labelWidth / 2, y: rowY)
+                    paperMarkerView(paper)
+                        .position(x: paper.x, y: rowY)
                 }
             }
 
@@ -763,6 +834,120 @@ struct DoctoralRecordHeroView: View {
             }
         }
         .frame(width: width, height: top + geometry.height, alignment: .topLeading)
+    }
+
+    // MARK: - Courses and supervision
+
+    private func courseCreditsText(_ bar: DoctoralHeroBar) -> String {
+        doctoralStatisticsNumber(bar.value, language: language) + " hp"
+    }
+
+    /// One year's course bar: the completed credits as a solid blue block at
+    /// the bottom, the credits not yet completed as a pale dashed block on
+    /// top. The "x hp" label sits inside when the bar is tall enough.
+    private func courseBarView(_ bar: DoctoralHeroBar, width: CGFloat, height h: CGFloat) -> some View {
+        let radius: CGFloat = 4
+        let doneHeight = bar.value > 0 ? h * CGFloat(min(1, bar.completed / bar.value)) : 0
+        let plannedHeight = max(0, h - doneHeight)
+        let doneShape = UnevenRoundedRectangle(
+            cornerRadii: RectangleCornerRadii(
+                topLeading: plannedHeight > 0 ? 0 : radius,
+                bottomLeading: radius,
+                bottomTrailing: radius,
+                topTrailing: plannedHeight > 0 ? 0 : radius
+            ),
+            style: .continuous
+        )
+        let plannedShape = UnevenRoundedRectangle(
+            cornerRadii: RectangleCornerRadii(
+                topLeading: radius,
+                bottomLeading: doneHeight > 0 ? 0 : radius,
+                bottomTrailing: doneHeight > 0 ? 0 : radius,
+                topTrailing: radius
+            ),
+            style: .continuous
+        )
+        // The label is centred in the bar; it is read against whichever part
+        // lies under its middle.
+        let labelColor = doneHeight >= h / 2 ? DoctoralHeroColors.courseDoneText : AppPalette.appText
+        return VStack(spacing: 0) {
+            if plannedHeight > 0 {
+                plannedShape
+                    .fill(DoctoralHeroColors.coursePlannedFill)
+                    .overlay(plannedShape.stroke(
+                        DoctoralHeroColors.coursePlannedEdge,
+                        style: StrokeStyle(lineWidth: 1.2, dash: [4, 3])
+                    ))
+                    .frame(height: plannedHeight)
+            }
+            if doneHeight > 0 {
+                doneShape
+                    .fill(DoctoralHeroColors.courseDoneFill)
+                    .overlay(doneShape.stroke(DoctoralHeroColors.courseDoneEdge, lineWidth: 1.2))
+                    .frame(height: doneHeight)
+            }
+        }
+        .frame(width: width, height: h)
+        .overlay {
+            if h >= Self.courseInsideLabelMinHeight {
+                Text(courseCreditsText(bar))
+                    .font(appFont(.secondary).weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(labelColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .padding(.horizontal, 2)
+            }
+        }
+    }
+
+    /// One semester of supervision as a low band with the hours inside.
+    /// Partly confirmed semesters show the confirmed share as a filled part.
+    private func supervisionBlockView(_ block: DoctoralSupervisionSemesterBlock, width: CGFloat) -> some View {
+        let h = Self.supervisionBandHeight
+        let radius: CGFloat = 3
+        let isConfirmed = block.isFullyConfirmed
+        let confirmedHeight = !isConfirmed && block.hours > 0
+            ? h * CGFloat(min(1, block.confirmedHours / block.hours))
+            : 0
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        let hoursText = doctoralStatisticsNumber(block.hours, language: language) + " h"
+        return ZStack(alignment: .bottom) {
+            shape
+                .fill(isConfirmed ? DoctoralHeroColors.supervisionConfirmedFill : DoctoralHeroColors.supervisionPendingFill)
+            if confirmedHeight > 0 {
+                UnevenRoundedRectangle(
+                    cornerRadii: RectangleCornerRadii(topLeading: 0, bottomLeading: radius, bottomTrailing: radius, topTrailing: 0),
+                    style: .continuous
+                )
+                .fill(DoctoralHeroColors.supervisionConfirmedFill)
+                .frame(height: confirmedHeight)
+            }
+            shape
+                .stroke(
+                    DoctoralHeroColors.supervisionEdge,
+                    style: isConfirmed ? StrokeStyle(lineWidth: 1) : StrokeStyle(lineWidth: 1, dash: [4, 3])
+                )
+            Text(hoursText)
+                .font(appFont(.secondary).weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(AppPalette.appText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.leading, block.needsConfirmation ? 4 : 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(width: width, height: h)
+        .overlay(alignment: .leading) {
+            if block.needsConfirmation {
+                UnevenRoundedRectangle(
+                    cornerRadii: RectangleCornerRadii(topLeading: radius, bottomLeading: radius, bottomTrailing: 0, topTrailing: 0),
+                    style: .continuous
+                )
+                .fill(AppPalette.statusMark(.warning))
+                .frame(width: 4)
+            }
+        }
     }
 
     // MARK: - Milestones
@@ -788,14 +973,16 @@ struct DoctoralRecordHeroView: View {
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(AppPalette.statusOnFill)
                 } else {
+                    // Not yet done: blue (no status) on the page surface;
+                    // dashed only while the date is preliminary or estimated.
                     Circle()
                         .fill(AppPalette.detailPanelSurface)
                     Circle()
                         .stroke(
-                            Color.secondary.opacity(0.8),
+                            DoctoralHeroColors.futureBlue,
                             style: isTentative
-                                ? StrokeStyle(lineWidth: 1.5, dash: [3, 2.4])
-                                : StrokeStyle(lineWidth: 1.5)
+                                ? StrokeStyle(lineWidth: 1.6, dash: [3, 2.4])
+                                : StrokeStyle(lineWidth: 1.6)
                         )
                 }
             }
@@ -973,8 +1160,8 @@ struct DoctoralRecordHeroView: View {
     @ViewBuilder
     private func activityMarkerView(_ marker: ActivityMarker) -> some View {
         // Round 17: done activities are green (done), not blue; planned
-        // ones have no status yet and keep the blue outline.
-        let blue = StatisticsEditorialStyle.paletteBlue
+        // ones have no status yet and keep a blue outline on the page surface.
+        let blue = DoctoralHeroColors.futureBlue
         let doneFill = AppPalette.statusFill(.done)
         let doneEdge = AppPalette.statusEdge(.done)
         if marker.isGroup {
@@ -985,17 +1172,17 @@ struct DoctoralRecordHeroView: View {
                     Circle()
                         .fill(marker.allDone ? doneFill : (marker.noneDone ? AppPalette.detailPanelSurface : doneFill.opacity(0.45)))
                     Circle()
-                        .stroke(marker.noneDone ? blue : doneEdge, lineWidth: 1.6)
+                        .stroke(marker.noneDone ? blue : doneEdge, lineWidth: 1.5)
                     Text("\(marker.rows.count)")
                         .font(appFont(.secondary).weight(.semibold))
                         .monospacedDigit()
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
-                        .foregroundStyle(AppPalette.appText)
+                        .foregroundStyle(marker.allDone ? AppPalette.statusOnFill : AppPalette.appText)
                         .padding(.horizontal, 2)
                 }
                 .frame(width: Self.activityGroupSize, height: Self.activityGroupSize)
-                .contentShape(Circle())
+                .contentShape(Circle().scale(1.2))
             }
             .buttonStyle(.plain)
             .help(activityGroupHelpText(marker))
@@ -1008,9 +1195,9 @@ struct DoctoralRecordHeroView: View {
             } label: {
                 Circle()
                     .fill(marker.allDone ? doneFill : AppPalette.detailPanelSurface)
-                    .overlay(Circle().stroke(marker.allDone ? doneEdge : blue, lineWidth: 1.6))
+                    .overlay(Circle().stroke(marker.allDone ? doneEdge : blue, lineWidth: 1.5))
                     .frame(width: Self.activityDotSize, height: Self.activityDotSize)
-                    .contentShape(Circle().scale(1.8))
+                    .contentShape(Circle().scale(2.1))
             }
             .buttonStyle(.plain)
             .help(activityHelpText(row))
@@ -1084,9 +1271,9 @@ struct DoctoralRecordHeroView: View {
     }
 
     /// The line from the day work on a paper began up to its marker: solid
-    /// once published, dashed while the work is still going on.
+    /// once published, dashed blue while the work is still going on.
     private func paperLineView(_ paper: PaperPlacement, startX: CGFloat, y: CGFloat) -> some View {
-        let color = paper.publication.isPublished ? AppPalette.timelineBarStroke : Color.secondary
+        let color = paper.publication.isPublished ? AppPalette.timelineBarStroke : DoctoralHeroColors.futureBlue
         let length = max(0, paper.x - 8 - startX)
         return Button {
             store.openRoute(for: paper.publication)
@@ -1115,37 +1302,45 @@ struct DoctoralRecordHeroView: View {
         .offset(x: startX - 3, y: y - 5)
     }
 
-    private func paperMarkerView(_ paper: PaperPlacement, labelHeight: CGFloat) -> some View {
+    private func paperMarkerView(_ paper: PaperPlacement) -> some View {
         Button {
             store.openRoute(for: paper.publication)
         } label: {
-            VStack(spacing: 2) {
-                Group {
-                    if paper.publication.isPublished {
-                        Rectangle()
-                            .fill(AppPalette.timelineBarEnd)
-                            .overlay(Rectangle().stroke(AppPalette.timelineBarStroke, lineWidth: 1.2))
-                    } else {
-                        Rectangle()
-                            .fill(AppPalette.detailPanelSurface)
-                            .overlay(Rectangle().stroke(
-                                Color.secondary,
-                                style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2])
-                            ))
-                    }
+            Group {
+                if paper.publication.isPublished {
+                    Rectangle()
+                        .fill(AppPalette.timelineBarEnd)
+                        .overlay(Rectangle().stroke(AppPalette.timelineBarStroke, lineWidth: 1.2))
+                } else {
+                    Rectangle()
+                        .fill(AppPalette.detailPanelSurface)
+                        .overlay(Rectangle().stroke(
+                            DoctoralHeroColors.futureBlue,
+                            style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2])
+                        ))
                 }
-                .frame(width: 11, height: 11)
-                .rotationEffect(.degrees(45))
-                .frame(height: Self.paperDiamondBlock)
-                Text(paper.label)
-                    .font(appFont(.secondary).weight(.semibold))
-                    .foregroundStyle(AppPalette.appText)
-                    .fixedSize()
-                    .padding(.horizontal, 2)
-                    .background(AppPalette.detailPanelSurface)
-                    .frame(height: labelHeight)
             }
+            .frame(width: 11, height: 11)
+            .rotationEffect(.degrees(45))
+            .frame(width: Self.paperDiamondBlock, height: Self.paperDiamondBlock)
             .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(paperHelpText(paper))
+    }
+
+    /// "P1", "P2" … to the left of where the paper's line starts.
+    private func paperLabelView(_ paper: PaperPlacement) -> some View {
+        Button {
+            store.openRoute(for: paper.publication)
+        } label: {
+            Text(paper.label)
+                .font(appFont(.secondary).weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .fixedSize()
+                .frame(width: paper.labelWidth, height: Self.paperDiamondBlock, alignment: .trailing)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .help(paperHelpText(paper))
@@ -1354,4 +1549,38 @@ private func doctoralHeroYearFraction(from raw: String) -> Double? {
 private func doctoralHeroIsPastOrToday(_ rawDate: String) -> Bool {
     guard let date = rawDate.trimmedOrNil.flatMap(DateParsers.isoDay.date(from:)) else { return false }
     return Calendar.current.startOfDay(for: date) <= Calendar.current.startOfDay(for: Date())
+}
+
+// MARK: - Colours
+
+private func doctoralHeroHex(_ hex: Int) -> NSColor {
+    NSColor(
+        srgbRed: CGFloat((hex >> 16) & 0xFF) / 255.0,
+        green: CGFloat((hex >> 8) & 0xFF) / 255.0,
+        blue: CGFloat(hex & 0xFF) / 255.0,
+        alpha: 1
+    )
+}
+
+/// Colours of the doctoral timeline in light and dark mode. Things without a
+/// status (courses, supervision, upcoming items) use blue shades; status
+/// colours (done green, warning orange) come from `AppPalette`.
+private enum DoctoralHeroColors {
+    /// Course credits already completed.
+    static let courseDoneFill = dynamicColor(light: doctoralHeroHex(0x9DB9DD), dark: doctoralHeroHex(0x3D6699))
+    static let courseDoneEdge = dynamicColor(light: doctoralHeroHex(0x6F8FBE), dark: doctoralHeroHex(0x7F9CC4))
+    /// Text inside the completed part of a course bar.
+    static let courseDoneText = dynamicColor(light: doctoralHeroHex(0x1F2328), dark: .white)
+    /// Course credits not completed yet (pale, dashed edge).
+    static let coursePlannedFill = dynamicColor(light: doctoralHeroHex(0xE6EEF8), dark: doctoralHeroHex(0x26364A))
+    static let coursePlannedEdge = dynamicColor(light: doctoralHeroHex(0x9DB4D6), dark: doctoralHeroHex(0x6F8DB8))
+    /// Supervision confirmed in Retendo, and not yet confirmed (pale).
+    static let supervisionConfirmedFill = dynamicColor(light: doctoralHeroHex(0xC9D3E2), dark: doctoralHeroHex(0x3A475A))
+    static let supervisionPendingFill = dynamicColor(light: doctoralHeroHex(0xEEF1F6), dark: doctoralHeroHex(0x262C35))
+    static let supervisionEdge = dynamicColor(light: doctoralHeroHex(0x98A8C0), dark: doctoralHeroHex(0x6F86A3))
+    /// Edge of things that are still to come: planned milestones, planned
+    /// activities and papers not yet published.
+    static let futureBlue = dynamicColor(light: doctoralHeroHex(0x7F9CC4), dark: doctoralHeroHex(0x7F9CC4))
+    /// The faint band behind every other lane.
+    static let rowBand = dynamicColor(light: doctoralHeroHex(0xF5F6F8), dark: doctoralHeroHex(0x24262A))
 }
