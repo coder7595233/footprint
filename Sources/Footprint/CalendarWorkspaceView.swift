@@ -4192,6 +4192,17 @@ struct CalendarWorkspaceView: View {
     @State private var calendarRevealPulseToken: UUID?
     /// F44: content signals of the current main-thread turn, refreshed once.
     @State private var pendingCalendarContentRefresh: CalendarPendingContentRefresh?
+    /// List or week view, remembered on this Mac like the congress map's
+    /// view settings (kept out of the data file on purpose).
+    @AppStorage(AppRuntime.scopedDefaultsKey("CalendarWorkspaceViewMode"))
+    private var calendarViewMode: CalendarWorkspaceViewMode = .list
+    /// The day whose week the week view shows; nil follows the list's top day.
+    @State private var calendarWeekAnchorDate: Date?
+    @State private var calendarWeekModel: CalendarWeekViewModel?
+    @State private var calendarWeekModelSignature: Int?
+    @State private var calendarWeekWindowRequestKey: String?
+    /// Bumped each time the filtered day groups are rebuilt.
+    @State private var calendarDerivedDataRevision = 0
 
     private let listHorizontalPadding: CGFloat = 22
     private let calendarFilterSidebarWidth: CGFloat = 244
@@ -4419,55 +4430,60 @@ struct CalendarWorkspaceView: View {
                 GeometryReader { calendarGeometry in
                     let contentWidth = max(calendarGeometry.size.width, calendarContentMinimumWidth)
                     ZStack(alignment: .topTrailing) {
-                        ScrollView(.horizontal) {
-                            VStack(spacing: 0) {
-                                stickyCalendarToolbar()
+                        if calendarViewMode == .week {
+                            calendarWeekContent()
+                                .frame(width: calendarGeometry.size.width, height: calendarGeometry.size.height, alignment: .topLeading)
+                        } else {
+                            ScrollView(.horizontal) {
+                                VStack(spacing: 0) {
+                                    stickyCalendarToolbar()
 
-                                ZStack(alignment: .topLeading) {
-                                    ScrollView(.vertical) {
-                                        CalendarVerticalScrollOffsetBridge(
-                                            offsetY: $verticalScrollOffset,
-                                            restoreToken: verticalScrollRestoreToken
-                                        )
-                                        .frame(height: 0)
+                                    ZStack(alignment: .topLeading) {
+                                        ScrollView(.vertical) {
+                                            CalendarVerticalScrollOffsetBridge(
+                                                offsetY: $verticalScrollOffset,
+                                                restoreToken: verticalScrollRestoreToken
+                                            )
+                                            .frame(height: 0)
 
-                                        LazyVStack(alignment: .leading, spacing: 0) {
-                                            ForEach(dayGroups) { group in
-                                                VStack(alignment: .leading, spacing: 0) {
-                                                    if group.startsWeek {
-                                                        calendarWeekHeaderRow(for: group)
+                                            LazyVStack(alignment: .leading, spacing: 0) {
+                                                ForEach(dayGroups) { group in
+                                                    VStack(alignment: .leading, spacing: 0) {
+                                                        if group.startsWeek {
+                                                            calendarWeekHeaderRow(for: group)
+                                                        }
+                                                        // The position reader measures the day
+                                                        // itself, not the week header above it.
+                                                        dayGroupCard(group)
+                                                            .background(dayPositionReader(for: group.date))
                                                     }
-                                                    // The position reader measures the day
-                                                    // itself, not the week header above it.
-                                                    dayGroupCard(group)
-                                                        .background(dayPositionReader(for: group.date))
+                                                    .id(group.id)
+                                                    .padding(.top, group.topSpacing)
                                                 }
-                                                .id(group.id)
-                                                .padding(.top, group.topSpacing)
                                             }
+                                            .padding(.horizontal, listHorizontalPadding)
+                                            .padding(.top, 6)
+                                            .padding(.bottom, 28)
                                         }
-                                        .padding(.horizontal, listHorizontalPadding)
-                                        .padding(.top, 6)
-                                        .padding(.bottom, 28)
+                                        .coordinateSpace(name: "CalendarListSpace")
+                                        .onPreferenceChange(CalendarDayPositionPreferenceKey.self) { positions in
+                                            handleCalendarDayPositionsChange(
+                                                normalizedDayPositions(positions),
+                                                using: proxy
+                                            )
+                                        }
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                                     }
-                                    .coordinateSpace(name: "CalendarListSpace")
-                                    .onPreferenceChange(CalendarDayPositionPreferenceKey.self) { positions in
-                                        handleCalendarDayPositionsChange(
-                                            normalizedDayPositions(positions),
-                                            using: proxy
-                                        )
-                                    }
+                                    .background(AppPalette.calendarWorkspaceSurface)
                                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                                 }
                                 .background(AppPalette.calendarWorkspaceSurface)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                .frame(width: contentWidth, height: calendarGeometry.size.height, alignment: .topLeading)
                             }
                             .background(AppPalette.calendarWorkspaceSurface)
-                            .frame(width: contentWidth, height: calendarGeometry.size.height, alignment: .topLeading)
+                            .frame(width: calendarGeometry.size.width, height: calendarGeometry.size.height, alignment: .topLeading)
+                            .clipped()
                         }
-                        .background(AppPalette.calendarWorkspaceSurface)
-                        .frame(width: calendarGeometry.size.width, height: calendarGeometry.size.height, alignment: .topLeading)
-                        .clipped()
 
                         floatingCalendarJumpControls(proxy: proxy)
                     }
@@ -5105,6 +5121,8 @@ struct CalendarWorkspaceView: View {
 
     private func floatingCalendarJumpControls(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: 8) {
+            calendarViewModePicker(proxy: proxy)
+
             Button {
                 prepareGoToDatePopover()
                 isGoToDatePopoverPresented.toggle()
@@ -5122,13 +5140,21 @@ struct CalendarWorkspaceView: View {
                     displayedYear: $goToDateYear
                 ) { date in
                     isGoToDatePopoverPresented = false
-                    goToCalendarDate(date, using: proxy)
+                    if calendarViewMode == .week {
+                        showCalendarWeek(containing: date)
+                    } else {
+                        goToCalendarDate(date, using: proxy)
+                    }
                 }
             }
             .help(language.text("Go to date", "Gå till datum"))
 
             Button {
-                scrollToToday(using: proxy, animated: true)
+                if calendarViewMode == .week {
+                    showCalendarWeek(containing: today)
+                } else {
+                    scrollToToday(using: proxy, animated: true)
+                }
             } label: {
                 Label(language.text("Today", "Idag"), systemImage: "sun.max")
             }
@@ -9228,6 +9254,7 @@ struct CalendarWorkspaceView: View {
             dayLocationFilterOptions: dayLocationOptions,
             meetingCategoryFilterOptions: resolvedMeetingOptions
         )
+        calendarDerivedDataRevision &+= 1
         let afterAssign = CFAbsoluteTimeGetCurrent()
         let snapshot = calendarVisibleWindowSnapshot(from: dayGroups)
         visibleWindowSnapshot = snapshot
@@ -9629,6 +9656,227 @@ struct CalendarWorkspaceView: View {
         guard date.timeIntervalSince(lastPeriodicCalendarCheckDate) >= periodicCalendarCheckInterval else { return }
         lastPeriodicCalendarCheckDate = date
         scheduleCalendarCacheRebuild()
+    }
+}
+
+// MARK: - Week view
+
+/// The week view (CalendarWeekView.swift) reads the same filtered day groups
+/// as the list and reuses the list's colours, icons, rings, detail sheet and
+/// context menus. Its model is rebuilt only when the shown week or the
+/// filtered data changes.
+extension CalendarWorkspaceView {
+    /// The first day of the week the week view shows.
+    private var calendarShownWeekStart: Date {
+        calendarWeekViewWeekStart(for: calendarWeekAnchorDate ?? topVisibleDate, calendar: workspaceCalendar)
+    }
+
+    private var calendarWeekModelSignatureValue: Int {
+        var hasher = Hasher()
+        hasher.combine(DateParsers.isoDay.string(from: calendarShownWeekStart))
+        hasher.combine(calendarDerivedDataRevision)
+        hasher.combine(DateParsers.isoDay.string(from: today))
+        hasher.combine(visibleCalendarColumns.contains(.conferences))
+        hasher.combine(visibleCalendarColumns.contains(.completion))
+        hasher.combine(effectiveUsesDarkAppearance)
+        hasher.combine(language.rawValue)
+        hasher.combine(store.calendarWeekdayChoice.rawValue)
+        hasher.combine(store.holidayCountries.map(\.rawValue))
+        hasher.combine(store.calendarTaskReminderBadgeEntries.map(\.id))
+        return hasher.finalize()
+    }
+
+    /// "Lista | Vecka" next to "Gå till …" and "Idag".
+    private func calendarViewModePicker(proxy: ScrollViewProxy) -> some View {
+        Picker(language.text("View", "Visning"), selection: $calendarViewMode) {
+            ForEach(CalendarWorkspaceViewMode.allCases) { mode in
+                Text(mode.title(language: language))
+                    .tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .fixedSize()
+        .help(language.text(
+            "Show the calendar as a list or one week at a time",
+            "Visa kalendern som lista eller en vecka i taget"
+        ))
+        .onChange(of: calendarViewMode) { oldMode, newMode in
+            handleCalendarViewModeChange(from: oldMode, to: newMode, using: proxy)
+        }
+    }
+
+    private func handleCalendarViewModeChange(
+        from oldMode: CalendarWorkspaceViewMode,
+        to newMode: CalendarWorkspaceViewMode,
+        using proxy: ScrollViewProxy
+    ) {
+        guard oldMode != newMode else { return }
+        switch newMode {
+        case .week:
+            // The week of the day at the top of the list.
+            showCalendarWeek(containing: topVisibleDate)
+        case .list:
+            // The list opens at the week that was shown.
+            let weekStart = calendarShownWeekStart
+            DispatchQueue.main.async {
+                goToCalendarDate(weekStart, using: proxy, animated: false)
+            }
+        }
+    }
+
+    private func calendarWeekContent() -> some View {
+        Group {
+            if let model = calendarWeekModel {
+                CalendarWeekView(
+                    model: model,
+                    language: language,
+                    usesDarkAppearance: effectiveUsesDarkAppearance,
+                    onPreviousWeek: { moveCalendarWeek(by: -1) },
+                    onNextWeek: { moveCalendarWeek(by: 1) },
+                    onSelectEvent: { event in presentCalendarEventDetail(event) },
+                    eventContextMenu: { event, date in calendarEventContextMenu(for: event, on: date) },
+                    dayContextMenu: { date in dayCreationContextMenu(for: date) }
+                )
+            } else {
+                AppPalette.calendarWorkspaceSurface
+            }
+        }
+        .onAppear {
+            if calendarWeekAnchorDate == nil {
+                calendarWeekAnchorDate = calendarWeekViewWeekStart(for: topVisibleDate, calendar: workspaceCalendar)
+            }
+            calendarWeekWindowRequestKey = nil
+            refreshCalendarWeekModelIfNeeded(force: true)
+        }
+        .onChange(of: calendarWeekModelSignatureValue) { _, _ in
+            refreshCalendarWeekModelIfNeeded()
+        }
+        .onChange(of: pinnedCalendarNavigationDate) { _, newValue in
+            // "Show in calendar" from another workspace pins the target day;
+            // the week view then opens that week.
+            guard let newValue else { return }
+            showCalendarWeek(containing: newValue)
+        }
+    }
+
+    /// "Idag", "Gå till …" and the arrows in week mode.
+    private func showCalendarWeek(containing date: Date) {
+        let weekStart = calendarWeekViewWeekStart(for: date, calendar: workspaceCalendar)
+        calendarWeekAnchorDate = weekStart
+        pendingTargetedCalendarScroll = nil
+        pendingDefaultOpenDate = nil
+        isStabilizingDefaultOpen = false
+        cancelQueuedCalendarViewportRestoresForTargetedNavigation()
+        // Keep the remembered day in step, so a tab switch or a return to
+        // the list comes back to this week.
+        topVisibleDate = weekStart
+        lastFocusedCalendarDate = weekStart
+        store.calendarWorkspaceLastFocusedDate = weekStart
+        refreshCalendarWeekModelIfNeeded()
+    }
+
+    private func moveCalendarWeek(by weeks: Int) {
+        let weekStart = calendarShownWeekStart
+        let target = workspaceCalendar.date(byAdding: .day, value: 7 * weeks, to: weekStart) ?? weekStart
+        showCalendarWeek(containing: target)
+    }
+
+    private func refreshCalendarWeekModelIfNeeded(force: Bool = false) {
+        let weekStart = calendarShownWeekStart
+        loadCalendarWeekIfNeeded(weekStart: weekStart)
+        let signature = calendarWeekModelSignatureValue
+        guard force || calendarWeekModel == nil || calendarWeekModelSignature != signature else { return }
+        calendarWeekModelSignature = signature
+        calendarWeekModel = makeCalendarWeekModel(weekStart: weekStart)
+    }
+
+    /// The list builds its day groups for a window of dates around the day
+    /// in view. When the shown week falls outside that window, the window is
+    /// moved to the week. It asks once per week and window, so a week the
+    /// window cannot reach does not rebuild over and over.
+    private func loadCalendarWeekIfNeeded(weekStart: Date) {
+        // The first load is still running; its rebuild refreshes the week.
+        guard !cache.allDates.isEmpty else { return }
+        let weekEnd = calendarWeekViewWeekEnd(for: weekStart, calendar: workspaceCalendar)
+        guard !isDateInsideRenderedWindow(weekStart) || !isDateInsideRenderedWindow(weekEnd) else { return }
+        let requestKey = [
+            DateParsers.isoDay.string(from: weekStart),
+            renderedDateWindow.map { DateParsers.isoDay.string(from: $0.start) } ?? "",
+            renderedDateWindow.map { DateParsers.isoDay.string(from: $0.end) } ?? ""
+        ].joined(separator: "|")
+        guard calendarWeekWindowRequestKey != requestKey else { return }
+        calendarWeekWindowRequestKey = requestKey
+        resetRenderedDateWindow(centeredOn: weekStart)
+        if cache.isWindowScoped {
+            rebuildCalendarCache(skipIfUnchanged: false, scope: .visibleWindow)
+        } else {
+            rebuildDerivedCalendarData(skipIfUnchanged: false)
+        }
+    }
+
+    private func makeCalendarWeekModel(weekStart: Date) -> CalendarWeekViewModel {
+        let calendar = workspaceCalendar
+        let weekDayKeys = Set(
+            calendarWeekViewDays(weekStart: weekStart, calendar: calendar)
+                .map { DateParsers.isoDay.string(from: $0) }
+        )
+        // Congresses follow the Conferences column, as in the list.
+        let showsConferences = visibleCalendarColumns.contains(.conferences)
+        var eventsByDay: [String: [CalendarWorkspaceEvent]] = [:]
+        for group in derivedData.dayGroups where weekDayKeys.contains(group.id) {
+            eventsByDay[group.id] = showsConferences ? group.events + group.conferenceEvents : group.events
+        }
+        let weekEnd = calendarWeekViewWeekEnd(for: weekStart, calendar: calendar)
+        let holidays = holidaysInCalendarRange(
+            from: weekStart,
+            to: weekEnd,
+            countries: store.holidayCountries,
+            calendar: calendar
+        )
+        let holidaysByDay = Dictionary(grouping: holidays) { holiday in
+            DateParsers.isoDay.string(from: calendar.startOfDay(for: holiday.date))
+        }
+        return makeCalendarWeekViewModel(
+            weekStart: weekStart,
+            today: today,
+            calendar: calendar,
+            language: language,
+            eventsByDay: eventsByDay,
+            holidaysByDay: holidaysByDay,
+            showsCompletionRing: calendarShowsCompletionRing,
+            dayHighlightColor: { date, dayHolidays in
+                calendarDayHighlightKind(for: date, holidays: dayHolidays)
+                    .map { configuredCalendarDayHighlightTextColor($0) }
+            },
+            eventStyle: { event in
+                CalendarWeekViewEventStyle(
+                    accentColor: eventRowHighlightColor(for: event),
+                    iconName: calendarEventIconName(for: event),
+                    opacity: calendarWeekEventOpacity(event),
+                    needsAttentionRing: eventNeedsAttentionRing(event),
+                    completionTint: completionTint(for: event),
+                    isItalic: eventUsesItalicStyle(event)
+                )
+            }
+        )
+    }
+
+    /// The list's dimming rule without a day group: done tasks and events
+    /// that are over are drawn fainter.
+    private func calendarWeekEventOpacity(_ event: CalendarWorkspaceEvent) -> Double {
+        if event.isCompleted {
+            return 0.56
+        }
+        let day = workspaceCalendar.startOfDay(for: event.displayDate)
+        if day < today {
+            return 0.6
+        }
+        if day > today {
+            return 1
+        }
+        guard let cutoff = eventPastCutoffDate(for: event) else { return 1 }
+        return cutoff < Date() ? 0.6 : 1
     }
 }
 
