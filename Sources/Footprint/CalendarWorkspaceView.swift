@@ -73,16 +73,6 @@ func calendarWorkspaceVisibleDetailText(for event: CalendarWorkspaceEvent, langu
         return uncertainText ?? ""
     }
 
-    if event.isRolledOverPastDue {
-        return [
-            language.text("Overdue", "Försenad"),
-            uncertainText,
-            event.detail.nonEmpty
-        ]
-        .compactMap { $0 }
-        .joined(separator: " · ")
-    }
-
     return [
         uncertainText,
         event.detail.nonEmpty
@@ -6124,7 +6114,6 @@ struct CalendarWorkspaceView: View {
         let usesItalicStyle = eventUsesItalicStyle(event)
         let foreground = eventForegroundColor(for: event, group: group, base: eventBodyTextColor(for: event))
         let primaryAction = eventTapAction(for: event)
-        let isActiveReminder = store.calendarTaskReminderBadgeEntries.contains { $0.source == event.source }
         return HStack(alignment: .top, spacing: 8) {
             Button {
                 if let primaryAction {
@@ -6146,7 +6135,14 @@ struct CalendarWorkspaceView: View {
             }
             Spacer(minLength: 0)
         }
-        .appReminderDot(isActiveReminder)
+    }
+
+    /// Overdue or reminding tasks get a clear red ring around the "Klar"
+    /// circle instead of a dot after the title.
+    private func eventNeedsAttentionRing(_ event: CalendarWorkspaceEvent) -> Bool {
+        guard !event.isCompleted else { return false }
+        return event.isRolledOverPastDue
+            || store.calendarTaskReminderBadgeEntries.contains { $0.source == event.source }
     }
 
     @ViewBuilder
@@ -6223,7 +6219,16 @@ struct CalendarWorkspaceView: View {
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(eventForegroundColor(for: event, group: group, base: completionTint(for: event)))
                         .frame(width: 22, height: 22)
+                        .overlay {
+                            if eventNeedsAttentionRing(event) {
+                                Circle()
+                                    .stroke(Color(nsColor: .systemRed), lineWidth: 2)
+                                    .frame(width: 20, height: 20)
+                                    .accessibilityHidden(true)
+                            }
+                        }
                 }
+                .help(event.isRolledOverPastDue ? language.text("Overdue", "Försenad") : "")
                 .buttonStyle(.plain)
             } else {
                 Color.clear.frame(width: 22, height: 22)
@@ -8716,6 +8721,7 @@ struct CalendarWorkspaceView: View {
 
         let pinnedNavigationDate = pinnedCalendarNavigationDate.map { workspaceCalendar.startOfDay(for: $0) }
         let pendingDefaultNavigationDate = pendingDefaultOpenDate.map { workspaceCalendar.startOfDay(for: $0) }
+        // A day with only congresses is empty when the Conferences column is hidden.
         let showsConferenceColumn = visibleCalendarColumns.contains(.conferences)
         let shouldIncludeEmptyDays = includeEmptyDays && calendarSearchText.trimmedOrNil == nil
         let candidateDates: [Date]
@@ -8756,10 +8762,10 @@ struct CalendarWorkspaceView: View {
             }
             let key = DateParsers.isoDay.string(from: date)
             let groupedEvents = groupedByDay[date, default: []]
-            // Round 16: with the Conferences column hidden, congresses are
-            // shown as ordinary rows instead of disappearing.
+            // Congresses belong in the Conferences column; when the user hides
+            // that column they are hidden too (round 16's "show as rows" undone).
             let separatedEvents = groupedEvents.reduce(into: (events: [CalendarWorkspaceEvent](), conferenceEvents: [CalendarWorkspaceEvent]())) { result, event in
-                if showsConferenceColumn && isStandaloneCongressEvent(event) {
+                if isStandaloneCongressEvent(event) {
                     result.conferenceEvents.append(event)
                 } else {
                     result.events.append(event)
@@ -8767,7 +8773,8 @@ struct CalendarWorkspaceView: View {
             }
             let holidays = cache.holidaysByDay[key, default: []]
             let dayEndLocation = cache.dayEndLocations[key]?.label ?? ""
-            let hasVisibleContent = !separatedEvents.events.isEmpty || !separatedEvents.conferenceEvents.isEmpty
+            let hasVisibleContent = !separatedEvents.events.isEmpty
+                || (showsConferenceColumn && !separatedEvents.conferenceEvents.isEmpty)
             if !isNavigationAnchorDate, !hasVisibleContent, !shouldIncludeEmptyDays {
                 return nil
             }
