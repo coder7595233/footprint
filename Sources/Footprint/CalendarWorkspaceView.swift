@@ -60,6 +60,77 @@ private func uncertainCalendarText(_ text: String, uncertain: Bool, language: Ap
     return "\(text) (\(language.text("uncertain date", "osäkert datum")))"
 }
 
+/// Short month name for the calendar list: "okt" in Swedish, "Oct" in English.
+/// `month` is 1–12.
+func calendarListMonthAbbreviation(_ month: Int, language: AppLanguage) -> String {
+    let swedish = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+    let english = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    let index = min(max(month, 1), 12) - 1
+    return language == .swedish ? swedish[index] : english[index]
+}
+
+/// Short weekday name for the calendar list: "Fre" / "Fri".
+/// `weekday` follows `Calendar`: 1 is Sunday, 7 is Saturday.
+func calendarListWeekdayAbbreviation(_ weekday: Int, language: AppLanguage) -> String {
+    let swedish = ["Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"]
+    let english = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    let index = min(max(weekday, 1), 7) - 1
+    return language == .swedish ? swedish[index] : english[index]
+}
+
+/// The merged day column in the calendar list: "Fre 2 okt" / "Fri 2 Oct".
+func calendarListShortDayLabel(weekday: Int, day: Int, month: Int, language: AppLanguage) -> String {
+    "\(calendarListWeekdayAbbreviation(weekday, language: language)) \(day) \(calendarListMonthAbbreviation(month, language: language))"
+}
+
+/// The week header row in the calendar list, e.g.
+/// "Vecka 40 · 28 sep – 4 okt 2026" / "Week 40 · 28 Sep – 4 Oct 2026".
+/// `weekNumber` is nil when the week number is hidden; the year is left out
+/// when `showsYear` is false.
+func calendarListWeekHeaderLabel(
+    weekNumber: Int?,
+    startDay: Int,
+    startMonth: Int,
+    startYear: Int,
+    endDay: Int,
+    endMonth: Int,
+    endYear: Int,
+    showsYear: Bool,
+    language: AppLanguage
+) -> String {
+    let startMonthText = calendarListMonthAbbreviation(startMonth, language: language)
+    let endMonthText = calendarListMonthAbbreviation(endMonth, language: language)
+    let range: String
+    if showsYear, startYear != endYear {
+        range = "\(startDay) \(startMonthText) \(startYear) – \(endDay) \(endMonthText) \(endYear)"
+    } else {
+        let start = startMonth == endMonth ? "\(startDay)" : "\(startDay) \(startMonthText)"
+        let end = "\(endDay) \(endMonthText)"
+        range = showsYear ? "\(start) – \(end) \(endYear)" : "\(start) – \(end)"
+    }
+    guard let weekNumber else { return range }
+    return "\(language.text("Week", "Vecka")) \(weekNumber) · \(range)"
+}
+
+/// The category icon for a meeting row: a camera for online meetings, a
+/// phone for phone meetings and two people for meetings in person. Uses the
+/// same "Online" place text the list used to show as a wifi icon.
+func calendarMeetingCategoryIconName(place: String) -> String {
+    let cleaned = place.trimmingCharacters(in: .whitespacesAndNewlines)
+    if calendarPlaceIsOnline(cleaned) {
+        return "video"
+    }
+    if cleaned.caseInsensitiveCompare("Telefon") == .orderedSame
+        || cleaned.caseInsensitiveCompare("Phone") == .orderedSame {
+        return "phone"
+    }
+    return "person.2"
+}
+
+func calendarPlaceIsOnline(_ place: String) -> Bool {
+    place.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare("Online") == .orderedSame
+}
+
 func calendarWorkspaceVisibleDetailText(for event: CalendarWorkspaceEvent, language: AppLanguage) -> String {
     let uncertainText = event.isDateUncertain ? language.text("Uncertain date", "Osäkert datum") : nil
     let isCongressDeadline: Bool = {
@@ -313,6 +384,9 @@ private struct CalendarWorkspaceDayGroup: Identifiable {
     let dayEndLocation: String
     let isPast: Bool
     let topSpacing: CGFloat
+    /// True for the first shown day of a week; that day carries the week's
+    /// header row ("Vecka 40 · 28 sep – 4 okt 2026").
+    var startsWeek: Bool = false
 }
 
 private struct CalendarDayLocation: Hashable {
@@ -323,6 +397,24 @@ private struct CalendarDayLocation: Hashable {
 private struct CalendarDetailLinkPresentation {
     let visibleText: String
     let urls: [URL]
+}
+
+/// What the calendar list shows of a row's details: the grey line under the
+/// title and the link arrows next to it.
+private struct CalendarListRowDetail {
+    let visibleText: String
+    let congressLink: CalendarDetailRecordLink?
+    let recordLinks: [CalendarDetailRecordLink]
+    let urls: [URL]
+    let helpText: String
+
+    var hasTextLine: Bool {
+        congressLink != nil || !visibleText.isEmpty
+    }
+
+    var hasLinkButtons: Bool {
+        !recordLinks.isEmpty || !urls.isEmpty
+    }
 }
 
 private enum CalendarDetailLinkParser {
@@ -530,15 +622,6 @@ private func calendarVisibleWindowSnapshot(from groups: [CalendarWorkspaceDayGro
     )
 }
 
-private struct CalendarVerticalMarker: Identifiable {
-    let id: String
-    let label: String
-    let minY: CGFloat
-    let maxY: CGFloat
-    let x: CGFloat
-    let width: CGFloat
-    let fontSize: CGFloat
-}
 
 private struct CalendarDayPosition: Equatable {
     let date: Date
@@ -3790,67 +3873,96 @@ struct CalendarWorkspaceView: View {
     private var visibleCalendarColumnList: [CalendarWorkspaceColumn] {
         CalendarWorkspaceColumn.allCases.filter { visibleCalendarColumns.contains($0) }
     }
+    /// Weekday and date share one column ("Fre 2 okt") when both are on.
+    private var calendarMergesDayAndDate: Bool {
+        visibleCalendarColumns.contains(.weekday) && visibleCalendarColumns.contains(.date)
+    }
+    private var calendarShowsCompletionRing: Bool {
+        visibleCalendarColumns.contains(.completion)
+    }
+    private var calendarShowsDetailLine: Bool {
+        visibleCalendarColumns.contains(.details)
+    }
+    /// The day column that carries the small "Idag" tag.
+    private var calendarTodayTagColumn: CalendarWorkspaceColumn? {
+        if visibleCalendarColumns.contains(.date) { return .date }
+        if visibleCalendarColumns.contains(.weekday) { return .weekday }
+        return nil
+    }
+    /// The columns the list draws. The Klar ring sits in the time column and
+    /// the details sit under the title, so Klar and Detaljer have no columns
+    /// of their own; their settings still decide whether the ring and the
+    /// detail line show.
+    private var calendarLayoutColumnList: [CalendarWorkspaceColumn] {
+        let mergesDayAndDate = calendarMergesDayAndDate
+        let showsTimeColumn = visibleCalendarColumns.contains(.time) || calendarShowsCompletionRing
+        let showsTitleColumn = visibleCalendarColumns.contains(.title) || calendarShowsDetailLine
+        return CalendarWorkspaceColumn.allCases.filter { column in
+            switch column {
+            case .weekday:
+                return visibleCalendarColumns.contains(.weekday) && !mergesDayAndDate
+            case .time:
+                return showsTimeColumn
+            case .title:
+                return showsTitleColumn
+            case .completion, .details:
+                return false
+            default:
+                return visibleCalendarColumns.contains(column)
+            }
+        }
+    }
+    private func calendarLayoutWidth(for column: CalendarWorkspaceColumn) -> CGFloat {
+        switch column {
+        case .date where calendarMergesDayAndDate:
+            return 136
+        case .date, .weekday:
+            return column.width + (calendarTodayTagColumn == column ? 44 : 0)
+        case .time:
+            guard visibleCalendarColumns.contains(.time) else { return 40 }
+            return column.width + (calendarShowsCompletionRing ? 26 : 0)
+        case .title:
+            return calendarShowsDetailLine ? CalendarWorkspaceColumn.details.width : column.width
+        default:
+            return column.width
+        }
+    }
+    /// Cells sit at the top of the row so a title with a detail line under
+    /// it does not push the other columns down to its middle.
+    private func calendarLayoutGridItem(for column: CalendarWorkspaceColumn) -> GridItem {
+        let width = calendarLayoutWidth(for: column)
+        if column == .title {
+            return GridItem(.flexible(minimum: width), spacing: column.trailingSpacing, alignment: .topLeading)
+        }
+        return GridItem(.fixed(width), spacing: column.trailingSpacing, alignment: .topLeading)
+    }
+    private func calendarLayoutColumnTitle(_ column: CalendarWorkspaceColumn) -> String {
+        switch column {
+        case .time where !visibleCalendarColumns.contains(.time):
+            return CalendarWorkspaceColumn.completion.title(language: language)
+        case .title where !visibleCalendarColumns.contains(.title):
+            return CalendarWorkspaceColumn.details.title(language: language)
+        default:
+            return column.title(language: language)
+        }
+    }
     private var visibleCompactGrid: [GridItem] {
-        visibleCalendarColumnList.map(\.gridItem)
+        calendarLayoutColumnList.map { calendarLayoutGridItem(for: $0) }
     }
     private var calendarGridContentWidth: CGFloat {
-        visibleCalendarColumnList.reduce(CGFloat(0)) { width, column in
-            width + column.width + column.trailingSpacing
+        calendarLayoutColumnList.reduce(CGFloat(0)) { width, column in
+            width + calendarLayoutWidth(for: column) + column.trailingSpacing
         }
     }
     private var calendarContentMinimumWidth: CGFloat {
         listHorizontalPadding * 2
-            + calendarMarkerGutterWidth
             + calendarGridContentWidth
-            + 24
+            + calendarRowLeadingPadding
+            + calendarRowTrailingPadding
     }
-    private var calendarMarkerGutterWidth: CGFloat {
-        let showsYear = visibleCalendarMarkerColumns.contains(.year)
-        let showsWeek = visibleCalendarMarkerColumns.contains(.weekNumber)
-        switch (showsYear, showsWeek) {
-        case (true, true):
-            return 72
-        case (true, false):
-            return 34
-        case (false, true):
-            return 50
-        case (false, false):
-            return 0
-        }
-    }
-    private var calendarYearMarkerX: CGFloat {
-        16
-    }
-    private var calendarWeekMarkerX: CGFloat {
-        visibleCalendarMarkerColumns.contains(.year) ? 40 : 16
-    }
-    private var calendarCategoryAccentLeadingInset: CGFloat {
-        12 + offsetBeforeCalendarColumn(.category)
-    }
-    private var calendarDayAccentBandWidth: CGFloat {
-        max(64, calendarCategoryAccentLeadingInset - 12)
-    }
-    private var calendarCompactDayAccentBandWidth: CGFloat {
-        guard visibleCalendarColumns.contains(.weekday) else { return 0 }
-        return max(36, 12 + CalendarWorkspaceColumn.weekday.width)
-    }
-    private var calendarCompactCategoryAccentLeadingInset: CGFloat {
-        calendarCategoryAccentLeadingInset
-    }
-    private var calendarCompactCategoryAccentBandWidth: CGFloat {
-        guard visibleCalendarColumns.contains(.category) else { return 0 }
-        return max(36, CalendarWorkspaceColumn.category.width)
-    }
-    private var calendarCategoryAccentBandWidth: CGFloat {
-        guard visibleCalendarColumns.contains(.category) else { return 0 }
-        let categoryOffset = offsetBeforeCalendarColumn(.category)
-        if visibleCalendarColumns.contains(.project) {
-            return max(0, offsetBeforeCalendarColumn(.project) - categoryOffset)
-        }
-        return CalendarWorkspaceColumn.category.width
-    }
-    private let calendarCompactCategoryHighlightHorizontalPadding: CGFloat = 6
-    private let calendarCompactCategoryHighlightVerticalPadding: CGFloat = 3
+    /// Room at the row's left edge for the category colour strip.
+    private let calendarRowLeadingPadding: CGFloat = 16
+    private let calendarRowTrailingPadding: CGFloat = 12
 
     private var workspaceCalendar: Calendar {
         footprintCalendar(for: language, weekStart: store.calendarWeekdayChoice)
@@ -3913,9 +4025,9 @@ struct CalendarWorkspaceView: View {
 
     private func offsetBeforeCalendarColumn(_ targetColumn: CalendarWorkspaceColumn) -> CGFloat {
         var offset: CGFloat = 0
-        for column in visibleCalendarColumnList {
+        for column in calendarLayoutColumnList {
             guard column != targetColumn else { return offset }
-            offset += column.width + column.trailingSpacing
+            offset += calendarLayoutWidth(for: column) + column.trailingSpacing
         }
         return 0
     }
@@ -3928,7 +4040,7 @@ struct CalendarWorkspaceView: View {
               visibleCalendarColumns.contains(rightColumn) else {
             return nil
         }
-        return 12 + offsetBeforeCalendarColumn(rightColumn) - leftColumn.trailingSpacing / 2
+        return calendarRowLeadingPadding + offsetBeforeCalendarColumn(rightColumn) - leftColumn.trailingSpacing / 2
     }
 
     private func persistCalendarColumnVisibility(
@@ -3989,27 +4101,24 @@ struct CalendarWorkspaceView: View {
 
                                         LazyVStack(alignment: .leading, spacing: 0) {
                                             ForEach(dayGroups) { group in
-                                                dayGroupCard(group)
-                                                    .id(group.id)
-                                                    .padding(.top, group.topSpacing + dayGroupBorderClearance(for: group))
-                                                    .padding(.bottom, dayGroupBorderClearance(for: group))
-                                                    .background(dayPositionReader(for: group.date))
+                                                VStack(alignment: .leading, spacing: 0) {
+                                                    if group.startsWeek {
+                                                        calendarWeekHeaderRow(for: group)
+                                                    }
+                                                    // The position reader measures the day
+                                                    // itself, not the week header above it.
+                                                    dayGroupCard(group)
+                                                        .background(dayPositionReader(for: group.date))
+                                                }
+                                                .id(group.id)
+                                                .padding(.top, group.topSpacing)
                                             }
                                         }
-                                        .padding(.leading, listHorizontalPadding + calendarMarkerGutterWidth)
-                                        .padding(.trailing, listHorizontalPadding)
+                                        .padding(.horizontal, listHorizontalPadding)
                                         .padding(.top, 6)
                                         .padding(.bottom, 28)
                                     }
                                     .coordinateSpace(name: "CalendarListSpace")
-                                    .overlay(alignment: .topLeading) {
-                                        if calendarMarkerGutterWidth > 0 {
-                                            calendarOverlayContent(
-                                                dayGroups: dayGroups,
-                                                dayPositions: visibleDayPositions
-                                            )
-                                        }
-                                    }
                                     .onPreferenceChange(CalendarDayPositionPreferenceKey.self) { positions in
                                         handleCalendarDayPositionsChange(
                                             normalizedDayPositions(positions),
@@ -4433,8 +4542,16 @@ struct CalendarWorkspaceView: View {
         Button {
             NSWorkspace.shared.open(url)
         } label: {
-            AppLinkDestinationLabel(kind: .web, language: language, fontSize: compact ? 12 : 13, showsTitle: false)
-                .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
+            // In the list rows the arrows are grey so they don't compete
+            // with the text; the detail sheet keeps the link colour.
+            AppLinkDestinationLabel(
+                kind: .web,
+                language: language,
+                fontSize: compact ? 12 : 13,
+                tint: compact ? Color.secondary : AppPalette.linkAction,
+                showsTitle: false
+            )
+            .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
         }
         .buttonStyle(.plain)
         .help(language.text("Open link", "Öppna länk"))
@@ -4444,8 +4561,14 @@ struct CalendarWorkspaceView: View {
         Button {
             openDetailRecordLink(link)
         } label: {
-            AppLinkDestinationLabel(kind: .app, language: language, fontSize: compact ? 12 : 13, showsTitle: false)
-                .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
+            AppLinkDestinationLabel(
+                kind: .app,
+                language: language,
+                fontSize: compact ? 12 : 13,
+                tint: compact ? Color.secondary : AppPalette.linkAction,
+                showsTitle: false
+            )
+            .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
         }
         .buttonStyle(.plain)
         .help(link.title)
@@ -4454,13 +4577,14 @@ struct CalendarWorkspaceView: View {
     private func calendarInlineDetailRecordLinkButton(
         _ link: CalendarDetailRecordLink,
         compact: Bool,
-        italic: Bool
+        italic: Bool,
+        typography: AppTypographyRole = .body
     ) -> some View {
         Button {
             openDetailRecordLink(link)
         } label: {
             Text(link.title)
-                .calendarTypography(.body)
+                .calendarTypography(typography)
                 .modifier(CalendarItalicTextModifier(isItalic: italic))
                 .foregroundStyle(AppPalette.linkAction)
                 .lineLimit(compact ? 2 : nil)
@@ -4517,6 +4641,9 @@ struct CalendarWorkspaceView: View {
     private func calendarEventIconName(for event: CalendarWorkspaceEvent) -> String {
         if event.kind == .travel, let travelMode = event.travelMode {
             return travelMode.calendarSystemImageName
+        }
+        if event.kind == .meeting {
+            return calendarMeetingCategoryIconName(place: event.place)
         }
         return calendarEventIconName(for: event.kind)
     }
@@ -4586,10 +4713,7 @@ struct CalendarWorkspaceView: View {
 
     private func stickyCalendarToolbar() -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 0) {
-                Color.clear.frame(width: calendarMarkerGutterWidth)
-                compactHeaderRow
-            }
+            compactHeaderRow
         }
         .padding(.horizontal, listHorizontalPadding)
         .padding(.top, 9)
@@ -4658,11 +4782,12 @@ struct CalendarWorkspaceView: View {
 
     private var compactHeaderRow: some View {
         LazyVGrid(columns: visibleCompactGrid, alignment: .leading, spacing: 12) {
-            ForEach(visibleCalendarColumnList) { column in
-                headerCell(column.title(language: language))
+            ForEach(calendarLayoutColumnList) { column in
+                headerCell(calendarLayoutColumnTitle(column))
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, calendarRowLeadingPadding)
+        .padding(.trailing, calendarRowTrailingPadding)
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .offset(x: calendarHeaderScrollAlignmentInset)
@@ -5376,7 +5501,7 @@ struct CalendarWorkspaceView: View {
     }
 
     private func dayGroupCard(_ group: CalendarWorkspaceDayGroup) -> some View {
-        return VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             if group.events.isEmpty {
                 emptyDayRow(group: group)
             } else {
@@ -5384,23 +5509,23 @@ struct CalendarWorkspaceView: View {
                     compactEventRow(
                         event,
                         group: group,
-                        showsDateColumns: index == 0,
-                        showsTopDivider: index > 0
+                        showsDateColumns: index == 0
                     )
                 }
             }
         }
-        .background(
-            dayRowBackground(
-                for: group.date,
-                holidays: group.holidays,
-                fill: dayGroupFill(for: group)
-            )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(dayGroupStroke(for: group), lineWidth: dayGroupStrokeWidth(for: group))
-        )
+        // Calm rows: one plain surface per day, a thin line between days and
+        // no lines between the rows of a day. Today is marked in the day
+        // column, not with an outline round the whole day.
+        .background(Rectangle().fill(dayGroupFill(for: group)))
+        .overlay(alignment: .top) {
+            if !group.startsWeek {
+                Rectangle()
+                    .fill(AppPalette.subtleBorder.opacity(0.6))
+                    .frame(height: 0.5)
+                    .accessibilityHidden(true)
+            }
+        }
         .contentShape(Rectangle())
         .onHover { hovering in
             guard !hovering, expandedProjectDayID == group.id else { return }
@@ -5409,6 +5534,49 @@ struct CalendarWorkspaceView: View {
         .contextMenu {
             dayCreationContextMenu(for: group.date)
         }
+    }
+
+    /// The faint band at the start of each week:
+    /// "Vecka 40 · 28 sep – 4 okt 2026". It replaces the old vertical
+    /// week and year text in the left margin.
+    private func calendarWeekHeaderRow(for group: CalendarWorkspaceDayGroup) -> some View {
+        Text(calendarWeekHeaderText(for: group))
+            .font(calendarAppFont(.secondary).weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .padding(.leading, calendarRowLeadingPadding)
+            .padding(.trailing, calendarRowTrailingPadding)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                Rectangle()
+                    .fill(AppPalette.appText.opacity(effectiveUsesDarkAppearance ? 0.07 : 0.045))
+            )
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private func calendarWeekHeaderText(for group: CalendarWorkspaceDayGroup) -> String {
+        // The same week rule that decides where a new week starts in the list.
+        let calendar = weekNumberCalendar
+        let start = calendar.dateInterval(of: .weekOfYear, for: group.date)?.start ?? group.date
+        let end = calendar.date(byAdding: .day, value: 6, to: start) ?? start
+        let startParts = calendar.dateComponents([.day, .month, .year], from: start)
+        let endParts = calendar.dateComponents([.day, .month, .year], from: end)
+        let weekNumber: Int? = visibleCalendarMarkerColumns.contains(.weekNumber)
+            ? calendar.component(.weekOfYear, from: group.date)
+            : nil
+        return calendarListWeekHeaderLabel(
+            weekNumber: weekNumber,
+            startDay: startParts.day ?? 1,
+            startMonth: startParts.month ?? 1,
+            startYear: startParts.year ?? 0,
+            endDay: endParts.day ?? 1,
+            endMonth: endParts.month ?? 1,
+            endYear: endParts.year ?? 0,
+            showsYear: visibleCalendarMarkerColumns.contains(.year),
+            language: language
+        )
     }
 
     private func dayPositionReader(for date: Date) -> some View {
@@ -5449,31 +5617,23 @@ struct CalendarWorkspaceView: View {
     }
 
     private func emptyDayRow(group: CalendarWorkspaceDayGroup) -> some View {
-        return LazyVGrid(columns: visibleCompactGrid, alignment: .leading, spacing: 12) {
-            ForEach(visibleCalendarColumnList) { column in
+        LazyVGrid(columns: visibleCompactGrid, alignment: .leading, spacing: 12) {
+            ForEach(calendarLayoutColumnList) { column in
                 emptyDayColumn(column, group: group)
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, calendarRowLeadingPadding)
+        .padding(.trailing, calendarRowTrailingPadding)
         .padding(.vertical, 5)
     }
 
     @ViewBuilder
     private func emptyDayColumn(_ column: CalendarWorkspaceColumn, group: CalendarWorkspaceDayGroup) -> some View {
         switch column {
-        case .weekday:
-            rowCell(
-                group.weekdayLabel,
-                foreground: dayForegroundColor(for: group, base: dateAccentTextColor(for: group))
-            )
-        case .date:
-            dateCell(group: group, showsDateColumns: true)
-        case .time, .category, .project, .title, .details, .place:
+        case .weekday, .date:
+            calendarDayCell(column, group: group, showsDateColumns: true)
+        case .time, .category, .project, .title, .completion, .details, .place:
             rowCell("")
-        case .completion:
-            Color.clear
-                .frame(width: 22, height: 22)
-                .frame(maxWidth: .infinity, alignment: .center)
         case .dayLocation:
             placeCell(group.dayEndLocation, foreground: dayForegroundColor(for: group, base: .primary))
         case .conferences:
@@ -5485,15 +5645,12 @@ struct CalendarWorkspaceView: View {
         _ event: CalendarWorkspaceEvent,
         group: CalendarWorkspaceDayGroup,
         showsDateColumns: Bool,
-        usesSubtleDateColumns: Bool = false,
-        showsTopDivider: Bool
+        usesSubtleDateColumns: Bool = false
     ) -> some View {
         let usesItalicStyle = eventUsesItalicStyle(event)
         let textColor = eventBodyTextColor(for: event)
-        let dateColumnForeground = eventForegroundColor(for: event, group: group, base: dateAccentTextColor(for: group))
-            .opacity(usesSubtleDateColumns ? 0.5 : 1)
         return LazyVGrid(columns: visibleCompactGrid, alignment: .leading, spacing: 12) {
-            ForEach(visibleCalendarColumnList) { column in
+            ForEach(calendarLayoutColumnList) { column in
                 eventColumn(
                     column,
                     event: event,
@@ -5501,31 +5658,38 @@ struct CalendarWorkspaceView: View {
                     showsDateColumns: showsDateColumns,
                     usesSubtleDateColumns: usesSubtleDateColumns,
                     usesItalicStyle: usesItalicStyle,
-                    textColor: textColor,
-                    dateColumnForeground: dateColumnForeground
+                    textColor: textColor
                 )
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, calendarRowLeadingPadding)
+        .padding(.trailing, calendarRowTrailingPadding)
         .padding(.vertical, 5)
         .background(alignment: .leading) {
-            eventRowAccentBand(for: event, group: group)
+            eventCategoryStrip(for: event, group: group)
         }
         .undoRevealPulse(
             triggerID: eventRevealPulseTriggerID(for: event),
             isActive: eventRevealPulseIsActive(for: event),
             cornerRadius: 10
         )
-        .overlay(alignment: .top) {
-            if showsTopDivider {
-                Rectangle()
-                    .fill(AppPalette.subtleBorder.opacity(0.36))
-                    .frame(height: 0.5)
-            }
-        }
         .contentShape(Rectangle())
         .contextMenu {
             calendarEventContextMenu(for: event, on: group.date)
+        }
+    }
+
+    /// The category colour as a solid strip down the row's left edge – the
+    /// same strip other lists use for status – instead of a colour wash over
+    /// the category cell. Follows the Kategori column setting.
+    @ViewBuilder
+    private func eventCategoryStrip(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
+        if visibleCalendarColumns.contains(.category) {
+            StatusIndicatorListRowBackground(
+                fill: eventRowHighlightColor(for: event)
+                    .opacity(eventForegroundOpacity(for: event, group: group))
+            )
+            .accessibilityHidden(true)
         }
     }
 
@@ -5576,39 +5740,28 @@ struct CalendarWorkspaceView: View {
         showsDateColumns: Bool,
         usesSubtleDateColumns: Bool,
         usesItalicStyle: Bool,
-        textColor: Color,
-        dateColumnForeground: Color
+        textColor: Color
     ) -> some View {
         switch column {
-        case .weekday:
-            rowCell(
-                showsDateColumns ? group.weekdayLabel : "",
-                foreground: showsDateColumns ? dateColumnForeground : .primary
+        case .weekday, .date:
+            calendarDayCell(
+                column,
+                group: group,
+                showsDateColumns: showsDateColumns,
+                isRepeated: usesSubtleDateColumns
             )
-        case .date:
-            dateCell(group: group, showsDateColumns: showsDateColumns, isRepeated: usesSubtleDateColumns)
         case .time:
-            rowCell(
-                event.timeText,
-                foreground: eventForegroundColor(for: event, group: group, base: textColor),
-                alignment: .center,
-                textAlignment: .center
-            )
+            eventTimeCell(event, group: group, textColor: textColor)
         case .category:
             eventCategoryCell(event, group: group, italic: usesItalicStyle)
         case .project:
             projectCell(for: event, group: group)
         case .title:
             eventTitleCell(event, group: group)
-        case .completion:
-            completionCell(for: event, group: group)
-        case .details:
-            detailCell(
-                for: event,
-                group: group,
-                italic: detailUsesItalicStyle(for: event),
-                foreground: eventForegroundColor(for: event, group: group, base: detailTextColor(for: event))
-            )
+        case .completion, .details:
+            // Never laid out: the Klar ring sits in the time column and the
+            // details sit under the title.
+            EmptyView()
         case .place:
             placeCell(
                 event.place,
@@ -5622,13 +5775,65 @@ struct CalendarWorkspaceView: View {
         }
     }
 
-    @ViewBuilder
-    private func detailCell(
-        for event: CalendarWorkspaceEvent,
+    /// The time column: the Klar ring (when Klar is on and the row can be
+    /// ticked off) and then the time. Rows without a ring keep the ring's
+    /// room so the times line up.
+    private func eventTimeCell(
+        _ event: CalendarWorkspaceEvent,
         group: CalendarWorkspaceDayGroup,
-        italic: Bool,
-        foreground: Color
+        textColor: Color
     ) -> some View {
+        let showsTime = visibleCalendarColumns.contains(.time)
+        let timeText = event.timeText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return HStack(alignment: .center, spacing: 6) {
+            if calendarShowsCompletionRing {
+                if event.toggleCompletion != nil {
+                    completionToggle(for: event, group: group)
+                } else {
+                    Color.clear
+                        .frame(width: 20, height: 18)
+                        .accessibilityHidden(true)
+                }
+            }
+            if showsTime, !timeText.isEmpty {
+                Text(timeText)
+                    .calendarTypography(.body)
+                    .monospacedDigit()
+                    .foregroundStyle(eventForegroundColor(for: event, group: group, base: textColor))
+                    .lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func completionToggle(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
+        Button {
+            event.toggleCompletion?(!event.isCompleted)
+        } label: {
+            Image(systemName: completionIconName(for: event))
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(eventForegroundColor(for: event, group: group, base: completionTint(for: event)))
+                .frame(width: 20, height: 18)
+                .overlay {
+                    if eventNeedsAttentionRing(event) {
+                        Circle()
+                            .stroke(Color(nsColor: .systemRed), lineWidth: 2)
+                            .frame(width: 20, height: 20)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(event.isRolledOverPastDue ? language.text("Overdue", "Försenad") : "")
+        .accessibilityLabel(
+            event.isCompleted
+                ? language.text("Mark as not done", "Markera som inte klar")
+                : language.text("Mark as done", "Markera som klar")
+        )
+    }
+
+    private func calendarListRowDetail(for event: CalendarWorkspaceEvent) -> CalendarListRowDetail {
         let presentation = detailLinkPresentation(for: event)
         let congressLink = congressDetailRecordLink(for: event)
         let visibleText = detailTextByRemovingInlineRecordLink(
@@ -5636,43 +5841,30 @@ struct CalendarWorkspaceView: View {
             linkTitle: congressLink?.title
         )
         let recordLinks = detailRecordLinks(for: event)
+        let helpText = [
+            presentation.visibleText.nonEmpty,
+            recordLinks.map(\.title).joined(separator: "\n").nonEmpty
+        ]
+        .compactMap { $0 }
+        .joined(separator: "\n")
+        .nonEmpty ?? language.text("Open link", "Öppna länk")
+        return CalendarListRowDetail(
+            visibleText: visibleText,
+            congressLink: congressLink,
+            recordLinks: recordLinks,
+            urls: presentation.urls,
+            helpText: helpText
+        )
+    }
 
-        if congressLink == nil && visibleText.isEmpty && presentation.urls.isEmpty && recordLinks.isEmpty {
-            rowCell("")
-        } else {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                if let congressLink {
-                    calendarInlineDetailRecordLinkButton(
-                        congressLink,
-                        compact: true,
-                        italic: italic
-                    )
-                }
-                if !visibleText.isEmpty {
-                    Text(visibleText)
-                        .calendarTypography(.body)
-                        .modifier(CalendarItalicTextModifier(isItalic: italic))
-                        .foregroundStyle(foreground)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .lineLimit(2)
-                }
-                ForEach(recordLinks) { link in
-                    calendarDetailRecordLinkButton(link, compact: true)
-                }
-                ForEach(Array(presentation.urls.enumerated()), id: \.offset) { _, url in
-                    calendarDetailLinkButton(url, compact: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .help(
-                [
-                    presentation.visibleText.nonEmpty,
-                    recordLinks.map(\.title).joined(separator: "\n").nonEmpty
-                ]
-                .compactMap { $0 }
-                .joined(separator: "\n")
-                .nonEmpty ?? language.text("Open link", "Öppna länk")
-            )
+    /// The small grey link arrows for a row's details.
+    @ViewBuilder
+    private func calendarRowDetailLinkButtons(_ detail: CalendarListRowDetail) -> some View {
+        ForEach(detail.recordLinks) { link in
+            calendarDetailRecordLinkButton(link, compact: true)
+        }
+        ForEach(Array(detail.urls.enumerated()), id: \.offset) { _, url in
+            calendarDetailLinkButton(url, compact: true)
         }
     }
 
@@ -5690,58 +5882,92 @@ struct CalendarWorkspaceView: View {
         return remaining
     }
 
-    private func dateCell(
+    /// The weekday and date columns. With both on they share one column
+    /// ("Fre 2 okt", semibold) on the day's first row. Today is blue with a
+    /// small "Idag" tag; weekends and holidays get red date text.
+    @ViewBuilder
+    private func calendarDayCell(
+        _ column: CalendarWorkspaceColumn,
         group: CalendarWorkspaceDayGroup,
         showsDateColumns: Bool,
         isRepeated: Bool = false
     ) -> some View {
-        Group {
-            if showsDateColumns {
-                HStack(spacing: 8) {
-                    Text(group.dateLabel)
-                        .calendarTypography(.body)
-                        .foregroundStyle(dayForegroundColor(for: group, base: dateAccentTextColor(for: group)))
-                        .opacity(isRepeated ? 0.5 : 1)
-                        .lineLimit(1)
-                    if !group.holidays.isEmpty, !isRepeated {
-                        holidayDotView(holidays: group.holidays)
-                    }
+        if showsDateColumns {
+            let isToday = group.id == todayGroupID
+            let isMerged = column == .date && calendarMergesDayAndDate
+            let label: String = isMerged
+                ? calendarShortDayLabel(for: group.date)
+                : (column == .weekday ? group.weekdayLabel : group.dateLabel)
+            let baseColor: Color = isToday ? Color(nsColor: .systemBlue) : dateAccentTextColor(for: group)
+            HStack(spacing: 6) {
+                Text(label)
+                    .font(isMerged ? calendarAppFont(.body).weight(.semibold) : calendarAppFont(.body))
+                    .foregroundStyle(dayForegroundColor(for: group, base: baseColor))
+                    .opacity(isRepeated ? 0.5 : 1)
+                    .lineLimit(1)
+                if isToday, !isRepeated, calendarTodayTagColumn == column {
+                    calendarTodayTag
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                rowCell("")
+                if column == .date, !group.holidays.isEmpty, !isRepeated {
+                    holidayDotView(holidays: group.holidays)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            rowCell("")
         }
     }
 
+    private func calendarShortDayLabel(for date: Date) -> String {
+        let parts = workspaceCalendar.dateComponents([.weekday, .day, .month], from: date)
+        return calendarListShortDayLabel(
+            weekday: parts.weekday ?? 1,
+            day: parts.day ?? 1,
+            month: parts.month ?? 1,
+            language: language
+        )
+    }
+
+    private var calendarTodayTag: some View {
+        Text(language.text("Today", "Idag"))
+            .font(calendarAppFont(.secondary).weight(.semibold))
+            .foregroundStyle(Color(nsColor: .systemBlue))
+            .lineLimit(1)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color(nsColor: .systemBlue).opacity(0.14))
+            )
+            .fixedSize()
+    }
+
+    /// Category icon and name in normal text colour; the colour itself is
+    /// the strip at the row's left edge. Online and in-person meetings have
+    /// different icons.
     private func eventCategoryCell(
         _ event: CalendarWorkspaceEvent,
         group: CalendarWorkspaceDayGroup,
         italic: Bool
     ) -> some View {
-        let foreground = eventForegroundColor(for: event, group: group, base: eventCategoryTextColor(for: event))
-        let leadingPadding = store.calendarUsesCompactEventColorBands
-            ? calendarCompactCategoryHighlightHorizontalPadding
-            : 4
-        let trailingPadding = store.calendarUsesCompactEventColorBands
-            ? calendarCompactCategoryHighlightHorizontalPadding
-            : 0
-        let verticalPadding = store.calendarUsesCompactEventColorBands ? calendarCompactCategoryHighlightVerticalPadding : 0
-
+        let foreground = eventForegroundColor(for: event, group: group, base: .primary)
+        let onlineText: String? = event.kind == .meeting && calendarPlaceIsOnline(event.place)
+            ? language.text("Online", "Online")
+            : nil
         return HStack(spacing: 7) {
             Image(systemName: calendarEventIconName(for: event))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(foreground)
-                .frame(width: 15)
+                .frame(width: 16)
+                .help(onlineText ?? "")
+                .accessibilityLabel(onlineText ?? "")
+                .accessibilityHidden(onlineText == nil)
             Text(eventCategoryTitle(for: event))
                 .calendarTypography(.body)
                 .foregroundStyle(foreground)
                 .lineLimit(1)
                 .modifier(CalendarItalicTextModifier(isItalic: italic))
         }
-        .padding(.leading, leadingPadding)
-        .padding(.trailing, trailingPadding)
-        .padding(.vertical, verticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -5753,55 +5979,6 @@ struct CalendarWorkspaceView: View {
             textColor: colors.text,
             backgroundColor: colors.background
         )
-    }
-
-    private func dayRowBackground(for date: Date, holidays: [HolidayDefinition], fill: Color) -> some View {
-        let usesDarkAppearance = effectiveUsesDarkAppearance
-        let highlightKind = calendarDayHighlightKind(for: date, holidays: holidays)
-        let accentStrength: Double = {
-            switch highlightKind {
-            case .some(.holiday):
-                return usesDarkAppearance ? 0.42 : 0.3
-            case .some(.saturday), .some(.sunday):
-                return usesDarkAppearance ? 0.28 : 0.2
-            case nil:
-                return 0
-            }
-        }()
-        let accentColor = highlightKind.map { configuredCalendarDayHighlightBackgroundColor($0) } ?? AppPalette.vividRed
-
-        return RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(fill)
-            .overlay(alignment: .leading) {
-                if accentStrength > 0 {
-                    if store.calendarUsesCompactDayHighlightBands {
-                        if calendarCompactDayAccentBandWidth > 0 {
-                            HStack(spacing: 0) {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(accentColor.opacity(accentStrength))
-                                    .frame(width: calendarCompactDayAccentBandWidth)
-                                Spacer(minLength: 0)
-                            }
-                        }
-                    } else {
-                        HStack(spacing: 0) {
-                            LinearGradient(
-                                colors: [
-                                    accentColor.opacity(accentStrength),
-                                    accentColor.opacity(accentStrength * 0.55),
-                                    accentColor.opacity(accentStrength * 0.18),
-                                    Color.clear
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                            .frame(width: calendarDayAccentBandWidth)
-                            Spacer(minLength: 0)
-                        }
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                }
-            }
     }
 
     private func isStandaloneCongressEvent(_ event: CalendarWorkspaceEvent) -> Bool {
@@ -5985,51 +6162,6 @@ struct CalendarWorkspaceView: View {
         return eventUsesItalicStyle(event) ? Color.secondary : Color.primary
     }
 
-    @ViewBuilder
-    private func eventRowAccentBand(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
-        let accent = eventRowHighlightColor(for: event)
-        let emphasis = eventForegroundOpacity(for: event, group: group)
-        if store.calendarUsesCompactEventColorBands {
-            if calendarCompactCategoryAccentBandWidth > 0 {
-                HStack(spacing: 0) {
-                    Color.clear
-                        .frame(width: calendarCompactCategoryAccentLeadingInset)
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(accent.opacity(0.72 * emphasis))
-                        .frame(width: calendarCompactCategoryAccentBandWidth)
-                    Spacer(minLength: 0)
-                }
-            } else {
-                Color.clear
-            }
-        } else {
-            if calendarCategoryAccentBandWidth > 0 {
-                HStack(spacing: 0) {
-                    Color.clear
-                        .frame(width: calendarCategoryAccentLeadingInset)
-
-                    LinearGradient(
-                        colors: [
-                            accent.opacity(0.88 * emphasis),
-                            accent.opacity(0.6 * emphasis),
-                            accent.opacity(0.24 * emphasis),
-                            accent.opacity(0.08 * emphasis),
-                            Color.clear
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: calendarCategoryAccentBandWidth)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                    Spacer(minLength: 0)
-                }
-            } else {
-                Color.clear
-            }
-        }
-    }
-
     private func eventRowHighlightColor(for event: CalendarWorkspaceEvent) -> Color {
         if let categoryColor = configuredEventCategoryColor(for: event) {
             return categoryColor
@@ -6110,31 +6242,75 @@ struct CalendarWorkspaceView: View {
         .joined(separator: "\n")
     }
 
+    /// The title, with the row's link arrows right after it and the details
+    /// as a smaller grey line underneath (the Detaljer setting decides
+    /// whether that line shows).
     private func eventTitleCell(_ event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
+        let showsTitle = visibleCalendarColumns.contains(.title)
+        let detail: CalendarListRowDetail? = calendarShowsDetailLine ? calendarListRowDetail(for: event) : nil
         let usesItalicStyle = eventUsesItalicStyle(event)
         let foreground = eventForegroundColor(for: event, group: group, base: eventBodyTextColor(for: event))
+        let detailItalic = detailUsesItalicStyle(for: event)
+        let detailForeground = eventForegroundColor(
+            for: event,
+            group: group,
+            base: event.isRolledOverPastDue ? AppPalette.lateText : Color.secondary
+        )
         let primaryAction = eventTapAction(for: event)
-        return HStack(alignment: .top, spacing: 8) {
-            Button {
-                if let primaryAction {
-                    primaryAction()
-                } else {
-                    presentCalendarEventDetail(event)
+        return VStack(alignment: .leading, spacing: 2) {
+            if showsTitle {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Button {
+                        if let primaryAction {
+                            primaryAction()
+                        } else {
+                            presentCalendarEventDetail(event)
+                        }
+                    } label: {
+                        Text(event.title)
+                            .calendarTypography(.body)
+                            .modifier(CalendarItalicTextModifier(isItalic: usesItalicStyle))
+                            .foregroundStyle(foreground)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(2)
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        calendarEventContextMenu(for: event, on: group.date)
+                    }
+                    if let detail {
+                        calendarRowDetailLinkButtons(detail)
+                    }
+                    Spacer(minLength: 0)
                 }
-            } label: {
-                Text(event.title)
-                    .calendarTypography(.body)
-                    .modifier(CalendarItalicTextModifier(isItalic: usesItalicStyle))
-                    .foregroundStyle(foreground)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .buttonStyle(.plain)
-            .contextMenu {
-                calendarEventContextMenu(for: event, on: group.date)
+            if let detail, detail.hasTextLine || (!showsTitle && detail.hasLinkButtons) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    if let congressLink = detail.congressLink {
+                        calendarInlineDetailRecordLinkButton(
+                            congressLink,
+                            compact: true,
+                            italic: detailItalic,
+                            typography: .secondary
+                        )
+                    }
+                    if !detail.visibleText.isEmpty {
+                        Text(detail.visibleText)
+                            .calendarTypography(.secondary)
+                            .modifier(CalendarItalicTextModifier(isItalic: detailItalic))
+                            .foregroundStyle(detailForeground)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(2)
+                    }
+                    if !showsTitle {
+                        calendarRowDetailLinkButtons(detail)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .help(detail.helpText)
             }
-            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Overdue or reminding tasks get a clear red ring around the "Klar"
@@ -6209,34 +6385,6 @@ struct CalendarWorkspaceView: View {
         return parts[3].trimmedOrNil
     }
 
-    private func completionCell(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
-        Group {
-            if let toggleCompletion = event.toggleCompletion {
-                Button {
-                    toggleCompletion(!event.isCompleted)
-                } label: {
-                    Image(systemName: completionIconName(for: event))
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(eventForegroundColor(for: event, group: group, base: completionTint(for: event)))
-                        .frame(width: 22, height: 22)
-                        .overlay {
-                            if eventNeedsAttentionRing(event) {
-                                Circle()
-                                    .stroke(Color(nsColor: .systemRed), lineWidth: 2)
-                                    .frame(width: 20, height: 20)
-                                    .accessibilityHidden(true)
-                            }
-                        }
-                }
-                .help(event.isRolledOverPastDue ? language.text("Overdue", "Försenad") : "")
-                .buttonStyle(.plain)
-            } else {
-                Color.clear.frame(width: 22, height: 22)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .center)
-    }
-
     private func headerCell(_ title: String) -> some View {
         Text(title)
             .calendarTypography(.tableHeader)
@@ -6267,13 +6415,14 @@ struct CalendarWorkspaceView: View {
         let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if cleaned.isEmpty {
             rowCell("")
-        } else if cleaned.caseInsensitiveCompare("Online") == .orderedSame {
-            Image(systemName: "wifi")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(foreground)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .help(cleaned)
-                .accessibilityLabel(cleaned)
+        } else if calendarPlaceIsOnline(cleaned) {
+            // Online meetings show a camera icon in the category column, so
+            // the place stays empty; with that column hidden the word shows.
+            if visibleCalendarColumns.contains(.category) {
+                rowCell("")
+            } else {
+                rowCell(cleaned, italic: italic, foreground: foreground)
+            }
         } else if cleaned.caseInsensitiveCompare("Telefon") == .orderedSame
             || cleaned.caseInsensitiveCompare("Phone") == .orderedSame {
             Image(systemName: "phone.fill")
@@ -6442,19 +6591,18 @@ struct CalendarWorkspaceView: View {
         }
     }
 
+    /// The project as plain grey text (no box, no folder icon). Clicking the
+    /// name still opens the project.
     @ViewBuilder
     private func projectCell(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> some View {
         let references = projectReferences(for: event)
+        let foreground = eventForegroundColor(for: event, group: group, base: .secondary)
         if references.isEmpty {
             rowCell("")
         } else if expandedProjectDayID == group.id {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 3) {
                 ForEach(references, id: \.id) { project in
-                    FootprintMetadataChip(title: project.label, systemImage: "folder") {
-                        store.route = AppRoute(recordID: project.id, destination: .projects)
-                    }
-                    .opacity(eventForegroundOpacity(for: event, group: group))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    calendarProjectLink(id: project.id, label: project.label, foreground: foreground)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -6462,22 +6610,33 @@ struct CalendarWorkspaceView: View {
         } else if let firstProject = references.first {
             let remainingProjects = Array(references.dropFirst())
             HStack(spacing: 5) {
-                FootprintMetadataChip(title: firstProject.label, systemImage: "folder") {
-                    store.route = AppRoute(recordID: firstProject.id, destination: .projects)
-                }
-                .opacity(eventForegroundOpacity(for: event, group: group))
-                .frame(maxWidth: .infinity, alignment: .leading)
+                calendarProjectLink(id: firstProject.id, label: firstProject.label, foreground: foreground)
 
                 if !remainingProjects.isEmpty {
                     projectOverflowIndicator {
                         expandedProjectDayID = group.id
                     }
-                        .opacity(eventForegroundOpacity(for: event, group: group))
+                    .opacity(eventForegroundOpacity(for: event, group: group))
                 }
+                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .help(references.map(\.label).joined(separator: "\n"))
         }
+    }
+
+    private func calendarProjectLink(id: String, label: String, foreground: Color) -> some View {
+        Button {
+            store.route = AppRoute(recordID: id, destination: .projects)
+        } label: {
+            Text(label)
+                .calendarTypography(.body)
+                .foregroundStyle(foreground)
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(language.text("Opens the project", "Öppnar projektet"))
     }
 
     private func projectOverflowIndicator(onExpand: @escaping () -> Void) -> some View {
@@ -6519,21 +6678,6 @@ struct CalendarWorkspaceView: View {
 
     private func dayGroupFill(for group: CalendarWorkspaceDayGroup) -> Color {
         AppPalette.calendarDayRowSurface
-    }
-
-    private func dayGroupStroke(for group: CalendarWorkspaceDayGroup) -> Color {
-        workspaceCalendar.isDate(group.date, inSameDayAs: today)
-            ? AppPalette.mainMenuSelectionText
-            : AppPalette.calendarWorkspaceSurface
-    }
-
-    private func dayGroupStrokeWidth(for group: CalendarWorkspaceDayGroup) -> CGFloat {
-        workspaceCalendar.isDate(group.date, inSameDayAs: today) ? 2 : 1
-    }
-
-    private func dayGroupBorderClearance(for group: CalendarWorkspaceDayGroup) -> CGFloat {
-        guard workspaceCalendar.isDate(group.date, inSameDayAs: today) else { return 0 }
-        return max(0, ceil(dayGroupStrokeWidth(for: group) - 1))
     }
 
     private func eventForegroundOpacity(for event: CalendarWorkspaceEvent, group: CalendarWorkspaceDayGroup) -> Double {
@@ -7204,63 +7348,6 @@ struct CalendarWorkspaceView: View {
         return (currentWeek != previousWeek || currentYear != previousYear) ? 16 : 0
     }
 
-    private func rotatedMarkerText(_ text: String, width: CGFloat, fontSize: CGFloat) -> some View {
-        Text(text)
-            .font(.system(size: fontSize, weight: .semibold))
-            .monospacedDigit()
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .fixedSize()
-            .rotationEffect(.degrees(-90))
-            .frame(width: width)
-            .frame(maxHeight: .infinity, alignment: .center)
-    }
-
-    @ViewBuilder
-    private func visibleMarkersOverlay(
-        viewportHeight: CGFloat,
-        dayGroups: [CalendarWorkspaceDayGroup],
-        positions: [CalendarDayPosition]
-    ) -> some View {
-        let yearMarkers = visibleCalendarMarkerColumns.contains(.year)
-            ? buildYearMarkers(from: dayGroups, viewportHeight: viewportHeight, positions: positions)
-            : []
-        let weekMarkers = visibleCalendarMarkerColumns.contains(.weekNumber)
-            ? buildWeekMarkers(from: dayGroups, viewportHeight: viewportHeight, positions: positions)
-            : []
-
-        ZStack(alignment: .topLeading) {
-            ForEach(yearMarkers) { marker in
-                rotatedMarkerText(marker.label, width: marker.width, fontSize: marker.fontSize)
-                    .position(x: marker.x, y: clampedMarkerY(for: marker, viewportHeight: viewportHeight))
-            }
-            ForEach(weekMarkers) { marker in
-                rotatedMarkerText(marker.label, width: marker.width, fontSize: marker.fontSize)
-                    .position(x: marker.x, y: clampedMarkerY(for: marker, viewportHeight: viewportHeight))
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .allowsHitTesting(false)
-    }
-
-    private func calendarOverlayContent(
-        dayGroups: [CalendarWorkspaceDayGroup],
-        dayPositions: [CalendarDayPosition]
-    ) -> some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .topLeading) {
-                if calendarMarkerGutterWidth > 0 {
-                    visibleMarkersOverlay(
-                        viewportHeight: geometry.size.height,
-                        dayGroups: dayGroups,
-                        positions: dayPositions
-                    )
-                    .padding(.leading, listHorizontalPadding)
-                }
-            }
-        }
-    }
-
     private func parsedDividerCutoffDate(timeText: String, on date: Date) -> Date? {
         let trimmed = timeText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -7297,127 +7384,6 @@ struct CalendarWorkspaceView: View {
             timeText: event.timeText,
             on: event.displayDate
         )
-    }
-
-    private func buildYearMarkers(
-        from dayGroups: [CalendarWorkspaceDayGroup],
-        viewportHeight: CGFloat,
-        positions: [CalendarDayPosition]
-    ) -> [CalendarVerticalMarker] {
-        buildMarkers(
-            from: dayGroups,
-            viewportHeight: viewportHeight,
-            positions: positions,
-            markerID: { group in
-                "year-\(workspaceCalendar.component(.year, from: group.date))"
-            },
-            label: { group in
-                String(workspaceCalendar.component(.year, from: group.date))
-            },
-            x: calendarYearMarkerX,
-            width: 22,
-            fontSize: 18
-        )
-    }
-
-    private func buildWeekMarkers(
-        from dayGroups: [CalendarWorkspaceDayGroup],
-        viewportHeight: CGFloat,
-        positions: [CalendarDayPosition]
-    ) -> [CalendarVerticalMarker] {
-        let baseMarkers = buildMarkers(
-            from: dayGroups,
-            viewportHeight: viewportHeight,
-            positions: positions,
-            markerID: { group in
-                let year = weekNumberCalendar.component(.yearForWeekOfYear, from: group.date)
-                let week = weekNumberCalendar.component(.weekOfYear, from: group.date)
-                return "week-\(year)-\(week)"
-            },
-            label: { group in
-                language == .swedish ? "vecka \(weekNumberText(for: group.date))" : "week \(weekNumberText(for: group.date))"
-            },
-            x: calendarWeekMarkerX,
-            width: 20,
-            fontSize: 16
-        )
-        guard hasActiveCalendarFilters else { return baseMarkers }
-
-        let visibleEventCountsByWeek = dayGroups.reduce(into: [String: Int]()) { result, group in
-            let year = weekNumberCalendar.component(.yearForWeekOfYear, from: group.date)
-            let week = weekNumberCalendar.component(.weekOfYear, from: group.date)
-            let key = "week-\(year)-\(week)"
-            result[key, default: 0] += group.events.count + group.conferenceEvents.count
-        }
-        return baseMarkers.filter { visibleEventCountsByWeek[$0.id, default: 0] >= 3 }
-    }
-
-    private func buildMarkers(
-        from dayGroups: [CalendarWorkspaceDayGroup],
-        viewportHeight: CGFloat,
-        positions: [CalendarDayPosition],
-        markerID: (CalendarWorkspaceDayGroup) -> String,
-        label: (CalendarWorkspaceDayGroup) -> String,
-        x: CGFloat,
-        width: CGFloat,
-        fontSize: CGFloat
-    ) -> [CalendarVerticalMarker] {
-        let positionsByDay = Dictionary(firstWinsKeysWithValues: positions.map { (DateParsers.isoDay.string(from: $0.date), $0) })
-        var markers: [CalendarVerticalMarker] = []
-        var currentID: String?
-        var currentLabel: String = ""
-        var currentMinY: CGFloat = 0
-        var currentMaxY: CGFloat = 0
-
-        for group in dayGroups {
-            let id = markerID(group)
-            guard let position = positionsByDay[group.id] else { continue }
-            if id == currentID {
-                currentMaxY = max(currentMaxY, position.maxY)
-            } else {
-                if let currentID, currentMaxY > 0, currentMinY < viewportHeight {
-                    markers.append(CalendarVerticalMarker(
-                        id: currentID,
-                        label: currentLabel,
-                        minY: currentMinY,
-                        maxY: currentMaxY,
-                        x: x,
-                        width: width,
-                        fontSize: fontSize
-                    ))
-                }
-                currentID = id
-                currentLabel = label(group)
-                currentMinY = position.minY
-                currentMaxY = position.maxY
-            }
-        }
-
-        if let currentID, currentMaxY > 0, currentMinY < viewportHeight {
-            markers.append(CalendarVerticalMarker(
-                id: currentID,
-                label: currentLabel,
-                minY: currentMinY,
-                maxY: currentMaxY,
-                x: x,
-                width: width,
-                fontSize: fontSize
-            ))
-        }
-
-        return markers
-    }
-
-    private func clampedMarkerY(for marker: CalendarVerticalMarker, viewportHeight: CGFloat) -> CGFloat {
-        let visibleMin = max(marker.minY, 0)
-        let visibleMax = min(marker.maxY, viewportHeight)
-        let preferred = (visibleMin + visibleMax) / 2
-        let lowerBound = max(marker.minY + marker.width / 2, marker.width / 2)
-        let upperBound = min(marker.maxY - marker.width / 2, viewportHeight - marker.width / 2)
-        if lowerBound > upperBound {
-            return min(max(preferred, marker.width / 2), viewportHeight - marker.width / 2)
-        }
-        return min(max(preferred, lowerBound), upperBound)
     }
 
     private func normalizedDayPositions(_ positions: [CalendarDayPosition]) -> [CalendarDayPosition] {
@@ -8785,6 +8751,7 @@ struct CalendarWorkspaceView: View {
                 return nil
             }
             let topSpacing = weekSpacingBeforeGroup(current: date, previous: previousVisibleDate)
+            let startsWeek = previousVisibleDate == nil || topSpacing > 0
             previousVisibleDate = date
             return CalendarWorkspaceDayGroup(
                 id: key,
@@ -8796,7 +8763,8 @@ struct CalendarWorkspaceView: View {
                 weekdayLabel: cache.weekdayLabelsByDay[key] ?? weekdayText(for: date),
                 dayEndLocation: dayEndLocation,
                 isPast: date < today,
-                topSpacing: topSpacing
+                topSpacing: topSpacing,
+                startsWeek: startsWeek
             )
         }
         let afterDayGroups = CFAbsoluteTimeGetCurrent()
@@ -9514,21 +9482,13 @@ private struct CalendarProjectOverflowIndicator: View {
     let onExpand: () -> Void
 
     var body: some View {
+        // Plain grey "…" like the project names next to it (no box).
         Text("…")
             .font(appFont(.secondary).weight(.semibold))
-            .foregroundStyle(AppPalette.appText.opacity(0.82))
+            .foregroundStyle(.secondary)
             .lineLimit(1)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(AppPalette.fieldSurface)
-            )
-            .overlay(
-                Capsule(style: .continuous)
-                    .stroke(AppPalette.subtleBorder, lineWidth: 1)
-            )
-            .contentShape(Capsule(style: .continuous))
+            .padding(.horizontal, 4)
+            .contentShape(Rectangle())
             .fixedSize()
             .onHover { hovering in
                 guard hovering else { return }
