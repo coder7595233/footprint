@@ -968,7 +968,8 @@ extension GrantDataStore {
         let rows = taskRecords.map { record -> [String] in
             let comment = record.centralTask?.comment ?? record.projectTask?.comment ?? record.publicationTask?.comment ?? ""
             let completedOn = record.centralTask?.completedOn ?? record.projectTask?.completedOn ?? record.publicationTask?.completedOn
-            let deadline = record.centralTask?.deadline ?? record.projectTask?.deadline ?? record.publicationTask?.deadline ?? ""
+            // A shared task's deadline time follows the date ("2026-10-15 14:00").
+            let deadline = record.centralTask?.deadlineDisplayText ?? record.projectTask?.deadline ?? record.publicationTask?.deadline ?? ""
             let participants = record.centralTask?.participantNames ?? record.projectTask?.participantNames ?? record.publicationTask?.participantNames ?? []
             return [
                 comment.nonEmpty ?? "–",

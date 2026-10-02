@@ -2495,13 +2495,16 @@ func buildFootprintCalendarEvents(
                 isCompleted: task.isCompleted,
                 today: today,
                 calendar: calendar,
-                policy: taskDisplayPolicy
+                policy: taskDisplayPolicy,
+                deadlineMoment: task.deadlineMoment(calendar: calendar)
             ),
             title: title,
             subtitle: "",
             detail: task.note,
             place: "",
-            timeText: "",
+            // Only the single deadline time (no range); it also sorts the
+            // task among the day's timed events.
+            timeText: task.calendarTimeText(displayDate: displayDate, calendar: calendar),
             kind: .taskDeadline,
             completedOn: task.completedOn,
             action: nil,
@@ -2920,14 +2923,25 @@ func calendarTaskIsRolledOverPastDue(
     isCompleted: Bool,
     today: Date,
     calendar: Calendar,
-    policy: CalendarTaskDisplayPolicy
+    policy: CalendarTaskDisplayPolicy,
+    deadlineMoment: Date? = nil,
+    now: Date = Date()
 ) -> Bool {
     guard policy == .rollOverPastDue, !isCompleted else {
         return false
     }
     let normalizedDeadline = calendar.startOfDay(for: deadline)
-    return normalizedDeadline < today
-        && calendar.isDate(displayDate, inSameDayAs: today)
+    if normalizedDeadline < today {
+        return calendar.isDate(displayDate, inSameDayAs: today)
+    }
+    // A task with a clock time is overdue once that time has passed on the
+    // deadline day itself.
+    if let deadlineMoment,
+       calendar.isDate(normalizedDeadline, inSameDayAs: today),
+       calendar.isDate(displayDate, inSameDayAs: today) {
+        return deadlineMoment <= now
+    }
+    return false
 }
 
 func normalizedTaskCompletionDate(_ raw: String?, calendar: Calendar = .current) -> Date? {
@@ -3031,6 +3045,10 @@ func calendarWorkspaceEventSort(
         return false
     case (nil, nil):
         break
+    }
+    // A task with a deadline time comes after other events at the same time.
+    if leftTime != nil, rightTime != nil, (lhs.kind == .taskDeadline) != (rhs.kind == .taskDeadline) {
+        return rhs.kind == .taskDeadline
     }
     if lhs.kind == .taskDeadline, rhs.kind == .taskDeadline, lhs.isCompleted != rhs.isCompleted {
         return lhs.isCompleted && !rhs.isCompleted
@@ -9791,12 +9809,16 @@ private struct CalendarGoToDatePopover: View {
 struct CalendarTimeInputField: View {
     let placeholder: String
     @Binding var text: String
+    /// False writes the value only when editing ends (for fields that save
+    /// straight to the store, so a half-typed time is not normalized).
+    var updatesContinuously: Bool = true
 
     var body: some View {
         CommitFormattingTextField(
             placeholder: placeholder,
             text: $text,
-            formatter: normalizedCalendarTimeInput
+            formatter: normalizedCalendarTimeInput,
+            updatesContinuously: updatesContinuously
         )
         .frame(minHeight: 18)
         .appTextInputChrome()
@@ -9948,6 +9970,8 @@ private struct CalendarTodoSheet: View {
     @State private var teachingOptionIDs: [String] = []
     @State private var doctoralCandidateIDs: [String] = []
     @State private var deadline: String
+    /// Optional clock time on the deadline day ("HH:mm"); shared tasks only.
+    @State private var deadlineTime: String = ""
     @State private var completionDate: String = ""
     @State private var agendaText: String = ""
     @State private var protocolText: String = ""
@@ -10051,7 +10075,23 @@ private struct CalendarTodoSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(language.text("Date", "Datum"))
                                 .calendarTypography(.fieldLabel)
-                            CalendarDateInputField(placeholder: language.datePlaceholder, text: $deadline)
+                            if isLegacyTeachingTask {
+                                CalendarDateInputField(placeholder: language.datePlaceholder, text: $deadline)
+                            } else {
+                                HStack(alignment: .top, spacing: 8) {
+                                    CalendarDateInputField(placeholder: language.datePlaceholder, text: $deadline)
+                                    CalendarTimeInputField(placeholder: "hh:mm", text: $deadlineTime)
+                                        .frame(width: 70)
+                                        .disabled(deadline.trimmedOrNil == nil)
+                                        .help(language.text("Optional time on the deadline day", "Valfritt klockslag på dagen"))
+                                }
+                            }
+                        }
+                        .onChange(of: deadline) { _, newValue in
+                            // Clearing the date also clears the time.
+                            if newValue.trimmedOrNil == nil {
+                                deadlineTime = ""
+                            }
                         }
 
                         CalendarLinkRowsSection(
@@ -10113,6 +10153,7 @@ private struct CalendarTodoSheet: View {
 
         if var task = existingCentralTask {
             task.deadline = deadline
+            task.deadlineTime = deadline.trimmedOrNil == nil ? nil : TaskItem.normalizedDeadlineTime(deadlineTime)
             task.comment = title
             task.note = note
             task.participantNames = participants
@@ -10137,6 +10178,7 @@ private struct CalendarTodoSheet: View {
                 createdOn: todayString,
                 updatedOn: todayString,
                 deadline: deadline,
+                deadlineTime: deadline.trimmedOrNil == nil ? nil : TaskItem.normalizedDeadlineTime(deadlineTime),
                 comment: title,
                 note: note,
                 participantNames: participants,
@@ -10187,6 +10229,7 @@ private struct CalendarTodoSheet: View {
             title = existingCentralTask.comment
             note = existingCentralTask.note
             deadline = existingCentralTask.deadline
+            deadlineTime = existingCentralTask.deadlineTime ?? ""
             participantRows = existingCentralTask.participantNames.map { CalendarMeetingParticipantDraft(name: $0) }
                 + [CalendarMeetingParticipantDraft()]
             let selection = CalendarTaskLinkSelection(links: existingCentralTask.links)

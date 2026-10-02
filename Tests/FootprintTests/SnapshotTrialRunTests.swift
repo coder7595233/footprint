@@ -1140,4 +1140,36 @@ final class SnapshotTrialRunTests: XCTestCase {
         let dashboard = store.summary
         print("SNAPSHOT: R17 Översikt: avslag \(dashboard.rejectedCount), tillbakadragna \(dashboard.withdrawnCount)")
     }
+
+    /// Round 18: shared tasks get an optional deadline time. Old tasks have
+    /// none, so loading and saving must keep every task and add no times by
+    /// itself. Prints only counts.
+    @MainActor
+    func testSnapshotRound18TaskDeadlineTimes() throws {
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let tasksBefore = store.taskItems.count
+        let timedBefore = store.taskItems.filter { $0.deadlineTime != nil }.count
+        let datedBefore = store.taskItems.filter { $0.deadline.trimmedOrNil != nil }.count
+        let countsBefore = Self.recordCounts(store)
+
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let tasksAfter = reloaded.taskItems.count
+        let timedAfter = reloaded.taskItems.filter { $0.deadlineTime != nil }.count
+        let datedAfter = reloaded.taskItems.filter { $0.deadline.trimmedOrNil != nil }.count
+        let countsAfter = Self.recordCounts(reloaded)
+        print("SNAPSHOT: R18 Uppgifter: före \(tasksBefore), efter \(tasksAfter)")
+        print("SNAPSHOT: R18 Uppgifter med datum: före \(datedBefore), efter \(datedAfter)")
+        print("SNAPSHOT: R18 Uppgifter med klockslag: före \(timedBefore), efter \(timedAfter)")
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: R18 \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(tasksBefore, tasksAfter, "no task may be lost or added")
+        XCTAssertEqual(datedBefore, datedAfter, "no deadline may be lost")
+        XCTAssertEqual(timedBefore, timedAfter, "no deadline time is added or lost by saving")
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+    }
 }

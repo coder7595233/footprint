@@ -1300,6 +1300,8 @@ struct TaskItem: Codable, Hashable, Identifiable {
     var updatedOn: String
     /// The calendar date/deadline. A task without one remains visible only in its linked workspaces.
     var deadline: String
+    /// Optional clock time ("HH:mm") on the deadline day; nil means the whole day.
+    var deadlineTime: String?
     /// An optional event trigger which complements, rather than replaces, the deadline.
     var reminder: ProjectTaskReminder
     var comment: String
@@ -1320,6 +1322,7 @@ struct TaskItem: Codable, Hashable, Identifiable {
         case createdOn
         case updatedOn
         case deadline
+        case deadlineTime
         case reminder
         case comment
         case note
@@ -1336,6 +1339,7 @@ struct TaskItem: Codable, Hashable, Identifiable {
         createdOn: String = "",
         updatedOn: String = "",
         deadline: String = "",
+        deadlineTime: String? = nil,
         reminder: ProjectTaskReminder = .none,
         comment: String = "",
         note: String = "",
@@ -1350,6 +1354,7 @@ struct TaskItem: Codable, Hashable, Identifiable {
         self.createdOn = createdOn
         self.updatedOn = updatedOn
         self.deadline = deadline
+        self.deadlineTime = deadlineTime
         self.reminder = reminder
         self.comment = comment
         self.note = note
@@ -1367,6 +1372,7 @@ struct TaskItem: Codable, Hashable, Identifiable {
         createdOn = try container.decodeIfPresent(String.self, forKey: .createdOn) ?? ""
         updatedOn = try container.decodeIfPresent(String.self, forKey: .updatedOn) ?? ""
         deadline = try container.decodeIfPresent(String.self, forKey: .deadline) ?? ""
+        deadlineTime = try container.decodeIfPresent(String.self, forKey: .deadlineTime)
         reminder = try container.decodeIfPresent(ProjectTaskReminder.self, forKey: .reminder) ?? .none
         comment = try container.decodeIfPresent(String.self, forKey: .comment) ?? ""
         note = try container.decodeIfPresent(String.self, forKey: .note) ?? ""
@@ -1384,6 +1390,7 @@ struct TaskItem: Codable, Hashable, Identifiable {
         try container.encode(createdOn, forKey: .createdOn)
         try container.encode(updatedOn, forKey: .updatedOn)
         try container.encode(deadline, forKey: .deadline)
+        try container.encodeIfPresent(deadlineTime, forKey: .deadlineTime)
         try container.encode(reminder, forKey: .reminder)
         try container.encode(comment, forKey: .comment)
         try container.encode(note, forKey: .note)
@@ -1401,6 +1408,7 @@ struct TaskItem: Codable, Hashable, Identifiable {
         createdOn = DateParsers.canonicalizedDayInput(createdOn)
         updatedOn = DateParsers.canonicalizedDayInput(updatedOn)
         deadline = DateParsers.canonicalizedDayInput(deadline)
+        deadlineTime = deadline.trimmedOrNil == nil ? nil : Self.normalizedDeadlineTime(deadlineTime)
         comment = comment.trimmingCharacters(in: .whitespacesAndNewlines)
         note = note.trimmingCharacters(in: .whitespacesAndNewlines)
         participantNames = Array(NSOrderedSet(array: participantNames.compactMap(\.trimmedOrNil))) as? [String]
@@ -1425,6 +1433,53 @@ struct TaskItem: Codable, Hashable, Identifiable {
     }
 
     var isCompleted: Bool { completedOn?.trimmedOrNil != nil }
+
+    /// "9", "930", "9.30" and "09:30" become "09:30"; empty or unreadable input is nil.
+    static func normalizedDeadlineTime(_ raw: String?) -> String? {
+        guard let trimmed = raw?.trimmedOrNil else { return nil }
+        return CalendarReminderSettings.normalizedTime(trimmed)
+    }
+
+    /// The deadline as shown in lists and exports: "2026-10-15" or "2026-10-15 14:00".
+    var deadlineDisplayText: String {
+        Self.deadlineDisplayText(day: deadline, time: deadlineTime)
+    }
+
+    /// The time shown beside the task in calendar lists: the deadline time,
+    /// but only on the deadline day itself (not when an overdue task is
+    /// carried over to today, or a completed task is shown on its done day).
+    func calendarTimeText(displayDate: Date, calendar: Calendar) -> String {
+        guard let time = Self.normalizedDeadlineTime(deadlineTime),
+              let moment = deadlineMoment(calendar: calendar),
+              calendar.isDate(moment, inSameDayAs: displayDate)
+        else { return "" }
+        return time
+    }
+
+    static func deadlineDisplayText(day: String, time: String?) -> String {
+        let trimmedDay = day.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedDay.isEmpty, let time = normalizedDeadlineTime(time) else { return trimmedDay }
+        return "\(trimmedDay) \(time)"
+    }
+
+    /// The moment the deadline passes: the clock time on the deadline day when
+    /// one is set, otherwise nil (the whole day counts).
+    func deadlineMoment(calendar: Calendar = .current) -> Date? {
+        guard let time = Self.normalizedDeadlineTime(deadlineTime),
+              let value = CalendarReminderSettings.hourMinute(from: time)
+        else { return nil }
+        let parts = deadline.trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(separator: "-")
+            .compactMap { Int($0) }
+        guard parts.count == 3 else { return nil }
+        return calendar.date(from: DateComponents(
+            year: parts[0],
+            month: parts[1],
+            day: parts[2],
+            hour: value.hour,
+            minute: value.minute
+        ))
+    }
 
     func hasLink(kind: TaskLinkKind, targetID: String, ownerID: String? = nil) -> Bool {
         links.contains { $0.kind == kind && $0.targetID == targetID && $0.ownerID == ownerID }
