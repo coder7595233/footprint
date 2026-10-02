@@ -75,14 +75,14 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
-## Omgång 19 – pågår (kalenderlistan och klockslag för uppgifter)
+## Omgång 19 – klar 2026-10-02 (#14) (kalenderlistan och klockslag för uppgifter)
 
 | Nr | Område | Ändring | Status |
 |---|---|---|---|
-| F128 | Kalendern | Lugnare lista (beslut 2026-10-02): kategorins färg som remsa i radens höjd med ikon och namn; onlinemöten och fysiska möten har olika ikoner; projekt som grå text; en rubrikrad per vecka; dag och datum i en kolumn med "Idag"-etikett; helgdagar med röd datumtext utan färgplatta; Klar-ringen i tidskolumnen; detaljer under rubriken; grå länkpilar; linjer bara mellan dagar. Kongresser döljs när kolumnen Konferenser är dold, och försenade uppgifter har en röd ring i stället för en röd prick och ordet Försenad. | Pågår |
-| F129 | Uppgifter | En uppgift kan få ett klockslag som deadline. Klockslaget visas bredvid ringen i kalendern, i uppgiftslistor och exporter; uppgiften räknas som försenad när klockslaget passerat. | Pågår |
-| F130 | Kalendern | Linjer mellan dagar tydligare; deltagare på egen rad under rubriken och organisationen inom parentes efter; länkar med ikon efter mål (projekt, publikation, ansökan …) och flera projekt på varsin rad; Klar-ringen i egen kolumn före Plats; nytt val "Visa i raden" för deltagare, organisation, publikation, ansökan m.m.; större veckorubrik; minst 13 punkter text. | Pågår |
-| F131 | Kalendern | Veckovy: knappen Lista/Vecka, dagar i sidled och timmar nedåt, heldagsremsa överst, block i kategorifärg, överlappande möten sida vid sida, röd nu-linje, ‹ › för att byta vecka. | Pågår |
+| F128 | Kalendern | Lugnare lista (beslut 2026-10-02): kategorins färg som remsa i radens höjd med ikon och namn; onlinemöten och fysiska möten har olika ikoner; projekt som grå text; en rubrikrad per vecka; dag och datum i en kolumn med "Idag"-etikett; helgdagar med röd datumtext utan färgplatta; Klar-ringen i tidskolumnen; detaljer under rubriken; grå länkpilar; linjer bara mellan dagar. Kongresser döljs när kolumnen Konferenser är dold, och försenade uppgifter har en röd ring i stället för en röd prick och ordet Försenad. | Klar 2026-10-02 (#14) |
+| F129 | Uppgifter | En uppgift kan få ett klockslag som deadline. Klockslaget visas bredvid ringen i kalendern, i uppgiftslistor och exporter; uppgiften räknas som försenad när klockslaget passerat. | Klar 2026-10-02 (#14) |
+| F130 | Kalendern | Linjer mellan dagar tydligare; deltagare på egen rad under rubriken och organisationen inom parentes efter; länkar med ikon efter mål (projekt, publikation, ansökan …) och flera projekt på varsin rad; Klar-ringen i egen kolumn före Plats; nytt val "Visa i raden" för deltagare, organisation, publikation, ansökan m.m.; större veckorubrik; minst 13 punkter text. | Klar 2026-10-02 (#14) |
+| F131 | Kalendern | Veckovy: knappen Lista/Vecka, dagar i sidled och timmar nedåt, heldagsremsa överst, block i kategorifärg, överlappande möten sida vid sida, röd nu-linje, ‹ › för att byta vecka. | Klar 2026-10-02 (#14) |
 
 ## Omgång 18 – klar 2026-10-02 (#13) (rättningar efter test av omgång 17)
 
