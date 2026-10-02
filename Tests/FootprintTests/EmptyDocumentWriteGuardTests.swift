@@ -6,7 +6,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testEmptyingARegisterThatHasRecordsIsRefused() throws {
         let stored = ["teaching_assignments": data("[{\"id\":\"a\"},{\"id\":\"b\"},{\"id\":\"c\"}]")]
-        let refused = try EmptyDocumentWriteGuard.refusedKeys(
+        let refused = EmptyDocumentWriteGuard.refusedKeys(
             writing: [(key: "teaching_assignments", data: data("[]"))],
             existing: { stored[$0] }
         )
@@ -15,7 +15,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testEmptyingAnAlreadyEmptyRegisterIsAllowed() throws {
         let stored = ["teaching_assignments": data("[]")]
-        let refused = try EmptyDocumentWriteGuard.refusedKeys(
+        let refused = EmptyDocumentWriteGuard.refusedKeys(
             writing: [(key: "teaching_assignments", data: data("[]"))],
             existing: { stored[$0] }
         )
@@ -24,7 +24,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testDeletingTheLastRecordOfANonCanonicalDocumentIsAllowed() throws {
         let stored = ["relational_core": data("[{\"id\":\"x\"},{\"id\":\"y\"},{\"id\":\"z\"}]")]
-        let refused = try EmptyDocumentWriteGuard.refusedKeys(
+        let refused = EmptyDocumentWriteGuard.refusedKeys(
             writing: [(key: "relational_core", data: data("[]"))],
             existing: { stored[$0] }
         )
@@ -33,7 +33,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testWritingRecordsIsNeverRefused() throws {
         let stored = ["applications": data("[{\"id\":\"a\"}]")]
-        let refused = try EmptyDocumentWriteGuard.refusedKeys(
+        let refused = EmptyDocumentWriteGuard.refusedKeys(
             writing: [(key: "applications", data: data("[{\"id\":\"a\"},{\"id\":\"b\"}]"))],
             existing: { stored[$0] }
         )
@@ -42,7 +42,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testObjectDocumentsAreNotTreatedAsEmptyLists() throws {
         let stored = ["metadata": data("{\"a\":1}")]
-        let refused = try EmptyDocumentWriteGuard.refusedKeys(
+        let refused = EmptyDocumentWriteGuard.refusedKeys(
             writing: [(key: "metadata", data: data("{}"))],
             existing: { stored[$0] }
         )
@@ -51,7 +51,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testDeletingTheLastCoupleOfRecordsIsAllowed() throws {
         let stored = ["cv_other_publications": data("[{\"id\":\"a\"},{\"id\":\"b\"}]")]
-        let refused = try EmptyDocumentWriteGuard.refusedKeys(
+        let refused = EmptyDocumentWriteGuard.refusedKeys(
             writing: [(key: "cv_other_publications", data: data("[]"))],
             existing: { stored[$0] }
         )
@@ -74,7 +74,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
     func testPlaceholdersOverwritingRealAssignmentsAreRefused() throws {
         // The 2026-09-27 loss: three placeholders written over 27 assignments.
         let stored = ["teaching_assignments": records((1...27).map { "real-\($0)" })]
-        let refused = try EmptyDocumentWriteGuard.refusedReplacementKeys(
+        let refused = EmptyDocumentWriteGuard.refusedReplacementKeys(
             writing: [(key: "teaching_assignments", data: records(["assignment-1", "assignment-2", "assignment-3"]))],
             existing: { stored[$0] }
         )
@@ -84,7 +84,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
     func testDeletingAFewRecordsIsAllowed() throws {
         let ids = (1...27).map { "real-\($0)" }
         let stored = ["teaching_assignments": records(ids)]
-        let refused = try EmptyDocumentWriteGuard.refusedReplacementKeys(
+        let refused = EmptyDocumentWriteGuard.refusedReplacementKeys(
             writing: [(key: "teaching_assignments", data: records(Array(ids.dropFirst(4))))],
             existing: { stored[$0] }
         )
@@ -94,7 +94,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
     func testAddingAndEditingRecordsIsAllowed() throws {
         let ids = (1...10).map { "real-\($0)" }
         let stored = ["projects": records(ids)]
-        let refused = try EmptyDocumentWriteGuard.refusedReplacementKeys(
+        let refused = EmptyDocumentWriteGuard.refusedReplacementKeys(
             writing: [(key: "projects", data: records(ids + ["new-1", "new-2"]))],
             existing: { stored[$0] }
         )
@@ -103,7 +103,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testReplacingASmallRegisterIsLeftToTheEmptyCheck() throws {
         let stored = ["doctoral_candidates": records(["a", "b", "c"])]
-        let refused = try EmptyDocumentWriteGuard.refusedReplacementKeys(
+        let refused = EmptyDocumentWriteGuard.refusedReplacementKeys(
             writing: [(key: "doctoral_candidates", data: records(["x"]))],
             existing: { stored[$0] }
         )
@@ -112,7 +112,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testDerivedDocumentsAreNotChecked() throws {
         let stored = ["relational_core": records((1...20).map { "r\($0)" })]
-        let refused = try EmptyDocumentWriteGuard.refusedReplacementKeys(
+        let refused = EmptyDocumentWriteGuard.refusedReplacementKeys(
             writing: [(key: "relational_core", data: records(["other"]))],
             existing: { stored[$0] }
         )
@@ -121,7 +121,7 @@ final class EmptyDocumentWriteGuardTests: XCTestCase {
 
     func testEmptyWritesAreLeftToTheEmptyCheck() throws {
         let stored = ["applications": records((1...20).map { "a\($0)" })]
-        let refused = try EmptyDocumentWriteGuard.refusedReplacementKeys(
+        let refused = EmptyDocumentWriteGuard.refusedReplacementKeys(
             writing: [(key: "applications", data: data("[]"))],
             existing: { stored[$0] }
         )
