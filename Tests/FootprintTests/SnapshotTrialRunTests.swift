@@ -1242,6 +1242,11 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertEqual(changedPhD, 0, "PhD is not changed")
         XCTAssertEqual(Set(storedAuthors.map(\.id)), Set(authors.map(\.id)), "no researcher is lost or added")
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round20-researcher-position-degree-lists" })
+        // The step runs once per database. On a database where it ran earlier
+        // the user may since have cleared a researcher's list choices, which
+        // the step would fill in again; so idempotence is checked as "a
+        // second run right after a run changes nothing".
+        _ = reloaded.migrateResearcherPositionsAndDegreesToLists()
         XCTAssertFalse(reloaded.migrateResearcherPositionsAndDegreesToLists(), "running the step again changes nothing")
     }
 
@@ -1308,5 +1313,71 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertEqual(Set(storedAuthors.map(\.id)), Set(authors.map(\.id)), "no researcher is lost or added")
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round20b-physician-specialties" })
         XCTAssertFalse(reloaded.migrateResearcherPhysicianSpecialties(), "running the step again changes nothing")
+    }
+
+    /// Sjuksköterskespecialiteter (round 20c): hur många forskare som har
+    /// Specialistsjuksköterska, med och utan specialitet, och hur många som
+    /// har varje sjuksköterskespecialitet. Bara antal skrivs ut, inga namn
+    /// eller värden. Den gamla texten, karriärsteget och doktorsexamen får
+    /// inte ändras, och ingen post får försvinna eller tillkomma.
+    @MainActor
+    func testSnapshotNurseSpecialtiesKeepEveryRecord() throws {
+        let storedAuthors = try Self.storedResearchers()
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let countsBefore = Self.recordCounts(store)
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: Sjuksköterskespecialiteter \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+
+        let authors = reloaded.publicationAuthors
+        let nursePositionIDs = ResearcherPositionOption.nurseSpecialtyPositionIDs
+        let storedNurses = storedAuthors.filter { author in author.positionIDs.contains { nursePositionIDs.contains($0) } }
+        let nurses = authors.filter { author in author.positionIDs.contains { nursePositionIDs.contains($0) } }
+        let withSpecialty = nurses.filter { author in
+            author.positionIDs.contains { nursePositionIDs.contains($0) && author.positionSpecialtyIDs[$0] != nil }
+        }
+        let lacking = nurses.filter { author in
+            author.positionIDs.contains { nursePositionIDs.contains($0) && author.positionSpecialtyIDs[$0] == nil }
+        }
+        print("SNAPSHOT: Sjuksköterskespecialiteter forskare: sparat \(storedAuthors.count), efter \(authors.count)")
+        print("SNAPSHOT: Sjuksköterskespecialiteter forskare med Specialistsjuksköterska: sparat \(storedNurses.count), efter \(nurses.count)")
+        print("SNAPSHOT: Sjuksköterskespecialiteter forskare med Specialistsjuksköterska och specialitet: \(withSpecialty.count)")
+        print("SNAPSHOT: Sjuksköterskespecialiteter forskare med Specialistsjuksköterska utan specialitet: \(lacking.count)")
+        print("SNAPSHOT: Sjuksköterskespecialiteter forskare med befattning utanför listan: \(authors.filter { $0.positionOtherSv.trimmedOrNil != nil || $0.positionOtherEn.trimmedOrNil != nil }.count)")
+        let usage = reloaded.researcherSpecialtyOptionUsageCounts()
+        let nurseOptions = ResearcherSpecialtyOption.options(reloaded.researcherSpecialtyOptions, ofKind: .nurse)
+        print("SNAPSHOT: Sjuksköterskespecialiteter i listan: \(nurseOptions.count), sparad lista: \(reloaded.metadata.researcherSpecialtyOptions == nil ? "ingen (inbyggd)" : "finns")")
+        for option in nurseOptions {
+            print("SNAPSHOT: Sjuksköterskespecialiteter specialitet \(option.id): \(usage[option.id] ?? 0) forskare")
+        }
+
+        // The written text, career stage and PhD are exactly as stored.
+        let storedByID = Dictionary(storedAuthors.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var changedText = 0
+        var changedStage = 0
+        var changedPhD = 0
+        for author in authors {
+            guard let stored = storedByID[author.id] else { continue }
+            if [stored.positionSv, stored.positionEn, stored.degreeSv, stored.degreeEn, stored.titleSv, stored.titleEn]
+                != [author.positionSv, author.positionEn, author.degreeSv, author.degreeEn, author.titleSv, author.titleEn] {
+                changedText += 1
+            }
+            if stored.careerStage != author.careerStage { changedStage += 1 }
+            if stored.hasPhD != author.hasPhD { changedPhD += 1 }
+        }
+        print("SNAPSHOT: Sjuksköterskespecialiteter ändrad fritext: \(changedText), ändrat karriärsteg: \(changedStage), ändrad doktorsexamen: \(changedPhD)")
+        XCTAssertEqual(changedText, 0, "the written text is kept")
+        XCTAssertEqual(changedStage, 0, "the career stage is not changed")
+        XCTAssertEqual(changedPhD, 0, "PhD is not changed")
+        XCTAssertEqual(Set(storedAuthors.map(\.id)), Set(authors.map(\.id)), "no researcher is lost or added")
+        XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round20c-nurse-specialties" })
+        XCTAssertFalse(reloaded.migrateResearcherNurseSpecialties(), "running the step again changes nothing")
     }
 }

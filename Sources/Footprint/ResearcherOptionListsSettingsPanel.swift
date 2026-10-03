@@ -345,31 +345,34 @@ struct ResearcherOptionListsSettingsPanel: View {
         }
     }
 
-    // MARK: Läkarspecialiteter
+    // MARK: Läkar- och sjuksköterskespecialiteter
 
     private var specialtiesSection: some View {
-        specialtiesCard
-            .alert(
-                language.text("Delete specialty?", "Radera specialiteten?"),
-                isPresented: specialtyDeletionAlertBinding,
-                actions: {
-                    Button(language.text("Cancel", "Avbryt"), role: .cancel) {
-                        pendingSpecialtyDeletionID = nil
-                    }
-                    Button(language.text("Delete", "Radera"), role: .destructive) {
-                        if let id = pendingSpecialtyDeletionID {
-                            deleteSpecialty(id: id)
-                        }
-                        pendingSpecialtyDeletionID = nil
-                    }
-                },
-                message: {
-                    Text(language.text(
-                        "No researcher uses this specialty. It is removed from the list.",
-                        "Ingen forskare har den här specialiteten. Den tas bort ur listan."
-                    ))
+        VStack(alignment: .leading, spacing: 18) {
+            specialtiesCard(kind: .physician)
+            specialtiesCard(kind: .nurse)
+        }
+        .alert(
+            language.text("Delete specialty?", "Radera specialiteten?"),
+            isPresented: specialtyDeletionAlertBinding,
+            actions: {
+                Button(language.text("Cancel", "Avbryt"), role: .cancel) {
+                    pendingSpecialtyDeletionID = nil
                 }
-            )
+                Button(language.text("Delete", "Radera"), role: .destructive) {
+                    if let id = pendingSpecialtyDeletionID {
+                        deleteSpecialty(id: id)
+                    }
+                    pendingSpecialtyDeletionID = nil
+                }
+            },
+            message: {
+                Text(language.text(
+                    "No researcher uses this specialty. It is removed from the list.",
+                    "Ingen forskare har den här specialiteten. Den tas bort ur listan."
+                ))
+            }
+        )
     }
 
     private var specialtyDeletionAlertBinding: Binding<Bool> {
@@ -379,27 +382,74 @@ struct ResearcherOptionListsSettingsPanel: View {
         )
     }
 
-    private var specialtiesCard: some View {
+    /// Platserna i listan för specialiteterna av en sort, i listans ordning.
+    private func specialtyIndices(kind: ResearcherSpecialtyKind) -> [Int] {
+        specialties.indices.filter { specialties[$0].kind == kind }
+    }
+
+    /// En rad i ett specialitetskort: specialitetens id, platsen i hela
+    /// listan och platsen bland specialiteterna av samma sort.
+    private struct SpecialtyRowItem: Identifiable {
+        let id: String
+        let index: Int
+        let positionInKind: Int
+    }
+
+    private func specialtyRowItems(kind: ResearcherSpecialtyKind) -> [SpecialtyRowItem] {
+        specialtyIndices(kind: kind).enumerated().map { position, index in
+            SpecialtyRowItem(id: specialties[index].id, index: index, positionInKind: position)
+        }
+    }
+
+    private func specialtiesCard(kind: ResearcherSpecialtyKind) -> some View {
         let usage: [String: Int] = store.researcherSpecialtyOptionUsageCounts()
+        let items: [SpecialtyRowItem] = specialtyRowItems(kind: kind)
         return AppSettingsCard(padding: 18) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(language.text("Physician specialties", "Läkarspecialiteter"))
+                Text(specialtiesTitle(kind))
                     .appTypography(.sectionTitle)
-                SettingsEffectNote(language.text(
-                    "Affects: the specialty you can choose for the positions Resident Physician, Specialist Physician and Senior Consultant, and how the position is written in lists and exports (e.g. Specialist Physician, General Practice). Renaming changes the text everywhere. Hidden specialties are not offered for new choices but stay on researchers who have them. A specialty can only be deleted when no researcher has it.",
-                    "Påverkar: vilken specialitet du kan välja för befattningarna ST-läkare, Specialistläkare och Överläkare, och hur befattningen skrivs i listor och exporter (t.ex. Specialistläkare i allmänmedicin). Ett nytt namn ändrar texten överallt. Dolda specialiteter erbjuds inte för nya val men ligger kvar på forskare som har dem. En specialitet kan bara raderas när ingen forskare har den."
-                ))
+                SettingsEffectNote(specialtiesEffectNote(kind))
                 specialtyHeaderRow
-                ForEach(Array(specialties.enumerated()), id: \.element.id) { index, option in
-                    specialtyRow(index: index, option: option, usageCount: usage[option.id] ?? 0)
+                ForEach(items) { item in
+                    specialtyRow(
+                        index: item.index,
+                        kind: kind,
+                        positionInKind: item.positionInKind,
+                        countInKind: items.count,
+                        usageCount: usage[item.id] ?? 0
+                    )
                 }
                 Button {
-                    specialties.append(ResearcherSpecialtyOption(sortOrder: specialties.count))
+                    specialties.append(ResearcherSpecialtyOption(kind: kind, sortOrder: specialties.count))
                 } label: {
                     Label(language.text("Add specialty", "Lägg till specialitet"), systemImage: "plus")
                 }
                 .buttonStyle(.bordered)
             }
+        }
+    }
+
+    private func specialtiesTitle(_ kind: ResearcherSpecialtyKind) -> String {
+        switch kind {
+        case .physician:
+            return language.text("Physician specialties", "Läkarspecialiteter")
+        case .nurse:
+            return language.text("Nurse specialties", "Sjuksköterskespecialiteter")
+        }
+    }
+
+    private func specialtiesEffectNote(_ kind: ResearcherSpecialtyKind) -> String {
+        switch kind {
+        case .physician:
+            return language.text(
+                "Affects: the specialty you can choose for the positions Resident Physician, Specialist Physician and Senior Consultant, and how the position is written in lists and exports (e.g. Specialist Physician, General Practice). Renaming changes the text everywhere. Hidden specialties are not offered for new choices but stay on researchers who have them. A specialty can only be deleted when no researcher has it.",
+                "Påverkar: vilken specialitet du kan välja för befattningarna ST-läkare, Specialistläkare och Överläkare, och hur befattningen skrivs i listor och exporter (t.ex. Specialistläkare i allmänmedicin). Ett nytt namn ändrar texten överallt. Dolda specialiteter erbjuds inte för nya val men ligger kvar på forskare som har dem. En specialitet kan bara raderas när ingen forskare har den."
+            )
+        case .nurse:
+            return language.text(
+                "Affects: the specialty you can choose for the position Specialist Nurse, and how the position is written in lists and exports (e.g. Specialist Nurse, Intensive Care; District Nurse). Renaming changes the text everywhere. Hidden specialties are not offered for new choices but stay on researchers who have them. A specialty can only be deleted when no researcher has it.",
+                "Påverkar: vilken specialitet du kan välja för befattningen Specialistsjuksköterska, och hur befattningen skrivs i listor och exporter (t.ex. Specialistsjuksköterska inom intensivvård; Distriktssköterska). Ett nytt namn ändrar texten överallt. Dolda specialiteter erbjuds inte för nya val men ligger kvar på forskare som har dem. En specialitet kan bara raderas när ingen forskare har den."
+            )
         }
     }
 
@@ -414,13 +464,20 @@ struct ResearcherOptionListsSettingsPanel: View {
         }
     }
 
-    private func specialtyRow(index: Int, option: ResearcherSpecialtyOption, usageCount: Int) -> some View {
-        HStack(spacing: 8) {
+    private func specialtyRow(
+        index: Int,
+        kind: ResearcherSpecialtyKind,
+        positionInKind: Int,
+        countInKind: Int,
+        usageCount: Int
+    ) -> some View {
+        let optionID: String = specialties.indices.contains(index) ? specialties[index].id : ""
+        return HStack(spacing: 8) {
             moveButtons(
-                canMoveUp: index > 0,
-                canMoveDown: index < specialties.count - 1,
-                moveUp: { moveSpecialty(from: index, by: -1) },
-                moveDown: { moveSpecialty(from: index, by: 1) }
+                canMoveUp: positionInKind > 0,
+                canMoveDown: positionInKind < countInKind - 1,
+                moveUp: { moveSpecialty(from: index, kind: kind, by: -1) },
+                moveDown: { moveSpecialty(from: index, kind: kind, by: 1) }
             )
             TextField(language.text("Swedish name", "Svenskt namn"), text: specialtyTextBinding(index: index, keyPath: \.nameSv))
                 .appTextInputChrome()
@@ -435,7 +492,7 @@ struct ResearcherOptionListsSettingsPanel: View {
                 .help(language.text("Hide from new choices", "Dölj för nya val"))
             usageText(usageCount)
             deleteButton(usageCount: usageCount) {
-                pendingSpecialtyDeletionID = option.id
+                pendingSpecialtyDeletionID = optionID
             }
             Spacer(minLength: 0)
         }
@@ -461,8 +518,13 @@ struct ResearcherOptionListsSettingsPanel: View {
         )
     }
 
-    private func moveSpecialty(from index: Int, by offset: Int) {
-        let target = index + offset
+    /// Flyttar specialiteten ett steg bland specialiteterna av samma sort.
+    private func moveSpecialty(from index: Int, kind: ResearcherSpecialtyKind, by offset: Int) {
+        let indices = specialtyIndices(kind: kind)
+        guard let currentPosition = indices.firstIndex(of: index) else { return }
+        let targetPosition = currentPosition + offset
+        guard indices.indices.contains(targetPosition) else { return }
+        let target = indices[targetPosition]
         guard specialties.indices.contains(index), specialties.indices.contains(target) else { return }
         specialties.swapAt(index, target)
         for position in specialties.indices {

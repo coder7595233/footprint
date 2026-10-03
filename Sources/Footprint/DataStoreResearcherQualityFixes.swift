@@ -100,7 +100,9 @@ extension GrantDataStore {
 
     /// Väljer en befattning ur listan för en del av "annan"-texten: valet
     /// läggs till och just den delen tas bort ur texten. Har en läkar-
-    /// befattning en specialitet i delen ("… i geriatrik") blir den vald.
+    /// befattning en specialitet i delen ("… i geriatrik") blir den vald;
+    /// likaså en sjuksköterskespecialitet för Specialistsjuksköterska
+    /// ("Distriktssköterska", "… inom intensivvård").
     @discardableResult
     func chooseResearcherPositionForOutsideText(authorID: String, part: String, optionID: String) -> Bool {
         guard var author = publicationAuthor(id: authorID),
@@ -110,9 +112,9 @@ extension GrantDataStore {
         if !author.positionIDs.contains(option.id) {
             author.positionIDs.append(option.id)
         }
-        if option.takesSpecialty,
+        if let kind = option.specialtyKind,
            author.positionSpecialtyIDs[option.id] == nil,
-           let found = ResearcherLegacyFieldMapping.specialtyMatch(in: part) {
+           let found = ResearcherLegacyFieldMapping.specialtyMatch(in: part, kind: kind) {
             author.positionSpecialtyIDs[option.id] = found.specialtyID
         }
         Self.removeOtherPositionPart(from: &author, part: part, language: language, alignedPartIsUsed: false) { candidate in

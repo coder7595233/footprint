@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Forskarkortet: befattningar som rader, i samma stil som examensraderna:
 /// ett val ur listan per rad (akademiska först, sedan kliniska, sist övrigt),
-/// en läkarspecialitet för ST-läkare, Specialistläkare och Överläkare, och
+/// en läkarspecialitet för ST-läkare, Specialistläkare och Överläkare, en
+/// sjuksköterskespecialitet för Specialistsjuksköterska, och
 /// "Annan befattning…" för en befattning som inte finns i listan.
 struct ResearcherPositionPickerField: View {
     @Binding var positionIDs: [String]
@@ -80,19 +81,16 @@ struct ResearcherPositionPickerField: View {
             .frame(width: 190)
             .disabled(isDisabled)
             .help(positionHelp(option))
-            if option.takesSpecialty {
+            if let kind = option.specialtyKind {
                 AppMenuSelectionField(
                     selection: specialtyBinding(for: option.id),
-                    options: specialtyPickerOptions(selectedID: specialtyIDs[option.id]),
+                    options: specialtyPickerOptions(kind: kind, selectedID: specialtyIDs[option.id]),
                     placeholder: language.text("Specialty…", "Specialitet…"),
                     clearValue: ""
                 )
                 .frame(maxWidth: .infinity)
                 .disabled(isDisabled)
-                .help(language.text(
-                    "Physician specialty. The list is edited under Settings > Lists.",
-                    "Läkarspecialitet. Listan ändras under Inställningar > Listor."
-                ))
+                .help(specialtyHelp(kind))
             } else {
                 Spacer(minLength: 0)
             }
@@ -164,9 +162,31 @@ struct ResearcherPositionPickerField: View {
         return result
     }
 
-    private func specialtyPickerOptions(selectedID: String?) -> [(label: String, value: String)] {
+    private func specialtyHelp(_ kind: ResearcherSpecialtyKind) -> String {
+        switch kind {
+        case .physician:
+            return language.text(
+                "Physician specialty. The list is edited under Settings > Lists.",
+                "Läkarspecialitet. Listan ändras under Inställningar > Listor."
+            )
+        case .nurse:
+            return language.text(
+                "Nurse specialty. The list is edited under Settings > Lists.",
+                "Sjuksköterskespecialitet. Listan ändras under Inställningar > Listor."
+            )
+        }
+    }
+
+    /// Specialiteterna av befattningens sort (läkare eller sjuksköterska);
+    /// en redan vald specialitet visas alltid, även om den är dold.
+    private func specialtyPickerOptions(kind: ResearcherSpecialtyKind, selectedID: String?) -> [(label: String, value: String)] {
         var result: [(label: String, value: String)] = []
-        for option in specialtyOptions where !option.isHidden || option.id == selectedID {
+        let choices = ResearcherPositionPickerField.specialtyChoices(
+            specialtyOptions,
+            kind: kind,
+            selectedID: selectedID
+        )
+        for option in choices {
             result.append((label: option.localizedName(language: language), value: option.id))
         }
         if selectedID?.trimmedOrNil != nil {
@@ -239,7 +259,8 @@ struct ResearcherPositionPickerField: View {
     }
 
     /// Byter befattningen på en rad. En specialitet följer med när den nya
-    /// befattningen också kan ha en (t.ex. ST-läkare → Specialistläkare).
+    /// befattningen kan ha samma sorts specialitet (t.ex. ST-läkare →
+    /// Specialistläkare, men inte Specialistläkare → Specialistsjuksköterska).
     private func replace(_ currentID: String, with newID: String) {
         guard newID != currentID else { return }
         if newID == Self.otherValue {
@@ -250,8 +271,9 @@ struct ResearcherPositionPickerField: View {
         if let specialtyID = specialtyIDs[currentID] {
             var map = specialtyIDs
             map.removeValue(forKey: currentID)
-            let newTakesSpecialty = options.first(where: { $0.id == newID })?.takesSpecialty ?? false
-            if newTakesSpecialty && map[newID] == nil {
+            let oldKind = ResearcherPositionOption.specialtyKind(forPositionID: currentID)
+            let newKind = ResearcherPositionOption.specialtyKind(forPositionID: newID)
+            if newKind != nil && newKind == oldKind && map[newID] == nil {
                 map[newID] = specialtyID
             }
             specialtyIDs = map
@@ -305,6 +327,20 @@ struct ResearcherPositionPickerField: View {
                 specialtyIDs = map
             }
         )
+    }
+
+    /// Specialiteterna som erbjuds för en befattning: de av rätt sort som
+    /// inte är dolda, och den som redan är vald (även om den är dold eller
+    /// av fel sort, så att valet syns).
+    nonisolated static func specialtyChoices(
+        _ options: [ResearcherSpecialtyOption],
+        kind: ResearcherSpecialtyKind,
+        selectedID: String?
+    ) -> [ResearcherSpecialtyOption] {
+        options.filter { option in
+            if option.id == selectedID { return true }
+            return option.kind == kind && !option.isHidden
+        }
     }
 }
 
