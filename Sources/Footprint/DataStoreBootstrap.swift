@@ -1100,7 +1100,9 @@ extension GrantDataStore {
     // 25: round 11 (runRound11OneTimeDataMigrations).
     // 26: researchers' written position and degree become list choices
     // (runResearcherOptionListMigration).
-    private static let startupMaintenanceVersion = 26
+    // 27: physicians' specialties from the written position text
+    // (runResearcherSpecialtyMigration).
+    private static let startupMaintenanceVersion = 27
     private static let deferredLaunchMaintenanceVersion = 4
     private static let bundledJournalMetricVersion = 1
     private static let maintenanceMarkersStorageKey = "maintenance_markers"

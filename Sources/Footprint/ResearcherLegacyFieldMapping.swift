@@ -19,6 +19,8 @@ enum ResearcherLegacyFieldMapping {
         var positionIDs: [String] = []
         var isDocent = false
         var unmappedParts: [String] = []
+        /// Läkarspecialitet per befattning (befattningens id -> specialitetens id).
+        var specialtyIDs: [String: String] = [:]
     }
 
     struct DegreeMatch: Equatable {
@@ -323,23 +325,58 @@ enum ResearcherLegacyFieldMapping {
 
     // MARK: Befattningar
 
+    /// Befattningar ur texten. En läkarbefattning med specialitet
+    /// ("Överläkare i dermatologi och venereologi") får specialiteten; ett
+    /// ensamt specialistord ("geriatriker", "Kirurg") ger specialiteten till
+    /// textens enda läkarbefattning utan specialitet, eller, när texten inte
+    /// har någon läkarbefattning, Specialistläkare med den specialiteten.
     static func mapPositionText(_ text: String) -> PositionResult {
         var result = PositionResult()
         let synonyms = positionSynonyms()
-        for part in splitParts(text, splitsOnWords: true) {
+        let protected = protectingSpecialtyNames(text)
+        var outcomes: [String?] = []
+        var pendingLoose: [(index: Int, part: String, match: SpecialtyMatch)] = []
+        for rawPart in splitParts(protected.text, splitsOnWords: true) {
+            let part = restoringSpecialtyNames(rawPart, placeholders: protected.placeholders)
             let key = normalizedKey(part)
             guard !key.isEmpty else { continue }
             guard let synonym = synonyms.first(where: { match($0.phrase, in: key, allowsAnyRemainder: false) != nil }) else {
-                result.unmappedParts.append(part)
+                if let loose = looseSpecialty(in: part) {
+                    pendingLoose.append((index: outcomes.count, part: part, match: loose))
+                    outcomes.append(nil)
+                } else {
+                    outcomes.append(part)
+                }
                 continue
             }
+            outcomes.append(nil)
             for id in synonym.ids where !result.positionIDs.contains(id) {
                 result.positionIDs.append(id)
             }
             if synonym.docent {
                 result.isDocent = true
             }
+            let physicianIDs = synonym.ids.filter { ResearcherPositionOption.specialtyPositionIDs.contains($0) }
+            if !physicianIDs.isEmpty, let found = specialtyMatch(in: part) {
+                for id in physicianIDs where result.specialtyIDs[id] == nil {
+                    result.specialtyIDs[id] = found.specialtyID
+                }
+            }
         }
+        for loose in pendingLoose {
+            let physicians = result.positionIDs.filter { ResearcherPositionOption.specialtyPositionIDs.contains($0) }
+            let lacking = physicians.filter { result.specialtyIDs[$0] == nil }
+            if lacking.count == 1 {
+                result.specialtyIDs[lacking[0]] = loose.match.specialtyID
+            } else if physicians.isEmpty && loose.match.impliesSpecialist {
+                let specialistID = ResearcherPositionOption.BuiltInID.specialistPhysician
+                result.positionIDs.append(specialistID)
+                result.specialtyIDs[specialistID] = loose.match.specialtyID
+            } else {
+                outcomes[loose.index] = loose.part
+            }
+        }
+        result.unmappedParts = outcomes.compactMap { $0 }
         return result
     }
 
@@ -419,6 +456,13 @@ enum ResearcherLegacyFieldMapping {
                 ids.removeAll { $0 == seniorLecturerID }
             }
             updated.positionIDs = ids
+            var specialties: [String: String] = [:]
+            for id in ids {
+                if let specialtyID = swedish.specialtyIDs[id] ?? english.specialtyIDs[id] {
+                    specialties[id] = specialtyID
+                }
+            }
+            updated.positionSpecialtyIDs = specialties
             updated.positionOtherSv = swedish.unmappedParts.joined(separator: ", ")
             updated.positionOtherEn = english.unmappedParts.joined(separator: ", ")
             if swedish.isDocent || english.isDocent {
@@ -471,6 +515,421 @@ enum ResearcherLegacyFieldMapping {
 
         updated.positionOtherSv = updated.positionOtherSv.trimmingCharacters(in: .whitespacesAndNewlines)
         updated.positionOtherEn = updated.positionOtherEn.trimmingCharacters(in: .whitespacesAndNewlines)
+        return updated
+    }
+}
+
+// MARK: - Läkarspecialiteter
+
+extension ResearcherLegacyFieldMapping {
+    /// En specialitet som hittats i en text. `impliesSpecialist` gäller ord
+    /// som betyder en specialistläkare ("kirurg", "geriatriker").
+    struct SpecialtyMatch: Equatable {
+        var specialtyID: String
+        var impliesSpecialist: Bool
+    }
+
+    private struct SpecialtySynonym: Sendable {
+        let tokens: [String]
+        let specialtyID: String
+        let impliesSpecialist: Bool
+    }
+
+    private static let cachedSpecialtySynonyms: [SpecialtySynonym] = specialtySynonyms()
+
+    /// Namn och ord för specialiteterna: listans svenska och engelska namn,
+    /// andra stavningar, och ord för specialistläkaren själv.
+    private static func specialtySynonyms() -> [SpecialtySynonym] {
+        typealias S = ResearcherSpecialtyOption.BuiltInID
+        var rows: [(String, String, Bool)] = []
+        for option in ResearcherSpecialtyOption.builtInOptions {
+            rows.append((option.nameSv, option.id, false))
+            rows.append((option.nameEn, option.id, false))
+        }
+        let names: [(String, String)] = [
+            ("family medicine", S.generalPractice),
+            ("akutmedicin", S.emergencyMedicine),
+            ("emergency care", S.emergencyMedicine),
+            ("anestesiologi", S.anaesthesia),
+            ("anestesi", S.anaesthesia),
+            ("anesthesiology", S.anaesthesia),
+            ("anaesthesiology", S.anaesthesia),
+            ("anesthesia and intensive care", S.anaesthesia),
+            ("anaesthesia", S.anaesthesia),
+            ("anesthesia", S.anaesthesia),
+            ("arbetsmedicin", S.occupationalMedicine),
+            ("occupational medicine", S.occupationalMedicine),
+            ("pediatrik", S.paediatrics),
+            ("barnmedicin", S.paediatrics),
+            ("pediatrics", S.paediatrics),
+            ("barnpsykiatri", S.childPsychiatry),
+            ("child psychiatry", S.childPsychiatry),
+            ("dermatologi", S.dermatology),
+            ("dermatology", S.dermatology),
+            ("endokrinologi", S.endocrinology),
+            ("endocrinology", S.endocrinology),
+            ("diabetologi", S.endocrinology),
+            ("diabetology", S.endocrinology),
+            ("geriatric medicine", S.geriatrics),
+            ("gastroenterologi", S.gastroenterology),
+            ("gastroenterology", S.gastroenterology),
+            ("hematology", S.haematology),
+            ("infektionsmedicin", S.infectiousDiseases),
+            ("infectious disease", S.infectiousDiseases),
+            ("invärtesmedicin", S.internalMedicine),
+            ("allmänkirurgi", S.surgery),
+            ("general surgery", S.surgery),
+            ("lungmedicin", S.respiratoryMedicine),
+            ("pulmonology", S.respiratoryMedicine),
+            ("pulmonary medicine", S.respiratoryMedicine),
+            ("nefrologi", S.nephrology),
+            ("obstetrics and gynecology", S.obstetrics),
+            ("obstetrik", S.obstetrics),
+            ("gynekologi", S.obstetrics),
+            ("gynecology", S.obstetrics),
+            ("gynaecology", S.obstetrics),
+            ("orthopedics", S.orthopaedics),
+            ("ortopedisk kirurgi", S.orthopaedics),
+            ("orthopaedic surgery", S.orthopaedics),
+            ("orthopedic surgery", S.orthopaedics),
+            ("cardiothoracic surgery", S.thoracicSurgery),
+            ("oftalmologi", S.ophthalmology),
+            ("ögonmedicin", S.ophthalmology),
+            ("öron näs hals", S.otorhinolaryngology),
+            ("önh", S.otorhinolaryngology),
+            ("otolaryngology", S.otorhinolaryngology),
+            ("ear nose and throat", S.otorhinolaryngology),
+            ("patologi", S.clinicalPathology),
+            ("pathology", S.clinicalPathology),
+        ]
+        for name in names {
+            rows.append((name.0, name.1, false))
+        }
+        let nouns: [(String, String)] = [
+            ("allmänläkare", S.generalPractice),
+            ("distriktsläkare", S.generalPractice),
+            ("general practitioner", S.generalPractice),
+            ("family physician", S.generalPractice),
+            ("akutläkare", S.emergencyMedicine),
+            ("emergency physician", S.emergencyMedicine),
+            ("anestesiolog", S.anaesthesia),
+            ("anestesiläkare", S.anaesthesia),
+            ("anaesthetist", S.anaesthesia),
+            ("anesthetist", S.anaesthesia),
+            ("anesthesiologist", S.anaesthesia),
+            ("anaesthesiologist", S.anaesthesia),
+            ("barnläkare", S.paediatrics),
+            ("pediatriker", S.paediatrics),
+            ("pediatrician", S.paediatrics),
+            ("paediatrician", S.paediatrics),
+            ("barnpsykiater", S.childPsychiatry),
+            ("child psychiatrist", S.childPsychiatry),
+            ("dermatolog", S.dermatology),
+            ("hudläkare", S.dermatology),
+            ("dermatologist", S.dermatology),
+            ("endokrinolog", S.endocrinology),
+            ("endocrinologist", S.endocrinology),
+            ("diabetolog", S.endocrinology),
+            ("geriatriker", S.geriatrics),
+            ("geriatrician", S.geriatrics),
+            ("gastroenterolog", S.gastroenterology),
+            ("gastroenterologist", S.gastroenterology),
+            ("hematolog", S.haematology),
+            ("hematologist", S.haematology),
+            ("haematologist", S.haematology),
+            ("infektionsläkare", S.infectiousDiseases),
+            ("internmedicinare", S.internalMedicine),
+            ("internist", S.internalMedicine),
+            ("kardiolog", S.cardiology),
+            ("cardiologist", S.cardiology),
+            ("kirurg", S.surgery),
+            ("surgeon", S.surgery),
+            ("lungläkare", S.respiratoryMedicine),
+            ("pulmonologist", S.respiratoryMedicine),
+            ("neurolog", S.neurology),
+            ("neurologist", S.neurology),
+            ("nefrolog", S.nephrology),
+            ("njurläkare", S.nephrology),
+            ("nephrologist", S.nephrology),
+            ("gynekolog", S.obstetrics),
+            ("obstetriker", S.obstetrics),
+            ("gynecologist", S.obstetrics),
+            ("gynaecologist", S.obstetrics),
+            ("obstetrician", S.obstetrics),
+            ("onkolog", S.oncology),
+            ("oncologist", S.oncology),
+            ("ortoped", S.orthopaedics),
+            ("orthopaedic surgeon", S.orthopaedics),
+            ("orthopedic surgeon", S.orthopaedics),
+            ("psykiater", S.psychiatry),
+            ("psychiatrist", S.psychiatry),
+            ("radiolog", S.radiology),
+            ("radiologist", S.radiology),
+            ("reumatolog", S.rheumatology),
+            ("rheumatologist", S.rheumatology),
+            ("thoraxkirurg", S.thoracicSurgery),
+            ("thoracic surgeon", S.thoracicSurgery),
+            ("urolog", S.urology),
+            ("urologist", S.urology),
+            ("ögonläkare", S.ophthalmology),
+            ("ophthalmologist", S.ophthalmology),
+            ("öronläkare", S.otorhinolaryngology),
+            ("önh läkare", S.otorhinolaryngology),
+            ("otolaryngologist", S.otorhinolaryngology),
+            ("otorhinolaryngologist", S.otorhinolaryngology),
+            ("patolog", S.clinicalPathology),
+            ("pathologist", S.clinicalPathology),
+        ]
+        for noun in nouns {
+            rows.append((noun.0, noun.1, true))
+        }
+        return rows
+            .map { SpecialtySynonym(tokens: specialtyTokens($0.0), specialtyID: $0.1, impliesSpecialist: $0.2) }
+            .filter { !$0.tokens.isEmpty }
+            .sorted { lhs, rhs in
+                if lhs.tokens.count != rhs.tokens.count {
+                    return lhs.tokens.count > rhs.tokens.count
+                }
+                return lhs.tokens.joined().count > rhs.tokens.joined().count
+            }
+    }
+
+    /// Orden i jämförelseform, utan skiljetecken och parenteser.
+    private static func specialtyTokens(_ text: String) -> [String] {
+        normalizedKey(text)
+            .split(separator: " ")
+            .map { String($0).trimmingCharacters(in: CharacterSet(charactersIn: ",;:()[]/")) }
+            .filter { !$0.isEmpty }
+    }
+
+    private static func containsSequence(_ needle: [String], in haystack: [String]) -> Bool {
+        guard !needle.isEmpty, needle.count <= haystack.count else { return false }
+        for start in 0...(haystack.count - needle.count) {
+            if Array(haystack[start..<(start + needle.count)]) == needle {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Första specialitet som nämns någonstans i texten (hela ord).
+    static func specialtyMatch(in text: String) -> SpecialtyMatch? {
+        let tokens = specialtyTokens(text)
+        guard !tokens.isEmpty else { return nil }
+        for synonym in cachedSpecialtySynonyms where containsSequence(synonym.tokens, in: tokens) {
+            return SpecialtyMatch(specialtyID: synonym.specialtyID, impliesSpecialist: synonym.impliesSpecialist)
+        }
+        return nil
+    }
+
+    /// En text som bara är en specialitet ("geriatriker", "Kirurg",
+    /// "i allmänmedicin") och inget annat; annars nil.
+    static func looseSpecialty(in text: String) -> SpecialtyMatch? {
+        var tokens = specialtyTokens(text)
+        while let first = tokens.first, connectorWords.contains(first) {
+            tokens.removeFirst()
+        }
+        guard !tokens.isEmpty else { return nil }
+        for synonym in cachedSpecialtySynonyms where synonym.tokens == tokens {
+            return SpecialtyMatch(specialtyID: synonym.specialtyID, impliesSpecialist: synonym.impliesSpecialist)
+        }
+        return nil
+    }
+
+    /// Specialitetsnamn med "och", "and" eller komma ("Obstetrik och
+    /// gynekologi", "Öron-, näs- och halssjukdomar") byts mot en markör
+    /// innan texten delas, så att namnet inte delas mitt i.
+    static func protectingSpecialtyNames(_ text: String) -> (text: String, placeholders: [(marker: String, original: String)]) {
+        var names: [String] = []
+        for option in ResearcherSpecialtyOption.builtInOptions {
+            names.append(option.nameSv)
+            names.append(option.nameEn)
+        }
+        names.append("ear, nose and throat")
+        names.append("ear nose and throat")
+        names.append("obstetrics and gynecology")
+        names.append("anesthesia and intensive care")
+        let splitting: [String] = names
+            .filter { name in
+                let lowered = name.lowercased()
+                return lowered.contains(" och ") || lowered.contains(" and ") || lowered.contains(",") || lowered.contains("/")
+            }
+            .sorted { $0.count > $1.count }
+        var result = text
+        var placeholders: [(marker: String, original: String)] = []
+        for name in splitting {
+            while let range = result.range(of: name, options: [.caseInsensitive, .diacriticInsensitive]) {
+                let marker = "\u{E000}\(placeholders.count)\u{E001}"
+                placeholders.append((marker: marker, original: String(result[range])))
+                result.replaceSubrange(range, with: marker)
+            }
+        }
+        return (text: result, placeholders: placeholders)
+    }
+
+    static func restoringSpecialtyNames(_ text: String, placeholders: [(marker: String, original: String)]) -> String {
+        guard !placeholders.isEmpty else { return text }
+        var result = text
+        for placeholder in placeholders {
+            result = result.replacingOccurrences(of: placeholder.marker, with: placeholder.original)
+        }
+        return result
+    }
+
+    /// "Annan"-texten för befattning delad i delar (vid komma, semikolon,
+    /// snedstreck), utan att dela specialitetsnamn.
+    static func otherPositionParts(_ text: String) -> [String] {
+        let protected = protectingSpecialtyNames(text)
+        return splitParts(protected.text, splitsOnWords: false)
+            .map { restoringSpecialtyNames($0, placeholders: protected.placeholders) }
+    }
+
+    /// Engångssteget "round20b": forskare som redan har en läkarbefattning
+    /// (ST-läkare, Specialistläkare, Överläkare) utan specialitet får den ur
+    /// den gamla befattningstexten eller ur "annan"-texten. En del av
+    /// "annan"-texten som är helt förklarad av det nya valet ("geriatriker",
+    /// "Kirurg") flyttas ut därifrån; annat lämnas orört. Står ett
+    /// specialistord ensamt i "annan"-texten och forskaren saknar
+    /// läkarbefattning, blir det Specialistläkare med den specialiteten (som
+    /// vid flytten från fritext). Den gamla texten, karriärsteget och
+    /// doktorsexamen ändras aldrig. Att köra den igen ändrar ingenting.
+    static func migratedSpecialties(_ author: PublicationAuthor) -> PublicationAuthor {
+        let physicianSet = ResearcherPositionOption.specialtyPositionIDs
+        var updated = author
+        var newlyAssigned = Set<String>()
+
+        func physicians() -> [String] {
+            updated.positionIDs.filter { physicianSet.contains($0) }
+        }
+        func lacking() -> [String] {
+            physicians().filter { updated.positionSpecialtyIDs[$0]?.trimmedOrNil == nil }
+        }
+
+        // 1. The old position text, e.g. "Specialistläkare i allmänmedicin".
+        if !lacking().isEmpty {
+            let swedishText = author.positionSv.trimmingCharacters(in: .whitespacesAndNewlines)
+            let englishText = author.positionEn.trimmingCharacters(in: .whitespacesAndNewlines)
+            var findings: [String: String] = mapPositionText(swedishText).specialtyIDs
+            if normalizedKey(englishText) != normalizedKey(swedishText) {
+                for (positionID, specialtyID) in mapPositionText(englishText).specialtyIDs where findings[positionID] == nil {
+                    findings[positionID] = specialtyID
+                }
+            }
+            for positionID in lacking() {
+                if let specialtyID = findings[positionID] {
+                    updated.positionSpecialtyIDs[positionID] = specialtyID
+                    newlyAssigned.insert(specialtyID)
+                }
+            }
+        }
+
+        // 2. The "other" text: a part that is only a specialty.
+        for isSwedish in [true, false] {
+            let original = isSwedish ? updated.positionOtherSv : updated.positionOtherEn
+            guard original.trimmedOrNil != nil else { continue }
+            var kept: [String] = []
+            var removedAny = false
+            for part in otherPositionParts(original) {
+                guard let loose = looseSpecialty(in: part) else {
+                    kept.append(part)
+                    continue
+                }
+                let currentLacking = lacking()
+                let currentPhysicians = physicians()
+                let alreadyExplained = newlyAssigned.contains(loose.specialtyID)
+                    && currentPhysicians.contains(where: { updated.positionSpecialtyIDs[$0] == loose.specialtyID })
+                if currentLacking.count == 1 {
+                    updated.positionSpecialtyIDs[currentLacking[0]] = loose.specialtyID
+                    newlyAssigned.insert(loose.specialtyID)
+                    removedAny = true
+                } else if currentLacking.isEmpty && alreadyExplained {
+                    // Already explained by the specialty chosen in this step.
+                    removedAny = true
+                } else if currentPhysicians.isEmpty && loose.impliesSpecialist {
+                    let specialistID = ResearcherPositionOption.BuiltInID.specialistPhysician
+                    updated.positionIDs.append(specialistID)
+                    updated.positionSpecialtyIDs[specialistID] = loose.specialtyID
+                    newlyAssigned.insert(loose.specialtyID)
+                    removedAny = true
+                } else {
+                    kept.append(part)
+                }
+            }
+            if removedAny {
+                let rebuilt = kept.joined(separator: ", ")
+                if isSwedish {
+                    updated.positionOtherSv = rebuilt
+                } else {
+                    updated.positionOtherEn = rebuilt
+                }
+            }
+        }
+        return updated
+    }
+}
+
+// MARK: - Datakvalitet: rätta text utanför listorna
+
+extension ResearcherLegacyFieldMapping {
+    /// True när delen av "annan"-texten helt motsvarar befattningen: samma
+    /// namn som i listan, eller exakt ett känt namn för den.
+    static func positionPart(_ part: String, isExplainedBy option: ResearcherPositionOption) -> Bool {
+        let key = normalizedKey(part)
+        guard !key.isEmpty else { return false }
+        if key == normalizedKey(option.nameSv) || key == normalizedKey(option.nameEn) {
+            return true
+        }
+        return positionSynonyms().contains { $0.phrase == key && $0.ids == [option.id] }
+    }
+
+    /// True när texten helt motsvarar examen: samma namn eller förkortning
+    /// som i listan, eller exakt en känd examen utan rest.
+    static func degreeText(_ text: String, isExplainedBy option: ResearcherDegreeOption) -> Bool {
+        let key = normalizedKey(text)
+        guard !key.isEmpty else { return false }
+        let names = [option.nameSv, option.nameEn, option.abbreviation]
+            .map { normalizedKey($0) }
+            .filter { !$0.isEmpty }
+        if names.contains(key) {
+            return true
+        }
+        let mapped = mapDegreeText(text)
+        return mapped.unmappedParts.isEmpty
+            && mapped.matches.count == 1
+            && mapped.matches[0].optionID == option.id
+    }
+
+    /// En "annan examen"-rad som får ett val ur listan. Texten tappas aldrig
+    /// i tysthet: har examen ett ämne blir resten av texten ämnet (eller
+    /// hela texten när det är osäkert); utan ämne töms texten bara när den
+    /// helt motsvarar examen, annars ligger den kvar på raden (syns igen om
+    /// raden görs till "Annan examen…").
+    static func degreeEntry(_ entry: ResearcherDegreeEntry, choosing option: ResearcherDegreeOption) -> ResearcherDegreeEntry {
+        var updated = entry
+        updated.optionID = option.id
+        let text = entry.otherText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return updated }
+        let explained = degreeText(text, isExplainedBy: option)
+        if option.takesSubject {
+            var subject = text
+            if explained {
+                let mapped = mapDegreeText(text)
+                subject = mapped.matches.first(where: { $0.optionID == option.id })?.subject ?? ""
+            }
+            if updated.subjectSv.trimmedOrNil == nil {
+                updated.subjectSv = subject
+            }
+            if updated.subjectEn.trimmedOrNil == nil {
+                updated.subjectEn = subject
+            }
+            let subjectKept = normalizedKey(updated.subjectSv) == normalizedKey(subject)
+                || normalizedKey(updated.subjectEn) == normalizedKey(subject)
+            if explained || subjectKept {
+                updated.otherText = ""
+            }
+        } else if explained {
+            updated.otherText = ""
+        }
         return updated
     }
 }

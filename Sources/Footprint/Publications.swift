@@ -973,6 +973,9 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
     /// Examina valda ur listan, med ämne eller fri text. Tom = inget val;
     /// då visas den gamla texten i degreeSv/En.
     var degreeEntries: [ResearcherDegreeEntry]
+    /// Läkarspecialitet per befattning (befattningens id -> specialitetens id),
+    /// för ST-läkare, Specialistläkare och Överläkare. Tom = ingen vald.
+    var positionSpecialtyIDs: [String: String]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -1019,6 +1022,7 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         case positionOtherEn
         case isDocent
         case degreeEntries
+        case positionSpecialtyIDs
         case publicationCount
         case country
         case primaryAffiliation
@@ -1068,7 +1072,8 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         positionOtherSv: String = "",
         positionOtherEn: String = "",
         isDocent: Bool = false,
-        degreeEntries: [ResearcherDegreeEntry] = []
+        degreeEntries: [ResearcherDegreeEntry] = [],
+        positionSpecialtyIDs: [String: String] = [:]
     ) {
         self.id = id
         self.name = name
@@ -1113,6 +1118,7 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         self.positionOtherEn = positionOtherEn
         self.isDocent = isDocent
         self.degreeEntries = degreeEntries
+        self.positionSpecialtyIDs = positionSpecialtyIDs
         normalize()
     }
 
@@ -1183,7 +1189,8 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
             positionOtherSv: (try? container.decodeIfPresent(String.self, forKey: .positionOtherSv)) ?? "",
             positionOtherEn: (try? container.decodeIfPresent(String.self, forKey: .positionOtherEn)) ?? "",
             isDocent: (try? container.decodeIfPresent(Bool.self, forKey: .isDocent)) ?? false,
-            degreeEntries: (try? container.decodeIfPresent([ResearcherDegreeEntry].self, forKey: .degreeEntries)) ?? []
+            degreeEntries: (try? container.decodeIfPresent([ResearcherDegreeEntry].self, forKey: .degreeEntries)) ?? [],
+            positionSpecialtyIDs: (try? container.decodeIfPresent([String: String].self, forKey: .positionSpecialtyIDs)) ?? [:]
         )
         // Om nyckeln finns men är null eller tom text betyder det "inget karriärsteg".
         // Saknas nyckeln helt (äldre data) behålls det föreslagna steget från init ovan.
@@ -1271,6 +1278,9 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         if !degreeEntries.isEmpty {
             try container.encode(degreeEntries, forKey: .degreeEntries)
         }
+        if !positionSpecialtyIDs.isEmpty {
+            try container.encode(positionSpecialtyIDs, forKey: .positionSpecialtyIDs)
+        }
     }
 
     mutating func normalize() {
@@ -1351,6 +1361,7 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         positionIDs = positionIDs.compactMap(\.trimmedOrNil).uniqued()
         positionOtherSv = positionOtherSv.trimmingCharacters(in: .whitespacesAndNewlines)
         positionOtherEn = positionOtherEn.trimmingCharacters(in: .whitespacesAndNewlines)
+        positionSpecialtyIDs = Self.normalizedPositionSpecialtyIDs(positionSpecialtyIDs, positionIDs: positionIDs)
         // Tomma examensrader tas inte bort här: redigeraren lägger till en tom
         // rad för "Annan examen" som ska finnas kvar medan texten skrivs.
         for index in degreeEntries.indices {
@@ -1367,6 +1378,19 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
                 affiliations[index].isPrimary = false
             }
         }
+    }
+
+    /// Specialiteter bara för befattningar som är valda; tomma id:n tas bort.
+    static func normalizedPositionSpecialtyIDs(_ map: [String: String], positionIDs: [String]) -> [String: String] {
+        guard !map.isEmpty else { return map }
+        var result: [String: String] = [:]
+        for (rawPositionID, rawSpecialtyID) in map {
+            guard let positionID = rawPositionID.trimmedOrNil,
+                  let specialtyID = rawSpecialtyID.trimmedOrNil,
+                  positionIDs.contains(positionID) else { continue }
+            result[positionID] = specialtyID
+        }
+        return result
     }
 
     private static func strippingPhD(from raw: String) -> (String, Bool) {

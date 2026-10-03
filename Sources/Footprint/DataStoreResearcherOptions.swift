@@ -78,3 +78,44 @@ extension GrantDataStore {
         )
     }
 }
+
+/// Inställningar > Listor: läkarspecialiteter (för ST-läkare, Specialistläkare
+/// och Överläkare). Samma mönster som befattningar och examina.
+extension GrantDataStore {
+    var researcherSpecialtyOptions: [ResearcherSpecialtyOption] {
+        ResearcherSpecialtyOption.resolvedOptions(metadata.researcherSpecialtyOptions)
+    }
+
+    /// Hur många forskare som har varje specialitet vald (id → antal).
+    func researcherSpecialtyOptionUsageCounts() -> [String: Int] {
+        var counts: [String: Int] = [:]
+        for author in publicationAuthors {
+            for id in Set(author.positionSpecialtyIDs.values) {
+                counts[id, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
+    /// Sparar specialitetslistan (kan ångras). En specialitet som någon
+    /// forskare har vald tas aldrig bort, även om den saknas i den nya listan.
+    func autosaveResearcherSpecialtyOptions(_ options: [ResearcherSpecialtyOption]) {
+        var normalized = ResearcherSpecialtyOption.normalizedList(options)
+        let usage = researcherSpecialtyOptionUsageCounts()
+        for option in researcherSpecialtyOptions where (usage[option.id] ?? 0) > 0 {
+            if !normalized.contains(where: { $0.id == option.id }) {
+                var kept = option
+                kept.sortOrder = normalized.count
+                normalized.append(kept)
+            }
+        }
+        guard normalized != researcherSpecialtyOptions else { return }
+        var updated = editableMetadataSnapshot
+        updated.researcherSpecialtyOptions = normalized
+        guard updated != editableMetadataSnapshot else { return }
+        persistMetadataSilently(
+            updated,
+            undoActionName: language.text("Edit specialties list", "Redigera listan med specialiteter")
+        )
+    }
+}

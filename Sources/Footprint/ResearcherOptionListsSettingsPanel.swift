@@ -8,10 +8,12 @@ struct ResearcherOptionListsSettingsPanel: View {
 
     @State private var positions: [ResearcherPositionOption] = []
     @State private var degrees: [ResearcherDegreeOption] = []
+    @State private var specialties: [ResearcherSpecialtyOption] = []
     @State private var hasLoaded = false
     @State private var saveTask: Task<Void, Never>?
     @State private var pendingPositionDeletionID: String?
     @State private var pendingDegreeDeletionID: String?
+    @State private var pendingSpecialtyDeletionID: String?
 
     private var language: AppLanguage { store.language }
 
@@ -19,10 +21,12 @@ struct ResearcherOptionListsSettingsPanel: View {
         VStack(alignment: .leading, spacing: 18) {
             positionsCard
             degreesCard
+            specialtiesSection
         }
         .onAppear(perform: load)
         .onChange(of: positions) { _, _ in scheduleSave() }
         .onChange(of: degrees) { _, _ in scheduleSave() }
+        .onChange(of: specialties) { _, _ in scheduleSave() }
         .onDisappear {
             saveTask?.cancel()
             if hasLoaded {
@@ -341,6 +345,139 @@ struct ResearcherOptionListsSettingsPanel: View {
         }
     }
 
+    // MARK: Läkarspecialiteter
+
+    private var specialtiesSection: some View {
+        specialtiesCard
+            .alert(
+                language.text("Delete specialty?", "Radera specialiteten?"),
+                isPresented: specialtyDeletionAlertBinding,
+                actions: {
+                    Button(language.text("Cancel", "Avbryt"), role: .cancel) {
+                        pendingSpecialtyDeletionID = nil
+                    }
+                    Button(language.text("Delete", "Radera"), role: .destructive) {
+                        if let id = pendingSpecialtyDeletionID {
+                            deleteSpecialty(id: id)
+                        }
+                        pendingSpecialtyDeletionID = nil
+                    }
+                },
+                message: {
+                    Text(language.text(
+                        "No researcher uses this specialty. It is removed from the list.",
+                        "Ingen forskare har den här specialiteten. Den tas bort ur listan."
+                    ))
+                }
+            )
+    }
+
+    private var specialtyDeletionAlertBinding: Binding<Bool> {
+        Binding(
+            get: { pendingSpecialtyDeletionID != nil },
+            set: { if !$0 { pendingSpecialtyDeletionID = nil } }
+        )
+    }
+
+    private var specialtiesCard: some View {
+        let usage: [String: Int] = store.researcherSpecialtyOptionUsageCounts()
+        return AppSettingsCard(padding: 18) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(language.text("Physician specialties", "Läkarspecialiteter"))
+                    .appTypography(.sectionTitle)
+                SettingsEffectNote(language.text(
+                    "Affects: the specialty you can choose for the positions Resident Physician, Specialist Physician and Senior Consultant, and how the position is written in lists and exports (e.g. Specialist Physician, General Practice). Renaming changes the text everywhere. Hidden specialties are not offered for new choices but stay on researchers who have them. A specialty can only be deleted when no researcher has it.",
+                    "Påverkar: vilken specialitet du kan välja för befattningarna ST-läkare, Specialistläkare och Överläkare, och hur befattningen skrivs i listor och exporter (t.ex. Specialistläkare i allmänmedicin). Ett nytt namn ändrar texten överallt. Dolda specialiteter erbjuds inte för nya val men ligger kvar på forskare som har dem. En specialitet kan bara raderas när ingen forskare har den."
+                ))
+                specialtyHeaderRow
+                ForEach(Array(specialties.enumerated()), id: \.element.id) { index, option in
+                    specialtyRow(index: index, option: option, usageCount: usage[option.id] ?? 0)
+                }
+                Button {
+                    specialties.append(ResearcherSpecialtyOption(sortOrder: specialties.count))
+                } label: {
+                    Label(language.text("Add specialty", "Lägg till specialitet"), systemImage: "plus")
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+    }
+
+    private var specialtyHeaderRow: some View {
+        HStack(spacing: 8) {
+            Spacer().frame(width: 44)
+            columnHeader(language.text("Swedish", "Svenska"), width: 260)
+            columnHeader(language.text("English", "Engelska"), width: 260)
+            columnHeader(language.text("Hidden", "Dold"), width: 50)
+            columnHeader(language.text("Used by", "Används av"), width: 80)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func specialtyRow(index: Int, option: ResearcherSpecialtyOption, usageCount: Int) -> some View {
+        HStack(spacing: 8) {
+            moveButtons(
+                canMoveUp: index > 0,
+                canMoveDown: index < specialties.count - 1,
+                moveUp: { moveSpecialty(from: index, by: -1) },
+                moveDown: { moveSpecialty(from: index, by: 1) }
+            )
+            TextField(language.text("Swedish name", "Svenskt namn"), text: specialtyTextBinding(index: index, keyPath: \.nameSv))
+                .appTextInputChrome()
+                .frame(width: 260)
+            TextField(language.text("English name", "Engelskt namn"), text: specialtyTextBinding(index: index, keyPath: \.nameEn))
+                .appTextInputChrome()
+                .frame(width: 260)
+            Toggle("", isOn: specialtyHiddenBinding(index: index))
+                .appCheckboxStyle()
+                .labelsHidden()
+                .frame(width: 50, alignment: .leading)
+                .help(language.text("Hide from new choices", "Dölj för nya val"))
+            usageText(usageCount)
+            deleteButton(usageCount: usageCount) {
+                pendingSpecialtyDeletionID = option.id
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func specialtyTextBinding(index: Int, keyPath: WritableKeyPath<ResearcherSpecialtyOption, String>) -> Binding<String> {
+        Binding(
+            get: { specialties.indices.contains(index) ? specialties[index][keyPath: keyPath] : "" },
+            set: { newValue in
+                guard specialties.indices.contains(index) else { return }
+                specialties[index][keyPath: keyPath] = newValue
+            }
+        )
+    }
+
+    private func specialtyHiddenBinding(index: Int) -> Binding<Bool> {
+        Binding(
+            get: { specialties.indices.contains(index) ? specialties[index].isHidden : false },
+            set: { newValue in
+                guard specialties.indices.contains(index) else { return }
+                specialties[index].isHidden = newValue
+            }
+        )
+    }
+
+    private func moveSpecialty(from index: Int, by offset: Int) {
+        let target = index + offset
+        guard specialties.indices.contains(index), specialties.indices.contains(target) else { return }
+        specialties.swapAt(index, target)
+        for position in specialties.indices {
+            specialties[position].sortOrder = position
+        }
+    }
+
+    private func deleteSpecialty(id: String) {
+        guard (store.researcherSpecialtyOptionUsageCounts()[id] ?? 0) == 0 else { return }
+        specialties.removeAll { $0.id == id }
+        for position in specialties.indices {
+            specialties[position].sortOrder = position
+        }
+    }
+
     // MARK: Delade delar
 
     private func columnHeader(_ title: String, width: CGFloat) -> some View {
@@ -395,6 +532,7 @@ struct ResearcherOptionListsSettingsPanel: View {
     private func load() {
         positions = store.researcherPositionOptions
         degrees = store.researcherDegreeOptions
+        specialties = store.researcherSpecialtyOptions
         hasLoaded = true
     }
 
@@ -411,5 +549,6 @@ struct ResearcherOptionListsSettingsPanel: View {
     private func saveNow() {
         store.autosaveResearcherPositionOptions(positions)
         store.autosaveResearcherDegreeOptions(degrees)
+        store.autosaveResearcherSpecialtyOptions(specialties)
     }
 }

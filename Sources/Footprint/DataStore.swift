@@ -597,7 +597,8 @@ final class GrantDataStore: ObservableObject {
             WorkflowDefaultSettingsRegistry.update(from: metadata)
             ResearcherOptionRegistry.update(from: metadata)
             if oldValue.researcherPositionOptions != metadata.researcherPositionOptions
-                || oldValue.researcherDegreeOptions != metadata.researcherDegreeOptions {
+                || oldValue.researcherDegreeOptions != metadata.researcherDegreeOptions
+                || oldValue.researcherSpecialtyOptions != metadata.researcherSpecialtyOptions {
                 // Researchers store the options' ids; a renamed option shows
                 // its new name in the lists, the search and the Data view.
                 invalidateWorkspaceSearchCache()
@@ -20809,6 +20810,7 @@ final class GrantDataStore: ObservableObject {
         didChange = runRound10OneTimeDataMigrations() || didChange
         didChange = runRound11OneTimeDataMigrations() || didChange
         didChange = runResearcherOptionListMigration() || didChange
+        didChange = runResearcherSpecialtyMigration() || didChange
         didChange = normalizeConferenceContributionsForRound1() || didChange
         didChange = clearPlaceholderProjectNames() || didChange
         didChange = ensureManagedPublicationPDFAttachmentsStored() || didChange
@@ -23235,7 +23237,8 @@ final class GrantDataStore: ObservableObject {
         if current.positionSv != target.positionSv || current.positionEn != target.positionEn { return "position" }
         if current.positionIDs != target.positionIDs
             || current.positionOtherSv != target.positionOtherSv
-            || current.positionOtherEn != target.positionOtherEn { return "position" }
+            || current.positionOtherEn != target.positionOtherEn
+            || current.positionSpecialtyIDs != target.positionSpecialtyIDs { return "position" }
         if current.degreeSv != target.degreeSv || current.degreeEn != target.degreeEn { return "degree" }
         if current.degreeEntries != target.degreeEntries { return "degree" }
         if current.gender != target.gender { return "gender" }
@@ -30211,6 +30214,45 @@ extension GrantDataStore {
         rebuildPublicationAuthorLookupCaches()
         rebuildPublicationAuthorRowSnapshots()
         appendStartupDiagnostic("migration:researcherPositionDegreeLists changed=\(changed)")
+        return true
+    }
+}
+
+extension GrantDataStore {
+    /// One-time (round 20b): researchers with ST-läkare, Specialistläkare or
+    /// Överläkare get the physician specialty from the written position text
+    /// (see `ResearcherLegacyFieldMapping.migratedSpecialties`). Run once per
+    /// database and recorded in the migration log. Called from
+    /// `migrateRecordsIfNeeded()` after the list migration.
+    @discardableResult
+    func runResearcherSpecialtyMigration() -> Bool {
+        runRound7MigrationOnce(
+            key: "round20b-physician-specialties",
+            details: "Physicians' specialties are read from the written position text. A part of the \"other\" position text that is fully explained by the chosen specialty is moved out of it. The written text, career stage and PhD are not changed."
+        ) {
+            migrateResearcherPhysicianSpecialties()
+        }
+    }
+
+    /// Fills missing specialties for every researcher; only the position
+    /// choices, their specialties and the "other" text change. Running it
+    /// again changes nothing. Returns true when a researcher changed.
+    @discardableResult
+    func migrateResearcherPhysicianSpecialties() -> Bool {
+        var updated = publicationAuthors
+        var changed = 0
+        for index in updated.indices {
+            let migrated = ResearcherLegacyFieldMapping.migratedSpecialties(updated[index])
+            guard migrated != updated[index] else { continue }
+            updated[index] = migrated
+            changed += 1
+        }
+        // A migration must never lose a record.
+        guard changed > 0, updated.count == publicationAuthors.count else { return false }
+        publicationAuthors = updated
+        rebuildPublicationAuthorLookupCaches()
+        rebuildPublicationAuthorRowSnapshots()
+        appendStartupDiagnostic("migration:researcherPhysicianSpecialties changed=\(changed)")
         return true
     }
 }

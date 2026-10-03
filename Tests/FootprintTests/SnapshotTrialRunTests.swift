@@ -1244,4 +1244,69 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round20-researcher-position-degree-lists" })
         XCTAssertFalse(reloaded.migrateResearcherPositionsAndDegreesToLists(), "running the step again changes nothing")
     }
+
+    /// Läkarspecialiteter (round 20b): hur många forskare som fick en
+    /// specialitet och hur många som har varje specialitet. Bara antal skrivs
+    /// ut, inga namn eller värden. Den gamla texten, karriärsteget och
+    /// doktorsexamen får inte ändras, och ingen post får försvinna eller
+    /// tillkomma.
+    @MainActor
+    func testSnapshotPhysicianSpecialtiesKeepEveryRecord() throws {
+        let storedAuthors = try Self.storedResearchers()
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let countsBefore = Self.recordCounts(store)
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: Specialiteter \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+
+        let authors = reloaded.publicationAuthors
+        let physicianIDs = ResearcherPositionOption.specialtyPositionIDs
+        let physicians = authors.filter { author in author.positionIDs.contains { physicianIDs.contains($0) } }
+        let withSpecialty = authors.filter { !$0.positionSpecialtyIDs.isEmpty }
+        let lacking = physicians.filter { author in
+            author.positionIDs.contains { physicianIDs.contains($0) && author.positionSpecialtyIDs[$0] == nil }
+        }
+        print("SNAPSHOT: Specialiteter forskare: sparat \(storedAuthors.count), efter \(authors.count)")
+        print("SNAPSHOT: Specialiteter forskare med läkarbefattning: \(physicians.count)")
+        print("SNAPSHOT: Specialiteter forskare med specialitet: \(withSpecialty.count)")
+        print("SNAPSHOT: Specialiteter forskare med läkarbefattning utan specialitet: \(lacking.count)")
+        print("SNAPSHOT: Specialiteter forskare med befattning utanför listan: \(authors.filter { $0.positionOtherSv.trimmedOrNil != nil || $0.positionOtherEn.trimmedOrNil != nil }.count)")
+        let usage = reloaded.researcherSpecialtyOptionUsageCounts()
+        for option in reloaded.researcherSpecialtyOptions {
+            print("SNAPSHOT: Specialiteter specialitet \(option.id): \(usage[option.id] ?? 0) forskare")
+        }
+        let positionUsage = reloaded.researcherPositionOptionUsageCounts()
+        for positionID in physicianIDs.sorted() {
+            print("SNAPSHOT: Specialiteter befattning \(positionID): \(positionUsage[positionID] ?? 0) forskare")
+        }
+
+        // The written text, career stage and PhD are exactly as stored.
+        let storedByID = Dictionary(storedAuthors.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var changedText = 0
+        var changedStage = 0
+        var changedPhD = 0
+        for author in authors {
+            guard let stored = storedByID[author.id] else { continue }
+            if [stored.positionSv, stored.positionEn, stored.degreeSv, stored.degreeEn, stored.titleSv, stored.titleEn]
+                != [author.positionSv, author.positionEn, author.degreeSv, author.degreeEn, author.titleSv, author.titleEn] {
+                changedText += 1
+            }
+            if stored.careerStage != author.careerStage { changedStage += 1 }
+            if stored.hasPhD != author.hasPhD { changedPhD += 1 }
+        }
+        print("SNAPSHOT: Specialiteter ändrad fritext: \(changedText), ändrat karriärsteg: \(changedStage), ändrad doktorsexamen: \(changedPhD)")
+        XCTAssertEqual(changedText, 0, "the written text is kept")
+        XCTAssertEqual(changedStage, 0, "the career stage is not changed")
+        XCTAssertEqual(changedPhD, 0, "PhD is not changed")
+        XCTAssertEqual(Set(storedAuthors.map(\.id)), Set(authors.map(\.id)), "no researcher is lost or added")
+        XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round20b-physician-specialties" })
+        XCTAssertFalse(reloaded.migrateResearcherPhysicianSpecialties(), "running the step again changes nothing")
+    }
 }
