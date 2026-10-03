@@ -6529,7 +6529,7 @@ final class GrantDataStore: ObservableObject {
                 language == .swedish ? (author.titleSv.nonEmpty ?? author.titleEn) : (author.titleEn.nonEmpty ?? author.titleSv),
                 language == .swedish ? (author.positionSv.nonEmpty ?? author.positionEn) : (author.positionEn.nonEmpty ?? author.positionSv),
                 language == .swedish ? (author.degreeSv.nonEmpty ?? author.degreeEn) : (author.degreeEn.nonEmpty ?? author.degreeSv),
-                author.careerStage.rawValue,
+                author.careerStage?.rawValue ?? "",
                 projectWorkbookYesNo(author.hasPhD, language: language),
                 author.gender.displayName(language: language),
                 primary?.localizedOrganization(language: language) ?? "",

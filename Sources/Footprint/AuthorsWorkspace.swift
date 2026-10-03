@@ -4032,7 +4032,7 @@ private struct PublicationAuthorEditorView: View {
         .appKeyboardFocusPulse(isFocused: careerStageIsFocused, cornerRadius: 10)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(language.text("Career stage (Frascati 2015)", "Karriärsteg (Frascati 2015)"))
-        .accessibilityValue(draft.careerStage.rawValue)
+        .accessibilityValue(draft.careerStage?.rawValue ?? language.text("None", "Inget"))
         .accessibilityAdjustableAction { direction in
             moveCareerStageSelection(by: direction == .increment ? 1 : -1)
         }
@@ -4041,7 +4041,12 @@ private struct PublicationAuthorEditorView: View {
     private func moveCareerStageSelection(by offset: Int) {
         let stages = PublicationAuthorCareerStage.editorDisplayOrder
         guard !stages.isEmpty else { return }
-        let currentIndex = stages.firstIndex(of: draft.careerStage) ?? 0
+        // Inget steg valt: börja på första steget oavsett riktning.
+        guard let currentStage = draft.careerStage,
+              let currentIndex = stages.firstIndex(of: currentStage) else {
+            draft.careerStage = stages[0]
+            return
+        }
         draft.careerStage = stages[min(max(0, currentIndex + offset), stages.count - 1)]
     }
 
@@ -4050,7 +4055,8 @@ private struct PublicationAuthorEditorView: View {
         let isSelected = draft.careerStage == stage
 
         Button {
-            draft.careerStage = stage
+            // Klick på det redan valda steget avmarkerar det (inget karriärsteg).
+            draft.careerStage = isSelected ? nil : stage
         } label: {
             ZStack {
                 if isSelected {

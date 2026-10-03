@@ -433,22 +433,37 @@ enum PublicationAuthorCareerStage: String, Codable, Hashable, CaseIterable, Iden
 
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        let rawValue = (try? container.decode(String.self))?
+        let rawValue = (try? container.decode(String.self)) ?? ""
+        self = Self.storedStage(from: rawValue) ?? .categoryB
+    }
+
+    /// Tolkar ett sparat karriärsteg. Tom text betyder "inget karriärsteg" (nil).
+    /// Okänd icke-tom text faller tillbaka på B, precis som tidigare, så att
+    /// befintlig data inte ändras.
+    static func storedStage(from storedValue: String) -> PublicationAuthorCareerStage? {
+        let rawValue = storedValue
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased() ?? ""
+            .lowercased()
 
         switch rawValue {
+        case "":
+            return nil
         case "a", "categorya", "category a":
-            self = .categoryA
+            return .categoryA
         case "b", "categoryb", "category b":
-            self = .categoryB
+            return .categoryB
         case "c", "categoryc", "category c":
-            self = .categoryC
+            return .categoryC
         case "d", "categoryd", "category d":
-            self = .categoryD
+            return .categoryD
         default:
-            self = .categoryB
+            return .categoryB
         }
+    }
+
+    /// Text för visning/sortering när karriärsteg kan saknas.
+    static func displayText(for stage: PublicationAuthorCareerStage?) -> String {
+        stage?.rawValue ?? "–"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -926,7 +941,8 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
     var degreeEn: String
     var gender: PublicationAuthorGender
     var hasPhD: Bool
-    var careerStage: PublicationAuthorCareerStage
+    /// nil betyder att inget karriärsteg är valt (t.ex. läkarstudent som inte är doktorand).
+    var careerStage: PublicationAuthorCareerStage?
     var university: String
     var phoneLabel: String
     var phoneNumber: String
@@ -1136,6 +1152,24 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
             educationEntries: try container.decodeIfPresent([PublicationAuthorEducation].self, forKey: .educationEntries) ?? [],
             publications: try container.decodeIfPresent([PublicationAuthorContribution].self, forKey: .publications) ?? []
         )
+        // Om nyckeln finns men är null eller tom text betyder det "inget karriärsteg".
+        // Saknas nyckeln helt (äldre data) behålls det föreslagna steget från init ovan.
+        if container.contains(.careerStage) {
+            self.careerStage = Self.decodeStoredCareerStage(from: container)
+        }
+    }
+
+    private static func decodeStoredCareerStage(
+        from container: KeyedDecodingContainer<CodingKeys>
+    ) -> PublicationAuthorCareerStage? {
+        if (try? container.decodeNil(forKey: .careerStage)) == true {
+            return nil
+        }
+        guard let storedValue = try? container.decode(String.self, forKey: .careerStage) else {
+            // Tidigare tolkades oläsbara värden som B; behåll det.
+            return .categoryB
+        }
+        return PublicationAuthorCareerStage.storedStage(from: storedValue)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1161,7 +1195,13 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         try container.encode(degreeEn, forKey: .degreeEn)
         try container.encode(gender, forKey: .gender)
         try container.encode(hasPhD, forKey: .hasPhD)
-        try container.encode(careerStage, forKey: .careerStage)
+        if let careerStage {
+            try container.encode(careerStage, forKey: .careerStage)
+        } else {
+            // Skriv uttryckligen null så att "inget karriärsteg" läses tillbaka som nil
+            // och inte som saknad nyckel (som ger ett föreslaget steg för äldre data).
+            try container.encodeNil(forKey: .careerStage)
+        }
         try container.encode(university, forKey: .university)
         try container.encode(phoneLabel, forKey: .phoneLabel)
         try container.encode(phoneNumber, forKey: .phoneNumber)

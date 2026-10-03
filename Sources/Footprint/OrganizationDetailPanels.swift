@@ -823,10 +823,18 @@ struct OrganizationLinkedResearchersPanel: View {
             }
             comparison = lhs.author.sortName.localizedStandardCompare(rhs.author.sortName)
         case .careerStage:
-            if careerStageSortRank(for: lhs) != careerStageSortRank(for: rhs) {
-                return sortAscending
-                    ? careerStageSortRank(for: lhs) < careerStageSortRank(for: rhs)
-                    : careerStageSortRank(for: lhs) > careerStageSortRank(for: rhs)
+            switch (careerStageSortRank(for: lhs), careerStageSortRank(for: rhs)) {
+            case let (.some(left), .some(right)):
+                if left != right {
+                    return sortAscending ? left < right : left > right
+                }
+            case (.some, .none):
+                // Forskare utan karriärsteg hamnar alltid sist.
+                return true
+            case (.none, .some):
+                return false
+            case (.none, .none):
+                break
             }
             comparison = careerStageText(for: lhs).localizedStandardCompare(careerStageText(for: rhs))
         case .projectCount:
@@ -861,11 +869,12 @@ struct OrganizationLinkedResearchersPanel: View {
     }
 
     private func careerStageText(for row: OrganizationLinkedResearcherRow) -> String {
-        row.author.careerStage.rawValue
+        PublicationAuthorCareerStage.displayText(for: row.author.careerStage)
     }
 
-    private func careerStageSortRank(for row: OrganizationLinkedResearcherRow) -> Int {
-        switch row.author.careerStage {
+    private func careerStageSortRank(for row: OrganizationLinkedResearcherRow) -> Int? {
+        guard let stage = row.author.careerStage else { return nil }
+        switch stage {
         case .categoryA:
             return 0
         case .categoryB:

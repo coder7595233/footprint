@@ -2146,6 +2146,9 @@ extension GrantDataStore {
             }
         }
 
+        // Karriärsteg som inte stämmer med doktorsexamen (egen fil).
+        issues.append(contentsOf: dataQualityCareerStageIssues())
+
         // F19: links to records that no longer exist, and times in the wrong
         // order. Kept in their own pass so the check after saving can run
         // them without the rest of this list.
