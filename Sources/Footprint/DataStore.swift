@@ -30208,6 +30208,7 @@ extension GrantDataStore {
         // A migration must never lose a record.
         guard changed > 0, updated.count == publicationAuthors.count else { return false }
         publicationAuthors = updated
+        rebuildPublicationAuthorLookupCaches()
         rebuildPublicationAuthorRowSnapshots()
         appendStartupDiagnostic("migration:researcherPositionDegreeLists changed=\(changed)")
         return true
