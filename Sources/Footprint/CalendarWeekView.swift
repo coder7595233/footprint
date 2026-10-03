@@ -233,6 +233,100 @@ func calendarWeekViewPackColumns(_ spans: [CalendarWeekTimeSpan], minimumDuratio
     return spans.indices.map { CalendarWeekColumnSlot(column: columns[$0], columnCount: columnCounts[$0]) }
 }
 
+// MARK: - Working hours (Settings > Calendar)
+
+/// "Arbetstid" in Settings: the hours of a working day. In the week view the
+/// time before and after it, and all of Saturday and Sunday, gets a light
+/// grey background when `marksOutsideWorkingHours` is on.
+struct CalendarWorkingHoursSettings: Codable, Hashable {
+    static let standard = CalendarWorkingHoursSettings()
+
+    /// HH:MM, e.g. "08:00".
+    var startTime: String
+    /// HH:MM, e.g. "17:00".
+    var endTime: String
+    /// "Markera tid utanför arbetstid i veckovyn" (on unless switched off).
+    var marksOutsideWorkingHours: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case startTime
+        case endTime
+        case marksOutsideWorkingHours
+    }
+
+    init(
+        startTime: String = "08:00",
+        endTime: String = "17:00",
+        marksOutsideWorkingHours: Bool = true
+    ) {
+        self.startTime = startTime
+        self.endTime = endTime
+        self.marksOutsideWorkingHours = marksOutsideWorkingHours
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = CalendarWorkingHoursSettings()
+        self.init(
+            startTime: try container.decodeIfPresent(String.self, forKey: .startTime) ?? defaults.startTime,
+            endTime: try container.decodeIfPresent(String.self, forKey: .endTime) ?? defaults.endTime,
+            marksOutsideWorkingHours: try container.decodeIfPresent(Bool.self, forKey: .marksOutsideWorkingHours)
+                ?? defaults.marksOutsideWorkingHours
+        )
+    }
+
+    /// Times written as HH:MM; an unreadable time falls back to the default.
+    func normalized() -> CalendarWorkingHoursSettings {
+        let defaults = CalendarWorkingHoursSettings()
+        return CalendarWorkingHoursSettings(
+            startTime: CalendarReminderSettings.normalizedTime(startTime) ?? defaults.startTime,
+            endTime: CalendarReminderSettings.normalizedTime(endTime) ?? defaults.endTime,
+            marksOutsideWorkingHours: marksOutsideWorkingHours
+        )
+    }
+
+    /// The working day in minutes after midnight, or nil when a time cannot
+    /// be read or the start is not before the end.
+    var workingSpan: CalendarWeekTimeSpan? {
+        guard let start = CalendarReminderSettings.hourMinute(from: startTime),
+              let end = CalendarReminderSettings.hourMinute(from: endTime) else {
+            return nil
+        }
+        let startMinute = start.hour * 60 + start.minute
+        let endMinute = end.hour * 60 + end.minute
+        guard startMinute < endMinute else { return nil }
+        return CalendarWeekTimeSpan(startMinute: startMinute, endMinute: endMinute)
+    }
+}
+
+/// Saturday or Sunday (Gregorian weekday 7 or 1), whatever the week start.
+func calendarWeekViewIsWeekend(_ date: Date, calendar: Calendar) -> Bool {
+    let weekday = calendar.component(.weekday, from: date)
+    return weekday == 1 || weekday == 7
+}
+
+/// The parts of one day that get the "outside working hours" background.
+/// Nothing when the marking is off or the working hours are invalid (start
+/// not before end); the whole day on weekends; otherwise the time before
+/// the start and after the end. Partial hours (08:30) are kept as minutes.
+func calendarWeekViewOutsideWorkingHoursSpans(
+    isWeekend: Bool,
+    settings: CalendarWorkingHoursSettings
+) -> [CalendarWeekTimeSpan] {
+    guard settings.marksOutsideWorkingHours, let working = settings.workingSpan else { return [] }
+    if isWeekend {
+        return [CalendarWeekTimeSpan(startMinute: 0, endMinute: calendarWeekViewMinutesPerDay)]
+    }
+    var spans: [CalendarWeekTimeSpan] = []
+    if working.startMinute > 0 {
+        spans.append(CalendarWeekTimeSpan(startMinute: 0, endMinute: working.startMinute))
+    }
+    if working.endMinute < calendarWeekViewMinutesPerDay {
+        spans.append(CalendarWeekTimeSpan(startMinute: working.endMinute, endMinute: calendarWeekViewMinutesPerDay))
+    }
+    return spans
+}
+
 /// The y position of a minute in the hour grid.
 func calendarWeekViewYOffset(minute: Int, hourHeight: CGFloat) -> CGFloat {
     CGFloat(min(max(minute, 0), calendarWeekViewMinutesPerDay)) / 60 * hourHeight
@@ -468,6 +562,7 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
     let model: CalendarWeekViewModel
     let language: AppLanguage
     let usesDarkAppearance: Bool
+    let workingHours: CalendarWorkingHoursSettings
     let onPreviousWeek: () -> Void
     let onNextWeek: () -> Void
     let onSelectEvent: (CalendarWorkspaceEvent) -> Void
@@ -478,6 +573,7 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
         model: CalendarWeekViewModel,
         language: AppLanguage,
         usesDarkAppearance: Bool,
+        workingHours: CalendarWorkingHoursSettings = .standard,
         onPreviousWeek: @escaping () -> Void,
         onNextWeek: @escaping () -> Void,
         onSelectEvent: @escaping (CalendarWorkspaceEvent) -> Void,
@@ -487,6 +583,7 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
         self.model = model
         self.language = language
         self.usesDarkAppearance = usesDarkAppearance
+        self.workingHours = workingHours
         self.onPreviousWeek = onPreviousWeek
         self.onNextWeek = onNextWeek
         self.onSelectEvent = onSelectEvent
@@ -710,10 +807,44 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
         }
         .frame(height: totalHeight, alignment: .topLeading)
         .background(alignment: .topLeading) {
-            hourLines(hourHeight: hourHeight)
-                .padding(.leading, timeColumnWidth)
-                .allowsHitTesting(false)
+            // Back to front: the grey outside working hours, then the hour
+            // lines. Both sit behind the day columns and their events.
+            ZStack(alignment: .topLeading) {
+                outsideWorkingHoursShading(hourHeight: hourHeight)
+                hourLines(hourHeight: hourHeight)
+            }
+            .padding(.leading, timeColumnWidth)
+            .allowsHitTesting(false)
         }
+    }
+
+    /// A light grey band over the time before and after working hours, and
+    /// over all of Saturday and Sunday. One column per day, the same widths
+    /// as the day columns above it.
+    private func outsideWorkingHoursShading(hourHeight: CGFloat) -> some View {
+        HStack(spacing: 0) {
+            ForEach(model.days) { day in
+                let spans = calendarWeekViewOutsideWorkingHoursSpans(
+                    isWeekend: calendarWeekViewIsWeekend(day.date, calendar: model.calendar),
+                    settings: workingHours
+                )
+                ZStack(alignment: .topLeading) {
+                    Color.clear
+                    ForEach(spans, id: \.self) { span in
+                        let top = calendarWeekViewYOffset(minute: span.startMinute, hourHeight: hourHeight)
+                        let bottom = calendarWeekViewYOffset(minute: span.endMinute, hourHeight: hourHeight)
+                        Rectangle()
+                            .fill(outsideWorkingHoursColor)
+                            .frame(height: max(bottom - top, 0))
+                            .frame(maxWidth: .infinity)
+                            .offset(y: top)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+        }
+        .frame(height: hourHeight * 24, alignment: .topLeading)
+        .accessibilityHidden(true)
     }
 
     private func hourLines(hourHeight: CGFloat) -> some View {
@@ -721,8 +852,8 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
             ForEach(0..<24, id: \.self) { _ in
                 VStack(spacing: 0) {
                     Rectangle()
-                        .fill(gridLineColor)
-                        .frame(height: 0.5)
+                        .fill(hourLineColor)
+                        .frame(height: 1)
                     Color.clear
                 }
                 .frame(height: hourHeight)
@@ -839,8 +970,21 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
 
     // MARK: Colours and helpers
 
+    /// Lines between days and under the header rows. A little stronger than
+    /// the app's faint border so the grid is easy to follow in both modes.
     private var gridLineColor: Color {
-        AppPalette.subtleBorder.opacity(usesDarkAppearance ? 0.78 : 0.7)
+        AppPalette.border.opacity(usesDarkAppearance ? 1.0 : 0.95)
+    }
+
+    /// Hour lines: clearly visible, but a touch lighter than the day lines.
+    private var hourLineColor: Color {
+        AppPalette.border.opacity(usesDarkAppearance ? 0.85 : 0.8)
+    }
+
+    /// Outside working hours: grey in light mode, a faint light tint in dark
+    /// mode (the primary text colour follows the mode by itself).
+    private var outsideWorkingHoursColor: Color {
+        Color.primary.opacity(usesDarkAppearance ? 0.06 : 0.045)
     }
 
     private var nowLineColor: Color {
@@ -850,7 +994,7 @@ struct CalendarWeekView<EventMenu: View, DayMenu: View>: View {
     private var columnSeparator: some View {
         Rectangle()
             .fill(gridLineColor)
-            .frame(width: 0.5)
+            .frame(width: 1)
             .accessibilityHidden(true)
     }
 

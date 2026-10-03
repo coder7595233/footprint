@@ -81,6 +81,7 @@ struct SettingsWorkspaceView: View {
     @State private var calendarUsesCompactDayHighlightBands = false
     @State private var calendarTaskRemindersEnabled = false
     @State private var reminderSettings: CalendarReminderSettings = .standard
+    @State private var workingHours: CalendarWorkingHoursSettings = .standard
     @State private var homeCountry: String = HomeOrganizationDefaults.homeCountry
     @State private var homeRegionOrganizationID: String = ""
     @State private var defaultFundManagerOrganizationID: String = ""
@@ -259,6 +260,7 @@ struct SettingsWorkspaceView: View {
                 forKey: AppRuntime.calendarTaskRemindersEnabledDefaultsKey
             )
             reminderSettings = store.calendarReminderSettings
+            workingHours = store.calendarWorkingHours
             homeCountry = store.homeCountryName
             homeRegionOrganizationID = store.homeRegionOrganizationID ?? ""
             defaultFundManagerOrganizationID = store.defaultFundManagerOrganizationID ?? ""
@@ -291,6 +293,7 @@ struct SettingsWorkspaceView: View {
         .onChange(of: calendarUsesCompactDayHighlightBands) { _, _ in scheduleAutosave() }
         .onChange(of: customMediaLanguageOptions) { _, _ in scheduleAutosave() }
         .onChange(of: reminderSettings) { _, _ in scheduleAutosave() }
+        .onChange(of: workingHours) { _, _ in scheduleAutosave() }
         .onChange(of: homeCountry) { _, _ in scheduleAutosave() }
         .onChange(of: homeRegionOrganizationID) { _, _ in scheduleAutosave() }
         .onChange(of: defaultFundManagerOrganizationID) { _, _ in scheduleAutosave() }
@@ -520,6 +523,58 @@ struct SettingsWorkspaceView: View {
         }
     }
 
+    /// "Arbetstid": the working day shown in the calendar's week view.
+    @ViewBuilder
+    private func workingHoursCard(language: AppLanguage) -> some View {
+        settingsCard {
+            Text(language.text("Working hours", "Arbetstid"))
+                .appTypography(.sectionTitle)
+
+            Text(language.text(
+                "Your normal working day. In the week view, the time outside it and all of Saturday and Sunday get a light grey background.",
+                "Din vanliga arbetsdag. I veckovyn får tiden utanför den och hela lördagen och söndagen en ljusgrå bakgrund."
+            ))
+            .appTypography(.secondary)
+            .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Toggle(
+                    language.text("Mark time outside working hours in the week view", "Markera tid utanför arbetstid i veckovyn"),
+                    isOn: $workingHours.marksOutsideWorkingHours
+                )
+                .appCheckboxStyle()
+                HStack(spacing: 16) {
+                    reminderTimeField(
+                        title: language.text("From", "Från"),
+                        text: $workingHours.startTime
+                    )
+                    reminderTimeField(
+                        title: language.text("To", "Till"),
+                        text: $workingHours.endTime
+                    )
+                    Spacer()
+                }
+                .disabled(!workingHours.marksOutsideWorkingHours)
+                if workingHours.marksOutsideWorkingHours, workingHours.workingSpan == nil {
+                    Text(language.text(
+                        "The start time must be before the end time. Until then nothing is marked.",
+                        "Starttiden måste vara före sluttiden. Till dess markeras ingenting."
+                    ))
+                    .appTypography(.secondary)
+                    .foregroundStyle(Color.orange)
+                }
+                SettingsEffectNote(language.text(
+                    "Affects: only the background of the calendar's week view. Events, statistics and reminders are not changed.",
+                    "Påverkar: bara bakgrunden i kalenderns veckovy. Händelser, statistik och påminnelser ändras inte."
+                ))
+            }
+
+            Text(language.text("Format: HH:MM.", "Format: HH:MM."))
+                .appTypography(.secondary)
+                .foregroundStyle(.secondary)
+        }
+    }
+
     /// The lead days/months above decide when the reminders about
     /// applications are sent (GrantReminderCoordinator).
     private func grantReminderEffectNote(language: AppLanguage) -> some View {
@@ -630,6 +685,8 @@ struct SettingsWorkspaceView: View {
         }
 
         reminderSettingsCard(language: language)
+
+        workingHoursCard(language: language)
 
         settingsCard {
             Text(language.text("First day of week", "Första dag i veckan"))
@@ -4275,6 +4332,7 @@ struct SettingsWorkspaceView: View {
             loadedCalendarCategoryBehaviors = categoryBehaviors
         }
         store.autosaveCalendarReminderSettings(reminderSettings)
+        store.autosaveCalendarWorkingHours(workingHours)
         if [homeCountry, homeRegionOrganizationID, defaultFundManagerOrganizationID] != loadedHomeOrganizationValues {
             store.autosaveHomeOrganizationSettings(
                 homeCountry: homeCountry,

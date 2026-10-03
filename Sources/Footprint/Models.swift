@@ -3609,6 +3609,8 @@ struct DataSourceMetadata: Codable, Hashable {
     /// Settings > Calendar categories: statistics, clinical time and leave per
     /// category. nil = not stored yet (the old fixed category names apply).
     var calendarCategoryBehaviors: [CalendarCategoryBehaviorSetting]? = nil
+    /// Settings > Calendar, working hours shaded in the week view. nil = defaults.
+    var calendarWorkingHours: CalendarWorkingHoursSettings? = nil
 
     static let bundledDefault = DataSourceMetadata(
         sourceDescription: "Bundled data from for app.xlsx",
@@ -3832,6 +3834,7 @@ struct AppSettingsSnapshot: Codable, Hashable {
     var mainEmployerOrganizationID: String? = nil
     var calendarReminderSettings: CalendarReminderSettings? = nil
     var calendarCategoryBehaviors: [CalendarCategoryBehaviorSetting]? = nil
+    var calendarWorkingHours: CalendarWorkingHoursSettings? = nil
 
     init(
         schemaVersion: Int = Self.currentSchemaVersion,
@@ -4004,6 +4007,7 @@ struct AppSettingsSnapshot: Codable, Hashable {
         mainEmployerOrganizationID = metadata.mainEmployerOrganizationID
         calendarReminderSettings = metadata.calendarReminderSettings
         calendarCategoryBehaviors = metadata.calendarCategoryBehaviors
+        calendarWorkingHours = metadata.calendarWorkingHours
     }
 
     func applying(to metadata: DataSourceMetadata) -> DataSourceMetadata {
@@ -4065,6 +4069,7 @@ struct AppSettingsSnapshot: Codable, Hashable {
         updated.mainEmployerOrganizationID = mainEmployerOrganizationID
         updated.calendarReminderSettings = calendarReminderSettings
         updated.calendarCategoryBehaviors = calendarCategoryBehaviors
+        updated.calendarWorkingHours = calendarWorkingHours
         return updated
     }
 }
