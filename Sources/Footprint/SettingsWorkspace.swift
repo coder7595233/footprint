@@ -293,7 +293,6 @@ struct SettingsWorkspaceView: View {
         .onChange(of: calendarUsesCompactDayHighlightBands) { _, _ in scheduleAutosave() }
         .onChange(of: customMediaLanguageOptions) { _, _ in scheduleAutosave() }
         .onChange(of: reminderSettings) { _, _ in scheduleAutosave() }
-        .onChange(of: workingHours) { _, _ in scheduleAutosave() }
         .onChange(of: homeCountry) { _, _ in scheduleAutosave() }
         .onChange(of: homeRegionOrganizationID) { _, _ in scheduleAutosave() }
         .onChange(of: defaultFundManagerOrganizationID) { _, _ in scheduleAutosave() }
@@ -573,6 +572,8 @@ struct SettingsWorkspaceView: View {
                 .appTypography(.secondary)
                 .foregroundStyle(.secondary)
         }
+        // Lives here rather than on body: body's modifier chain is at the type-checker's limit.
+        .onChange(of: workingHours) { _, _ in scheduleAutosave() }
     }
 
     /// The lead days/months above decide when the reminders about
