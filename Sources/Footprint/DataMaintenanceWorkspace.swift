@@ -356,6 +356,12 @@ struct DataMaintenanceWorkspaceView: View {
     @WorkspaceFilterState("DataQuality.Filter.ExpandedArchive") private var expandedArchivedIDs = Set<String>()
     @State private var selectedArchivedIDs = Set<String>()
     @WorkspaceFilterState("DataQuality.ExpandedSections") private var expandedSectionKeys = Set<DataQualitySectionKey>()
+    /// The section chosen in the side panel; remembered between launches.
+    @AppStorage(AppRuntime.scopedDefaultsKey("DataQualityWorkspaceSelectedSection"))
+    private var selectedSectionRaw: String = DataQualitySectionKey.missingFields.rawValue
+    /// "Missing fields": the field chip that narrows the cards to records
+    /// missing that field (nil = all fields).
+    @State private var selectedMissingFieldLabel: String?
     @State private var cachedMissingIssues: [GrantDataStore.MissingFieldIssue] = []
     @State private var cachedDuplicateIssues: [GrantDataStore.DuplicateIssue] = []
     @State private var cachedIntegrityIssues: [GrantDataStore.IntegrityIssue] = []
@@ -386,7 +392,7 @@ struct DataMaintenanceWorkspaceView: View {
             .init(
                 id: "missing-fields",
                 title: store.language.text("Missing fields total", "Saknade fält totalt"),
-                count: missingIssues.reduce(0) { $0 + $1.missingFields.count },
+                count: missingFieldTotal,
                 tone: missingIssues.isEmpty ? .ok : .warning
             ),
             .init(
@@ -509,7 +515,9 @@ struct DataMaintenanceWorkspaceView: View {
     private func visibleMissingIssues(in category: DataQualityCategory? = nil) -> [GrantDataStore.MissingFieldIssue] {
         cachedMissingIssues.filter { issue in
             let matchesVisibleCategory = category.map { matchesCategory(issue.entityKind, in: $0) } ?? matchesCategory(issue.entityKind)
-            return matchesVisibleCategory && (showHiddenWarnings || !store.isDataQualityWarningHidden(issue))
+            return matchesVisibleCategory
+                && (showHiddenWarnings
+                    || (!store.isDataQualityWarningHidden(issue) && !store.unhiddenDataQualityFields(of: issue).isEmpty))
         }
     }
 
@@ -541,94 +549,110 @@ struct DataMaintenanceWorkspaceView: View {
         )
         let _ = reportSlowSectionSummaries(startedAt: summariesStartedAt)
 
-        VStack(spacing: 0) {
-            HStack(spacing: 16) {
-                Text(language.text("Data quality", "Datakvalitet"))
-                    .appTypography(.pageTitle)
-                Spacer()
-                TextField(language.text("Filter", "Filtrera"), text: $queryDraft)
-                    .appTextInputChrome()
-                    .frame(width: 240)
-                    .overlay(alignment: .trailing) {
-                        if !queryDraft.isEmpty {
-                            Button {
-                                clearDataQualitySearch()
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.trailing, 6)
-                            .help(language.text("Clear search", "Rensa sökningen"))
-                            .accessibilityLabel(language.text("Clear search", "Rensa sökningen"))
-                        }
-                    }
-                AppMenuSelectionField(
-                    selection: $category,
-                    options: DataQualityCategory.allCases.map { ($0.title(language: language), $0) },
-                    placeholder: nil
-                )
-                .frame(width: 190, alignment: .leading)
-                let hiddenTotal = store.hiddenDataQualityWarningTotalCount
-                Toggle(isOn: $showHiddenWarnings) {
-                    Text(hiddenTotal > 0
-                        ? language.text("Hidden (\(hiddenTotal))", "Dolda (\(hiddenTotal))")
-                        : language.text("Hidden", "Dolda"))
-                }
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .fixedSize()
-                .help(language.text(
-                    "Include warnings you have hidden. Each hidden row gets a Show again button.",
-                    "Visa även varningar som du har dolt. Varje dold rad får knappen Visa igen."
-                ))
-                if hiddenTotal > 0 {
-                    Button(language.text("Show all hidden", "Visa alla dolda")) {
-                        showsShowAllHiddenConfirmation = true
-                    }
-                    .controlSize(.small)
-                    .help(language.text(
-                        "Stop hiding every hidden warning. Can be undone.",
-                        "Sluta dölja alla dolda varningar. Kan ångras."
-                    ))
-                    .confirmationDialog(
-                        language.text(
-                            "Show all \(hiddenTotal) hidden warnings again?",
-                            "Visa alla \(hiddenTotal) dolda varningar igen?"
-                        ),
-                        isPresented: $showsShowAllHiddenConfirmation
-                    ) {
-                        Button(language.text("Show all", "Visa alla")) {
-                            store.showAllHiddenDataQualityWarnings()
-                        }
-                        Button(language.text("Cancel", "Avbryt"), role: .cancel) {}
-                    } message: {
-                        Text(language.text(
-                            "Warnings you hid, also in older versions of the app, are shown in the lists again. You can undo this with Undo.",
-                            "Varningar som du har dolt, även i äldre versioner av appen, visas i listorna igen. Du kan ångra med Ångra."
-                        ))
-                    }
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
-
-            Divider()
-
+        let selectedSection = self.selectedSection
+        PersistentSplitView(
+            defaultsKey: "DataQualityWorkspaceSplit",
+            defaultFraction: 0.23,
+            sidebarMinimumWidth: 250,
+            sidebarMaximumWidth: 360,
+            detailMinimumWidth: 520
+        ) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    if isDataQualityFilterActive {
-                        dataQualityFilterBanner(language: language)
+                VStack(alignment: .leading, spacing: 16) {
+                    AppPanelHeadingText(text: language.text("Data quality area", "Datakvalitetsområde"))
+                    dataQualitySectionNavigation(language: language)
+                }
+                .padding(16)
+            }
+        } detail: {
+            VStack(spacing: 0) {
+                HStack(spacing: 16) {
+                    Text(language.text("Data quality", "Datakvalitet"))
+                        .appTypography(.pageTitle)
+                        .lineLimit(1)
+                    Spacer()
+                    TextField(language.text("Filter", "Filtrera"), text: $queryDraft)
+                        .appTextInputChrome()
+                        .frame(minWidth: 140, maxWidth: 240)
+                        .overlay(alignment: .trailing) {
+                            if !queryDraft.isEmpty {
+                                Button {
+                                    clearDataQualitySearch()
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.trailing, 6)
+                                .help(language.text("Clear search", "Rensa sökningen"))
+                                .accessibilityLabel(language.text("Clear search", "Rensa sökningen"))
+                            }
+                        }
+                    AppMenuSelectionField(
+                        selection: $category,
+                        options: DataQualityCategory.allCases.map { ($0.title(language: language), $0) },
+                        placeholder: nil
+                    )
+                    .frame(minWidth: 140, maxWidth: 190, alignment: .leading)
+                    let hiddenTotal = store.hiddenDataQualityWarningTotalCount
+                    Toggle(isOn: $showHiddenWarnings) {
+                        Text(hiddenTotal > 0
+                            ? language.text("Hidden (\(hiddenTotal))", "Dolda (\(hiddenTotal))")
+                            : language.text("Hidden", "Dolda"))
                     }
-                    ForEach(DataQualitySectionKey.allCases) { key in
-                        collapsibleSection(
-                            key,
-                            summary: sectionSummaries[key] ?? sectionSummary(key, language: language),
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .fixedSize()
+                    .help(language.text(
+                        "Include warnings you have hidden. Each hidden row gets a Show again button.",
+                        "Visa även varningar som du har dolt. Varje dold rad får knappen Visa igen."
+                    ))
+                    if hiddenTotal > 0 {
+                        Button(language.text("Show all hidden", "Visa alla dolda")) {
+                            showsShowAllHiddenConfirmation = true
+                        }
+                        .controlSize(.small)
+                        .help(language.text(
+                            "Stop hiding every hidden warning. Can be undone.",
+                            "Sluta dölja alla dolda varningar. Kan ångras."
+                        ))
+                        .confirmationDialog(
+                            language.text(
+                                "Show all \(hiddenTotal) hidden warnings again?",
+                                "Visa alla \(hiddenTotal) dolda varningar igen?"
+                            ),
+                            isPresented: $showsShowAllHiddenConfirmation
+                        ) {
+                            Button(language.text("Show all", "Visa alla")) {
+                                store.showAllHiddenDataQualityWarnings()
+                            }
+                            Button(language.text("Cancel", "Avbryt"), role: .cancel) {}
+                        } message: {
+                            Text(language.text(
+                                "Warnings you hid, also in older versions of the app, are shown in the lists again. You can undo this with Undo.",
+                                "Varningar som du har dolt, även i äldre versioner av appen, visas i listorna igen. Du kan ångra med Ångra."
+                            ))
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 14)
+
+                Divider()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        if isDataQualityFilterActive {
+                            dataQualityFilterBanner(language: language)
+                        }
+                        selectedSectionPanel(
+                            selectedSection,
+                            summary: sectionSummaries[selectedSection] ?? sectionSummary(selectedSection, language: language),
                             language: language
                         )
                     }
+                    .padding(14)
                 }
-                .padding(14)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -653,13 +677,18 @@ struct DataMaintenanceWorkspaceView: View {
                 expandedArchivedIDs.removeAll()
             }
             queryDraft = query
+            // The section shown in the side panel counts as the open one
+            // (lists of other sections reload when they are chosen).
+            if expandedSectionKeys != [self.selectedSection] {
+                expandedSectionKeys = [self.selectedSection]
+            }
             refreshCachedDiagnosticsIfActive(reason: "appear", force: false)
         }
         .onChange(of: section) { _, value in
             // External navigation (menus, notifications) still speaks
-            // DataWorkspaceSection; expand the requested section.
+            // DataWorkspaceSection; show the requested section.
             guard let key = DataQualitySectionKey(section: value) else { return }
-            expandedSectionKeys = [key]
+            selectSection(key)
         }
         .onChange(of: queryDraft) { _, value in
             scheduleDataQualityQueryUpdate(value)
@@ -956,7 +985,10 @@ struct DataMaintenanceWorkspaceView: View {
         case .missingFields:
             let total = Set(
                 cachedMissingIssues
-                    .filter { showHiddenWarnings || !store.isDataQualityWarningHidden($0) }
+                    .filter {
+                        showHiddenWarnings
+                            || (!store.isDataQualityWarningHidden($0) && !store.unhiddenDataQualityFields(of: $0).isEmpty)
+                    }
                     .map(\.recordID)
             ).count
             return (Set(missingIssues.map(\.recordID)).count, total)
@@ -1089,6 +1121,99 @@ struct DataMaintenanceWorkspaceView: View {
         }
     }
 
+    /// The section shown in the detail pane (chosen in the side panel).
+    private var selectedSection: DataQualitySectionKey {
+        DataQualitySectionKey(rawValue: selectedSectionRaw) ?? .missingFields
+    }
+
+    private func selectSection(_ key: DataQualitySectionKey) {
+        if selectedSectionRaw != key.rawValue {
+            selectedSectionRaw = key.rawValue
+        }
+        // The shown section is the one whose lists are kept up to date
+        // after a change; the others reload when they are chosen.
+        if expandedSectionKeys != [key] {
+            expandedSectionKeys = [key]
+        }
+    }
+
+    /// Side panel: one row per section, like the Statistics view, with the
+    /// number of things to look at as a badge.
+    @ViewBuilder
+    private func dataQualitySectionNavigation(language: AppLanguage) -> some View {
+        let selected = selectedSection
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(DataQualitySectionKey.allCases) { key in
+                RenewedRailTabButton(
+                    title: key.title(language: language),
+                    symbolName: key.systemImage,
+                    badgeCount: sectionBadgeCount(key),
+                    isSelected: selected == key
+                ) {
+                    selectSection(key)
+                }
+            }
+        }
+    }
+
+    /// Nil for the archive and the history, which are lists to browse,
+    /// not things to fix.
+    private func sectionBadgeCount(_ key: DataQualitySectionKey) -> Int? {
+        switch key {
+        case .structure:
+            return structureDiagnostics.filter { $0.tone != .ok }.count
+        case .integrity:
+            return integrityIssues.count
+        case .missingFields:
+            return Set(missingIssues.map(\.recordID)).count
+        case .translations:
+            return store.translationIssues().count
+        case .nameLinks:
+            return store.unlinkedPersonNames().count
+        case .doctoralActivityLinks:
+            return store.doctoralActivityLinkSuggestions().count
+        case .duplicates:
+            return duplicateIssues.count
+        case .archive, .revisions:
+            return nil
+        }
+    }
+
+    /// The chosen section, with its title and summary above its content.
+    @ViewBuilder
+    private func selectedSectionPanel(
+        _ key: DataQualitySectionKey,
+        summary: DataQualitySectionSummary,
+        language: AppLanguage
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: key.systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppPalette.linkAction)
+                    .frame(width: 22)
+                Text(key.title(language: language))
+                    .appTypography(.sectionTitle)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(summary.text)
+                    .appTypography(.secondary)
+                    .foregroundStyle(.secondary)
+                DataQualityStatusIcon(tone: summary.tone, size: 15)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
+            .accessibilityElement(children: .combine)
+
+            sectionContent(key, language: language)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(AppPalette.cardSurface))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(AppPalette.subtleBorder, lineWidth: 1))
+    }
+
     @ViewBuilder
     private func collapsibleSection(
         _ key: DataQualitySectionKey,
@@ -1145,14 +1270,7 @@ struct DataMaintenanceWorkspaceView: View {
         case .integrity:
             issuesCard(integrityIssues.map(DataQualityUnifiedIssue.integrity), language: language)
         case .missingFields:
-            VStack(alignment: .leading, spacing: 10) {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                    ForEach(completenessItems) { item in
-                        completenessRow(item, language: language)
-                    }
-                }
-                issuesCard(missingIssues.map(DataQualityUnifiedIssue.missing), language: language)
-            }
+            missingFieldsSectionContent(language: language)
         case .translations:
             translationsSectionContent(language: language)
         case .nameLinks:
@@ -1915,7 +2033,7 @@ struct DataMaintenanceWorkspaceView: View {
     }
 
     private var missingFieldTotal: Int {
-        missingIssues.reduce(0) { $0 + $1.missingFields.count }
+        missingIssues.reduce(0) { $0 + displayedMissingFields(of: $1).count }
     }
 
     @ViewBuilder
@@ -3518,5 +3636,491 @@ private struct DoctoralActivityLinkRow: View {
         } else {
             store.hideDataQualityWarning(suggestion)
         }
+    }
+}
+
+// MARK: - Missing fields section
+
+/// One record's card in "Missing fields": the record and the fields shown
+/// for it (hidden ones left out unless "Hidden" is on).
+private struct DataQualityMissingCardEntry: Identifiable {
+    let issue: GrantDataStore.MissingFieldIssue
+    let fields: [GrantDataStore.MissingFieldIssue.Field]
+
+    var id: String { issue.id }
+    var hasWrongValue: Bool { fields.contains(where: \.isCritical) }
+}
+
+/// A chip above the cards: one kind of field and how many records lack it.
+private struct DataQualityFieldChip: Identifiable {
+    let label: String
+    let count: Int
+
+    var id: String { label }
+}
+
+extension DataMaintenanceWorkspaceView {
+    /// The fields shown for a record: hidden ones only while "Hidden" is
+    /// on. Wrong values (dates in the wrong order, invalid formats) come
+    /// first; otherwise the fields keep the order they were found in.
+    func displayedMissingFields(of issue: GrantDataStore.MissingFieldIssue) -> [GrantDataStore.MissingFieldIssue.Field] {
+        let fields = showHiddenWarnings ? issue.fields : store.unhiddenDataQualityFields(of: issue)
+        return fields.enumerated()
+            .sorted { lhs, rhs in
+                if lhs.element.isCritical != rhs.element.isCritical {
+                    return lhs.element.isCritical
+                }
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
+    }
+
+    /// Cards with a wrong value come first; the rest keep the list's order.
+    private func missingFieldCardEntries(_ issues: [GrantDataStore.MissingFieldIssue]) -> [DataQualityMissingCardEntry] {
+        let entries = issues.compactMap { issue -> DataQualityMissingCardEntry? in
+            let fields = displayedMissingFields(of: issue)
+            guard !fields.isEmpty else { return nil }
+            return DataQualityMissingCardEntry(issue: issue, fields: fields)
+        }
+        return entries.enumerated()
+            .sorted { lhs, rhs in
+                if lhs.element.hasWrongValue != rhs.element.hasWrongValue {
+                    return lhs.element.hasWrongValue
+                }
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
+    }
+
+    /// One chip per kind of field, the most common first.
+    private func missingFieldChips(for entries: [DataQualityMissingCardEntry], selectedLabel: String?) -> [DataQualityFieldChip] {
+        var counts: [String: Int] = [:]
+        for entry in entries {
+            for label in Set(entry.fields.map(\.label)) {
+                counts[label, default: 0] += 1
+            }
+        }
+        if let selectedLabel, counts[selectedLabel] == nil {
+            // Kept so the chosen chip can still be clicked off.
+            counts[selectedLabel] = 0
+        }
+        return counts
+            .map { DataQualityFieldChip(label: $0.key, count: $0.value) }
+            .sorted { lhs, rhs in
+                if lhs.count != rhs.count {
+                    return lhs.count > rhs.count
+                }
+                return lhs.label.localizedStandardCompare(rhs.label) == .orderedAscending
+            }
+    }
+
+    /// Completeness per category, the field chips, and one card per record
+    /// with the missing fields as text boxes where they can be typed in.
+    @ViewBuilder
+    func missingFieldsSectionContent(language: AppLanguage) -> some View {
+        let entries = missingFieldCardEntries(missingIssues)
+        let selectedLabel = selectedMissingFieldLabel
+        let chips = missingFieldChips(for: entries, selectedLabel: selectedLabel)
+        let shownEntries = filteredMissingFieldCardEntries(entries, selectedLabel: selectedLabel)
+        VStack(alignment: .leading, spacing: 10) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                ForEach(completenessItems) { item in
+                    completenessRow(item, language: language)
+                }
+            }
+
+            if !chips.isEmpty {
+                missingFieldChipBar(chips, selectedLabel: selectedLabel, language: language)
+            }
+
+            if shownEntries.isEmpty {
+                dataQualityEmptyState(language: language)
+            } else {
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    ForEach(shownEntries) { entry in
+                        DataQualityMissingFieldCard(
+                            store: store,
+                            issue: entry.issue,
+                            fields: orderedFields(entry.fields, selectedLabel: selectedLabel),
+                            isRecordHidden: store.isDataQualityWarningHidden(entry.issue),
+                            language: language,
+                            onOpen: {
+                                dismiss()
+                                store.openIssue(destination: entry.issue.destination, recordID: entry.issue.recordID)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /// With a chip chosen, only records where that field is flagged.
+    private func filteredMissingFieldCardEntries(
+        _ entries: [DataQualityMissingCardEntry],
+        selectedLabel: String?
+    ) -> [DataQualityMissingCardEntry] {
+        guard let selectedLabel else { return entries }
+        return entries.filter { entry in
+            entry.fields.contains(where: { $0.label == selectedLabel })
+        }
+    }
+
+    /// With a chip chosen, that field is put first in each card.
+    private func orderedFields(
+        _ fields: [GrantDataStore.MissingFieldIssue.Field],
+        selectedLabel: String?
+    ) -> [GrantDataStore.MissingFieldIssue.Field] {
+        guard let selectedLabel else { return fields }
+        return fields.filter { $0.label == selectedLabel } + fields.filter { $0.label != selectedLabel }
+    }
+
+    @ViewBuilder
+    private func missingFieldChipBar(
+        _ chips: [DataQualityFieldChip],
+        selectedLabel: String?,
+        language: AppLanguage
+    ) -> some View {
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 150), spacing: 6, alignment: .leading)],
+            alignment: .leading,
+            spacing: 6
+        ) {
+            ForEach(chips) { chip in
+                missingFieldChipButton(chip, isSelected: chip.label == selectedLabel, language: language)
+            }
+        }
+    }
+
+    private func missingFieldChipButton(
+        _ chip: DataQualityFieldChip,
+        isSelected: Bool,
+        language: AppLanguage
+    ) -> some View {
+        Button {
+            selectedMissingFieldLabel = isSelected ? nil : chip.label
+        } label: {
+            HStack(spacing: 6) {
+                Text(chip.label)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Spacer(minLength: 2)
+                Text("\(chip.count)")
+                    .monospacedDigit()
+                    .fontWeight(.semibold)
+            }
+            .font(appFont(.secondary))
+            .foregroundStyle(isSelected ? AppPalette.mainMenuSelectionText : AppPalette.appText)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(isSelected ? AppPalette.mainMenuSelectionSurface : AppPalette.fieldSurface)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(isSelected ? AppPalette.mainMenuSelectionStroke : AppPalette.subtleBorder, lineWidth: 1)
+            )
+            .contentShape(Capsule(style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .help(
+            isSelected
+                ? language.text("Show all fields again", "Visa alla fält igen")
+                : language.text("Show only records where \(chip.label) is flagged", "Visa bara poster där \(chip.label) är flaggat")
+        )
+        .accessibilityLabel("\(chip.label), \(chip.count)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// One record in "Missing fields": its name, what is already known about
+/// it, and one row per flagged field.
+private struct DataQualityMissingFieldCard: View {
+    let store: GrantDataStore
+    let issue: GrantDataStore.MissingFieldIssue
+    let fields: [GrantDataStore.MissingFieldIssue.Field]
+    let isRecordHidden: Bool
+    let language: AppLanguage
+    let onOpen: () -> Void
+
+    var body: some View {
+        let editableFields = editableFieldsByID()
+        let isLocked = editableFields.values.contains(where: \.isLocked)
+        let contextLine = store.dataQualityContextLine(for: issue)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                DataQualityStatusIcon(tone: fields.contains(where: \.isCritical) ? .critical : .warning, size: 13)
+                Button(action: onOpen) {
+                    Text(issue.title.nonEmpty ?? language.text("(no name)", "(namn saknas)"))
+                        .appTypography(.tableHeader)
+                        .foregroundStyle(AppPalette.linkAction)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                .buttonStyle(.plain)
+                .help(language.text("Open the record", "Öppna posten"))
+                if isRecordHidden {
+                    Label(language.text("Hidden", "Dold"), systemImage: "eye.slash")
+                        .appTypography(.secondary)
+                        .foregroundStyle(.secondary)
+                        .fixedSize()
+                }
+                if isLocked {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .help(language.text(
+                            "The record is locked for editing. Open it to unlock and change it.",
+                            "Posten är låst för redigering. Öppna den för att låsa upp och ändra."
+                        ))
+                        .accessibilityLabel(language.text("Locked", "Låst"))
+                }
+                Spacer(minLength: 8)
+                Button(action: toggleRecordHidden) {
+                    Text(isRecordHidden
+                        ? language.text("Show record again", "Visa posten igen")
+                        : language.text("Hide record", "Dölj posten"))
+                        .font(appFont(.secondary).weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .help(isRecordHidden
+                    ? language.text("Show this record's warnings again", "Visa varningarna för den här posten igen")
+                    : language.text("Hide every warning for this record", "Dölj alla varningar för den här posten"))
+                Button(action: onOpen) {
+                    Text(language.text("Open", "Öppna"))
+                        .font(appFont(.secondary).weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .help(language.text("Open the record", "Öppna posten"))
+            }
+
+            if let contextLine = contextLine.nonEmpty {
+                Text(contextLine)
+                    .appTypography(.secondary)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .textSelection(.enabled)
+                    .padding(.leading, 25)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(fields) { field in
+                    DataQualityMissingFieldRow(
+                        store: store,
+                        issue: issue,
+                        field: field,
+                        editable: editableFields[field.id],
+                        searchLinks: store.dataQualitySearchLinks(for: issue, field: field),
+                        isHidden: store.isDataQualityFieldHidden(issue, field: field),
+                        language: language,
+                        onOpen: onOpen
+                    )
+                }
+            }
+            .padding(.leading, 25)
+            .padding(.top, 2)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(isRecordHidden ? AppPalette.fieldSurface.opacity(0.42) : AppPalette.secondaryCardSurface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(AppPalette.subtleBorder.opacity(0.7), lineWidth: 1)
+        )
+    }
+
+    private func editableFieldsByID() -> [String: GrantDataStore.DataQualityEditableField] {
+        var result: [String: GrantDataStore.DataQualityEditableField] = [:]
+        for field in fields {
+            if let editable = store.dataQualityEditableField(for: issue, field: field) {
+                result[field.id] = editable
+            }
+        }
+        return result
+    }
+
+    private func toggleRecordHidden() {
+        if store.isDataQualityWarningHidden(issue) {
+            store.showDataQualityWarning(issue)
+        } else {
+            store.hideDataQualityWarning(issue)
+        }
+    }
+}
+
+/// One flagged field: its name, a text box when it can be typed in here
+/// (saved on Return or when leaving the box, through the record's own
+/// autosave, so Undo works), search buttons, and hide or open.
+private struct DataQualityMissingFieldRow: View {
+    static let labelColumnWidth: CGFloat = 190
+
+    let store: GrantDataStore
+    let issue: GrantDataStore.MissingFieldIssue
+    let field: GrantDataStore.MissingFieldIssue.Field
+    let editable: GrantDataStore.DataQualityEditableField?
+    let searchLinks: [DataQualitySearchLink]
+    let isHidden: Bool
+    let language: AppLanguage
+    let onOpen: () -> Void
+    @State private var draft: String
+    @FocusState private var isFocused: Bool
+
+    init(
+        store: GrantDataStore,
+        issue: GrantDataStore.MissingFieldIssue,
+        field: GrantDataStore.MissingFieldIssue.Field,
+        editable: GrantDataStore.DataQualityEditableField?,
+        searchLinks: [DataQualitySearchLink],
+        isHidden: Bool,
+        language: AppLanguage,
+        onOpen: @escaping () -> Void
+    ) {
+        self.store = store
+        self.issue = issue
+        self.field = field
+        self.editable = editable
+        self.searchLinks = searchLinks
+        self.isHidden = isHidden
+        self.language = language
+        self.onOpen = onOpen
+        _draft = State(initialValue: editable?.value ?? "")
+    }
+
+    private var opensRecordInstead: Bool {
+        guard let editable else { return true }
+        return editable.isLocked
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Text(field.label)
+                .appTypography(.secondary)
+                .foregroundStyle(field.isCritical ? AppPalette.statusText(.negative) : AppPalette.appText)
+                .lineLimit(2)
+                .frame(width: Self.labelColumnWidth, alignment: .leading)
+                .help(field.label)
+
+            if let editable {
+                TextField(field.label, text: $draft)
+                    .appTextInputChrome()
+                    .focused($isFocused)
+                    .onSubmit(save)
+                    .disabled(editable.isLocked)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityLabel(field.label)
+            } else {
+                Spacer(minLength: 0)
+            }
+
+            ForEach(searchLinks) { link in
+                Button {
+                    if let url = safeExternalURL(link.url) {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    searchLabel(link)
+                        .frame(height: 22)
+                }
+                .buttonStyle(.borderless)
+                .help(searchHelp(link))
+                .accessibilityLabel(searchTitle(link))
+            }
+
+            if isHidden {
+                Text(language.text("Hidden", "Dold"))
+                    .appTypography(.secondary)
+                    .foregroundStyle(.secondary)
+            }
+            Button(action: toggleHidden) {
+                Text(isHidden
+                    ? language.text("Show field again", "Visa fältet igen")
+                    : language.text("Hide field", "Dölj fältet"))
+                    .font(appFont(.secondary).weight(.semibold))
+                    .frame(height: 22)
+            }
+            .buttonStyle(.borderless)
+            .help(isHidden
+                ? language.text("Show this field's warning again", "Visa varningen för det här fältet igen")
+                : language.text("Hide only this field for this record", "Dölj bara det här fältet för den här posten"))
+
+            if opensRecordInstead {
+                Button(action: onOpen) {
+                    Text(language.text("Open", "Öppna"))
+                        .font(appFont(.secondary).weight(.semibold))
+                        .frame(height: 22)
+                }
+                .buttonStyle(.borderless)
+                .help(language.text("Fill this in on the record itself", "Fyll i det här på själva posten"))
+            }
+        }
+        .padding(.vertical, 2)
+        .opacity(isHidden ? 0.62 : 1)
+        // Leaving the box saves it, like the record's own editor.
+        .onChange(of: isFocused) { oldValue, newValue in
+            if oldValue, !newValue {
+                save()
+            }
+        }
+        .onChange(of: editable?.value) { _, value in
+            if !isFocused {
+                draft = value ?? ""
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func searchLabel(_ link: DataQualitySearchLink) -> some View {
+        switch link.kind {
+        case .google:
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12, weight: .semibold))
+        case .orcid:
+            Text("ORCID")
+                .font(appFont(.secondary).weight(.semibold))
+        case .pubmed:
+            Text("PubMed")
+                .font(appFont(.secondary).weight(.semibold))
+        case .crossref:
+            Text("Crossref")
+                .font(appFont(.secondary).weight(.semibold))
+        }
+    }
+
+    private func searchTitle(_ link: DataQualitySearchLink) -> String {
+        switch link.kind {
+        case .google:
+            return language.text("Search Google", "Sök på Google")
+        case .orcid:
+            return language.text("Search ORCID", "Sök i ORCID")
+        case .pubmed:
+            return language.text("Search PubMed", "Sök i PubMed")
+        case .crossref:
+            return language.text("Search Crossref", "Sök i Crossref")
+        }
+    }
+
+    /// The search phrase is shown in the tooltip only, never under the
+    /// field (it took too much room).
+    private func searchHelp(_ link: DataQualitySearchLink) -> String {
+        "\(searchTitle(link)): \(link.query)"
+    }
+
+    private func toggleHidden() {
+        if isHidden {
+            store.showDataQualityField(issue, field: field)
+        } else {
+            store.hideDataQualityField(issue, field: field)
+        }
+    }
+
+    private func save() {
+        guard let editable, !editable.isLocked, draft != editable.value else { return }
+        store.saveDataQualityField(issue, field: field, value: draft)
     }
 }
