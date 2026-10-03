@@ -425,30 +425,46 @@ enum PublicationAuthorCareerStage: String, Codable, Hashable, CaseIterable, Iden
     }
 
     static let overviewHelpText = """
-    A: Highest career stage, e.g., full professor
-    B: Intermediate stage between C and A, e.g., associate professor
-    C: First post after PhD, e.g., assistant professor or postdoctoral researcher
-    D: Doctoral student researcher
+    Career stages as defined in the Frascati Manual 2015 (used in Horizon Europe applications):
+    A – Top grade researcher: the single highest grade/post at which research is normally conducted, e.g., full professor or director of research
+    B – Senior researcher: more senior than newly qualified doctoral graduates, e.g., associate professor (docent), senior lecturer, senior researcher or principal investigator
+    C – Recognised researcher: the first post for a newly qualified doctoral graduate, e.g., assistant professor or postdoctoral fellow
+    D – First stage researcher: doctoral students, or researchers in posts that do not normally require a doctorate, e.g., junior researchers without a PhD
     """
 
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        let rawValue = (try? container.decode(String.self))?
+        let rawValue = (try? container.decode(String.self)) ?? ""
+        self = Self.storedStage(from: rawValue) ?? .categoryB
+    }
+
+    /// Tolkar ett sparat karriärsteg. Tom text betyder "inget karriärsteg" (nil).
+    /// Okänd icke-tom text faller tillbaka på B, precis som tidigare, så att
+    /// befintlig data inte ändras.
+    static func storedStage(from storedValue: String) -> PublicationAuthorCareerStage? {
+        let rawValue = storedValue
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased() ?? ""
+            .lowercased()
 
         switch rawValue {
+        case "":
+            return nil
         case "a", "categorya", "category a":
-            self = .categoryA
+            return .categoryA
         case "b", "categoryb", "category b":
-            self = .categoryB
+            return .categoryB
         case "c", "categoryc", "category c":
-            self = .categoryC
+            return .categoryC
         case "d", "categoryd", "category d":
-            self = .categoryD
+            return .categoryD
         default:
-            self = .categoryB
+            return .categoryB
         }
+    }
+
+    /// Text för visning/sortering när karriärsteg kan saknas.
+    static func displayText(for stage: PublicationAuthorCareerStage?) -> String {
+        stage?.rawValue ?? "–"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -926,7 +942,8 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
     var degreeEn: String
     var gender: PublicationAuthorGender
     var hasPhD: Bool
-    var careerStage: PublicationAuthorCareerStage
+    /// nil betyder att inget karriärsteg är valt (t.ex. läkarstudent som inte är doktorand).
+    var careerStage: PublicationAuthorCareerStage?
     var university: String
     var phoneLabel: String
     var phoneNumber: String
@@ -945,6 +962,17 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
     var employments: [PublicationAuthorEmployment]
     var educationEntries: [PublicationAuthorEducation]
     var publications: [PublicationAuthorContribution]
+    /// Befattningar valda ur listan i Inställningar > Listor (id:n, i vald
+    /// ordning). Tom = inget val; då visas den gamla texten i positionSv/En.
+    var positionIDs: [String]
+    /// Befattning som inte finns i listan ("Annan…").
+    var positionOtherSv: String
+    var positionOtherEn: String
+    /// Forskaren är docent (ger titeln Docent och minst karriärsteg B).
+    var isDocent: Bool
+    /// Examina valda ur listan, med ämne eller fri text. Tom = inget val;
+    /// då visas den gamla texten i degreeSv/En.
+    var degreeEntries: [ResearcherDegreeEntry]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -986,6 +1014,11 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         case employments
         case educationEntries
         case publications
+        case positionIDs
+        case positionOtherSv
+        case positionOtherEn
+        case isDocent
+        case degreeEntries
         case publicationCount
         case country
         case primaryAffiliation
@@ -1030,7 +1063,12 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         affiliations: [PublicationAffiliation] = [],
         employments: [PublicationAuthorEmployment] = [],
         educationEntries: [PublicationAuthorEducation] = [],
-        publications: [PublicationAuthorContribution] = []
+        publications: [PublicationAuthorContribution] = [],
+        positionIDs: [String] = [],
+        positionOtherSv: String = "",
+        positionOtherEn: String = "",
+        isDocent: Bool = false,
+        degreeEntries: [ResearcherDegreeEntry] = []
     ) {
         self.id = id
         self.name = name
@@ -1070,6 +1108,11 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         self.employments = employments
         self.educationEntries = educationEntries
         self.publications = publications
+        self.positionIDs = positionIDs
+        self.positionOtherSv = positionOtherSv
+        self.positionOtherEn = positionOtherEn
+        self.isDocent = isDocent
+        self.degreeEntries = degreeEntries
         normalize()
     }
 
@@ -1134,8 +1177,32 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
             affiliations: affiliations,
             employments: try container.decodeIfPresent([PublicationAuthorEmployment].self, forKey: .employments) ?? [],
             educationEntries: try container.decodeIfPresent([PublicationAuthorEducation].self, forKey: .educationEntries) ?? [],
-            publications: try container.decodeIfPresent([PublicationAuthorContribution].self, forKey: .publications) ?? []
+            publications: try container.decodeIfPresent([PublicationAuthorContribution].self, forKey: .publications) ?? [],
+            // Nya fält: saknas de (äldre data) blir de tomma.
+            positionIDs: (try? container.decodeIfPresent([String].self, forKey: .positionIDs)) ?? [],
+            positionOtherSv: (try? container.decodeIfPresent(String.self, forKey: .positionOtherSv)) ?? "",
+            positionOtherEn: (try? container.decodeIfPresent(String.self, forKey: .positionOtherEn)) ?? "",
+            isDocent: (try? container.decodeIfPresent(Bool.self, forKey: .isDocent)) ?? false,
+            degreeEntries: (try? container.decodeIfPresent([ResearcherDegreeEntry].self, forKey: .degreeEntries)) ?? []
         )
+        // Om nyckeln finns men är null eller tom text betyder det "inget karriärsteg".
+        // Saknas nyckeln helt (äldre data) behålls det föreslagna steget från init ovan.
+        if container.contains(.careerStage) {
+            self.careerStage = Self.decodeStoredCareerStage(from: container)
+        }
+    }
+
+    private static func decodeStoredCareerStage(
+        from container: KeyedDecodingContainer<CodingKeys>
+    ) -> PublicationAuthorCareerStage? {
+        if (try? container.decodeNil(forKey: .careerStage)) == true {
+            return nil
+        }
+        guard let storedValue = try? container.decode(String.self, forKey: .careerStage) else {
+            // Tidigare tolkades oläsbara värden som B; behåll det.
+            return .categoryB
+        }
+        return PublicationAuthorCareerStage.storedStage(from: storedValue)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1161,7 +1228,13 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         try container.encode(degreeEn, forKey: .degreeEn)
         try container.encode(gender, forKey: .gender)
         try container.encode(hasPhD, forKey: .hasPhD)
-        try container.encode(careerStage, forKey: .careerStage)
+        if let careerStage {
+            try container.encode(careerStage, forKey: .careerStage)
+        } else {
+            // Skriv uttryckligen null så att "inget karriärsteg" läses tillbaka som nil
+            // och inte som saknad nyckel (som ger ett föreslaget steg för äldre data).
+            try container.encodeNil(forKey: .careerStage)
+        }
         try container.encode(university, forKey: .university)
         try container.encode(phoneLabel, forKey: .phoneLabel)
         try container.encode(phoneNumber, forKey: .phoneNumber)
@@ -1181,6 +1254,23 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         try container.encode(employments, forKey: .employments)
         try container.encode(educationEntries, forKey: .educationEntries)
         try container.encode(publications, forKey: .publications)
+        // Nya fält skrivs bara när de har innehåll, så att forskare utan
+        // listval sparas exakt som förut.
+        if !positionIDs.isEmpty {
+            try container.encode(positionIDs, forKey: .positionIDs)
+        }
+        if !positionOtherSv.isEmpty {
+            try container.encode(positionOtherSv, forKey: .positionOtherSv)
+        }
+        if !positionOtherEn.isEmpty {
+            try container.encode(positionOtherEn, forKey: .positionOtherEn)
+        }
+        if isDocent {
+            try container.encode(isDocent, forKey: .isDocent)
+        }
+        if !degreeEntries.isEmpty {
+            try container.encode(degreeEntries, forKey: .degreeEntries)
+        }
     }
 
     mutating func normalize() {
@@ -1258,6 +1348,17 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         }
         educationEntries.removeAll(where: \.isEmpty)
         educationEntries = Self.sortedEducationEntriesForEditor(educationEntries)
+        positionIDs = positionIDs.compactMap(\.trimmedOrNil).uniqued()
+        positionOtherSv = positionOtherSv.trimmingCharacters(in: .whitespacesAndNewlines)
+        positionOtherEn = positionOtherEn.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Tomma examensrader tas inte bort här: redigeraren lägger till en tom
+        // rad för "Annan examen" som ska finnas kvar medan texten skrivs.
+        for index in degreeEntries.indices {
+            degreeEntries[index].optionID = degreeEntries[index].optionID?.trimmedOrNil
+            degreeEntries[index].subjectSv = degreeEntries[index].subjectSv.trimmingCharacters(in: .whitespacesAndNewlines)
+            degreeEntries[index].subjectEn = degreeEntries[index].subjectEn.trimmingCharacters(in: .whitespacesAndNewlines)
+            degreeEntries[index].otherText = degreeEntries[index].otherText.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         if !affiliations.isEmpty, !affiliations.contains(where: \.isPrimary) {
             affiliations[0].isPrimary = true
         }
@@ -1510,7 +1611,9 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
     }
 
     var displaySubtitle: String {
-        [position.nonEmpty, primaryAffiliation?.organization.nonEmpty].compactMap { $0 }.joined(separator: " · ")
+        // The positions chosen from the list, else the old text.
+        let positionText = structuredPositionText(language: .swedish).nonEmpty ?? position.nonEmpty
+        return [positionText, primaryAffiliation?.organization.nonEmpty].compactMap { $0 }.joined(separator: " · ")
     }
 
     var publicationCount: Int {

@@ -1739,6 +1739,8 @@ private struct PublicationAuthorEditorView: View {
     @State private var lastLocalAutosaveSnapshot: PublicationAuthor?
     @State private var duplicateWarningRefreshToken: UInt = 0
     @State private var careerStageIsFocused = false
+    /// "Keep current" on the career stage suggestion (this edit session only).
+    @State private var dismissedCareerStageSuggestionKey: String?
 
     init(
         store: GrantDataStore,
@@ -3425,52 +3427,57 @@ private struct PublicationAuthorEditorView: View {
         .appTextInputChrome()
     }
 
+    /// Position (chosen from the list) and degrees, the first row of the card.
+    private func positionAndDegreeRow(language: AppLanguage) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            compactField(language.text("Position", "Befattning"), width: 400) {
+                ResearcherPositionPickerField(
+                    positionIDs: positionIDsBinding,
+                    otherText: positionOtherBinding,
+                    options: store.researcherPositionOptions,
+                    legacyText: draft.localizedPosition(language: language),
+                    language: language,
+                    isDisabled: false
+                )
+            }
+            .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "position"))
+            compactField(language.text("Degree", "Examen"), width: 420) {
+                ResearcherDegreeListField(
+                    entries: degreeEntriesBinding,
+                    options: store.researcherDegreeOptions,
+                    legacyText: draft.localizedDegree(language: language),
+                    language: language,
+                    isDisabled: false,
+                    onChoiceChange: { scheduleAutosave(reason: "degrees") }
+                )
+            }
+            .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "degree"))
+        }
+    }
+
     private func corePanel(language: AppLanguage) -> some View {
         PublicationCompactPanel(title: "", usesInnerSurface: false) {
             VStack(alignment: .leading, spacing: 8) {
+                // The title is no longer typed in: it is worked out from the
+                // positions, Docent and PhD (the stored title text is kept).
+                positionAndDegreeRow(language: language)
                 HStack(alignment: .top, spacing: 10) {
-                    compactField(language.text("Title", "Titel"), width: 140) {
-                        researcherTextField(
-                            language.text("Title", "Titel"),
-                            text: localizedAuthorFieldBinding(.title, language: language)
-                        )
-                    }
-                    .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "title"))
-                    compactField(language.text("Position", "Position"), width: 140) {
-                        researcherTextField(
-                            language.text("Position", "Position"),
-                            text: localizedAuthorFieldBinding(.position, language: language)
-                        )
-                    }
-                    .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "position"))
-                    compactField(language.text("Degree", "Examen"), width: 240) {
-                        HStack(spacing: 10) {
-                            researcherTextField(
-                                language.text("Degree", "Examen"),
-                                text: localizedAuthorFieldBinding(.degree, language: language)
-                            )
-                            Toggle("PhD", isOn: Binding(
-                                get: { draft.hasPhD },
-                                set: { newValue in
-                                    let previous = draft
-                                    draft.hasPhD = newValue
-                                    reconcileCareerStage(previous: previous, forceFromPhDChange: previous.hasPhD != newValue)
-                                }
-                            ))
-                            .appCheckboxStyle()
-                            .fixedSize()
-                        }
+                    compactField(language.text("PhD and docent", "Doktorsexamen och docent"), width: 200) {
+                        phdAndDocentField(language: language)
                     }
                     .undoRevealPulse(
                         triggerID: store.undoRevealRequest?.id,
-                        isActive: undoRevealIsActive(fieldKey: "degree") || undoRevealIsActive(fieldKey: "hasPhD")
+                        isActive: undoRevealIsActive(fieldKey: "hasPhD") || undoRevealIsActive(fieldKey: "isDocent")
                     )
                     compactField(
                         language.text("Career stage (Frascati 2015)", "Karriärsteg (Frascati 2015)"),
                         width: 280,
                         helpText: PublicationAuthorCareerStage.overviewHelpText
                     ) {
-                        frascatiCareerStageField()
+                        VStack(alignment: .leading, spacing: 4) {
+                            frascatiCareerStageField()
+                            careerStageSuggestionRow(language: language)
+                        }
                     }
                     .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "careerStage"))
                     compactField(language.text("Gender", "Kön"), width: 130) {
@@ -4032,7 +4039,7 @@ private struct PublicationAuthorEditorView: View {
         .appKeyboardFocusPulse(isFocused: careerStageIsFocused, cornerRadius: 10)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(language.text("Career stage (Frascati 2015)", "Karriärsteg (Frascati 2015)"))
-        .accessibilityValue(draft.careerStage.rawValue)
+        .accessibilityValue(draft.careerStage?.rawValue ?? language.text("None", "Inget"))
         .accessibilityAdjustableAction { direction in
             moveCareerStageSelection(by: direction == .increment ? 1 : -1)
         }
@@ -4041,7 +4048,12 @@ private struct PublicationAuthorEditorView: View {
     private func moveCareerStageSelection(by offset: Int) {
         let stages = PublicationAuthorCareerStage.editorDisplayOrder
         guard !stages.isEmpty else { return }
-        let currentIndex = stages.firstIndex(of: draft.careerStage) ?? 0
+        // Inget steg valt: börja på första steget oavsett riktning.
+        guard let currentStage = draft.careerStage,
+              let currentIndex = stages.firstIndex(of: currentStage) else {
+            draft.careerStage = stages[0]
+            return
+        }
         draft.careerStage = stages[min(max(0, currentIndex + offset), stages.count - 1)]
     }
 
@@ -4050,7 +4062,8 @@ private struct PublicationAuthorEditorView: View {
         let isSelected = draft.careerStage == stage
 
         Button {
-            draft.careerStage = stage
+            // Klick på det redan valda steget avmarkerar det (inget karriärsteg).
+            draft.careerStage = isSelected ? nil : stage
         } label: {
             ZStack {
                 if isSelected {
@@ -4082,23 +4095,136 @@ private struct PublicationAuthorEditorView: View {
         .help(stage.helpText)
     }
 
+    /// After a change of positions, Docent or PhD: a researcher without a
+    /// career stage gets the suggested one (undo restores it). A chosen stage
+    /// is never changed here; when it differs from the suggestion the row
+    /// under the career stage offers the suggestion. A doctoral student (D)
+    /// who gets a PhD while no position gives a suggestion moves to C, as
+    /// before.
     private func reconcileCareerStage(
         previous: PublicationAuthor,
         forceFromPhDChange: Bool = false
     ) {
-        if forceFromPhDChange {
-            guard previous.hasPhD == false, draft.hasPhD else { return }
-            if let automaticStage = PublicationAuthor.automaticCareerStageWhenEnablingPhD(from: previous.careerStage) {
-                draft.careerStage = automaticStage
+        let suggestion = draft.careerStageSuggestion(options: store.researcherPositionOptions)
+        guard let currentStage = draft.careerStage else {
+            if let suggestion {
+                draft.careerStage = suggestion
             }
             return
         }
-
-        let previousSuggested = previous.suggestedCareerStage
-        let currentSuggested = draft.suggestedCareerStage
-        if draft.careerStage == previousSuggested {
-            draft.careerStage = currentSuggested
+        if forceFromPhDChange,
+           previous.hasPhD == false,
+           draft.hasPhD,
+           currentStage == .categoryD,
+           suggestion == nil,
+           let automaticStage = PublicationAuthor.automaticCareerStageWhenEnablingPhD(from: currentStage) {
+            draft.careerStage = automaticStage
         }
+    }
+
+    private var positionIDsBinding: Binding<[String]> {
+        Binding(
+            get: { draft.positionIDs },
+            set: { newValue in
+                let previous = draft
+                draft.positionIDs = newValue
+                reconcileCareerStage(previous: previous)
+                scheduleAutosave(reason: "positions")
+            }
+        )
+    }
+
+    private var positionOtherBinding: Binding<String> {
+        Binding(
+            get: { language == .swedish ? draft.positionOtherSv : draft.positionOtherEn },
+            set: { draft.setLocalizedPositionOther($0, language: language) }
+        )
+    }
+
+    private var degreeEntriesBinding: Binding<[ResearcherDegreeEntry]> {
+        Binding(
+            get: { draft.degreeEntries },
+            set: { draft.degreeEntries = $0 }
+        )
+    }
+
+    @ViewBuilder
+    private func phdAndDocentField(language: AppLanguage) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12) {
+                Toggle("PhD", isOn: Binding(
+                    get: { draft.hasPhD },
+                    set: { newValue in
+                        let previous = draft
+                        draft.hasPhD = newValue
+                        reconcileCareerStage(previous: previous, forceFromPhDChange: previous.hasPhD != newValue)
+                        scheduleAutosave(reason: "phd")
+                    }
+                ))
+                .appCheckboxStyle()
+                .fixedSize()
+                Toggle("Docent", isOn: Binding(
+                    get: { draft.isDocent },
+                    set: { newValue in
+                        let previous = draft
+                        draft.isDocent = newValue
+                        reconcileCareerStage(previous: previous)
+                        scheduleAutosave(reason: "docent")
+                    }
+                ))
+                .appCheckboxStyle()
+                .fixedSize()
+                .help(language.text(
+                    "Docent (Associate Professor title). Gives the title Docent and at least career stage B.",
+                    "Docent. Ger titeln Docent och minst karriärsteg B."
+                ))
+            }
+            if let title = draft.displayTitle(language: language, options: store.researcherPositionOptions).nonEmpty {
+                Text(language.text("Title: \(title)", "Titel: \(title)"))
+                    .appTypography(.secondary)
+                    .foregroundStyle(.secondary)
+                    .help(language.text(
+                        "Worked out from the positions, Docent and PhD; used in exports.",
+                        "Räknas fram ur befattning, docent och doktorsexamen; används i exporter."
+                    ))
+            }
+        }
+    }
+
+    /// "Föreslaget karriärsteg: B" with Use / Keep current, when the chosen
+    /// stage differs from what the positions suggest. Keep current hides it
+    /// for this researcher until the stage or the suggestion changes.
+    @ViewBuilder
+    private func careerStageSuggestionRow(language: AppLanguage) -> some View {
+        if let suggestion = draft.careerStageSuggestion(options: store.researcherPositionOptions),
+           let current = draft.careerStage,
+           suggestion != current,
+           dismissedCareerStageSuggestionKey != careerStageSuggestionKey(current: current, suggestion: suggestion) {
+            HStack(spacing: 8) {
+                Text(language.text(
+                    "Suggested career stage: \(suggestion.rawValue)",
+                    "Föreslaget karriärsteg: \(suggestion.rawValue)"
+                ))
+                .appTypography(.secondary)
+                .foregroundStyle(.secondary)
+                Button(language.text("Use", "Använd")) {
+                    draft.careerStage = suggestion
+                    scheduleAutosave(reason: "career-stage-suggestion")
+                }
+                .controlSize(.small)
+                Button(language.text("Keep current", "Behåll nuvarande")) {
+                    dismissedCareerStageSuggestionKey = careerStageSuggestionKey(current: current, suggestion: suggestion)
+                }
+                .controlSize(.small)
+            }
+        }
+    }
+
+    private func careerStageSuggestionKey(
+        current: PublicationAuthorCareerStage,
+        suggestion: PublicationAuthorCareerStage
+    ) -> String {
+        "\(draft.id)-\(current.rawValue)-\(suggestion.rawValue)"
     }
 
     private func affiliationMailURL(for index: Int) -> URL? {

@@ -75,6 +75,19 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 |---|---|---|---|
 | F47 | Offentlig kod | Inga namn på organisationer eller orter i koden. Standardprogrammet heter "Programmet", fakulteten är tom och hemregionen och lönekalkylens organisation väljs aldrig utifrån namnet; lönekalkylens standardmall har inga egna kostnadssatser. De värden som tidigare var inbyggda sparades i datan av versionen före denna. Kolumnen för lärosätets diarienummer i ansökningsexporten heter nu "Diarienummer hos lärosätet". Kontaktadressen i exporten av pedagogiska meriter är borttagen (ansökan skickas via ett webbformulär); en sparad adress läses in utan fel och används inte. | Klar 2026-09-29 (första offentliga versionen) |
 
+## Omgång 20 – pågår (Datakvalitet, arbetstid i kalendern, befattningar och karriärsteg)
+
+| Nr | Område | Ändring | Status |
+|---|---|---|---|
+| F132 | Datakvalitet | Rubrikerna ligger i en egen panel mellan navigeringen och vyn, som under Statistik, med antal per rubrik. | Gjord, ej testad |
+| F133 | Datakvalitet, saknade fält | Enkla textfält fylls i direkt i kortet (sparas med Enter eller när man lämnar fältet, går att ångra). Kort med det som redan är känt om posten. Fältknappar som filtrerar på ett fält i taget. "Dölj fältet" utöver "Dölj posten". | Gjord, ej testad |
+| F134 | Datakvalitet, sökning | Sökknappar per saknat fält: Google med fältanpassad sökfras, ORCID-sökning för forskare, PubMed och Crossref för publikationer. Sökfrasen visas bara när man håller musen över knappen. | Gjord, ej testad |
+| F135 | Kalendern | Inställningen Arbetstid (från–till). I veckovyn får tid utanför arbetstid och hela helgen ljusgrå bakgrund. Tydligare linjer mellan timmar och dagar. | Gjord, ej testad |
+| F136 | Forskare | Karriärsteg kan avmarkeras (klick på valt steg tar bort det). Nya forskare får inget steg från början. | Gjord, ej testad |
+| F137 | Datakvalitet, forskare | Varningar när karriärsteg och doktorsexamen inte går ihop, när steget skiljer sig från förslaget utifrån befattningen, och när befattning eller examen ligger utanför listorna. | Gjord, ej testad |
+| F138 | Forskare | Befattning och examen väljs ur listor (flera val), docent som egen kryssruta, titel räknas fram vid export. Gammal text sparas kvar och översätts till listval där det är entydigt. Förslag på karriärsteg enligt Frascati 2015 / Horizon Europe, som kan godtas eller avböjas. | Gjord, ej testad |
+| F139 | Inställningar | Ny flik Listor för befattningar och examina: lägg till, byt namn, dölj, sortera, antal som använder varje val. | Gjord, ej testad |
+
 ## Omgång 19 – klar 2026-10-02 (#14) (kalenderlistan och klockslag för uppgifter)
 
 | Nr | Område | Ändring | Status |

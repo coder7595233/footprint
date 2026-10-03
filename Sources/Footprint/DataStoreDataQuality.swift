@@ -161,7 +161,8 @@ extension GrantDataStore {
                 missingFields: issue.missingFields,
                 severity: shouldTreatAsCritical(issue.missingFields) ? .critical : .warning,
                 whyFlagged: reasonText(for: issue.missingFields),
-                suggestedFix: suggestedFixText(for: issue.missingFields)
+                suggestedFix: suggestedFixText(for: issue.missingFields),
+                fieldKeys: issue.fieldKeys
             )
         }
 
@@ -172,8 +173,13 @@ extension GrantDataStore {
             let isOpenCall = application.resultLabel.trimmingCharacters(in: .whitespacesAndNewlines) == "Att söka"
                 && (application.closeDate.map { $0 >= Calendar.current.startOfDay(for: Date()) } ?? false)
             var missing: [String] = []
+            var keys: [String: DataQualityFieldKey] = [:]
+            func flag(_ key: DataQualityFieldKey, _ label: String) {
+                missing.append(label)
+                keys[label] = key
+            }
             if application.organization.trimmedOrNil == nil {
-                missing.append(language.text("Funder", "Anslagsgivare"))
+                flag(.applicationFunder, language.text("Funder", "Anslagsgivare"))
             }
             if application.derivedResult?.trimmedOrNil == nil {
                 missing.append(language.text("Status", "Status"))
@@ -184,7 +190,7 @@ extension GrantDataStore {
                     missing.append(language.text("Project", "Projekt"))
                 }
                 if application.applicationTitle?.trimmedOrNil == nil {
-                    missing.append(language.text("Application title", "Ansökningstitel"))
+                    flag(.applicationTitle, language.text("Application title", "Ansökningstitel"))
                 }
             }
             if trimmedStatus == "Att söka" || trimmedStatus == "Väntar svar" {
@@ -319,7 +325,8 @@ extension GrantDataStore {
                         ]
                         .compactMap { $0 }
                         .joined(separator: " · "),
-                        missingFields: missing
+                        missingFields: missing,
+                        fieldKeys: keys
                     )
                 )
             }
@@ -327,8 +334,11 @@ extension GrantDataStore {
 
         for project in projects where !project.isArchived {
             var missing: [String] = []
+            var keys: [String: DataQualityFieldKey] = [:]
             if project.nameSv.trimmedOrNil == nil {
-                missing.append(language.text("Swedish name", "Svenskt namn"))
+                let label = language.text("Swedish name", "Svenskt namn")
+                missing.append(label)
+                keys[label] = .projectSwedishName
             }
             if project.collaboratorNames.isEmpty {
                 missing.append(language.text("Collaborators", "Medarbetare"))
@@ -376,7 +386,8 @@ extension GrantDataStore {
                         destination: .projects,
                         title: dataQualityLocalizedOptionDisplayName(project),
                         subtitle: language.text("Project", "Projekt"),
-                        missingFields: missing
+                        missingFields: missing,
+                        fieldKeys: keys
                     )
                 )
             }
@@ -430,8 +441,11 @@ extension GrantDataStore {
             if organization.country.trimmedOrNil != nil && !isKnownCountry(organization.country) {
                 missing.append(language.text("Organization country is not a real country", "Organisationens land är inte ett riktigt land"))
             }
+            var keys: [String: DataQualityFieldKey] = [:]
             if !looksLikeWebURL(organization.websiteURL) {
-                missing.append(language.text("Website URL is invalid", "Hemsidelänk är ogiltig"))
+                let label = language.text("Website URL is invalid", "Hemsidelänk är ogiltig")
+                missing.append(label)
+                keys[label] = .organizationWebsiteFormat
             }
             if !missing.isEmpty {
                 issues.append(
@@ -442,7 +456,8 @@ extension GrantDataStore {
                         destination: .organizations,
                         title: dataQualityLocalizedOptionDisplayName(organization),
                         subtitle: language.text("Funder", "Anslagsgivare"),
-                        missingFields: missing
+                        missingFields: missing,
+                        fieldKeys: keys
                     )
                 )
             }
@@ -450,43 +465,49 @@ extension GrantDataStore {
 
         for author in publicationAuthors {
             var missing: [String] = []
+            var keys: [String: DataQualityFieldKey] = [:]
+            func flag(_ key: DataQualityFieldKey, _ label: String) {
+                missing.append(label)
+                keys[label] = key
+            }
             if author.firstName.trimmedOrNil == nil {
-                missing.append(language.text("First name", "Förnamn"))
+                flag(.researcherFirstName, language.text("First name", "Förnamn"))
             }
             if author.lastName.trimmedOrNil == nil {
-                missing.append(language.text("Last name", "Efternamn"))
+                flag(.researcherLastName, language.text("Last name", "Efternamn"))
             }
-            if author.title.trimmedOrNil == nil {
-                missing.append(language.text("Title", "Titel"))
+            // The title is worked out from position, docent and PhD and is no
+            // longer typed in, so a missing title is not flagged. Position and
+            // degree count as present when chosen from the lists or written
+            // in the old text fields.
+            if !author.hasStructuredPosition && author.position.trimmedOrNil == nil {
+                flag(.researcherPosition, language.text("Position", "Position"))
             }
-            if author.position.trimmedOrNil == nil {
-                missing.append(language.text("Position", "Position"))
-            }
-            if author.degree.trimmedOrNil == nil {
-                missing.append(language.text("Degree", "Examen"))
+            if !author.hasStructuredDegree && author.degree.trimmedOrNil == nil {
+                flag(.researcherDegree, language.text("Degree", "Examen"))
             }
             if author.orcid.trimmedOrNil == nil {
-                missing.append("ORCID")
+                flag(.researcherORCID, "ORCID")
             }
             if author.primaryAffiliation?.organization.trimmedOrNil == nil {
-                missing.append(language.text("Primary affiliation organization", "Primär affilieringsorganisation"))
+                flag(.researcherPrimaryOrganization, language.text("Primary affiliation organization", "Primär affilieringsorganisation"))
             }
             if author.primaryAffiliation?.country.trimmedOrNil == nil {
-                missing.append(language.text("Primary affiliation country", "Primärt land"))
+                flag(.researcherPrimaryCountry, language.text("Primary affiliation country", "Primärt land"))
             }
             if author.primaryAffiliation?.email.trimmedOrNil == nil {
-                missing.append(language.text("Primary affiliation email", "Primär e-post"))
+                flag(.researcherPrimaryEmail, language.text("Primary affiliation email", "Primär e-post"))
             }
             if author.gender == .unspecified {
-                missing.append(language.text("Gender", "Kön"))
+                flag(.researcherGender, language.text("Gender", "Kön"))
             }
             if !looksLikeORCID(author.orcid) {
-                missing.append(language.text("ORCID format is invalid", "ORCID-formatet är ogiltigt"))
+                flag(.researcherORCIDFormat, language.text("ORCID format is invalid", "ORCID-formatet är ogiltigt"))
             } else if let orcid = author.orcid.trimmedOrNil,
                       !PublicationAuthor.isValidORCID(PublicationAuthor.normalizedORCID(orcid)) {
                 // F19: the right shape but a mistyped digit; the last
                 // character is a check digit computed from the others.
-                missing.append(language.text("ORCID check digit is invalid", "ORCID har ogiltig kontrollsiffra"))
+                flag(.researcherORCIDCheckDigit, language.text("ORCID check digit is invalid", "ORCID har ogiltig kontrollsiffra"))
             }
             if !author.affiliations.isEmpty && author.affiliations.filter(\.isPrimary).count > 1 {
                 missing.append(language.text("Multiple primary affiliations", "Flera primära affilieringar"))
@@ -522,7 +543,8 @@ extension GrantDataStore {
                         destination: .people,
                         title: author.displayName,
                         subtitle: [author.title.nonEmpty, author.primaryAffiliation?.organization.nonEmpty].compactMap { $0 }.joined(separator: " · "),
-                        missingFields: missing
+                        missingFields: missing,
+                        fieldKeys: keys
                     )
                 )
             }
@@ -541,20 +563,25 @@ extension GrantDataStore {
             var journalIssues: [MissingFieldIssue] = []
             for journal in publicationJournals {
                 var missing: [String] = []
+                var keys: [String: DataQualityFieldKey] = [:]
+                func flag(_ key: DataQualityFieldKey, _ label: String) {
+                    missing.append(label)
+                    keys[label] = key
+                }
                 if journal.name.trimmedOrNil == nil {
-                    missing.append(language.text("Name", "Namn"))
+                    flag(.journalName, language.text("Name", "Namn"))
                 }
                 if journal.issn.trimmedOrNil == nil && journal.eissn.trimmedOrNil == nil {
-                    missing.append(language.text("ISSN or eISSN", "ISSN eller eISSN"))
+                    flag(.journalISSN, language.text("ISSN or eISSN", "ISSN eller eISSN"))
                 }
                 if journal.country.trimmedOrNil != nil && !isKnownCountry(journal.country) {
                     missing.append(language.text("Country is not a real country", "Land är inte ett riktigt land"))
                 }
                 if !looksLikeWebURL(journal.journalURL) {
-                    missing.append(language.text("Journal URL is invalid", "Tidskriftslänk är ogiltig"))
+                    flag(.journalURLFormat, language.text("Journal URL is invalid", "Tidskriftslänk är ogiltig"))
                 }
                 if !looksLikeWebURL(journal.submissionPortalURL) {
-                    missing.append(language.text("Submission portal URL is invalid", "Inskicksportalens länk är ogiltig"))
+                    flag(.journalSubmissionPortalFormat, language.text("Submission portal URL is invalid", "Inskicksportalens länk är ogiltig"))
                 }
                 if journal.rankingRows.contains(where: { $0.yearlyMetrics.isEmpty }) {
                     missing.append(language.text("Ranking row has no year values", "Rankingrad saknar årsvärden"))
@@ -571,7 +598,8 @@ extension GrantDataStore {
                             destination: .journals,
                             title: journal.name,
                             subtitle: [journal.publisher.nonEmpty, journal.issn.nonEmpty, journal.eissn.nonEmpty].compactMap { $0 }.joined(separator: " · "),
-                            missingFields: missing
+                            missingFields: missing,
+                            fieldKeys: keys
                         )
                     )
                 }
@@ -586,8 +614,13 @@ extension GrantDataStore {
 
         for publication in publicationRecords {
             var missing: [String] = []
+            var keys: [String: DataQualityFieldKey] = [:]
+            func flag(_ key: DataQualityFieldKey, _ label: String) {
+                missing.append(label)
+                keys[label] = key
+            }
             if publication.title.trimmedOrNil == nil {
-                missing.append(language.text("Title", "Titel"))
+                flag(.publicationTitle, language.text("Title", "Titel"))
             }
             if publication.statusLabel.trimmedOrNil == nil {
                 missing.append(language.text("Status", "Status"))
@@ -595,7 +628,7 @@ extension GrantDataStore {
             if publication.journal.trimmedOrNil == nil {
                 let status = PublicationStatus.fromStored(publication.statusLabel)
                 if status == .submitted || status == .accepted || status == .published {
-                    missing.append(language.text("Journal", "Tidskrift"))
+                    flag(.publicationJournal, language.text("Journal", "Tidskrift"))
                 }
             }
             if PublicationStatus.fromStored(publication.statusLabel) == .submitted,
@@ -604,10 +637,10 @@ extension GrantDataStore {
             }
             if PublicationStatus.fromStored(publication.statusLabel) == .published,
                publication.year.trimmedOrNil == nil {
-                missing.append(language.text("Year", "År"))
+                flag(.publicationYear, language.text("Year", "År"))
             }
             if publication.authorNames.isEmpty {
-                missing.append(language.text("Authors", "Författare"))
+                flag(.publicationAuthors, language.text("Authors", "Författare"))
             }
             if publication.projectName?.trimmedOrNil == nil {
                 missing.append(language.text("Project", "Projekt"))
@@ -626,13 +659,13 @@ extension GrantDataStore {
                 missing.append(language.text("Current status date differs from publication history", "Nuvarande statusdatum skiljer sig från publikationshistoriken"))
             }
             if !looksLikeDOI(publication.doi) {
-                missing.append(language.text("DOI format is invalid", "DOI-formatet är ogiltigt"))
+                flag(.publicationDOIFormat, language.text("DOI format is invalid", "DOI-formatet är ogiltigt"))
             }
             if publication.epubDate.trimmedOrNil != nil, parsedDay(publication.epubDate) == nil {
                 missing.append(language.text("Epub date format is invalid", "Epub-datumformatet är ogiltigt"))
             }
             if !looksLikePMID(publication.pmid) {
-                missing.append(language.text("PMID format is invalid", "PMID-formatet är ogiltigt"))
+                flag(.publicationPMIDFormat, language.text("PMID format is invalid", "PMID-formatet är ogiltigt"))
             }
             if publication.statusTimeline.count > 1 {
                 for pair in zip(publication.statusTimeline, publication.statusTimeline.dropFirst()) {
@@ -677,7 +710,8 @@ extension GrantDataStore {
                         destination: .publications,
                         title: publication.title.nonEmpty ?? publication.number,
                         subtitle: [publication.journal.nonEmpty, publication.projectName.nonEmpty].compactMap { $0 }.joined(separator: " · "),
-                        missingFields: missing
+                        missingFields: missing,
+                        fieldKeys: keys
                     )
                 )
             }
@@ -771,11 +805,16 @@ extension GrantDataStore {
 
         for candidate in doctoralCandidates {
             var missing: [String] = []
+            var keys: [String: DataQualityFieldKey] = [:]
+            func flag(_ key: DataQualityFieldKey, _ label: String) {
+                missing.append(label)
+                keys[label] = key
+            }
             if candidate.candidateName.trimmedOrNil == nil {
-                missing.append(language.text("Doctoral candidate name", "Doktorandnamn"))
+                flag(.doctoralCandidateName, language.text("Doctoral candidate name", "Doktorandnamn"))
             }
             if candidate.institution.trimmedOrNil == nil {
-                missing.append(language.text("University", "Lärosäte"))
+                flag(.doctoralInstitution, language.text("University", "Lärosäte"))
             }
             if candidate.supervisors.isEmpty {
                 missing.append(language.text("Supervisor", "Handledare"))
@@ -836,7 +875,8 @@ extension GrantDataStore {
                         destination: .doctoralCandidates,
                         title: candidate.candidateName.nonEmpty ?? candidate.id,
                         subtitle: [candidate.institution.nonEmpty, candidate.doctoralProjectName.nonEmpty].compactMap { $0 }.joined(separator: " · "),
-                        missingFields: missing
+                        missingFields: missing,
+                        fieldKeys: keys
                     )
                 )
             }
@@ -2145,6 +2185,9 @@ extension GrantDataStore {
                 )
             }
         }
+
+        // Karriärsteg som inte stämmer med doktorsexamen (egen fil).
+        issues.append(contentsOf: dataQualityCareerStageIssues())
 
         // F19: links to records that no longer exist, and times in the wrong
         // order. Kept in their own pass so the check after saving can run

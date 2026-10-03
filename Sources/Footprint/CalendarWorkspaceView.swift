@@ -4203,6 +4203,9 @@ struct CalendarWorkspaceView: View {
     @State private var calendarWeekWindowRequestKey: String?
     /// Bumped each time the filtered day groups are rebuilt.
     @State private var calendarDerivedDataRevision = 0
+    /// Settings > Calendar > Working hours, kept in step with the store
+    /// while the week view is shown.
+    @State private var calendarWeekWorkingHours = CalendarWorkingHoursSettings.standard
 
     private let listHorizontalPadding: CGFloat = 22
     private let calendarFilterSidebarWidth: CGFloat = 244
@@ -9734,6 +9737,7 @@ extension CalendarWorkspaceView {
                     model: model,
                     language: language,
                     usesDarkAppearance: effectiveUsesDarkAppearance,
+                    workingHours: calendarWeekWorkingHours,
                     onPreviousWeek: { moveCalendarWeek(by: -1) },
                     onNextWeek: { moveCalendarWeek(by: 1) },
                     // Same as clicking the title in the list: open the editor when
@@ -9761,6 +9765,15 @@ extension CalendarWorkspaceView {
         }
         .onChange(of: calendarWeekModelSignatureValue) { _, _ in
             refreshCalendarWeekModelIfNeeded()
+        }
+        // The current value arrives at once, then each change made in
+        // Settings, so the grey shading follows the working hours directly.
+        .onReceive(
+            store.$metadata
+                .map { ($0.calendarWorkingHours ?? CalendarWorkingHoursSettings.standard).normalized() }
+                .removeDuplicates()
+        ) { workingHours in
+            calendarWeekWorkingHours = workingHours
         }
         .onChange(of: pinnedCalendarNavigationDate) { _, newValue in
             // "Show in calendar" from another workspace pins the target day;
