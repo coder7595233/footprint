@@ -3434,10 +3434,13 @@ private struct PublicationAuthorEditorView: View {
                 ResearcherPositionPickerField(
                     positionIDs: positionIDsBinding,
                     otherText: positionOtherBinding,
+                    specialtyIDs: positionSpecialtyIDsBinding,
                     options: store.researcherPositionOptions,
+                    specialtyOptions: store.researcherSpecialtyOptions,
                     legacyText: draft.localizedPosition(language: language),
                     language: language,
-                    isDisabled: false
+                    isDisabled: false,
+                    onChoiceChange: { scheduleAutosave(reason: "position-other") }
                 )
             }
             .undoRevealPulse(triggerID: store.undoRevealRequest?.id, isActive: undoRevealIsActive(fieldKey: "position"))
@@ -4130,6 +4133,17 @@ private struct PublicationAuthorEditorView: View {
                 draft.positionIDs = newValue
                 reconcileCareerStage(previous: previous)
                 scheduleAutosave(reason: "positions")
+            }
+        )
+    }
+
+    private var positionSpecialtyIDsBinding: Binding<[String: String]> {
+        Binding(
+            get: { draft.positionSpecialtyIDs },
+            set: { newValue in
+                guard draft.positionSpecialtyIDs != newValue else { return }
+                draft.positionSpecialtyIDs = newValue
+                scheduleAutosave(reason: "position-specialty")
             }
         )
     }

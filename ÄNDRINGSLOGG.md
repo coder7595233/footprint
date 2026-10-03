@@ -87,6 +87,9 @@ Loggen uppdateras i samma pull request som ändringen. Status: Öppen, Pågår, 
 | F137 | Datakvalitet, forskare | Varningar när karriärsteg och doktorsexamen inte går ihop, när steget skiljer sig från förslaget utifrån befattningen, och när befattning eller examen ligger utanför listorna. | Gjord, ej testad |
 | F138 | Forskare | Befattning och examen väljs ur listor (flera val), docent som egen kryssruta, titel räknas fram vid export. Gammal text sparas kvar och översätts till listval där det är entydigt. Förslag på karriärsteg enligt Frascati 2015 / Horizon Europe, som kan godtas eller avböjas. | Gjord, ej testad |
 | F139 | Inställningar | Ny flik Listor för befattningar och examina: lägg till, byt namn, dölj, sortera, antal som använder varje val. | Gjord, ej testad |
+| F140 | Datakvalitet, forskare | Varningarna om karriärsteg, doktorsexamen och befattning eller examen utanför listan rättas direkt i raden: Använd förslaget, D/C/B/A-knappar, kryssruta för doktorsexamen, Välj befattning/examen och Lägg till i listan. | Gjord, ej testad |
+| F141 | Forskare | Befattningsraderna ser ut som examensraderna (meny och minusknapp). Befattningar visas alltid akademiska först, sedan kliniska, sist övrigt. | Gjord, ej testad |
+| F142 | Forskare, Listor | Läkarspecialitet för ST-läkare, Specialistläkare och Överläkare ("Specialistläkare i allmänmedicin"), med egen lista under Inställningar > Listor. Engångssteg som läser specialiteten ur den gamla befattningstexten. | Gjord, ej testad |
 
 ## Omgång 19 – klar 2026-10-02 (#14) (kalenderlistan och klockslag för uppgifter)
 

@@ -3616,6 +3616,8 @@ struct DataSourceMetadata: Codable, Hashable {
     var researcherPositionOptions: [ResearcherPositionOption]? = nil
     /// Settings > Lists: the researchers' degrees. nil = the built-in list.
     var researcherDegreeOptions: [ResearcherDegreeOption]? = nil
+    /// Settings > Lists: physicians' specialties. nil = the built-in list.
+    var researcherSpecialtyOptions: [ResearcherSpecialtyOption]? = nil
 
     static let bundledDefault = DataSourceMetadata(
         sourceDescription: "Bundled data from for app.xlsx",
