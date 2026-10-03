@@ -260,6 +260,11 @@ extension GrantDataStore {
         (metadata.calendarReminderSettings ?? .standard).normalized()
     }
 
+    /// Settings > Calendar > Working hours (week view shading).
+    var calendarWorkingHours: CalendarWorkingHoursSettings {
+        (metadata.calendarWorkingHours ?? .standard).normalized()
+    }
+
     /// The organization whose salary calculator is used for applications
     /// (the one with "Use as salary calculator for applications" ticked).
     var applicationSalaryCalculatorOrganization: OrganizationRecord? {
@@ -299,6 +304,17 @@ extension GrantDataStore {
         persistMetadataSilently(
             updated,
             undoActionName: language.text("Edit reminder times", "Redigera påminnelsetider")
+        )
+    }
+
+    func autosaveCalendarWorkingHours(_ settings: CalendarWorkingHoursSettings) {
+        let normalized = settings.normalized()
+        var updated = editableMetadataSnapshot
+        updated.calendarWorkingHours = normalized == .standard ? nil : normalized
+        guard updated != editableMetadataSnapshot else { return }
+        persistMetadataSilently(
+            updated,
+            undoActionName: language.text("Edit working hours", "Redigera arbetstid")
         )
     }
 

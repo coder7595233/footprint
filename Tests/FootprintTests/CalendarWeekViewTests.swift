@@ -259,6 +259,107 @@ final class CalendarWeekViewTests: XCTestCase {
     }
 }
 
+/// Settings > Calendar > Working hours and the grey background outside
+/// them in the week view. All values are made up.
+final class CalendarWorkingHoursTests: XCTestCase {
+    private func mondayCalendar() -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Stockholm") ?? .current
+        calendar.firstWeekday = 2
+        return calendar
+    }
+
+    func testDefaultsAreEightToFiveAndOn() {
+        let settings = CalendarWorkingHoursSettings.standard
+        XCTAssertEqual(settings.startTime, "08:00")
+        XCTAssertEqual(settings.endTime, "17:00")
+        XCTAssertTrue(settings.marksOutsideWorkingHours)
+        XCTAssertEqual(settings.workingSpan, CalendarWeekTimeSpan(startMinute: 480, endMinute: 1020))
+    }
+
+    func testWeekdayIsShadedBeforeAndAfterWorkingHours() {
+        let spans = calendarWeekViewOutsideWorkingHoursSpans(isWeekend: false, settings: .standard)
+        XCTAssertEqual(spans, [
+            CalendarWeekTimeSpan(startMinute: 0, endMinute: 480),
+            CalendarWeekTimeSpan(startMinute: 1020, endMinute: 1440)
+        ])
+    }
+
+    func testPartialHoursAreKept() {
+        let settings = CalendarWorkingHoursSettings(startTime: "08:30", endTime: "16:45")
+        let spans = calendarWeekViewOutsideWorkingHoursSpans(isWeekend: false, settings: settings)
+        XCTAssertEqual(spans, [
+            CalendarWeekTimeSpan(startMinute: 0, endMinute: 510),
+            CalendarWeekTimeSpan(startMinute: 1005, endMinute: 1440)
+        ])
+    }
+
+    func testWorkingDayFromMidnightOnlyShadesTheEvening() {
+        let settings = CalendarWorkingHoursSettings(startTime: "00:00", endTime: "18:00")
+        let spans = calendarWeekViewOutsideWorkingHoursSpans(isWeekend: false, settings: settings)
+        XCTAssertEqual(spans, [CalendarWeekTimeSpan(startMinute: 1080, endMinute: 1440)])
+    }
+
+    func testWeekendIsShadedAllDay() {
+        let spans = calendarWeekViewOutsideWorkingHoursSpans(isWeekend: true, settings: .standard)
+        XCTAssertEqual(spans, [CalendarWeekTimeSpan(startMinute: 0, endMinute: 1440)])
+    }
+
+    func testNothingIsShadedWhenSwitchedOff() {
+        let settings = CalendarWorkingHoursSettings(marksOutsideWorkingHours: false)
+        XCTAssertEqual(calendarWeekViewOutsideWorkingHoursSpans(isWeekend: false, settings: settings), [])
+        XCTAssertEqual(calendarWeekViewOutsideWorkingHoursSpans(isWeekend: true, settings: settings), [])
+    }
+
+    func testStartNotBeforeEndIsIgnored() {
+        let reversed = CalendarWorkingHoursSettings(startTime: "17:00", endTime: "08:00")
+        XCTAssertNil(reversed.workingSpan)
+        XCTAssertEqual(calendarWeekViewOutsideWorkingHoursSpans(isWeekend: false, settings: reversed), [])
+        XCTAssertEqual(calendarWeekViewOutsideWorkingHoursSpans(isWeekend: true, settings: reversed), [])
+
+        let same = CalendarWorkingHoursSettings(startTime: "09:00", endTime: "09:00")
+        XCTAssertNil(same.workingSpan)
+    }
+
+    func testNormalizedWritesTimesAsHourMinuteAndFallsBack() {
+        let settings = CalendarWorkingHoursSettings(startTime: "7:5", endTime: "nonsense").normalized()
+        XCTAssertEqual(settings.startTime, "07:05")
+        XCTAssertEqual(settings.endTime, "17:00")
+    }
+
+    func testDecodingOldOrPartialDataUsesDefaults() throws {
+        let data = Data(#"{"startTime":"09:00"}"#.utf8)
+        let decoded = try JSONDecoder().decode(CalendarWorkingHoursSettings.self, from: data)
+        XCTAssertEqual(decoded.startTime, "09:00")
+        XCTAssertEqual(decoded.endTime, "17:00")
+        XCTAssertTrue(decoded.marksOutsideWorkingHours)
+    }
+
+    func testAppSettingsSnapshotKeepsWorkingHours() {
+        var metadata = DataSourceMetadata.bundledDefault
+        metadata.calendarWorkingHours = CalendarWorkingHoursSettings(startTime: "07:30", endTime: "16:00")
+        let snapshot = AppSettingsSnapshot(metadata: metadata)
+        let restored = snapshot.applying(to: DataSourceMetadata.bundledDefault)
+        XCTAssertEqual(restored.calendarWorkingHours, metadata.calendarWorkingHours)
+    }
+
+    func testSaturdayAndSundayAreWeekendWhateverTheWeekStart() throws {
+        let calendar = mondayCalendar()
+        // 2026-10-05 is a Monday.
+        let monday = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 10, day: 5)))
+        let days = calendarWeekViewDays(weekStart: monday, calendar: calendar)
+        XCTAssertEqual(days.map { calendarWeekViewIsWeekend($0, calendar: calendar) },
+                       [false, false, false, false, false, true, true])
+
+        var sundayCalendar = calendar
+        sundayCalendar.firstWeekday = 1
+        let sunday = try XCTUnwrap(calendar.date(byAdding: .day, value: -1, to: monday))
+        let sundayWeek = calendarWeekViewDays(weekStart: sunday, calendar: sundayCalendar)
+        XCTAssertEqual(sundayWeek.map { calendarWeekViewIsWeekend($0, calendar: sundayCalendar) },
+                       [true, false, false, false, false, false, true])
+    }
+}
+
 final class CalendarWeekSwipeTests: XCTestCase {
     func testSidewaysSwipeChangesWeek() {
         XCTAssertEqual(CalendarWeekSwipeTracker.direction(totalX: 120, totalY: 10), .previous)
