@@ -86,7 +86,9 @@ final class ResearcherSpecialtyAndQualityFixTests: XCTestCase {
     }
 
     func testSpecialtyListRoundTripAndBuiltInList() throws {
-        XCTAssertEqual(specialties.count, 37)
+        XCTAssertEqual(specialties.count, 51)
+        XCTAssertEqual(ResearcherSpecialtyOption.builtInPhysicianOptions.count, 37)
+        XCTAssertEqual(ResearcherSpecialtyOption.builtInNurseOptions.count, 14)
         XCTAssertEqual(Set(specialties.map(\.id)).count, specialties.count)
         XCTAssertEqual(ResearcherSpecialtyOption.resolvedOptions(nil), specialties)
 

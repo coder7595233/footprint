@@ -1102,7 +1102,9 @@ extension GrantDataStore {
     // (runResearcherOptionListMigration).
     // 27: physicians' specialties from the written position text
     // (runResearcherSpecialtyMigration).
-    private static let startupMaintenanceVersion = 27
+    // 28: specialist nurses' specialties from the written position text
+    // (runResearcherNurseSpecialtyMigration).
+    private static let startupMaintenanceVersion = 28
     private static let deferredLaunchMaintenanceVersion = 4
     private static let bundledJournalMetricVersion = 1
     private static let maintenanceMarkersStorageKey = "maintenance_markers"

@@ -330,19 +330,29 @@ enum ResearcherLegacyFieldMapping {
     /// ensamt specialistord ("geriatriker", "Kirurg") ger specialiteten till
     /// textens enda läkarbefattning utan specialitet, eller, när texten inte
     /// har någon läkarbefattning, Specialistläkare med den specialiteten.
+    /// Samma sak för sjuksköterskor: "Specialistsjuksköterska inom
+    /// intensivvård" får specialiteten, och "Distriktssköterska" eller
+    /// "Operationssjuksköterska" ger Specialistsjuksköterska med specialiteten.
     static func mapPositionText(_ text: String) -> PositionResult {
         var result = PositionResult()
         let synonyms = positionSynonyms()
         let protected = protectingSpecialtyNames(text)
         var outcomes: [String?] = []
-        var pendingLoose: [(index: Int, part: String, match: SpecialtyMatch)] = []
+        var pendingLoose: [PendingLooseSpecialty] = []
         for rawPart in splitParts(protected.text, splitsOnWords: true) {
             let part = restoringSpecialtyNames(rawPart, placeholders: protected.placeholders)
             let key = normalizedKey(part)
             guard !key.isEmpty else { continue }
             guard let synonym = synonyms.first(where: { match($0.phrase, in: key, allowsAnyRemainder: false) != nil }) else {
-                if let loose = looseSpecialty(in: part) {
-                    pendingLoose.append((index: outcomes.count, part: part, match: loose))
+                let physicianLoose = looseSpecialty(in: part, kind: .physician)
+                let nurseLoose = looseSpecialty(in: part, kind: .nurse)
+                if physicianLoose != nil || nurseLoose != nil {
+                    pendingLoose.append(PendingLooseSpecialty(
+                        index: outcomes.count,
+                        part: part,
+                        physician: physicianLoose,
+                        nurse: nurseLoose
+                    ))
                     outcomes.append(nil)
                 } else {
                     outcomes.append(part)
@@ -356,25 +366,24 @@ enum ResearcherLegacyFieldMapping {
             if synonym.docent {
                 result.isDocent = true
             }
-            let physicianIDs = synonym.ids.filter { ResearcherPositionOption.specialtyPositionIDs.contains($0) }
-            if !physicianIDs.isEmpty, let found = specialtyMatch(in: part) {
-                for id in physicianIDs where result.specialtyIDs[id] == nil {
-                    result.specialtyIDs[id] = found.specialtyID
+            for kind in ResearcherSpecialtyKind.allCases {
+                let kindPositionIDs = ResearcherPositionOption.specialtyPositionIDSet(for: kind)
+                let holders = synonym.ids.filter { kindPositionIDs.contains($0) }
+                if !holders.isEmpty, let found = specialtyMatch(in: part, kind: kind) {
+                    for id in holders where result.specialtyIDs[id] == nil {
+                        result.specialtyIDs[id] = found.specialtyID
+                    }
                 }
             }
         }
         for loose in pendingLoose {
-            let physicians = result.positionIDs.filter { ResearcherPositionOption.specialtyPositionIDs.contains($0) }
-            let lacking = physicians.filter { result.specialtyIDs[$0] == nil }
-            if lacking.count == 1 {
-                result.specialtyIDs[lacking[0]] = loose.match.specialtyID
-            } else if physicians.isEmpty && loose.match.impliesSpecialist {
-                let specialistID = ResearcherPositionOption.BuiltInID.specialistPhysician
-                result.positionIDs.append(specialistID)
-                result.specialtyIDs[specialistID] = loose.match.specialtyID
-            } else {
-                outcomes[loose.index] = loose.part
+            if let found = loose.physician, assignLooseSpecialty(found, kind: .physician, to: &result) {
+                continue
             }
+            if let found = loose.nurse, assignLooseSpecialty(found, kind: .nurse, to: &result) {
+                continue
+            }
+            outcomes[loose.index] = loose.part
         }
         result.unmappedParts = outcomes.compactMap { $0 }
         return result
@@ -535,14 +544,157 @@ extension ResearcherLegacyFieldMapping {
         let impliesSpecialist: Bool
     }
 
-    private static let cachedSpecialtySynonyms: [SpecialtySynonym] = specialtySynonyms()
+    /// En del av texten som bara är en specialitet, som väntar på att
+    /// befattningarna i resten av texten är kända.
+    private struct PendingLooseSpecialty {
+        let index: Int
+        let part: String
+        let physician: SpecialtyMatch?
+        let nurse: SpecialtyMatch?
+    }
 
-    /// Namn och ord för specialiteterna: listans svenska och engelska namn,
-    /// andra stavningar, och ord för specialistläkaren själv.
+    private static let cachedSpecialtySynonyms: [SpecialtySynonym] = specialtySynonyms()
+    private static let cachedNurseSpecialtySynonyms: [SpecialtySynonym] = nurseSpecialtySynonyms()
+
+    private static func specialtySynonymList(for kind: ResearcherSpecialtyKind) -> [SpecialtySynonym] {
+        switch kind {
+        case .physician: return cachedSpecialtySynonyms
+        case .nurse: return cachedNurseSpecialtySynonyms
+        }
+    }
+
+    /// Befattningen som ett ensamt specialistord ger när texten saknar en
+    /// befattning av rätt sort ("Kirurg" → Specialistläkare,
+    /// "Distriktssköterska" → Specialistsjuksköterska).
+    static func defaultSpecialistPositionID(for kind: ResearcherSpecialtyKind) -> String {
+        switch kind {
+        case .physician: return ResearcherPositionOption.BuiltInID.specialistPhysician
+        case .nurse: return ResearcherPositionOption.BuiltInID.specialistNurse
+        }
+    }
+
+    /// Ger ett ensamt specialitetsord till textens enda befattning av rätt
+    /// sort utan specialitet, eller (för ett specialistord när texten saknar
+    /// en sådan befattning) till en ny Specialistläkare/Specialistsjuksköterska.
+    private static func assignLooseSpecialty(
+        _ found: SpecialtyMatch,
+        kind: ResearcherSpecialtyKind,
+        to result: inout PositionResult
+    ) -> Bool {
+        let kindPositionIDs = ResearcherPositionOption.specialtyPositionIDSet(for: kind)
+        let holders = result.positionIDs.filter { kindPositionIDs.contains($0) }
+        let lacking = holders.filter { result.specialtyIDs[$0] == nil }
+        if lacking.count == 1 {
+            result.specialtyIDs[lacking[0]] = found.specialtyID
+            return true
+        }
+        if holders.isEmpty && found.impliesSpecialist {
+            let specialistID = defaultSpecialistPositionID(for: kind)
+            result.positionIDs.append(specialistID)
+            result.specialtyIDs[specialistID] = found.specialtyID
+            return true
+        }
+        return false
+    }
+
+    /// Namn och ord för sjuksköterskespecialiteterna: listans svenska och
+    /// engelska namn, andra stavningar, och ord för specialistsjuksköterskan
+    /// själv ("distriktssköterska", "operationssjuksköterska").
+    private static func nurseSpecialtySynonyms() -> [SpecialtySynonym] {
+        typealias S = ResearcherSpecialtyOption.BuiltInID
+        var rows: [(String, String, Bool)] = []
+        for option in ResearcherSpecialtyOption.builtInNurseOptions {
+            // "Distriktssköterska" is the nurse herself.
+            let isNoun = option.id == S.nurseDistrictNursing
+            rows.append((option.nameSv, option.id, isNoun))
+            rows.append((option.nameEn, option.id, false))
+        }
+        let names: [(String, String)] = [
+            ("emergency nursing", S.nurseEmergencyCare),
+            ("prehospital vård", S.nurseAmbulanceCare),
+            ("prehospital care", S.nurseAmbulanceCare),
+            ("ambulance nursing", S.nurseAmbulanceCare),
+            ("anestesi", S.nurseAnaesthesiaCare),
+            ("anestesivård", S.nurseAnaesthesiaCare),
+            ("anesthesia care", S.nurseAnaesthesiaCare),
+            ("anaesthesia nursing", S.nurseAnaesthesiaCare),
+            ("anesthesia nursing", S.nurseAnaesthesiaCare),
+            ("pediatric care", S.nursePaediatricCare),
+            ("paediatric nursing", S.nursePaediatricCare),
+            ("pediatric nursing", S.nursePaediatricCare),
+            ("barnsjukvård", S.nursePaediatricCare),
+            ("child health nursing", S.nurseChildHealth),
+            ("intensive care nursing", S.nurseIntensiveCare),
+            ("kirurgi", S.nurseSurgicalCare),
+            ("surgical nursing", S.nurseSurgicalCare),
+            ("medical nursing", S.nurseMedicalCare),
+            ("onkologi", S.nurseOncologyCare),
+            ("cancervård", S.nurseOncologyCare),
+            ("oncology nursing", S.nurseOncologyCare),
+            ("cancer care", S.nurseOncologyCare),
+            ("operating theatre care", S.nurseOperatingRoomCare),
+            ("operating room nursing", S.nurseOperatingRoomCare),
+            ("psykiatri", S.nursePsychiatricCare),
+            ("psychiatric nursing", S.nursePsychiatricCare),
+            ("mental health nursing", S.nursePsychiatricCare),
+            ("geriatrisk vård", S.nurseOlderPeopleCare),
+            ("äldrevård", S.nurseOlderPeopleCare),
+            ("elderly care", S.nurseOlderPeopleCare),
+            ("gerontological nursing", S.nurseOlderPeopleCare),
+            ("diabetes", S.nurseDiabetesCare),
+        ]
+        for name in names {
+            rows.append((name.0, name.1, false))
+        }
+        let nouns: [(String, String)] = [
+            ("akutsjuksköterska", S.nurseEmergencyCare),
+            ("emergency nurse", S.nurseEmergencyCare),
+            ("ambulanssjuksköterska", S.nurseAmbulanceCare),
+            ("ambulance nurse", S.nurseAmbulanceCare),
+            ("anestesisjuksköterska", S.nurseAnaesthesiaCare),
+            ("nurse anaesthetist", S.nurseAnaesthesiaCare),
+            ("nurse anesthetist", S.nurseAnaesthesiaCare),
+            ("barnsjuksköterska", S.nursePaediatricCare),
+            ("paediatric nurse", S.nursePaediatricCare),
+            ("pediatric nurse", S.nursePaediatricCare),
+            ("district nurse", S.nurseDistrictNursing),
+            ("intensivvårdssjuksköterska", S.nurseIntensiveCare),
+            ("intensive care nurse", S.nurseIntensiveCare),
+            ("onkologisjuksköterska", S.nurseOncologyCare),
+            ("oncology nurse", S.nurseOncologyCare),
+            ("operationssjuksköterska", S.nurseOperatingRoomCare),
+            ("operating room nurse", S.nurseOperatingRoomCare),
+            ("theatre nurse", S.nurseOperatingRoomCare),
+            ("psykiatrisjuksköterska", S.nursePsychiatricCare),
+            ("psychiatric nurse", S.nursePsychiatricCare),
+            ("diabetessjuksköterska", S.nurseDiabetesCare),
+            ("diabetes nurse", S.nurseDiabetesCare),
+            ("diabetes specialist nurse", S.nurseDiabetesCare),
+        ]
+        for noun in nouns {
+            rows.append((noun.0, noun.1, true))
+        }
+        return sortedSynonyms(rows)
+    }
+
+    private static func sortedSynonyms(_ rows: [(String, String, Bool)]) -> [SpecialtySynonym] {
+        rows
+            .map { SpecialtySynonym(tokens: specialtyTokens($0.0), specialtyID: $0.1, impliesSpecialist: $0.2) }
+            .filter { !$0.tokens.isEmpty }
+            .sorted { lhs, rhs in
+                if lhs.tokens.count != rhs.tokens.count {
+                    return lhs.tokens.count > rhs.tokens.count
+                }
+                return lhs.tokens.joined().count > rhs.tokens.joined().count
+            }
+    }
+
+    /// Namn och ord för läkarspecialiteterna: listans svenska och engelska
+    /// namn, andra stavningar, och ord för specialistläkaren själv.
     private static func specialtySynonyms() -> [SpecialtySynonym] {
         typealias S = ResearcherSpecialtyOption.BuiltInID
         var rows: [(String, String, Bool)] = []
-        for option in ResearcherSpecialtyOption.builtInOptions {
+        for option in ResearcherSpecialtyOption.builtInPhysicianOptions {
             rows.append((option.nameSv, option.id, false))
             rows.append((option.nameEn, option.id, false))
         }
@@ -683,15 +835,7 @@ extension ResearcherLegacyFieldMapping {
         for noun in nouns {
             rows.append((noun.0, noun.1, true))
         }
-        return rows
-            .map { SpecialtySynonym(tokens: specialtyTokens($0.0), specialtyID: $0.1, impliesSpecialist: $0.2) }
-            .filter { !$0.tokens.isEmpty }
-            .sorted { lhs, rhs in
-                if lhs.tokens.count != rhs.tokens.count {
-                    return lhs.tokens.count > rhs.tokens.count
-                }
-                return lhs.tokens.joined().count > rhs.tokens.joined().count
-            }
+        return sortedSynonyms(rows)
     }
 
     /// Orden i jämförelseform, utan skiljetecken och parenteser.
@@ -712,25 +856,25 @@ extension ResearcherLegacyFieldMapping {
         return false
     }
 
-    /// Första specialitet som nämns någonstans i texten (hela ord).
-    static func specialtyMatch(in text: String) -> SpecialtyMatch? {
+    /// Första specialitet av sorten som nämns någonstans i texten (hela ord).
+    static func specialtyMatch(in text: String, kind: ResearcherSpecialtyKind = .physician) -> SpecialtyMatch? {
         let tokens = specialtyTokens(text)
         guard !tokens.isEmpty else { return nil }
-        for synonym in cachedSpecialtySynonyms where containsSequence(synonym.tokens, in: tokens) {
+        for synonym in specialtySynonymList(for: kind) where containsSequence(synonym.tokens, in: tokens) {
             return SpecialtyMatch(specialtyID: synonym.specialtyID, impliesSpecialist: synonym.impliesSpecialist)
         }
         return nil
     }
 
-    /// En text som bara är en specialitet ("geriatriker", "Kirurg",
-    /// "i allmänmedicin") och inget annat; annars nil.
-    static func looseSpecialty(in text: String) -> SpecialtyMatch? {
+    /// En text som bara är en specialitet av sorten ("geriatriker", "Kirurg",
+    /// "i allmänmedicin", "Distriktssköterska") och inget annat; annars nil.
+    static func looseSpecialty(in text: String, kind: ResearcherSpecialtyKind = .physician) -> SpecialtyMatch? {
         var tokens = specialtyTokens(text)
         while let first = tokens.first, connectorWords.contains(first) {
             tokens.removeFirst()
         }
         guard !tokens.isEmpty else { return nil }
-        for synonym in cachedSpecialtySynonyms where synonym.tokens == tokens {
+        for synonym in specialtySynonymList(for: kind) where synonym.tokens == tokens {
             return SpecialtyMatch(specialtyID: synonym.specialtyID, impliesSpecialist: synonym.impliesSpecialist)
         }
         return nil
@@ -793,8 +937,15 @@ extension ResearcherLegacyFieldMapping {
     /// läkarbefattning, blir det Specialistläkare med den specialiteten (som
     /// vid flytten från fritext). Den gamla texten, karriärsteget och
     /// doktorsexamen ändras aldrig. Att köra den igen ändrar ingenting.
-    static func migratedSpecialties(_ author: PublicationAuthor) -> PublicationAuthor {
-        let physicianSet = ResearcherPositionOption.specialtyPositionIDs
+    ///
+    /// Med `kind: .nurse` (engångssteget "round20c") gäller samma sak för
+    /// Specialistsjuksköterska och sjuksköterskespecialiteterna
+    /// ("Distriktssköterska", "Operationssjuksköterska").
+    static func migratedSpecialties(
+        _ author: PublicationAuthor,
+        kind: ResearcherSpecialtyKind = .physician
+    ) -> PublicationAuthor {
+        let physicianSet = ResearcherPositionOption.specialtyPositionIDSet(for: kind)
         var updated = author
         var newlyAssigned = Set<String>()
 
@@ -830,7 +981,7 @@ extension ResearcherLegacyFieldMapping {
             var kept: [String] = []
             var removedAny = false
             for part in otherPositionParts(original) {
-                guard let loose = looseSpecialty(in: part) else {
+                guard let loose = looseSpecialty(in: part, kind: kind) else {
                     kept.append(part)
                     continue
                 }
@@ -846,7 +997,7 @@ extension ResearcherLegacyFieldMapping {
                     // Already explained by the specialty chosen in this step.
                     removedAny = true
                 } else if currentPhysicians.isEmpty && loose.impliesSpecialist {
-                    let specialistID = ResearcherPositionOption.BuiltInID.specialistPhysician
+                    let specialistID = defaultSpecialistPositionID(for: kind)
                     updated.positionIDs.append(specialistID)
                     updated.positionSpecialtyIDs[specialistID] = loose.specialtyID
                     newlyAssigned.insert(loose.specialtyID)
@@ -865,6 +1016,14 @@ extension ResearcherLegacyFieldMapping {
             }
         }
         return updated
+    }
+
+    /// Engångssteget "round20c": Specialistsjuksköterska utan specialitet får
+    /// den ur den gamla texten eller ur "annan"-texten, och ett ensamt
+    /// "Distriktssköterska", "Intensivvårdssjuksköterska" o.s.v. i
+    /// "annan"-texten blir Specialistsjuksköterska med den specialiteten.
+    static func migratedNurseSpecialties(_ author: PublicationAuthor) -> PublicationAuthor {
+        migratedSpecialties(author, kind: .nurse)
     }
 }
 

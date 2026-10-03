@@ -80,7 +80,9 @@ extension GrantDataStore {
 }
 
 /// Inställningar > Listor: läkarspecialiteter (för ST-läkare, Specialistläkare
-/// och Överläkare). Samma mönster som befattningar och examina.
+/// och Överläkare) och sjuksköterskespecialiteter (för Specialistsjuksköterska),
+/// i en gemensam lista där varje specialitet har sin sort. Samma mönster som
+/// befattningar och examina.
 extension GrantDataStore {
     var researcherSpecialtyOptions: [ResearcherSpecialtyOption] {
         ResearcherSpecialtyOption.resolvedOptions(metadata.researcherSpecialtyOptions)

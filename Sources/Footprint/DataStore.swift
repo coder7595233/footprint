@@ -20811,6 +20811,7 @@ final class GrantDataStore: ObservableObject {
         didChange = runRound11OneTimeDataMigrations() || didChange
         didChange = runResearcherOptionListMigration() || didChange
         didChange = runResearcherSpecialtyMigration() || didChange
+        didChange = runResearcherNurseSpecialtyMigration() || didChange
         didChange = normalizeConferenceContributionsForRound1() || didChange
         didChange = clearPlaceholderProjectNames() || didChange
         didChange = ensureManagedPublicationPDFAttachmentsStored() || didChange
@@ -30253,6 +30254,47 @@ extension GrantDataStore {
         rebuildPublicationAuthorLookupCaches()
         rebuildPublicationAuthorRowSnapshots()
         appendStartupDiagnostic("migration:researcherPhysicianSpecialties changed=\(changed)")
+        return true
+    }
+}
+
+extension GrantDataStore {
+    /// One-time (round 20c): researchers with Specialistsjuksköterska get the
+    /// nurse specialty from the written position text, and a lone
+    /// "Distriktssköterska", "Operationssjuksköterska" etc. in the "other"
+    /// position text becomes Specialistsjuksköterska with that specialty (see
+    /// `ResearcherLegacyFieldMapping.migratedNurseSpecialties`). Run once per
+    /// database and recorded in the migration log. Called from
+    /// `migrateRecordsIfNeeded()` after the physician step.
+    @discardableResult
+    func runResearcherNurseSpecialtyMigration() -> Bool {
+        runRound7MigrationOnce(
+            key: "round20c-nurse-specialties",
+            details: "Specialist nurses' specialties are read from the written position text. A part of the \"other\" position text that is fully explained by a nurse specialty (e.g. district nurse) is moved out of it. The written text, career stage and PhD are not changed."
+        ) {
+            migrateResearcherNurseSpecialties()
+        }
+    }
+
+    /// Fills missing nurse specialties for every researcher; only the
+    /// position choices, their specialties and the "other" text change.
+    /// Running it again changes nothing. Returns true when a researcher changed.
+    @discardableResult
+    func migrateResearcherNurseSpecialties() -> Bool {
+        var updated = publicationAuthors
+        var changed = 0
+        for index in updated.indices {
+            let migrated = ResearcherLegacyFieldMapping.migratedNurseSpecialties(updated[index])
+            guard migrated != updated[index] else { continue }
+            updated[index] = migrated
+            changed += 1
+        }
+        // A migration must never lose a record.
+        guard changed > 0, updated.count == publicationAuthors.count else { return false }
+        publicationAuthors = updated
+        rebuildPublicationAuthorLookupCaches()
+        rebuildPublicationAuthorRowSnapshots()
+        appendStartupDiagnostic("migration:researcherNurseSpecialties changed=\(changed)")
         return true
     }
 }
