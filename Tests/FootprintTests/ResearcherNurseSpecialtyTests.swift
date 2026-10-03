@@ -241,7 +241,7 @@ final class ResearcherNurseSpecialtyTests: XCTestCase {
         let first = R.migratedNurseSpecialties(fromOldText)
         XCTAssertEqual(first.positionSpecialtyIDs, [P.specialistNurse: S.nurseIntensiveCare])
         XCTAssertEqual(first.positionSv, fromOldText.positionSv)
-        XCTAssertNil(first.careerStage)
+        XCTAssertEqual(first.careerStage, fromOldText.careerStage, "career stage is never changed")
         XCTAssertFalse(first.hasPhD)
         XCTAssertEqual(R.migratedNurseSpecialties(first), first, "running again changes nothing")
 
