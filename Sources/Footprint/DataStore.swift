@@ -178,6 +178,29 @@ final class GrantDataStore: ObservableObject {
         let severity: Severity
         let whyFlagged: String
         let suggestedFix: String
+        /// Which field each text in `missingFields` stands for, where the
+        /// Data view knows it (it can then be typed in directly or searched
+        /// for). Texts without a key are shown with an Open button only.
+        let fieldKeys: [String: DataQualityFieldKey]
+
+        /// One flagged field: the text shown and, when known, which field it is.
+        struct Field: Hashable, Identifiable {
+            let key: DataQualityFieldKey?
+            let label: String
+
+            var id: String { label }
+
+            /// Used in the hidden-warnings list, so a hidden field stays
+            /// hidden when the app language changes.
+            var hideKeyComponent: String { key?.rawValue ?? label }
+
+            var isCritical: Bool { GrantDataStore.isCriticalDataQualityField(label) }
+        }
+
+        /// The same fields as `missingFields`, in the same order, with keys.
+        var fields: [Field] {
+            missingFields.map { Field(key: fieldKeys[$0], label: $0) }
+        }
 
         init(
             id: String,
@@ -189,7 +212,8 @@ final class GrantDataStore: ObservableObject {
             missingFields: [String],
             severity: Severity = .warning,
             whyFlagged: String = "",
-            suggestedFix: String = ""
+            suggestedFix: String = "",
+            fieldKeys: [String: DataQualityFieldKey] = [:]
         ) {
             self.id = id
             self.entityKind = entityKind
@@ -201,6 +225,7 @@ final class GrantDataStore: ObservableObject {
             self.severity = severity
             self.whyFlagged = whyFlagged
             self.suggestedFix = suggestedFix
+            self.fieldKeys = fieldKeys
         }
     }
 
@@ -1011,6 +1036,9 @@ final class GrantDataStore: ObservableObject {
     private var cachedHiddenDataQualityWarningKeySet: Set<String>?
     /// The raw key lists the cached set above was built from.
     private var cachedHiddenDataQualityWarningKeySetSource: (hidden: [String]?, ignored: [String]?)?
+    /// Whether the cached set above holds any single hidden field
+    /// ("Dölj fältet"); when it does not, no field needs to be looked up.
+    private var cachedHiddenDataQualityWarningKeySetHasFieldKeys = false
     private var managerByID: [String: ManagerOption] = [:]
     private var managerByName: [String: ManagerOption] = [:]
     private var projectByName: [String: ProjectRecord] = [:]
@@ -17238,6 +17266,46 @@ final class GrantDataStore: ObservableObject {
         return shownPrecise || shownEarlier
     }
 
+    /// One field of a record hidden on its own ("Dölj fältet"), next to
+    /// hiding the whole record. Stored in the same hidden-warnings list, so
+    /// "Show all hidden" shows it again and it can be undone.
+    nonisolated static let dataQualityFieldWarningKeyPrefix = "data-quality-field:v1|"
+
+    func dataQualityFieldWarningKey(for issue: MissingFieldIssue, field: MissingFieldIssue.Field) -> String {
+        [
+            "data-quality-field:v1",
+            "missing",
+            issue.entityKind.rawValue,
+            Self.duplicateWarningKeyComponent(issue.recordID),
+            Self.duplicateWarningKeyComponent(issue.id),
+            Self.duplicateWarningKeyComponent(field.hideKeyComponent),
+        ].joined(separator: "|")
+    }
+
+    func isDataQualityFieldHidden(_ issue: MissingFieldIssue, field: MissingFieldIssue.Field) -> Bool {
+        isDataQualityWarningHidden(key: dataQualityFieldWarningKey(for: issue, field: field))
+    }
+
+    @discardableResult
+    func hideDataQualityField(_ issue: MissingFieldIssue, field: MissingFieldIssue.Field) -> Bool {
+        hideDataQualityWarning(key: dataQualityFieldWarningKey(for: issue, field: field))
+    }
+
+    @discardableResult
+    func showDataQualityField(_ issue: MissingFieldIssue, field: MissingFieldIssue.Field) -> Bool {
+        showDataQualityWarning(key: dataQualityFieldWarningKey(for: issue, field: field))
+    }
+
+    /// The record's fields that are not hidden one by one.
+    func unhiddenDataQualityFields(of issue: MissingFieldIssue) -> [MissingFieldIssue.Field] {
+        // Reading the set refreshes the flag below; with no single field
+        // hidden anywhere, nothing has to be looked up (the Data view asks
+        // this for every record on every redraw).
+        _ = hiddenDataQualityWarningKeySet
+        guard cachedHiddenDataQualityWarningKeySetHasFieldKeys else { return issue.fields }
+        return issue.fields.filter { !isDataQualityFieldHidden(issue, field: $0) }
+    }
+
     @discardableResult
     func showDataQualityWarning(_ issue: DuplicateIssue) -> Bool {
         guard let key = dataQualityWarningKey(for: issue) else { return false }
@@ -17373,8 +17441,10 @@ final class GrantDataStore: ObservableObject {
         return hideDataQualityWarning(key: suppressionKey)
     }
 
+    /// A record whose every field has been hidden one by one counts as
+    /// hidden too.
     private func visibleDataQualityWarnings(_ issues: [MissingFieldIssue]) -> [MissingFieldIssue] {
-        issues.filter { !isDataQualityWarningHidden($0) }
+        issues.filter { !isDataQualityWarningHidden($0) && !unhiddenDataQualityFields(of: $0).isEmpty }
     }
 
     private func visibleDataQualityWarnings(_ issues: [DuplicateIssue]) -> [DuplicateIssue] {
@@ -17416,6 +17486,7 @@ final class GrantDataStore: ObservableObject {
         let keySet = Self.combinedHiddenDataQualityWarningKeys(hidden: hiddenKeys, ignored: ignoredKeys)
         cachedHiddenDataQualityWarningKeySet = keySet
         cachedHiddenDataQualityWarningKeySetSource = (hiddenKeys, ignoredKeys)
+        cachedHiddenDataQualityWarningKeySetHasFieldKeys = keySet.contains { $0.hasPrefix(Self.dataQualityFieldWarningKeyPrefix) }
         return keySet
     }
 
