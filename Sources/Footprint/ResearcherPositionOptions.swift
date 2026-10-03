@@ -170,7 +170,7 @@ struct ResearcherPositionOption: Codable, Hashable, Identifiable, Sendable {
             (BuiltInID.visitingResearcher, "Gästforskare", "Visiting Researcher", .academic, .categoryC, false),
             (BuiltInID.directorOfResearch, "Forskningschef", "Director of Research", .academic, .categoryA, false),
             (BuiltInID.seniorResearcher, "Seniorforskare", "Senior Researcher", .academic, .categoryB, false),
-            (BuiltInID.researchEngineer, "Forskningsingenjör", "Research Engineer", .academic, .categoryD, false),
+            (BuiltInID.researchEngineer, "Forskningsingenjör", "Research Engineer", .academic, nil, false),
             (BuiltInID.researchAssistant, "Forskningsassistent", "Research Assistant", .academic, .categoryD, false),
             (BuiltInID.phdStudent, "Doktorand", "PhD Student", .academic, .categoryD, false),
             (BuiltInID.medicalStudent, "Läkarstudent", "Medical Student", .clinical, nil, false),
