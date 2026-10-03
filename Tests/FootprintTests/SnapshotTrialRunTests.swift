@@ -1242,6 +1242,11 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertEqual(changedPhD, 0, "PhD is not changed")
         XCTAssertEqual(Set(storedAuthors.map(\.id)), Set(authors.map(\.id)), "no researcher is lost or added")
         XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round20-researcher-position-degree-lists" })
+        // The step runs once per database. On a database where it ran earlier
+        // the user may since have cleared a researcher's list choices, which
+        // the step would fill in again; so idempotence is checked as "a
+        // second run right after a run changes nothing".
+        _ = reloaded.migrateResearcherPositionsAndDegreesToLists()
         XCTAssertFalse(reloaded.migrateResearcherPositionsAndDegreesToLists(), "running the step again changes nothing")
     }
 
