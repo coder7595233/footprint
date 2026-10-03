@@ -315,7 +315,9 @@ final class ResearcherPositionListTests: XCTestCase {
         typealias S = ResearcherCareerStageSuggestion
         XCTAssertEqual(S.suggestedCareerStage(positions: options([P.professor]), isDocent: false, hasPhD: true), .categoryA)
         XCTAssertEqual(S.suggestedCareerStage(positions: options([P.associateProfessor]), isDocent: true, hasPhD: true), .categoryB)
-        XCTAssertEqual(S.suggestedCareerStage(positions: options([P.seniorLecturer]), isDocent: false, hasPhD: true), .categoryC)
+        XCTAssertEqual(S.suggestedCareerStage(positions: options([P.seniorLecturer]), isDocent: false, hasPhD: true), .categoryB)
+        XCTAssertEqual(S.suggestedCareerStage(positions: options([P.assistantProfessor]), isDocent: false, hasPhD: true), .categoryC)
+        XCTAssertEqual(S.suggestedCareerStage(positions: options([P.researchEngineer]), isDocent: false, hasPhD: false), .categoryD)
         XCTAssertEqual(S.suggestedCareerStage(positions: options([P.seniorLecturer]), isDocent: true, hasPhD: true), .categoryB)
         XCTAssertEqual(S.suggestedCareerStage(positions: options([P.adjunctSeniorLecturer]), isDocent: true, hasPhD: true), .categoryB)
         XCTAssertEqual(S.suggestedCareerStage(positions: options([P.postdoc]), isDocent: false, hasPhD: true), .categoryC)

@@ -425,10 +425,11 @@ enum PublicationAuthorCareerStage: String, Codable, Hashable, CaseIterable, Iden
     }
 
     static let overviewHelpText = """
-    A: Highest career stage, e.g., full professor
-    B: Intermediate stage between C and A, e.g., associate professor
-    C: First post after PhD, e.g., assistant professor or postdoctoral researcher
-    D: Doctoral student researcher
+    Career stages as defined in the Frascati Manual 2015 (used in Horizon Europe applications):
+    A – Top grade researcher: the single highest grade/post at which research is normally conducted, e.g., full professor or director of research
+    B – Senior researcher: more senior than newly qualified doctoral graduates, e.g., associate professor (docent), senior lecturer, senior researcher or principal investigator
+    C – Recognised researcher: the first post for a newly qualified doctoral graduate, e.g., assistant professor or postdoctoral fellow
+    D – First stage researcher: doctoral students, or researchers in posts that do not normally require a doctorate, e.g., junior researchers without a PhD
     """
 
     init(from decoder: Decoder) throws {

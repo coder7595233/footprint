@@ -132,6 +132,9 @@ struct ResearcherPositionOption: Codable, Hashable, Identifiable, Sendable {
         static let affiliatedResearcher = "position-affiliated-researcher"
         static let visitingResearcher = "position-visiting-researcher"
         static let researchEngineer = "position-research-engineer"
+        static let researchAssistant = "position-research-assistant"
+        static let seniorResearcher = "position-senior-researcher"
+        static let directorOfResearch = "position-director-of-research"
         static let phdStudent = "position-phd-student"
         static let medicalStudent = "position-medical-student"
         static let internPhysician = "position-intern-physician"
@@ -156,16 +159,19 @@ struct ResearcherPositionOption: Codable, Hashable, Identifiable, Sendable {
             (BuiltInID.seniorProfessor, "Seniorprofessor", "Senior Professor", .academic, .categoryA, true),
             (BuiltInID.professorEmeritus, "Professor emeritus", "Professor Emeritus", .academic, .categoryA, true),
             (BuiltInID.associateProfessor, "Biträdande professor", "Associate Professor", .academic, .categoryB, false),
-            (BuiltInID.seniorLecturer, "Universitetslektor", "Senior Lecturer", .academic, .categoryC, false),
+            (BuiltInID.seniorLecturer, "Universitetslektor", "Senior Lecturer", .academic, .categoryB, false),
             (BuiltInID.assistantProfessor, "Biträdande universitetslektor", "Assistant Professor", .academic, .categoryC, false),
-            (BuiltInID.adjunctSeniorLecturer, "Adjungerad universitetslektor", "Adjunct Senior Lecturer", .academic, .categoryC, false),
+            (BuiltInID.adjunctSeniorLecturer, "Adjungerad universitetslektor", "Adjunct Senior Lecturer", .academic, .categoryB, false),
             (BuiltInID.lecturer, "Universitetsadjunkt", "Lecturer", .academic, nil, false),
             (BuiltInID.adjunctLecturer, "Adjungerad adjunkt", "Adjunct Lecturer", .academic, nil, false),
             (BuiltInID.postdoc, "Postdoktor", "Postdoctoral Researcher", .academic, .categoryC, false),
             (BuiltInID.researcher, "Forskare", "Researcher", .academic, .categoryC, false),
             (BuiltInID.affiliatedResearcher, "Affilierad forskare", "Affiliated Researcher", .academic, .categoryC, false),
             (BuiltInID.visitingResearcher, "Gästforskare", "Visiting Researcher", .academic, .categoryC, false),
-            (BuiltInID.researchEngineer, "Forskningsingenjör", "Research Engineer", .academic, nil, false),
+            (BuiltInID.directorOfResearch, "Forskningschef", "Director of Research", .academic, .categoryA, false),
+            (BuiltInID.seniorResearcher, "Seniorforskare", "Senior Researcher", .academic, .categoryB, false),
+            (BuiltInID.researchEngineer, "Forskningsingenjör", "Research Engineer", .academic, .categoryD, false),
+            (BuiltInID.researchAssistant, "Forskningsassistent", "Research Assistant", .academic, .categoryD, false),
             (BuiltInID.phdStudent, "Doktorand", "PhD Student", .academic, .categoryD, false),
             (BuiltInID.medicalStudent, "Läkarstudent", "Medical Student", .clinical, nil, false),
             (BuiltInID.internPhysician, "AT-läkare", "Intern Physician", .clinical, nil, false),
