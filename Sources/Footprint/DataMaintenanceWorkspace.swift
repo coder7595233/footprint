@@ -1688,6 +1688,8 @@ struct DataMaintenanceWorkspaceView: View {
                             .truncationMode(.tail)
                             .textSelection(.enabled)
                     }
+
+                    researcherIntegrityFixControls(issue, language: language)
                 }
 
                 Spacer(minLength: 12)
@@ -1721,6 +1723,22 @@ struct DataMaintenanceWorkspaceView: View {
         .background(isUnifiedIssueHidden(issue) ? AppPalette.fieldSurface.opacity(0.42) : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture { openUnifiedIssueRow(issue) }
+    }
+
+    /// Researcher warnings about career stage, PhD and text outside the
+    /// lists get small controls under the message to fix them right here.
+    @ViewBuilder
+    private func researcherIntegrityFixControls(_ issue: DataQualityUnifiedIssue, language: AppLanguage) -> some View {
+        if case .integrity(let integrity) = issue,
+           let fix = store.researcherIntegrityFix(for: integrity) {
+            DataQualityResearcherFixControls(
+                store: store,
+                authorID: integrity.recordID,
+                fix: fix,
+                language: language
+            )
+            .padding(.top, 2)
+        }
     }
 
     // F23: the whole row opens the record, like the Show button.

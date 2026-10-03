@@ -482,6 +482,7 @@ func researcherOptionLocalizedText(language: AppLanguage, swedish: String, engli
 final class ResearcherOptionRegistry {
     nonisolated(unsafe) private static var storedPositionOptions: [ResearcherPositionOption] = ResearcherPositionOption.builtInOptions
     nonisolated(unsafe) private static var storedDegreeOptions: [ResearcherDegreeOption] = ResearcherDegreeOption.builtInOptions
+    nonisolated(unsafe) private static var storedSpecialtyOptions: [ResearcherSpecialtyOption] = ResearcherSpecialtyOption.builtInOptions
 
     static var positionOptions: [ResearcherPositionOption] {
         storedPositionOptions
@@ -491,17 +492,24 @@ final class ResearcherOptionRegistry {
         storedDegreeOptions
     }
 
+    static var specialtyOptions: [ResearcherSpecialtyOption] {
+        storedSpecialtyOptions
+    }
+
     static func update(from metadata: DataSourceMetadata) {
         storedPositionOptions = ResearcherPositionOption.resolvedOptions(metadata.researcherPositionOptions)
         storedDegreeOptions = ResearcherDegreeOption.resolvedOptions(metadata.researcherDegreeOptions)
+        storedSpecialtyOptions = ResearcherSpecialtyOption.resolvedOptions(metadata.researcherSpecialtyOptions)
     }
 
     static func replace(
         positionOptions: [ResearcherPositionOption] = ResearcherPositionOption.builtInOptions,
-        degreeOptions: [ResearcherDegreeOption] = ResearcherDegreeOption.builtInOptions
+        degreeOptions: [ResearcherDegreeOption] = ResearcherDegreeOption.builtInOptions,
+        specialtyOptions: [ResearcherSpecialtyOption] = ResearcherSpecialtyOption.builtInOptions
     ) {
         storedPositionOptions = positionOptions
         storedDegreeOptions = degreeOptions
+        storedSpecialtyOptions = specialtyOptions
     }
 }
 
@@ -573,10 +581,12 @@ extension PublicationAuthor {
         degreeEntries.contains { !$0.isEmpty }
     }
 
+    /// De valda befattningarna i visningsordning: akademiska, kliniska, övrigt.
     func selectedPositionOptions(
         options: [ResearcherPositionOption] = ResearcherOptionRegistry.positionOptions
     ) -> [ResearcherPositionOption] {
-        positionIDs.compactMap { id in options.first(where: { $0.id == id }) }
+        let selected = positionIDs.compactMap { id in options.first(where: { $0.id == id }) }
+        return ResearcherPositionOption.displaySorted(selected)
     }
 
     func localizedPositionOther(language: AppLanguage) -> String {
@@ -591,13 +601,15 @@ extension PublicationAuthor {
         }
     }
 
-    /// Valda befattningar på appens språk, följda av "annan"-texten.
+    /// Valda befattningar på appens språk (med läkarspecialitet, t.ex.
+    /// "Specialistläkare i allmänmedicin"), följda av "annan"-texten.
     func structuredPositionText(
         language: AppLanguage,
-        options: [ResearcherPositionOption] = ResearcherOptionRegistry.positionOptions
+        options: [ResearcherPositionOption] = ResearcherOptionRegistry.positionOptions,
+        specialtyOptions: [ResearcherSpecialtyOption] = ResearcherOptionRegistry.specialtyOptions
     ) -> String {
         let names = selectedPositionOptions(options: options)
-            .map { $0.localizedName(language: language) }
+            .map { positionDisplayName($0, language: language, specialtyOptions: specialtyOptions) }
             .compactMap(\.trimmedOrNil)
         let other = localizedPositionOther(language: language).trimmedOrNil
         return (names + [other].compactMap { $0 }).uniqued().joined(separator: ", ")
@@ -606,9 +618,10 @@ extension PublicationAuthor {
     /// Befattningen som visas och exporteras: listvalen, annars den gamla texten.
     func displayPosition(
         language: AppLanguage,
-        options: [ResearcherPositionOption] = ResearcherOptionRegistry.positionOptions
+        options: [ResearcherPositionOption] = ResearcherOptionRegistry.positionOptions,
+        specialtyOptions: [ResearcherSpecialtyOption] = ResearcherOptionRegistry.specialtyOptions
     ) -> String {
-        structuredPositionText(language: language, options: options).nonEmpty
+        structuredPositionText(language: language, options: options, specialtyOptions: specialtyOptions).nonEmpty
             ?? localizedPosition(language: language)
     }
 
