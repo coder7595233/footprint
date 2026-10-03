@@ -1097,7 +1097,10 @@ extension GrantDataStore {
     // (migrateFunderMaxOverheadToOverheadRuleForRound8).
     // 24: round 10, the fund managers' "OH som tas ut" and the OH numbers on
     // open records not yet applied for (runRound10OneTimeDataMigrations).
-    private static let startupMaintenanceVersion = 25
+    // 25: round 11 (runRound11OneTimeDataMigrations).
+    // 26: researchers' written position and degree become list choices
+    // (runResearcherOptionListMigration).
+    private static let startupMaintenanceVersion = 26
     private static let deferredLaunchMaintenanceVersion = 4
     private static let bundledJournalMetricVersion = 1
     private static let maintenanceMarkersStorageKey = "maintenance_markers"

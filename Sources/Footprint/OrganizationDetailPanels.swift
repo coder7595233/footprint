@@ -865,7 +865,7 @@ struct OrganizationLinkedResearchersPanel: View {
     }
 
     private func positionValue(for row: OrganizationLinkedResearcherRow) -> String? {
-        row.author.localizedPosition(language: language).nonEmpty
+        row.author.displayPosition(language: language).nonEmpty
     }
 
     private func careerStageText(for row: OrganizationLinkedResearcherRow) -> String {

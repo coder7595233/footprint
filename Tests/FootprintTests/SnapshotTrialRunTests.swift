@@ -1172,4 +1172,76 @@ final class SnapshotTrialRunTests: XCTestCase {
         XCTAssertEqual(timedBefore, timedAfter, "no deadline time is added or lost by saving")
         XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
     }
+
+    /// Befattningar och examina som listval (Inställningar > Listor): hur
+    /// många forskare som fick val ur listorna vid flytten från fritext och
+    /// hur många som har text utanför listorna. Bara antal skrivs ut, inga
+    /// namn eller värden. Den gamla texten, karriärsteget och doktorsexamen
+    /// får inte ändras, och ingen post får försvinna eller tillkomma.
+    @MainActor
+    func testSnapshotResearcherPositionAndDegreeListsKeepEveryRecord() throws {
+        let storedAuthors = try Self.storedResearchers()
+        let store = GrantDataStore.loadFromBundle()
+        XCTAssertFalse(store.storageWritesBlockedByLoadFailure, store.loadError ?? "")
+        let countsBefore = Self.recordCounts(store)
+        _ = store.migrateRecordsIfNeeded()
+        try store.persistAll()
+
+        let reloaded = GrantDataStore.loadFromBundle()
+        let countsAfter = Self.recordCounts(reloaded)
+        for ((label, countBefore), (_, countAfter)) in zip(countsBefore, countsAfter) {
+            print("SNAPSHOT: Listor \(label): före \(countBefore), efter \(countAfter)")
+        }
+        XCTAssertEqual(countsBefore.map(\.1), countsAfter.map(\.1), "no record may be lost or added")
+
+        let authors = reloaded.publicationAuthors
+        let positionOptions = reloaded.researcherPositionOptions
+        print("SNAPSHOT: Listor forskare: sparat \(storedAuthors.count), efter \(authors.count)")
+        print("SNAPSHOT: Listor forskare med befattning som text (sparat): \(storedAuthors.filter { $0.position.trimmedOrNil != nil }.count)")
+        print("SNAPSHOT: Listor forskare med befattning ur listan: \(authors.filter { !$0.positionIDs.isEmpty }.count)")
+        print("SNAPSHOT: Listor forskare med befattning utanför listan: \(authors.filter { $0.positionOtherSv.trimmedOrNil != nil || $0.positionOtherEn.trimmedOrNil != nil }.count)")
+        print("SNAPSHOT: Listor forskare med befattningstext men inget listval: \(authors.filter { $0.position.trimmedOrNil != nil && $0.positionIDs.isEmpty }.count)")
+        print("SNAPSHOT: Listor docenter: \(authors.filter(\.isDocent).count)")
+        print("SNAPSHOT: Listor forskare med examen som text (sparat): \(storedAuthors.filter { $0.degree.trimmedOrNil != nil }.count)")
+        print("SNAPSHOT: Listor forskare med examen ur listan: \(authors.filter { $0.degreeEntries.contains { $0.optionID != nil } }.count)")
+        print("SNAPSHOT: Listor forskare med examen utanför listan: \(authors.filter { $0.degreeEntries.contains { $0.optionID == nil && $0.otherText.trimmedOrNil != nil } }.count)")
+        let positionUsage = reloaded.researcherPositionOptionUsageCounts()
+        for option in positionOptions {
+            print("SNAPSHOT: Listor befattning \(option.id): \(positionUsage[option.id] ?? 0) forskare")
+        }
+        let degreeUsage = reloaded.researcherDegreeOptionUsageCounts()
+        for option in reloaded.researcherDegreeOptions {
+            print("SNAPSHOT: Listor examen \(option.id): \(degreeUsage[option.id] ?? 0) forskare")
+        }
+        let withSuggestion = authors.filter { $0.careerStageSuggestion(options: positionOptions) != nil }
+        let mismatched = authors.filter { author in
+            guard let stage = author.careerStage,
+                  let suggestion = author.careerStageSuggestion(options: positionOptions) else { return false }
+            return stage != suggestion
+        }
+        print("SNAPSHOT: Listor forskare med föreslaget karriärsteg: \(withSuggestion.count), som skiljer sig från valt steg: \(mismatched.count)")
+        print("SNAPSHOT: Listor forskare med räknad titel: \(authors.filter { $0.suggestedTitle(language: .swedish, options: positionOptions).trimmedOrNil != nil }.count)")
+
+        // The written text, career stage and PhD are exactly as stored.
+        let storedByID = Dictionary(storedAuthors.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var changedText = 0
+        var changedStage = 0
+        var changedPhD = 0
+        for author in authors {
+            guard let stored = storedByID[author.id] else { continue }
+            if [stored.positionSv, stored.positionEn, stored.degreeSv, stored.degreeEn, stored.titleSv, stored.titleEn]
+                != [author.positionSv, author.positionEn, author.degreeSv, author.degreeEn, author.titleSv, author.titleEn] {
+                changedText += 1
+            }
+            if stored.careerStage != author.careerStage { changedStage += 1 }
+            if stored.hasPhD != author.hasPhD { changedPhD += 1 }
+        }
+        print("SNAPSHOT: Listor ändrad fritext: \(changedText), ändrat karriärsteg: \(changedStage), ändrad doktorsexamen: \(changedPhD)")
+        XCTAssertEqual(changedText, 0, "the written text is kept")
+        XCTAssertEqual(changedStage, 0, "the career stage is not changed")
+        XCTAssertEqual(changedPhD, 0, "PhD is not changed")
+        XCTAssertEqual(Set(storedAuthors.map(\.id)), Set(authors.map(\.id)), "no researcher is lost or added")
+        XCTAssertTrue((reloaded.metadata.migrationLog ?? []).contains { $0.key == "round20-researcher-position-degree-lists" })
+        XCTAssertFalse(reloaded.migrateResearcherPositionsAndDegreesToLists(), "running the step again changes nothing")
+    }
 }

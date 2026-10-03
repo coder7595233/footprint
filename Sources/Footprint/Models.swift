@@ -3611,6 +3611,11 @@ struct DataSourceMetadata: Codable, Hashable {
     var calendarCategoryBehaviors: [CalendarCategoryBehaviorSetting]? = nil
     /// Settings > Calendar, working hours shaded in the week view. nil = defaults.
     var calendarWorkingHours: CalendarWorkingHoursSettings? = nil
+    /// Settings > Lists: the researchers' positions. nil = not changed yet
+    /// (the built-in list applies; nothing is written until it is edited).
+    var researcherPositionOptions: [ResearcherPositionOption]? = nil
+    /// Settings > Lists: the researchers' degrees. nil = the built-in list.
+    var researcherDegreeOptions: [ResearcherDegreeOption]? = nil
 
     static let bundledDefault = DataSourceMetadata(
         sourceDescription: "Bundled data from for app.xlsx",

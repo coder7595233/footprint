@@ -476,13 +476,14 @@ extension GrantDataStore {
             if author.lastName.trimmedOrNil == nil {
                 flag(.researcherLastName, language.text("Last name", "Efternamn"))
             }
-            if author.title.trimmedOrNil == nil {
-                flag(.researcherTitle, language.text("Title", "Titel"))
-            }
-            if author.position.trimmedOrNil == nil {
+            // The title is worked out from position, docent and PhD and is no
+            // longer typed in, so a missing title is not flagged. Position and
+            // degree count as present when chosen from the lists or written
+            // in the old text fields.
+            if !author.hasStructuredPosition && author.position.trimmedOrNil == nil {
                 flag(.researcherPosition, language.text("Position", "Position"))
             }
-            if author.degree.trimmedOrNil == nil {
+            if !author.hasStructuredDegree && author.degree.trimmedOrNil == nil {
                 flag(.researcherDegree, language.text("Degree", "Examen"))
             }
             if author.orcid.trimmedOrNil == nil {

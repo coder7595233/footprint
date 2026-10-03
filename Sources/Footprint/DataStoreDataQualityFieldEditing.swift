@@ -26,9 +26,6 @@ extension GrantDataStore {
         switch key {
         case .researcherFirstName,
              .researcherLastName,
-             .researcherTitle,
-             .researcherPosition,
-             .researcherDegree,
              .researcherORCID,
              .researcherORCIDFormat,
              .researcherORCIDCheckDigit,
@@ -98,26 +95,27 @@ extension GrantDataStore {
         case .researcherPrimaryOrganization,
              .researcherPrimaryCountry,
              .researcherGender,
+             .researcherTitle,
+             .researcherPosition,
+             .researcherDegree,
              .publicationJournal,
              .publicationAuthors,
              .applicationFunder,
              .doctoralCandidateName:
             // Linked to other records or chosen from a list: opened in the
-            // record's own editor.
+            // record's own editor. Position and degree are chosen from the
+            // lists in Settings > Lists; the title is worked out from them.
             return nil
         }
     }
 
-    /// Researchers' title, position and degree exist in Swedish and
-    /// English; the box edits the language the app is shown in.
+    /// The researcher fields that can be typed in directly. Title, position
+    /// and degree are not among them (they are chosen in the researcher's
+    /// editor).
     private func dataQualityAuthorValue(_ author: PublicationAuthor, key: DataQualityFieldKey) -> String? {
-        let swedish = language == .swedish
         switch key {
         case .researcherFirstName: return author.firstName
         case .researcherLastName: return author.lastName
-        case .researcherTitle: return swedish ? author.titleSv : author.titleEn
-        case .researcherPosition: return swedish ? author.positionSv : author.positionEn
-        case .researcherDegree: return swedish ? author.degreeSv : author.degreeEn
         case .researcherORCID, .researcherORCIDFormat, .researcherORCIDCheckDigit: return author.orcid
         case .researcherPrimaryEmail:
             // Only when the researcher has an affiliation row to put it on.
@@ -155,25 +153,15 @@ extension GrantDataStore {
         switch key {
         case .researcherFirstName,
              .researcherLastName,
-             .researcherTitle,
-             .researcherPosition,
-             .researcherDegree,
              .researcherORCID,
              .researcherORCIDFormat,
              .researcherORCIDCheckDigit,
              .researcherPrimaryEmail:
             guard var author = publicationAuthor(id: issue.recordID) else { return }
             let previousName = author.name
-            let swedish = language == .swedish
             switch key {
             case .researcherFirstName: author.firstName = value
             case .researcherLastName: author.lastName = value
-            case .researcherTitle:
-                if swedish { author.titleSv = value } else { author.titleEn = value }
-            case .researcherPosition:
-                if swedish { author.positionSv = value } else { author.positionEn = value }
-            case .researcherDegree:
-                if swedish { author.degreeSv = value } else { author.degreeEn = value }
             case .researcherPrimaryEmail:
                 guard let primary = author.affiliations.firstIndex(where: \.isPrimary) ?? author.affiliations.indices.first else {
                     return
@@ -251,6 +239,9 @@ extension GrantDataStore {
         case .researcherPrimaryOrganization,
              .researcherPrimaryCountry,
              .researcherGender,
+             .researcherTitle,
+             .researcherPosition,
+             .researcherDegree,
              .publicationJournal,
              .publicationAuthors,
              .applicationFunder,
@@ -269,7 +260,7 @@ extension GrantDataStore {
             guard let author = publicationAuthor(id: issue.recordID) else { return issue.subtitle }
             parts = [
                 author.primaryAffiliation?.organization.nonEmpty,
-                author.localizedPosition(language: language).nonEmpty ?? author.position.nonEmpty,
+                author.displayPosition(language: language).nonEmpty ?? author.position.nonEmpty,
                 author.orcid.nonEmpty.map { "ORCID \($0)" },
             ]
         case .publications:

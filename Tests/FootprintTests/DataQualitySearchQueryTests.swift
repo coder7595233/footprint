@@ -237,8 +237,10 @@ final class DataQualityFieldEditingTests: XCTestCase {
         let store = makeStore()
         let keys = Set(try authorIssue(store).fields.compactMap(\.key))
         XCTAssertTrue(keys.contains(.researcherORCID))
-        XCTAssertTrue(keys.contains(.researcherTitle))
+        XCTAssertTrue(keys.contains(.researcherPosition))
         XCTAssertTrue(keys.contains(.researcherPrimaryEmail))
+        // The title is worked out from position, docent and PhD; it is not flagged.
+        XCTAssertFalse(keys.contains(.researcherTitle))
     }
 
     @MainActor
@@ -252,22 +254,43 @@ final class DataQualityFieldEditingTests: XCTestCase {
     }
 
     @MainActor
-    func testTypedTitleAndEmailAreSaved() throws {
+    func testPositionAndDegreeAreOpenedAndEmailIsSaved() throws {
         let store = makeStore()
         let issue = try authorIssue(store)
-        let title = try XCTUnwrap(issue.fields.first { $0.key == .researcherTitle })
+        let position = try XCTUnwrap(issue.fields.first { $0.key == .researcherPosition })
+        let degree = try XCTUnwrap(issue.fields.first { $0.key == .researcherDegree })
         let email = try XCTUnwrap(issue.fields.first { $0.key == .researcherPrimaryEmail })
-        store.saveDataQualityField(issue, field: title, value: "Docent")
+        // Position and degree are chosen from the lists in the editor.
+        XCTAssertNil(store.dataQualityEditableField(for: issue, field: position))
+        XCTAssertNil(store.dataQualityEditableField(for: issue, field: degree))
+        store.saveDataQualityField(issue, field: position, value: "Forskare")
+        XCTAssertEqual(store.publicationAuthors.first?.position, "")
         store.saveDataQualityField(issue, field: email, value: "anna@example.org")
-        XCTAssertEqual(store.publicationAuthors.first?.title, "Docent")
         XCTAssertEqual(store.publicationAuthors.first?.primaryAffiliation?.email, "anna@example.org")
+    }
+
+    @MainActor
+    func testChosenPositionAndDegreeAreNotMissing() throws {
+        let author = PublicationAuthor(
+            id: "author-1",
+            name: "Anna Exempel",
+            firstName: "Anna",
+            lastName: "Exempel",
+            affiliations: [PublicationAffiliation(organization: "Exempeluniversitetet", isPrimary: true)],
+            positionIDs: [ResearcherPositionOption.BuiltInID.researcher],
+            degreeEntries: [ResearcherDegreeEntry(optionID: ResearcherDegreeOption.BuiltInID.medical)]
+        )
+        let store = GrantDataStore(publicationAuthors: [author], skipInitialMigration: true)
+        let keys = Set(try authorIssue(store).fields.compactMap(\.key))
+        XCTAssertFalse(keys.contains(.researcherPosition))
+        XCTAssertFalse(keys.contains(.researcherDegree))
     }
 
     @MainActor
     func testEmptyBoxDoesNotChangeAMissingField() throws {
         let store = makeStore()
         let issue = try authorIssue(store)
-        let field = try XCTUnwrap(issue.fields.first { $0.key == .researcherPosition })
+        let field = try XCTUnwrap(issue.fields.first { $0.key == .researcherORCID })
         let before = store.publicationAuthors
         store.saveDataQualityField(issue, field: field, value: "   ")
         XCTAssertEqual(store.publicationAuthors, before)

@@ -1552,7 +1552,7 @@ private enum WorkspaceSearchModel {
 
         items.append(contentsOf: store.coauthors.map { author in
             let title = author.displayName
-            let subtitle = [author.primaryAffiliation?.organization.nonEmpty, author.title.nonEmpty].compactMap { $0 }.joined(separator: " · ")
+            let subtitle = [author.primaryAffiliation?.organization.nonEmpty, author.displayTitle(language: store.language).nonEmpty].compactMap { $0 }.joined(separator: " · ")
             return CommandPaletteItem(
                 id: "author-\(author.id)",
                 kind: .record,

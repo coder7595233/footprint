@@ -961,6 +961,17 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
     var employments: [PublicationAuthorEmployment]
     var educationEntries: [PublicationAuthorEducation]
     var publications: [PublicationAuthorContribution]
+    /// Befattningar valda ur listan i Inställningar > Listor (id:n, i vald
+    /// ordning). Tom = inget val; då visas den gamla texten i positionSv/En.
+    var positionIDs: [String]
+    /// Befattning som inte finns i listan ("Annan…").
+    var positionOtherSv: String
+    var positionOtherEn: String
+    /// Forskaren är docent (ger titeln Docent och minst karriärsteg B).
+    var isDocent: Bool
+    /// Examina valda ur listan, med ämne eller fri text. Tom = inget val;
+    /// då visas den gamla texten i degreeSv/En.
+    var degreeEntries: [ResearcherDegreeEntry]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -1002,6 +1013,11 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         case employments
         case educationEntries
         case publications
+        case positionIDs
+        case positionOtherSv
+        case positionOtherEn
+        case isDocent
+        case degreeEntries
         case publicationCount
         case country
         case primaryAffiliation
@@ -1046,7 +1062,12 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         affiliations: [PublicationAffiliation] = [],
         employments: [PublicationAuthorEmployment] = [],
         educationEntries: [PublicationAuthorEducation] = [],
-        publications: [PublicationAuthorContribution] = []
+        publications: [PublicationAuthorContribution] = [],
+        positionIDs: [String] = [],
+        positionOtherSv: String = "",
+        positionOtherEn: String = "",
+        isDocent: Bool = false,
+        degreeEntries: [ResearcherDegreeEntry] = []
     ) {
         self.id = id
         self.name = name
@@ -1086,6 +1107,11 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         self.employments = employments
         self.educationEntries = educationEntries
         self.publications = publications
+        self.positionIDs = positionIDs
+        self.positionOtherSv = positionOtherSv
+        self.positionOtherEn = positionOtherEn
+        self.isDocent = isDocent
+        self.degreeEntries = degreeEntries
         normalize()
     }
 
@@ -1150,7 +1176,13 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
             affiliations: affiliations,
             employments: try container.decodeIfPresent([PublicationAuthorEmployment].self, forKey: .employments) ?? [],
             educationEntries: try container.decodeIfPresent([PublicationAuthorEducation].self, forKey: .educationEntries) ?? [],
-            publications: try container.decodeIfPresent([PublicationAuthorContribution].self, forKey: .publications) ?? []
+            publications: try container.decodeIfPresent([PublicationAuthorContribution].self, forKey: .publications) ?? [],
+            // Nya fält: saknas de (äldre data) blir de tomma.
+            positionIDs: (try? container.decodeIfPresent([String].self, forKey: .positionIDs)) ?? [],
+            positionOtherSv: (try? container.decodeIfPresent(String.self, forKey: .positionOtherSv)) ?? "",
+            positionOtherEn: (try? container.decodeIfPresent(String.self, forKey: .positionOtherEn)) ?? "",
+            isDocent: (try? container.decodeIfPresent(Bool.self, forKey: .isDocent)) ?? false,
+            degreeEntries: (try? container.decodeIfPresent([ResearcherDegreeEntry].self, forKey: .degreeEntries)) ?? []
         )
         // Om nyckeln finns men är null eller tom text betyder det "inget karriärsteg".
         // Saknas nyckeln helt (äldre data) behålls det föreslagna steget från init ovan.
@@ -1221,6 +1253,23 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         try container.encode(employments, forKey: .employments)
         try container.encode(educationEntries, forKey: .educationEntries)
         try container.encode(publications, forKey: .publications)
+        // Nya fält skrivs bara när de har innehåll, så att forskare utan
+        // listval sparas exakt som förut.
+        if !positionIDs.isEmpty {
+            try container.encode(positionIDs, forKey: .positionIDs)
+        }
+        if !positionOtherSv.isEmpty {
+            try container.encode(positionOtherSv, forKey: .positionOtherSv)
+        }
+        if !positionOtherEn.isEmpty {
+            try container.encode(positionOtherEn, forKey: .positionOtherEn)
+        }
+        if isDocent {
+            try container.encode(isDocent, forKey: .isDocent)
+        }
+        if !degreeEntries.isEmpty {
+            try container.encode(degreeEntries, forKey: .degreeEntries)
+        }
     }
 
     mutating func normalize() {
@@ -1298,6 +1347,17 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
         }
         educationEntries.removeAll(where: \.isEmpty)
         educationEntries = Self.sortedEducationEntriesForEditor(educationEntries)
+        positionIDs = positionIDs.compactMap(\.trimmedOrNil).uniqued()
+        positionOtherSv = positionOtherSv.trimmingCharacters(in: .whitespacesAndNewlines)
+        positionOtherEn = positionOtherEn.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Tomma examensrader tas inte bort här: redigeraren lägger till en tom
+        // rad för "Annan examen" som ska finnas kvar medan texten skrivs.
+        for index in degreeEntries.indices {
+            degreeEntries[index].optionID = degreeEntries[index].optionID?.trimmedOrNil
+            degreeEntries[index].subjectSv = degreeEntries[index].subjectSv.trimmingCharacters(in: .whitespacesAndNewlines)
+            degreeEntries[index].subjectEn = degreeEntries[index].subjectEn.trimmingCharacters(in: .whitespacesAndNewlines)
+            degreeEntries[index].otherText = degreeEntries[index].otherText.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         if !affiliations.isEmpty, !affiliations.contains(where: \.isPrimary) {
             affiliations[0].isPrimary = true
         }
@@ -1550,7 +1610,9 @@ struct PublicationAuthor: Codable, Hashable, Identifiable {
     }
 
     var displaySubtitle: String {
-        [position.nonEmpty, primaryAffiliation?.organization.nonEmpty].compactMap { $0 }.joined(separator: " · ")
+        // The positions chosen from the list, else the old text.
+        let positionText = structuredPositionText(language: .swedish).nonEmpty ?? position.nonEmpty
+        return [positionText, primaryAffiliation?.organization.nonEmpty].compactMap { $0 }.joined(separator: " · ")
     }
 
     var publicationCount: Int {

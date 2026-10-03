@@ -23,6 +23,7 @@ private enum SettingsWorkspaceSection: String, CaseIterable, Identifiable {
     case translations
     case mediaLanguages
     case teachingTerminology
+    case researcherLists
 
     var id: String { rawValue }
 }
@@ -234,6 +235,8 @@ struct SettingsWorkspaceView: View {
                         mediaLanguagesSection(language: language)
                     case .teachingTerminology:
                         teachingTerminologySection(language: language)
+                    case .researcherLists:
+                        ResearcherOptionListsSettingsPanel(store: store)
                     }
                 }
                 .padding(20)
@@ -4846,6 +4849,8 @@ struct SettingsWorkspaceView: View {
             return language.text("Media languages", "Mediaspråk")
         case .teachingTerminology:
             return language.text("Teaching terms", "Undervisningsbegrepp")
+        case .researcherLists:
+            return language.text("Lists", "Listor")
         }
     }
 

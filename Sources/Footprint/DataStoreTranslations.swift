@@ -271,12 +271,22 @@ extension GrantDataStore {
 
         for author in publicationAuthors {
             let authorTitle = author.displayName
-            check(.researcher, recordID: author.id, recordTitle: authorTitle, destination: .people,
-                  field: .title, sv: author.titleSv, en: author.titleEn, flagIdentical: false)
-            check(.researcher, recordID: author.id, recordTitle: authorTitle, destination: .people,
-                  field: .position, sv: author.positionSv, en: author.positionEn, flagIdentical: false)
-            check(.researcher, recordID: author.id, recordTitle: authorTitle, destination: .people,
-                  field: .degree, sv: author.degreeSv, en: author.degreeEn, flagIdentical: false)
+            // Once position or degree is chosen from the lists (which have
+            // both languages), the old written text is no longer shown, so
+            // it is not checked; nor is the old title, which is then worked
+            // out from the positions.
+            if !author.hasStructuredPosition && !author.isDocent {
+                check(.researcher, recordID: author.id, recordTitle: authorTitle, destination: .people,
+                      field: .title, sv: author.titleSv, en: author.titleEn, flagIdentical: false)
+            }
+            if !author.hasStructuredPosition {
+                check(.researcher, recordID: author.id, recordTitle: authorTitle, destination: .people,
+                      field: .position, sv: author.positionSv, en: author.positionEn, flagIdentical: false)
+            }
+            if !author.hasStructuredDegree {
+                check(.researcher, recordID: author.id, recordTitle: authorTitle, destination: .people,
+                      field: .degree, sv: author.degreeSv, en: author.degreeEn, flagIdentical: false)
+            }
         }
 
         for contribution in cvConferenceContributions {

@@ -245,12 +245,12 @@ struct ContributorCompositionSnapshot: Equatable {
     }
 
     private static func titleLabel(for row: ContributorCompositionRow, language: AppLanguage) -> String {
-        let title = collapsedContributorCompositionWhitespace(row.author?.localizedTitle(language: language) ?? "")
+        let title = collapsedContributorCompositionWhitespace(row.author?.displayTitle(language: language) ?? "")
         if !title.isEmpty && !isContributorCompositionHonorific(title) {
             return title
         }
 
-        let position = collapsedContributorCompositionWhitespace(row.author?.localizedPosition(language: language) ?? "")
+        let position = collapsedContributorCompositionWhitespace(row.author?.displayPosition(language: language) ?? "")
         if !position.isEmpty {
             return position
         }

@@ -595,6 +595,15 @@ final class GrantDataStore: ObservableObject {
             FixedDropdownTranslationRegistry.update(from: metadata)
             AppAppearanceRegistry.update(from: metadata)
             WorkflowDefaultSettingsRegistry.update(from: metadata)
+            ResearcherOptionRegistry.update(from: metadata)
+            if oldValue.researcherPositionOptions != metadata.researcherPositionOptions
+                || oldValue.researcherDegreeOptions != metadata.researcherDegreeOptions {
+                // Researchers store the options' ids; a renamed option shows
+                // its new name in the lists, the search and the Data view.
+                invalidateWorkspaceSearchCache()
+                invalidateDataQualityCaches()
+                rebuildPublicationAuthorRowSnapshots()
+            }
             let previousLanguage = AppLanguage(rawValue: oldValue.interfaceLanguage ?? "") ?? .english
             let currentLanguage = AppLanguage(rawValue: metadata.interfaceLanguage ?? "") ?? .english
             let previousCurrentUserAuthorID = oldValue.currentUserAuthorID?.trimmedOrNil
@@ -1373,6 +1382,7 @@ final class GrantDataStore: ObservableObject {
         FixedDropdownTranslationRegistry.update(from: sanitizedMetadata)
         AppAppearanceRegistry.update(from: sanitizedMetadata)
         WorkflowDefaultSettingsRegistry.update(from: sanitizedMetadata)
+        ResearcherOptionRegistry.update(from: sanitizedMetadata)
         synchronizeOrganizationsAndManagers(preserveCustomLists: true)
         if !skipInitialMigration {
             _ = migrateRecordsIfNeeded()
@@ -6554,9 +6564,9 @@ final class GrantDataStore: ObservableObject {
             return [
                 firstName,
                 lastName,
-                language == .swedish ? (author.titleSv.nonEmpty ?? author.titleEn) : (author.titleEn.nonEmpty ?? author.titleSv),
-                language == .swedish ? (author.positionSv.nonEmpty ?? author.positionEn) : (author.positionEn.nonEmpty ?? author.positionSv),
-                language == .swedish ? (author.degreeSv.nonEmpty ?? author.degreeEn) : (author.degreeEn.nonEmpty ?? author.degreeSv),
+                author.displayTitle(language: language),
+                author.displayPosition(language: language),
+                author.displayDegree(language: language),
                 author.careerStage?.rawValue ?? "",
                 projectWorkbookYesNo(author.hasPhD, language: language),
                 author.gender.displayName(language: language),
@@ -8925,7 +8935,7 @@ final class GrantDataStore: ObservableObject {
     private func cvSummaryLines(for author: PublicationAuthor?) -> [String] {
         guard let author else { return [] }
         var lines: [String] = []
-        if let title = author.localizedTitle(language: language).nonEmpty {
+        if let title = author.displayTitle(language: language).nonEmpty {
             lines.append(title)
         }
         if let affiliation = author.primaryAffiliation?.displayLine.nonEmpty {
@@ -11055,9 +11065,9 @@ final class GrantDataStore: ObservableObject {
         let rows = publicationAuthors.map { author in
             [
                 author.displayName,
-                author.localizedTitle(language: language),
-                author.localizedPosition(language: language),
-                author.localizedDegree(language: language),
+                author.displayTitle(language: language),
+                author.displayPosition(language: language),
+                author.displayDegree(language: language),
                 author.phoneLabel,
                 author.phoneNumber,
                 author.phoneLabelSecondary,
@@ -13273,8 +13283,8 @@ final class GrantDataStore: ObservableObject {
             return SubmissionAuthorExportRow(
                 firstName: author.firstName,
                 lastName: author.lastName,
-                titleSv: author.titleSv,
-                titleEn: author.titleEn,
+                titleSv: author.displayTitle(language: .swedish),
+                titleEn: author.displayTitle(language: .english),
                 orcid: author.orcid,
                 organizationSv: affiliation?.organizationSv ?? "",
                 organizationEn: affiliation?.organizationEn ?? "",
@@ -18598,7 +18608,7 @@ final class GrantDataStore: ObservableObject {
             ),
             DataQualitySummaryItem(
                 title: language.text("Researchers missing title", "Forskare utan titel"),
-                count: publicationAuthors.filter { $0.title.trimmedOrNil == nil }.count
+                count: publicationAuthors.filter { $0.displayTitle(language: language).trimmedOrNil == nil }.count
             ),
             DataQualitySummaryItem(
                 title: language.text("Applications without project", "Ansökningar utan projekt"),
@@ -19510,10 +19520,14 @@ final class GrantDataStore: ObservableObject {
     /// `name` is empty for the ordinary "add researcher" button; the Data
     /// view's "Names to link" passes the written name (F13c).
     func addPublicationAuthor(name: String = "") -> String {
-        let newAuthor = PublicationAuthor(
+        var newAuthor = PublicationAuthor(
             name: name,
             affiliations: [PublicationAffiliation(isPrimary: true)]
         )
+        // A new researcher starts without a career stage; it is suggested
+        // from the positions once they are chosen. (Older stored data
+        // without the key still gets the suggestion when it is read.)
+        newAuthor.careerStage = nil
 
         // "The first researcher becomes me": when no valid CV profile is
         // chosen yet, store one in the same undoable change. A lone existing
@@ -20794,6 +20808,7 @@ final class GrantDataStore: ObservableObject {
         didChange = runRound8OneTimeDataMigrations() || didChange
         didChange = runRound10OneTimeDataMigrations() || didChange
         didChange = runRound11OneTimeDataMigrations() || didChange
+        didChange = runResearcherOptionListMigration() || didChange
         didChange = normalizeConferenceContributionsForRound1() || didChange
         didChange = clearPlaceholderProjectNames() || didChange
         didChange = ensureManagedPublicationPDFAttachmentsStored() || didChange
@@ -23218,9 +23233,14 @@ final class GrantDataStore: ObservableObject {
         if current.nameVariantRows != target.nameVariantRows { return "nameVariantRows" }
         if current.titleSv != target.titleSv || current.titleEn != target.titleEn { return "title" }
         if current.positionSv != target.positionSv || current.positionEn != target.positionEn { return "position" }
+        if current.positionIDs != target.positionIDs
+            || current.positionOtherSv != target.positionOtherSv
+            || current.positionOtherEn != target.positionOtherEn { return "position" }
         if current.degreeSv != target.degreeSv || current.degreeEn != target.degreeEn { return "degree" }
+        if current.degreeEntries != target.degreeEntries { return "degree" }
         if current.gender != target.gender { return "gender" }
         if current.hasPhD != target.hasPhD { return "hasPhD" }
+        if current.isDocent != target.isDocent { return "isDocent" }
         if current.careerStage != target.careerStage { return "careerStage" }
         if current.phoneLabel != target.phoneLabel { return "phoneLabel" }
         if current.phoneNumber != target.phoneNumber { return "phoneNumber" }
@@ -25888,9 +25908,9 @@ final class GrantDataStore: ObservableObject {
                 author.nameVariants.joined(separator: " "),
                 primaryOrganization,
                 primaryCountry,
-                author.localizedTitle(language: targetLanguage),
-                author.localizedPosition(language: targetLanguage),
-                author.localizedDegree(language: targetLanguage)
+                author.displayTitle(language: targetLanguage),
+                author.displayPosition(language: targetLanguage),
+                author.displayDegree(language: targetLanguage)
             ] + affiliationSearchTerms)
             .compactMap(\.nonEmpty)
             .joined(separator: " ")
@@ -25921,7 +25941,7 @@ final class GrantDataStore: ObservableObject {
                 missingEmail: author.primaryAffiliation?.email.trimmedOrNil == nil,
                 missingPrimaryOrganization: author.primaryAffiliation?.organization.trimmedOrNil == nil,
                 missingPrimaryCountry: author.primaryAffiliation?.country.trimmedOrNil == nil,
-                missingTitle: author.title.trimmedOrNil == nil,
+                missingTitle: author.displayTitle(language: targetLanguage).trimmedOrNil == nil,
                 affiliationOrganizationKeys: author.affiliations
                     .compactMap { affiliation -> String? in
                         // Round 17: the organization filter's key is the
@@ -30149,6 +30169,47 @@ extension GrantDataStore {
         refreshOrganizationLookupCaches()
         rebuildOrganizationRowSnapshots()
         appendStartupDiagnostic("migration:hiddenSalaryCalculators removed=\(removed)")
+        return true
+    }
+}
+
+// MARK: - Researchers' positions and degrees as list choices
+// Lives in this file because the researcher list has a private setter and the
+// one-time helper is private here.
+
+extension GrantDataStore {
+    /// One-time (user decision 2026-10-03): the researchers' written position
+    /// and degree are read into the new list choices. Run once per database
+    /// and recorded in the migration log. Called from `migrateRecordsIfNeeded()`.
+    @discardableResult
+    func runResearcherOptionListMigration() -> Bool {
+        runRound7MigrationOnce(
+            key: "round20-researcher-position-degree-lists",
+            details: "Researchers' written positions and degrees are matched to the lists in Settings > Lists. Text that is not in the lists is kept as \"other\" and shown in Data quality. The written text, career stage and PhD are not changed."
+        ) {
+            migrateResearcherPositionsAndDegreesToLists()
+        }
+    }
+
+    /// Fills the list choices from the written text for every researcher that
+    /// has none yet (see `ResearcherLegacyFieldMapping`). Only the new fields
+    /// change. Running it again changes nothing. Returns true when a
+    /// researcher changed.
+    @discardableResult
+    func migrateResearcherPositionsAndDegreesToLists() -> Bool {
+        var updated = publicationAuthors
+        var changed = 0
+        for index in updated.indices {
+            let migrated = ResearcherLegacyFieldMapping.migrated(updated[index])
+            guard migrated != updated[index] else { continue }
+            updated[index] = migrated
+            changed += 1
+        }
+        // A migration must never lose a record.
+        guard changed > 0, updated.count == publicationAuthors.count else { return false }
+        publicationAuthors = updated
+        rebuildPublicationAuthorRowSnapshots()
+        appendStartupDiagnostic("migration:researcherPositionDegreeLists changed=\(changed)")
         return true
     }
 }

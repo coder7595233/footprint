@@ -2616,7 +2616,8 @@ final class StabilityTests: XCTestCase {
         let issue = store.missingFieldIssues().first { $0.recordID == author.id }
 
         XCTAssertEqual(issue?.entityKind, .researcher)
-        XCTAssertEqual(issue?.missingFields, ["Titel", "Position", "Examen", "ORCID", "Primär e-post"])
+        // The title is worked out from position, docent and PhD and is not flagged.
+        XCTAssertEqual(issue?.missingFields, ["Position", "Examen", "ORCID", "Primär e-post"])
     }
 
     @MainActor
